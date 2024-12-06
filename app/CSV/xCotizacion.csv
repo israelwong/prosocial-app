@@ -1,0 +1,3 @@
+id,eventoTipoId,eventoId,nombre,precio,condicionesComercialesId,condicionesComercialesMetodoPagoId,status,createdAt,updatedAt,contratoId
+cm44vf4tm0001lxexr2pyvxsb,cm3t5e6ro0001txdwurvtrmit,cm3xt1cc6000j4m6exdn38ja4,Estándar 6hrs,18544.5,cm422ulc90001mvbejtvr21zr,cm44rtrv3000nci409lddqd1r,pendiente,1733013378346,1733272943199,NULL
+cm4aly9nl0001tc6818k35zwi,cm3t5e6ro0001txdwurvtrmit,cm3xt1cc6000j4m6exdn38ja4,Todo incluido 8hrs,79165.0,NULL,NULL,pendiente,1733360271831,1733360271831,NULL

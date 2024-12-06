@@ -1,0 +1,91 @@
+'use client'
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+import { cerrarSesion } from '@/app/lib/auth';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import { User } from '@/app/admin/_lib/types';
+import { verifyToken } from '@/app/lib/auth';
+
+function Navbar() {
+
+    const [user, setUser] = React.useState<User | null>(null);
+    const pathname = usePathname();
+    const router = useRouter();
+    const token = Cookies.get('token');
+
+    useEffect(() => {
+        async function validarToken(token: string | undefined) {
+            if (token) {
+                try {
+                    const response = await verifyToken(token);
+                    if (response.payload) {
+                        const userData: User = response.payload as unknown as User;
+                        userData.token = token;
+                        // console.log('userData:', userData);
+                        setUser(userData);
+                    } else {
+                        router.push('/admin');
+                    }
+                } catch (error) {
+                    console.error('Error verifying token:', error);
+                    router.push('/admin');
+                }
+            } else {
+                router.push('/admin');
+            }
+        }
+        validarToken(token);
+    }, [token, router]);
+
+    async function handleCerrarSesion() {
+
+        if (confirm('¿Estás seguro de cerrar sesión?')) {
+            if (user && user.token) {
+                console.log('cerrando sesión');
+                const response = await cerrarSesion(user.token);
+                console.log('response:', response);
+                if (response && response.status) {
+                    Cookies.remove('token');
+                    router.push('/admin');
+                }
+            }
+        }
+    }
+
+    const links = [
+        { href: '/admin/dashboard', label: 'Dashboard' },
+    ];
+
+    if (user && user.role === 'admin') {
+        links.push({ href: '/admin/configurar', label: 'Configurar' });
+    }
+
+    return (
+        <div className='flex flex-grow justify-between items-center px-5 py-2 border-b border-zinc-800'>
+            <div className='flex text-lg text-zinc-300'>
+                <Image className='mr-2' src='https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/isotipo_gris.svg' width={20} height={20} alt='Logo' />
+                ProSocial {user && <span className='text-zinc-600 ml-2'>{user.username}</span>}
+            </div>
+            <div className='flex gap-5 justify-center items-center'>
+                {links.map((link) => (
+                    <Link key={link.href} href={link.href}>
+                        <span className={`text-gray-500 ${pathname.includes(link.href) ? 'font-bold text-white' : ''}`}>
+                            {link.label}
+                        </span>
+                    </Link>
+                ))}
+                <button
+                    className='border border-zinc-600 rounded-md text-sm leading-3 px-3 py-2'
+                    onClick={handleCerrarSesion}
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+        </div>
+    );
+}
+
+export default Navbar;
