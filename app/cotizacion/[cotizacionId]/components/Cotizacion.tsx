@@ -307,7 +307,7 @@ export default function Cotizacion({ cotizacionId }: Props) {
                                 ) : (
                                     <button className='bg-purple-600 w-full px-3 py-3 font-semibold rounded-md uppercase text-sm'>
 
-                                        Pagar el total ahora
+                                        Pagar ahora
                                     </button>
                                 )}
                             </div>

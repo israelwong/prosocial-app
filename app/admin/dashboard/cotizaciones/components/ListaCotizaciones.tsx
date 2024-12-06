@@ -4,13 +4,16 @@ import { obtenerCotizacionesPorEvento } from '@/app/admin/_lib/cotizacion.action
 import { obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/paquete.actions'
 import { Evento, Cotizacion, Paquete } from '@/app/admin/_lib/types'
 import { useRouter } from 'next/navigation'
+import { Copy, SquareArrowOutUpRight, Pencil, Send } from 'lucide-react'
+import { Cliente } from '@/app/admin/_lib/types'
 
 interface Props {
     evento: Evento
+    cliente: Cliente
     onClose: () => void
 }
 
-const ListaCotizaciones: React.FC<Props> = ({ evento, onClose }) => {
+const ListaCotizaciones: React.FC<Props> = ({ evento, cliente, onClose }) => {
 
     const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
     const [paquetes, setPaquetes] = useState<Paquete[]>([])
@@ -34,6 +37,24 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, onClose }) => {
         router.push(`/admin/dashboard/cotizaciones/nueva?eventoId=${evento.id}&eventoTipoId=${evento.eventoTipoId}&&paqueteId=${paqueteId}`)
     }, [evento.id, evento.eventoTipoId, router])
 
+    const handleShareCotizacion = useCallback(() => {
+
+        const fecha_evento = new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })
+
+        const link_cotizacion = `https://www.prosocial.mx/cotizacion/${evento.id}`
+        const mensaje = `Hola ${cliente.nombre}, te compartimos la cotización para el evento ${evento.tipoEvento} de ${evento.nombre} que celebrarás el ${fecha_evento}.\n\n${link_cotizacion}`
+
+        //envia mensaje con link de whatsapp
+        window.open(`https://wa.me/${cliente.telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+
+
+        console.log(mensaje)
+    }, [cliente, evento])
+
     const cotizacionesRenderizadas = useMemo(() => {
         return cotizaciones.map(cotizacion => (
             <li key={cotizacion.id} className={`flex justify-between items-center relative ${cotizacion.status === 'pendiente' ? 'bg-zinc-900 rounded-md  p-5' : ''}`}>
@@ -52,16 +73,29 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, onClose }) => {
                 </div>
                 <div className='space-x-2'>
                     <button className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm'
-                        onClick={() => router.push(`/admin/dashboard/cotizaciones/${cotizacion.id}`)}>
-                        Editar
+                        onClick={() => router.push(`/admin/dashboard/cotizaciones/${cotizacion.id}`)}
+                    >
+                        <Pencil />
                     </button>
+
+                    <button className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm'
+                        onClick={() => navigator.clipboard.writeText(`https://www.prosocial.mx/cotizacion/${cotizacion.id}`)}
+                    >
+                        <Copy />
+                    </button>
+
                     <button className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm'
                         onClick={() => window.open(`/cotizacion/${cotizacion.id}`, '_blank')}
                     >
-                        Compartir
+                        <SquareArrowOutUpRight />
+                    </button>
+                    <button className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm'
+                        onClick={handleShareCotizacion}
+                    >
+                        <Send />
                     </button>
                 </div>
-            </li>
+            </li >
         ))
     }, [cotizaciones, router])
 
@@ -84,11 +118,13 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, onClose }) => {
                                 Cotizaciones {evento.nombre}
                             </h2>
                             <div className='flex'>
+                                {/* //! COmpartir paquetes */}
                                 <button
                                     className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm mr-2'
                                 >
                                     Compartir paquetes
                                 </button>
+
                                 <select
                                     className='opciones_cotizacion bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm mr-2'
                                     onChange={(e) => handleNuevaCotizacion(e.target.value)}
@@ -97,11 +133,13 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, onClose }) => {
                                     {paquetesRenderizados}
                                     <option value="personalizada">Personalizada</option>
                                 </select>
+
                                 <button
                                     onClick={onClose}
                                     className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm'>
                                     Cerrar
                                 </button>
+
                             </div>
                         </div>
                         {/* content */}

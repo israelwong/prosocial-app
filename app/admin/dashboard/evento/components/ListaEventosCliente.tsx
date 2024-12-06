@@ -3,12 +3,15 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { obtenerEventosPorCliente } from '@/app/admin/_lib/evento.actions'
 import { Evento } from '@/app/admin/_lib/types'
 import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
-import { Calendar, Pencil, Eye } from 'lucide-react'
-import ListaCotizaciones from '../../cotizaciones/components/ListaCotizaciones'
-import { useSearchParams } from 'next/navigation'
+import { obtenerCliente } from '@/app/admin/_lib/cliente.actions'
+import { Cliente } from '@/app/admin/_lib/types'
 
+import ListaCotizaciones from '../../cotizaciones/components/ListaCotizaciones'
+
+import { useSearchParams } from 'next/navigation'
 import FormEventoEditar from './FormEventoEditar'
 import FormEventoNuevo from './FormEventoNuevo'
+import { Calendar, Pencil, Eye } from 'lucide-react'
 
 interface Props {
     clienteId: string
@@ -22,16 +25,25 @@ function ListaEventosCliente({ clienteId }: Props) {
     const [eventoSeleccionado, setEventoSeleccionado] = useState<Evento | null>(null)
     const [openModalEditarEvento, setOpenModalEditarEvento] = useState(false)
     const [openModalCrearEvento, setOpenModalCrearEvento] = useState(false)
+    const [cliente, setCliente] = useState<Cliente | null>(null)
 
     const fetchData = useCallback(async () => {
         setLoading(true)
+
         const eventos = await obtenerEventosPorCliente(clienteId)
+
         const eventosConTipo = await Promise.all(
             eventos.map(async (evento) => {
                 const tipoEvento = evento.eventoTipoId ? await obtenerTipoEvento(evento.eventoTipoId) : null
                 return { ...evento, tipoEvento: tipoEvento?.nombre }
             })
         )
+
+        const cliente = await obtenerCliente(clienteId)
+        if (cliente) {
+            setCliente(cliente)
+        }
+
         setEventos(eventosConTipo)
         setLoading(false)
     }, [clienteId])
@@ -42,7 +54,6 @@ function ListaEventosCliente({ clienteId }: Props) {
 
     useEffect(() => {
         if (eventoId) {
-
             const evento = eventos.find(evento => evento.id === eventoId)
             if (evento) {
                 setEventoSeleccionado(evento)
@@ -118,13 +129,12 @@ function ListaEventosCliente({ clienteId }: Props) {
                                     <span className='absolute top-2 right-2 inline-block w-2 h-2 bg-green-500 rounded-full'></span>
                                 )}
 
-                                <h3 className='text-lg text-zinc-200 absolute top-[-16]'>
-                                    <span className='px-2 py-1 leading-3 text-[12px] bg-gray-700 rounded-full mr-2 uppercase' >
+                                <h3 className='text-lg text-zinc-300 mt-2 items-center'>
+                                    {evento.nombre}
+                                    <span className='px-2 py-1 leading-3 text-[12px] bg-gray-700 rounded-md ml-2 uppercase' >
                                         {evento.tipoEvento}
                                     </span>
                                 </h3>
-
-                                <h3 className='text-lg text-zinc-300 mt-2'>{evento.nombre}</h3>
 
                                 <div className='flex items-center my-2'>
                                     <button
@@ -152,9 +162,10 @@ function ListaEventosCliente({ clienteId }: Props) {
                         ))}
                     </div>
                     <div className='col-span-2'>
-                        {eventoSeleccionado && (
+                        {eventoSeleccionado && cliente && (
                             <ListaCotizaciones
                                 evento={eventoSeleccionado}
+                                cliente={cliente}
                                 onClose={() => handleCloseCotizaciones()}
                             />
                         )}

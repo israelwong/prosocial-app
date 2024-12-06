@@ -15,9 +15,9 @@ import {
 import ListaServicios from './ListaServicios'
 import Wishlist from './Wishlist'
 
-import { obtenerCotizacion, obtenerCotizacionServicios, actualizarCotizacion } from '@/app/admin/_lib/cotizacion.actions';
+import { obtenerCotizacion, obtenerCotizacionServicios, actualizarCotizacion, eliminarCotizacion } from '@/app/admin/_lib/cotizacion.actions';
 import { useRouter } from 'next/navigation'
-import { X } from 'lucide-react';
+import { Trash, X } from 'lucide-react';
 
 
 interface Props {
@@ -49,6 +49,8 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
     const [codigoCotizacion, setCodigoCotizacion] = useState('');
     const [respuestaGuardado, setRespuestaGuardado] = useState<string | null>(null);
     const [condicionesComercialesId, setCondicionComercialId] = useState<string | undefined>('');
+
+    const [actualizando, setActualizando] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -247,11 +249,24 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
             utilidadDeVenta: parseFloat(utilidadDeVenta.toFixed(2)),
             utilidadSistema: parseFloat(utilidadSistema.toFixed(2)),
         }
+
+        setActualizando(true);
         const respuesta = await actualizarCotizacion(cotizacionActualizada);
         setRespuestaGuardado(respuesta.success ? 'Cotización actualizada' : respuesta.error || 'Error al actualizar la cotización');
         setTimeout(() => {
             setRespuestaGuardado(null);
-        }, 3000);
+        }, 2000);
+        setActualizando(false);
+    }
+
+    const handleEliminarCotizacion = async () => {
+        const confirmar = confirm('¿Estás seguro de eliminar la cotización?');
+        if (confirmar) {
+            const respuesta = await eliminarCotizacion(cotizacionId);
+            if (respuesta.success) {
+                router.back();
+            }
+        }
     }
 
     return (
@@ -302,18 +317,59 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                 </p>
                             </div>
 
-                            {/* PRECIO SISTEMA */}
-                            <div className='rounded-md bg-zinc-900 border border-zinc-800 px-5 py-2 mb-5'>
+                            {/* //! TOTAL A PAGAR */}
+                            <div className='mb-3 border border-zinc-400 p-5 rounded-md'>
                                 <div>
-                                    <p className='text-sm text-zinc-500 mb-1'>
-                                        Precio sistema
-                                    </p>
-                                    <p className='text-3xl'>
-                                        {(isNaN(totalPrecioSistema) ? 0 : totalPrecioSistema).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                    </p>
-                                </div>
 
+                                    <div className=''>
+
+                                        <div>
+                                            <div className='flex'>
+                                                <p className={`text-3xl mr-5 ${descuento > 0 ? 'line-through' : ''}`}>
+                                                    {(isNaN(totalPrecioSistema) ? 0 : totalPrecioSistema).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                </p>
+
+                                                {descuento > 0 && (
+                                                    <p className='text-3xl'>
+                                                        {precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {descuento > 0 && (
+                                                <p className='text-zinc-900 mt-2 py-2 px-2 leading-3 bg-yellow-500 inline-block'>DESC.{condicionComercial?.descuento}% OFF
+                                                    <span className='font-bold ml-1'>
+                                                        {descuento.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                    </span>
+                                                </p>
+                                            )}
+
+                                            {msi > 0 && (
+                                                <p>{msi} pagos de {pagoMensual.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} cada uno</p>
+                                            )}
+
+                                            {condicionComercial?.nombre && (
+                                                <div className='flex items-start'>
+                                                    <p className='pt-3 text-sm'>Condiciones comerciales:  <span className='text-zinc-600'> {condicionComercial?.nombre}. {condicionComercial?.descripcion}</span></p>
+                                                    <button
+                                                        onClick={() => {
+                                                            setCondicionComercial(null)
+                                                            setMetodoPago(null)
+                                                            setMetodoPagoId('')
+                                                        }}
+                                                        className='ml-2 pt-4'
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                    </div>
+
+                                </div>
                             </div>
+
 
                             {/* //! CONDICIONES COMERCIALES */}
                             <div className='mb-5'>
@@ -358,46 +414,6 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
 
                             </div>
 
-                            {/* //! TOTAL A PAGAR */}
-                            <div className='mb-3 border border-zinc-400 p-5 rounded-md'>
-                                <div>
-                                    <p className='text-sm text-zinc-500'>
-                                        Proyección financiera
-                                    </p>
-                                    <p className='text-3xl'>
-                                        {precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                    </p>
-                                    {descuento > 0 && (
-                                        <p className='text-zinc-900 mt-2 py-2 px-2 leading-3 bg-yellow-500 inline-block'>DESC.{condicionComercial?.descuento}% OFF
-                                            <span className='font-bold ml-1'>
-                                                {descuento.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                            </span>
-                                        </p>
-                                    )}
-                                </div>
-
-                                {msi > 0 && (
-                                    <p>{msi} pagos de {pagoMensual.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} cada uno</p>
-                                )}
-
-
-                                {condicionComercial?.nombre && (
-                                    <div className='flex items-start'>
-                                        <p className='pt-3 text-sm'>Condiciones comerciales:  <span className='text-zinc-600'> {condicionComercial?.nombre}. {condicionComercial?.descripcion}</span></p>
-                                        <button
-                                            onClick={() => {
-                                                setCondicionComercial(null)
-                                                setMetodoPago(null)
-                                                setMetodoPagoId('')
-                                            }}
-                                            className='ml-2 pt-4'
-                                        >
-                                            <X size={16} />
-                                        </button>
-                                    </div>
-                                )}
-
-                            </div>
 
                             {/* //! Guardar corización */}
                             {respuestaGuardado && (
@@ -405,16 +421,33 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                     {respuestaGuardado}
                                 </p>
                             )}
+
                             <button
-                                onClick={() => handleActualizarCotizacion()}
-                                className='bg-blue-900 text-white px-3 py-3 rounded-md w-full'
-                            >Actualizar cotización
+                                onClick={() => !actualizando && handleActualizarCotizacion()}
+                                className={`bg-blue-900 text-white px-3 py-3 rounded-md w-full mb-2 ${actualizando ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={actualizando}
+                            >
+                                {actualizando ? 'Actualizando...' : 'Actualizar cotización'}
+                            </button>
+
+                            <button
+                                className='bg-zinc-700 text-white px-3 py-3 w-full rounded-md'
+                                onClick={() => router.back()}
+                            >
+                                Cerrar ventana
+                            </button>
+
+                            <button
+                                className='text-red-700 px-3 py-3 w-full rounded-md mt-3 flex items-center justify-center'
+                                onClick={() => handleEliminarCotizacion()}
+                            >
+                                <Trash size={16} className='mr-1' />
+                                Eliminar cotización
                             </button>
 
                             <p className={`text-sm italic text-center pt-3 text-zinc-600`}>
                                 COD-{codigoCotizacion}
                             </p>
-
 
                         </div>
 
