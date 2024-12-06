@@ -12,42 +12,47 @@ export async function login(email: string, password: string) {
         message: ''
     };
 
-    const user = await prisma.user.findFirst({
-        where: {
-            email
+    try {
+        const user = await prisma.user.findFirst({
+            where: {
+                email
+            }
+        });
+
+        if (!user) {
+            response.error = 'Credenciales inválidas';
+            return response;
         }
-    });
 
-    if (!user) {
-        response.error = 'Credenciales inválidas';
-        return response;
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+            response.error = 'Credenciales inválidas';
+            return response;
+        }
+
+        const jwt = await new SignJWT({ email: user.email, username: user.username, id: user.id, role: user.role })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setIssuedAt()
+            .setIssuer('israelwong')
+            .setAudience('prosocial')
+            .setExpirationTime('5d')
+            .sign(new TextEncoder().encode(process.env.JWT_SECRET));
+
+        // Registrar sesión en la base de datos
+        const sesionStatus = await crearSesion(user.id, jwt);
+
+        response.status = true;
+        response.token = jwt;
+        response.message = sesionStatus.toString();
+    } catch (error) {
+        response.error = 'Error interno del servidor';
+        console.error(error);
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch) {
-        response.error = 'Credenciales inválidas*';
-        return response;
-    }
-
-    const jwt = await new SignJWT({ email: user.email, username: user.username, id: user.id, role: user.role })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setIssuedAt()
-        .setIssuer('israelwong')
-        .setAudience('prosocial')
-        .setExpirationTime('5d')
-        .sign(new TextEncoder().encode(process.env.JWT_SECRET));
-
-    //registrar sessión en la base de datos
-    const sesionStatus = await crearSesion(user.id, jwt);
-
-    response.status = true;
-    response.token = jwt;
-    response.message = sesionStatus.toString();
     return response;
 }
 
 async function crearSesion(userid: string, token: string) {
-    //crear sesion en la base de datos
     try {
         await prisma.sesion.create({
             data: {
@@ -55,11 +60,10 @@ async function crearSesion(userid: string, token: string) {
                 userId: userid
             }
         });
-        return 'Sesion creada';
-    }
-    catch (error) {
-        console.log(error);
-        return 'Error al crear la sesion';
+        return 'Sesión creada exitosamente';
+    } catch (error) {
+        console.error('Error al crear la sesión:', error);
+        throw new Error('No se pudo crear la sesión');
     }
 }
 
