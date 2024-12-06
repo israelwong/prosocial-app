@@ -1,9 +1,9 @@
 import React from 'react'
 
-export default function Pasarela() {
+export default function page() {
     return (
         <div>
-
+            Pago exitoso
         </div>
     )
 }

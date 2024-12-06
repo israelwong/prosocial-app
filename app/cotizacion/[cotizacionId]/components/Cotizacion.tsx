@@ -163,6 +163,22 @@ export default function Cotizacion({ cotizacionId }: Props) {
         setCondicionComercialId(condicion.id);
     }
 
+    const checkout = () => {
+        //metodopagoid, cotizacionid, condicioncomercialid, msi, total, pago_mensual
+        const data = {
+            metodoPagoId: metodoPagoId || '',
+            cotizacionId: cotizacionId,
+            condicionComercialId: condicionesComercialesId || '',
+            msi: msi.toString(),
+            total: precioFinal.toString(),
+            pagoMensual: pagoMensual.toString()
+        }
+        const queryParams = new URLSearchParams(data).toString();
+        const checkoutUrl = `http://localhost:3000/checkout?${queryParams}`;
+        window.open(checkoutUrl, '_blank');
+        console.table(data);
+    }
+
     return (
         <div>
             {loading ? (
@@ -300,15 +316,23 @@ export default function Cotizacion({ cotizacionId }: Props) {
                             </div>
 
                             <div>
-                                {condicionesComercialesId === 'cm422ulc90001mvbejtvr21zr' ? (
-                                    <button className='bg-blue-600 w-full px-3 py-3 font-semibold rounded-md uppercase text-sm'>
-                                        Reservar ahora
-                                    </button>
+                                {metodoPagoId ? (
+                                    condicionesComercialesId === 'cm422ulc90001mvbejtvr21zr' ? (
+                                        <button
+                                            className='bg-blue-600 w-full px-3 py-3 font-semibold rounded-md uppercase text-sm'
+                                            onClick={checkout}>
+                                            Reservar ahora
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className='bg-purple-600 w-full px-3 py-3 font-semibold rounded-md uppercase text-sm'
+                                            onClick={checkout}
+                                        >
+                                            Pagar ahora
+                                        </button>
+                                    )
                                 ) : (
-                                    <button className='bg-purple-600 w-full px-3 py-3 font-semibold rounded-md uppercase text-sm'>
-
-                                        Pagar ahora
-                                    </button>
+                                    <p className='text-red-500'>Selecciona una opción de pago según condición comercial</p>
                                 )}
                             </div>
 
