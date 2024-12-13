@@ -1,3 +1,4 @@
+'use server'
 import { PrismaClient } from '@prisma/client';
 import Stripe from 'stripe';
 
@@ -78,8 +79,8 @@ export default async function handler(req, res) {
 
         const session = await stripe.checkout.sessions.create(sessionParams);
         
-         //! Guardar el pago en la base de datos usando Prisma
-         await prisma.pago.create({
+        //! Guardar el pago en la base de datos usando Prisma
+        await prisma.pago.create({
             data: {
                 cotizacionId,
                 condicionesComercialesId,

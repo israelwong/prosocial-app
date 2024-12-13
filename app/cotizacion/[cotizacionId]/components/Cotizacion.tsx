@@ -209,7 +209,7 @@ export default function Cotizacion({ cotizacionId }: Props) {
 
     const checkout = async () => {
 
-        // setIsProcessing(true););
+        setIsProcessing(true);
 
         let concepto = '';
         if (porcentajeAnticipo > 0 && porcentajeAnticipo < 100) {
@@ -241,8 +241,6 @@ export default function Cotizacion({ cotizacionId }: Props) {
                 body: JSON.stringify(datosPagoTarjeta),
             });
 
-            return
-
             const data = await response.json();
 
             if (response.ok) {
@@ -256,7 +254,7 @@ export default function Cotizacion({ cotizacionId }: Props) {
         } finally {
             setIsProcessing(false);
         }
-        // setIsProcessing(false);
+        setIsProcessing(false);
     }
 
     return (

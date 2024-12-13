@@ -97,7 +97,7 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente, onClose }) => {
                 </div>
             </li >
         ))
-    }, [cotizaciones, router])
+    }, [cotizaciones, router, handleShareCotizacion])
 
     const paquetesRenderizados = useMemo(() => {
         return paquetes.map(paquete => (
