@@ -27,15 +27,12 @@ app.post('/api/webhook', bodyParser.raw({ type: 'application/json' }), async (re
         case 'payment_intent.succeeded':
             const paymentIntent = event.data.object;
             console.log(`✅ Pago exitoso: ${paymentIntent.id}`);
+
             // Actualiza la base de datos o envía una notificación
             await prisma.cotizacion.update({
-                where: { id: paymentIntent.metadata.cotizacionId },
+                where: { stripe_payment_id: paymentIntent.metadata.cotizacionId },
                 data: {
-                    estatus: 'PAGADA',
-                    metodoPagoId: paymentIntent.metadata.metodoPagoId,
-                    condicionesComercialesId: paymentIntent.metadata.condicionesComercialesId,
-                    num_msi: paymentIntent.metadata.num_msi,
-                    paymentIntentId: paymentIntent.id,
+                    estatus: 'succeeded'
                 },
             });
             break;
@@ -44,13 +41,19 @@ app.post('/api/webhook', bodyParser.raw({ type: 'application/json' }), async (re
             const failedIntent = event.data.object;
             console.error(`❌ Fallo de pago: ${failedIntent.last_payment_error?.message}`);
             // Registra el error o notifica al cliente
+            await prisma.cotizacion.update({
+                where: { stripe_payment_id: paymentIntent.metadata.cotizacionId },
+                data: {
+                    estatus: 'failed'
+                },
+            });
             break;
 
-        case 'checkout.session.completed':
-            const session = event.data.object;
-            console.log(`✅ Sesión completada: ${session.id}`);
-            // Procesa la orden correspondiente
-            break;
+        // case 'checkout.session.completed':
+        //     const session = event.data.object;
+        //     console.log(`✅ Sesión completada: ${session.id}`);
+        //     // Procesa la orden correspondiente
+        //     break;
 
         default:
             console.log(`ℹ️  Evento no manejado: ${event.type}`);
