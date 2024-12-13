@@ -1,12 +1,15 @@
+'use server';
 import express from 'express';
 import Stripe from 'stripe';
 import bodyParser from 'body-parser';
+import { PrismaClient } from '@prisma/client';
 
 const app = express();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-08-16' });
+const prisma = new PrismaClient();
 
 // Configuración para procesar raw body
-app.post('/api/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) => {
+app.post('/api/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
 
     let event;
@@ -25,6 +28,16 @@ app.post('/api/webhook', bodyParser.raw({ type: 'application/json' }), (req, res
             const paymentIntent = event.data.object;
             console.log(`✅ Pago exitoso: ${paymentIntent.id}`);
             // Actualiza la base de datos o envía una notificación
+            await prisma.cotizacion.update({
+                where: { id: paymentIntent.metadata.cotizacionId },
+                data: {
+                    estatus: 'PAGADA',
+                    metodoPagoId: paymentIntent.metadata.metodoPagoId,
+                    condicionesComercialesId: paymentIntent.metadata.condicionesComercialesId,
+                    num_msi: paymentIntent.metadata.num_msi,
+                    paymentIntentId: paymentIntent.id,
+                },
+            });
             break;
 
         case 'payment_intent.payment_failed':
