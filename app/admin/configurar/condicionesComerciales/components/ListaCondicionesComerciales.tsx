@@ -1,8 +1,9 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { obtenerCondicionesComerciales } from '@/app/admin/_lib/condicionesComerciales.actions'
+import { obtenerCondicionesComerciales, ordenar } from '@/app/admin/_lib/condicionesComerciales.actions'
 import { CondicionesComerciales } from '@/app/admin/_lib/types'
 import { useRouter } from 'next/navigation'
+import { useDragAndDrop } from '@/app/admin/_lib/dragAndDrop'
 
 export default function ListaCondicionesComerciales() {
 
@@ -16,6 +17,22 @@ export default function ListaCondicionesComerciales() {
         }
         fetchData()
     }, [])
+
+
+    //! Drag and drop begin
+    const { items, handleDragStart, handleDrop, handleDragOver } = useDragAndDrop(condicionesComerciales);
+    useEffect(() => {
+        setCondicionesComerciales(items);
+    }, [items]);
+
+    useEffect(() => {
+        const newOrder = condicionesComerciales.map((condicion, index) => ({
+            ...condicion,
+            orden: index + 1
+        }));
+        ordenar(newOrder);
+    }, [condicionesComerciales]);
+    //! Drag and drop end
 
     return (
         <div>
@@ -38,19 +55,29 @@ export default function ListaCondicionesComerciales() {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descuento</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Anticipo</th>
                             <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Estátus</th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="bg-zinc-800 divide-y divide-gray-200 text-white">
-                        {condicionesComerciales.map((condicion) => (
-                            <tr key={condicion.id}>
+                        {condicionesComerciales.map((condicion, index) => (
+                            <tr key={condicion.id}
+                                draggable
+                                onDragStart={() => handleDragStart(index)}
+                                onDragOver={handleDragOver}
+                                onDrop={() => handleDrop(index)}
+
+                            >
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{condicion.nombre}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                                     {condicion.descripcion ? condicion.descripcion : 'N/A'}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                                     {condicion.descuento ? `${condicion.descuento}%` : 'N/A'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                    {condicion.porcentaje_anticipo ? `${condicion.porcentaje_anticipo}%` : 'N/A'}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                                     <span className={`inline-block w-3 h-3 rounded-full ${condicion.status === 'active' ? 'bg-green-500' : 'bg-zinc-400'}`}></span>

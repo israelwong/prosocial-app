@@ -4,7 +4,7 @@ import FormCondicionesComercialesEditar from '../components/FormCondicionesComer
 
 
 export const metadata: Metadata = {
-  title: 'Nueva Condición Comercial',
+  title: 'Editar Condición Comercial',
   description: 'Crear una nueva condición comercial',
 }
 

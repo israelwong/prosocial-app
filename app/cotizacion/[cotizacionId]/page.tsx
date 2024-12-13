@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import Cotizacion from './components/Cotizacion'
 
 export const metadata: Metadata = {
-    title: 'Cotización'
+    title: 'Cotización personalizada'
 }
 
 export default async function page({ params }: { params: Promise<{ cotizacionId: string }> }) {

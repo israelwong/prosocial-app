@@ -21,7 +21,7 @@ function ListaEventosCliente({ clienteId }: Props) {
     const [eventos, setEventos] = useState<Evento[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const searchParams = useSearchParams()
-    const eventoId = searchParams.get('eventoId')
+    const eventoId = searchParams ? searchParams.get('eventoId') : null
     const [eventoSeleccionado, setEventoSeleccionado] = useState<Evento | null>(null)
     const [openModalEditarEvento, setOpenModalEditarEvento] = useState(false)
     const [openModalCrearEvento, setOpenModalCrearEvento] = useState(false)
@@ -70,9 +70,13 @@ function ListaEventosCliente({ clienteId }: Props) {
 
     const hanldleDetalleEvento = (evento: Evento) => {
         setEventoSeleccionado(evento)
-        const newSearchParams = new URLSearchParams(searchParams.toString())
-        newSearchParams.set('eventoId', evento.id || '')
-        window.history.replaceState(null, '', `?${newSearchParams.toString()}`)
+        if (searchParams) {
+            if (searchParams) {
+                const newSearchParams = searchParams ? new URLSearchParams(searchParams.toString()) : new URLSearchParams()
+                newSearchParams.set('eventoId', evento.id || '')
+                window.history.replaceState(null, '', `?${newSearchParams.toString()}`)
+            }
+        }
     }
 
     const handleCloseEditarEvento = () => {
@@ -89,9 +93,11 @@ function ListaEventosCliente({ clienteId }: Props) {
     //! HANDLE COTIZACIONES
     const handleCloseCotizaciones = () => {
         setEventoSeleccionado(null)
-        const newSearchParams = new URLSearchParams(searchParams.toString())
-        newSearchParams.delete('eventoId')
-        window.history.replaceState(null, '', `?${newSearchParams.toString()}`)
+        if (searchParams) {
+            const newSearchParams = new URLSearchParams(searchParams.toString())
+            newSearchParams.delete('eventoId')
+            window.history.replaceState(null, '', `?${newSearchParams.toString()}`)
+        }
     }
 
     const handleSuccessCrearEvento = () => {

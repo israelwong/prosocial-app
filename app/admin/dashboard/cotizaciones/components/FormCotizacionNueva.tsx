@@ -21,9 +21,9 @@ export default function FormCotizaacionNueva() {
     const router = useRouter();
     const [loading, setLoading] = useState(true); // Estado de carga
     const searchParams = useSearchParams();
-    const eventoId = searchParams.get('eventoId');//para asociar la cotizacion a un evento
-    const paqueteId = searchParams.get('paqueteId');
-    const eventoTipoId = searchParams.get('eventoTipoId');
+    const eventoId = searchParams ? searchParams.get('eventoId') : null; //para asociar la cotizacion a un evento
+    const paqueteId = searchParams ? searchParams.get('paqueteId') : null;
+    const eventoTipoId = searchParams ? searchParams.get('eventoTipoId') : null;
     const [eventoTipo, setEventoTipo] = useState<string | undefined>('');
     const [servicios, setServicios] = useState<Servicio[]>([]);
 

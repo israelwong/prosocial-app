@@ -96,7 +96,10 @@ function FormClienteEditar({ clienteId }: Props) {
     return (
         <div className="max-w-md mx-auto p-5 border border-zinc-800 rounded-lg shadow-md">
 
+            <h1>Información general</h1>
+
             <div>
+
                 <div className="mb-4">
                     <label className="block text-zinc-700 mb-1 text-sm">Nombre</label>
                     <input

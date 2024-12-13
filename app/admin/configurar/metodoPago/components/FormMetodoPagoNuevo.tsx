@@ -11,6 +11,7 @@ export default function FormMetodoPagoNuevo() {
     const [comisionFijaMonto, setComisionFijaMonto] = useState('')
     const [numMsi, setNumMsi] = useState('')
     const [comisionMsiPorcentaje, setComisionMsiPorcentaje] = useState('')
+    const [payment_method, setPaymentMethod] = useState('')
     const [errors, setErrors] = useState({ metodoPago: '' })
 
     const validate = () => {
@@ -30,7 +31,8 @@ export default function FormMetodoPagoNuevo() {
             comsion_porcentaje_base: parseFloat(comisionPorcentajeBase),
             comision_fija_monto: parseFloat(comisionFijaMonto),
             num_msi: parseInt(numMsi, 10),
-            comision_msi_porcentaje: parseFloat(comisionMsiPorcentaje)
+            comision_msi_porcentaje: parseFloat(comisionMsiPorcentaje),
+            payment_method: payment_method
         }
 
         await crearMetodoPago(nuevoMetodo)
@@ -92,6 +94,15 @@ export default function FormMetodoPagoNuevo() {
                         type='text'
                         value={comisionMsiPorcentaje}
                         onChange={(e) => setComisionMsiPorcentaje(e.target.value)}
+                        className='mt-1 block w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-md shadow-sm focus:outline-none'
+                    />
+                </div>
+                <div className='mb-4'>
+                    <label className='block text-zinc-500'>Payment Method Stripe</label>
+                    <input
+                        type='text'
+                        value={payment_method}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
                         className='mt-1 block w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-md shadow-sm focus:outline-none'
                     />
                 </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Servicio, ServicioCategoria } from '@/app/admin/_lib/types'
 import { obtenerCategories } from '@/app/admin/_lib/categorias.actions'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Camera, BookImage, Settings, Video, Box } from 'lucide-react'
 
 // import Galeria from './Galeria'
 
@@ -51,11 +51,6 @@ const Wishlist: React.FC<Props> = ({ servicios }) => {
         fetchData()
     }, [])
 
-    const handleOpenModalSesionVestido = () => {
-        console.log('handleOpenModalSesionVestido')
-        setModalSesionVestido(true)
-    }
-
     const categoriasRenderizadas = useMemo(() => {
         return categorias.map(categoria => {
 
@@ -65,30 +60,26 @@ const Wishlist: React.FC<Props> = ({ servicios }) => {
             if (serviciosFiltrados.length === 0) return null
 
             return (
-                <div key={categoria.id} className="mb-3 bg-zinc-900 border border-zinc-600 p-3 rounded-md">
-
-                    <p className='text-lg text-zinc-400 mb-2'>{categoria.nombre}</p>
+                <div key={categoria.id} className="mb-5 ">
+                    <p className='text-sm text-zinc-200 mb-1 items-center uppercase font-semibold'>
+                        {categoria.nombre.toLowerCase().includes('fotografía') && <Camera size={18} className='inline-block mr-1' />}
+                        {categoria.nombre.toLowerCase().includes('cuadro') && <BookImage size={18} className='inline-block mr-1' />}
+                        {categoria.nombre.toLowerCase().includes('otros servicios') && <Settings size={18} className='inline-block mr-1' />}
+                        {categoria.nombre.toLowerCase().includes('cine') && <Video size={18} className='inline-block mr-1' />}
+                        {categoria.nombre.toLowerCase().includes('entregables') && <Box size={18} className='inline-block mr-1' />}
+                        {categoria.nombre}
+                    </p>
                     <ul>
                         {serviciosFiltrados.map(servicio => (
-                            <li key={servicio.id} className="flex items-start leading-6">
+                            <li key={servicio.id} className="flex items-start leading-5">
                                 <p><ChevronRight size={16} className='mt-1 text-zinc-500' /></p>
-                                <p className='text-zinc-300'>
+                                <p className='text-zinc-400'>
                                     {getServiceHours(servicio.nombre, servicio.cantidad)}
                                     {uniqueServices(servicio.nombre)} {formatServiceName(servicio.nombre)}
-
-                                    {servicio.nombre.toLocaleLowerCase().includes('sesión de vestido') && (
-                                        <button
-                                            onClick={handleOpenModalSesionVestido}
-                                            className='bg-blue-400 px-3 py-1 rounded-md leading-3 text-sm'>ver ejemplo</button>
-                                    )}
-
                                 </p>
                             </li>
                         ))}
                     </ul>
-
-
-
                 </div>
             )
         })
@@ -96,9 +87,6 @@ const Wishlist: React.FC<Props> = ({ servicios }) => {
 
     return (
         <div>
-
-            {/* <Galeria bucked={'vestido'} /> */}
-
             <div className="sticky top-5">
                 {servicios.length === 0 ? (
                     <p className='py-16 px-5 border border-dashed border-zinc-800 rounded-md text-center text-zinc-800 text-xl font-light'>

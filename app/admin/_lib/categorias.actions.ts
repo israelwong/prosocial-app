@@ -89,7 +89,6 @@ export async function eliminarCategoria(id: string) {
 }
 
 export async function actualizarPosicionesCategorias(categorias: ServicioCategoria[]) {
-    // console.log('actualizarPosicionesCategorias', categorias);
     categorias.forEach(async (categoria) => {
         await prisma.servicioCategoria.update({
             where: { id: categoria.id },

@@ -11,7 +11,7 @@ export default function Navbar() {
     const pathname = usePathname()
 
     useEffect(() => {
-        setActiveItem(pathname)
+        setActiveItem(pathname || '')
     }, [pathname])
 
 

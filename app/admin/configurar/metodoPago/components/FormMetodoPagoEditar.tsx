@@ -17,27 +17,32 @@ export default function FormMetodoPagoEditar({ metodoPagoId }: Params) {
     const [comisionFijaMonto, setComisionFijaMonto] = useState('')
     const [numMsi, setNumMsi] = useState('')
     const [comisionMsiPorcentaje, setComisionMsiPorcentaje] = useState('')
+    const [payment_method, setPaymentMethod] = useState('')
+    const [status, setStatus] = useState('activo')
     const [errors, setErrors] = useState<{ metodoPago: string }>({ metodoPago: '' })
 
     useEffect(() => {
-        const fetchData = async () => {
-            const metodoPagoData = await obtenerMetodoPago(metodoPagoId)
-            if (metodoPagoData) {
-                setMetodoPago(metodoPagoData.metodo_pago)
-                setComisionPorcentajeBase(metodoPagoData.comision_porcentaje_base ? metodoPagoData.comision_porcentaje_base.toString() : '')
-                setComisionFijaMonto(metodoPagoData.comision_fija_monto ? metodoPagoData.comision_fija_monto.toString() : '')
-                setNumMsi(metodoPagoData.num_msi ? metodoPagoData.num_msi.toString() : '')
-                setComisionMsiPorcentaje(metodoPagoData.comision_msi_porcentaje ? metodoPagoData.comision_msi_porcentaje.toString() : '')
-            }
 
+        const fetchData = async () => {
+            try {
+                const metodoPagoData = await obtenerMetodoPago(metodoPagoId)
+                if (metodoPagoData) {
+                    setMetodoPago(metodoPagoData.metodo_pago || '')
+                    setComisionPorcentajeBase(metodoPagoData.comision_porcentaje_base ? metodoPagoData.comision_porcentaje_base.toString() : '')
+                    setComisionFijaMonto(metodoPagoData.comision_fija_monto ? metodoPagoData.comision_fija_monto.toString() : '')
+                    setNumMsi(metodoPagoData.num_msi ? metodoPagoData.num_msi.toString() : '')
+                    setComisionMsiPorcentaje(metodoPagoData.comision_msi_porcentaje ? metodoPagoData.comision_msi_porcentaje.toString() : '')
+                    setStatus(metodoPagoData.status || 'active')
+                    setPaymentMethod(metodoPagoData.payment_method || '')
+                }
+            } catch (error) {
+                console.error('Error al obtener el método de pago:', error)
+            }
         }
         fetchData()
     }, [metodoPagoId])
 
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-
+    const handleActualizarMetodoPago = async () => {
         if (!metodoPago) {
             setErrors({ metodoPago: 'El campo nombre del método de pago es requerido' })
             return
@@ -46,21 +51,30 @@ export default function FormMetodoPagoEditar({ metodoPagoId }: Params) {
         const metodoPagoActualizado = {
             id: metodoPagoId,
             metodo_pago: metodoPago.charAt(0).toUpperCase() + metodoPago.slice(1),
-            comsion_porcentaje_base: parseFloat(comisionPorcentajeBase),
+            comision_porcentaje_base: parseFloat(comisionPorcentajeBase),
             comision_fija_monto: parseFloat(comisionFijaMonto),
-            num_msi: parseInt(numMsi, 10),
-            comision_msi_porcentaje: parseFloat(comisionMsiPorcentaje)
+            num_msi: numMsi ? parseInt(numMsi, 10) : null,
+            comision_msi_porcentaje: comisionMsiPorcentaje ? parseFloat(comisionMsiPorcentaje) : null,
+            status: status,
+            payment_method: payment_method
         }
 
-        await actualizarMetodoPago(metodoPagoActualizado)
-        router.push('/admin/configurar/metodoPago')
-
+        try {
+            await actualizarMetodoPago(metodoPagoActualizado)
+            router.push('/admin/configurar/metodoPago')
+        } catch (error) {
+            console.error('Error al actualizar el método de pago:', error)
+        }
     }
 
     const handleDeleteMetodoPago = async (id: string) => {
         if (confirm('¿Estás seguro de eliminar este método de pago?')) {
-            await eliminarMetodoPago(id)
-            router.push('/admin/configurar/metodoPago')
+            try {
+                await eliminarMetodoPago(id)
+                router.push('/admin/configurar/metodoPago')
+            } catch (error) {
+                console.error('Error al eliminar el método de pago:', error)
+            }
         }
     }
 
@@ -74,7 +88,7 @@ export default function FormMetodoPagoEditar({ metodoPagoId }: Params) {
             </div>
 
             {/* CONTENT */}
-            <form onSubmit={handleSubmit}>
+            <div>
                 <div className='mb-4'>
                     <label className='block text-zinc-500'>Nombre del método de Pago</label>
                     <input
@@ -122,7 +136,32 @@ export default function FormMetodoPagoEditar({ metodoPagoId }: Params) {
                     />
                 </div>
 
-                <button type='submit' className='bg-blue-500 text-white px-3 py-2 rounded-md font-semibold w-full mb-3'>
+                <div className='mb-4'>
+                    <label className='block text-zinc-500'>Payment Method Stripe</label>
+                    <input
+                        type='text'
+                        value={payment_method}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className='mt-1 block w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-md shadow-sm focus:outline-none'
+                    />
+                </div>
+
+                <div className='mb-4'>
+                    <label className='block text-zinc-500'>Estado</label>
+                    <select
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                        className='mt-1 block w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-md shadow-sm focus:outline-none'
+                    >
+                        <option value="active">Activo</option>
+                        <option value="inactive">Inactivo</option>
+                    </select>
+                </div>
+
+                <button
+                    className='bg-blue-500 text-white px-3 py-2 rounded-md font-semibold w-full mb-3'
+                    onClick={handleActualizarMetodoPago}
+                >
                     Actualizar
                 </button>
 
@@ -137,7 +176,7 @@ export default function FormMetodoPagoEditar({ metodoPagoId }: Params) {
                     <Trash size={16} className='mr-1' />
                     Eliminar método de pago
                 </button>
-            </form>
+            </div>
         </div>
     )
 }

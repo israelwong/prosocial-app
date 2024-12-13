@@ -101,20 +101,25 @@ model Contrato {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   Cotizacion     Cotizacion[]
-  Pago           Pago[]
   Cliente        Cliente[]
 }
 
 model Pago {
-  id          String   @id @default(cuid())
-  contratoId  String
-  Contrato    Contrato @relation(fields: [contratoId], references: [id])
-  fecha       DateTime
-  monto       Float
-  metodo_pago String
-  status      String   @default("active")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                                 String                            @id @default(cuid())
+  cotizacionId                       String?
+  Cotizacion                         Cotizacion?                       @relation(fields: [cotizacionId], references: [id])
+  condicionesComercialesId           String?
+  CondicionesComerciales             CondicionesComerciales?           @relation(fields: [condicionesComercialesId], references: [id])
+  condicionesComercialesMetodoPagoId String?
+  CondicionesComercialesMetodoPago   CondicionesComercialesMetodoPago? @relation(fields: [condicionesComercialesMetodoPagoId], references: [id])
+  metodo_pago                        String
+  monto                              Float
+  concepto                           String
+  descripcion                        String?
+  stripe_payment_id                  String?
+  status                             String                            @default("pending") //pending, succeeded, failed
+  createdAt                          DateTime                          @default(now())
+  updatedAt                          DateTime                          @updatedAt
 }
 
 model Cotizacion {
@@ -132,9 +137,11 @@ model Cotizacion {
   status                             String                             @default("pendiente") //pendiente, aprobado, rechazado
   createdAt                          DateTime                           @default(now())
   updatedAt                          DateTime                           @updatedAt
+  expiresAt                          DateTime?                          @default(dbgenerated("now() + interval '10 day'"))
   Servicio                           CotizacionServicio[]
   Contrato                           Contrato?                          @relation(fields: [contratoId], references: [id])
   contratoId                         String?
+  Pago                               Pago[]
 }
 
 model CotizacionServicio {
@@ -317,6 +324,7 @@ model MetodoPago {
   num_msi                          Int? // 3, 6, 9, 12
   comision_msi_porcentaje          Float?
   orden                            Int?                               @default(0)
+  payment_method                   String?                            @default("card")
   status                           String                             @default("active")
   createdAt                        DateTime                           @default(now())
   updatedAt                        DateTime                           @updatedAt
@@ -328,11 +336,14 @@ model CondicionesComerciales {
   nombre                           String // 3/6/9/12 msi / 10% de desc plan estandar (30% anticipo / 70 en exibiciones) 
   descripcion                      String?
   descuento                        Float? // 10
+  porcentaje_anticipo              Float?                             @default(0) // 30
   status                           String                             @default("active")
+  orden                            Int?                               @default(0)
   createdAt                        DateTime                           @default(now())
   updatedAt                        DateTime                           @updatedAt
   CondicionesComercialesMetodoPago CondicionesComercialesMetodoPago[]
   Cotizacion                       Cotizacion[]
+  Pago                             Pago[]
 }
 
 model CondicionesComercialesMetodoPago {
@@ -346,4 +357,5 @@ model CondicionesComercialesMetodoPago {
   createdAt                DateTime               @default(now())
   updatedAt                DateTime               @updatedAt
   Cotizacion               Cotizacion[]
+  Pago                     Pago[]
 }

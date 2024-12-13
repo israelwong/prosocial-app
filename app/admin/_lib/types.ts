@@ -145,6 +145,7 @@ export interface Cotizacion {
     status?: string
     servicios?: Servicio[];
     createdAt?: Date
+    expiresAt?: Date | null
     updatedAt?: Date
 }
 
@@ -168,6 +169,7 @@ export interface MetodoPago {
     num_msi?: number | null
     comision_msi_porcentaje?: number | null
     orden?: number | null
+    payment_method?: string | null
     status?: string
     createdAt?: Date
     updatedAt?: Date
@@ -180,11 +182,12 @@ export interface CondicionesComerciales {
     nombre?: string
     descripcion?: string | null
     descuento?: number | null
+    porcentaje_anticipo?: number | null
     status?: string
+    orden?: number | null // para mostrar la lista
     createdAt?: Date
     updatedAt?: Date
     metodosPago?: MetodoPago[] | null
-    orden?: number | null // para mostrar la lista
 }
 
 export interface CondicionesComercialesMetodoPago {
@@ -213,8 +216,17 @@ export interface CotizacionDetalleEvento {
     };
 }
 
-export interface Image {
-    name: string;
-    width: number;
-    height: number;
+export interface Pago {
+    id?: string
+    cotizacionId: string
+    condicionesComercialesId: string
+    condicionesComercialesMetodoPagoId: string
+    metodo_pago: string
+    monto: number
+    concepto: string
+    descripcion?: string
+    stripe_payment_id?: string | undefined
+    status?: string
+    createdAt?: Date
+    updatedAt?: Date
 }

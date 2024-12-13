@@ -17,6 +17,8 @@ export default function FormCondicionComercialNueva() {
     const [metodosPago, setMetodosPago] = useState([] as MetodoPago[])
     const [metodosPagoAceptados, setMetodosPagoAceptados] = useState([] as MetodoPago[])
 
+    const [porcentajeAnticipo, setPorcentajeAnticipo] = useState<number | undefined>(0)
+
     useEffect(() => {
         const fetchData = async () => {
             const metodosPagoData = await obtenerMetodosPago()
@@ -38,12 +40,12 @@ export default function FormCondicionComercialNueva() {
             return
         }
 
-        console.log('metodos de pago aceptados', metodosPagoAceptados)
         const condicionComercial = {
             nombre,
             descripcion,
             descuento,
-            metodosPago: metodosPagoAceptados
+            metodosPago: metodosPagoAceptados,
+            porcentaje_anticipo: porcentajeAnticipo
         }
         await crearCondicionComercial(condicionComercial)
         router.push('/admin/configurar/condicionesComerciales')
@@ -95,6 +97,16 @@ export default function FormCondicionComercialNueva() {
                                 type='number'
                                 value={descuento !== undefined ? descuento : ''}
                                 onChange={(e) => setDescuento(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                className='mt-1 block w-full px-3 py-2 border border-zinc-800 bg-zinc-900 rounded-md shadow-sm focus:outline-none '
+                            />
+                        </div>
+
+                        <div>
+                            <label className='block text-sm font-medium text-zinc-500'>Porcentaje anticipo</label>
+                            <input
+                                type='number'
+                                value={porcentajeAnticipo !== undefined ? porcentajeAnticipo : ''}
+                                onChange={(e) => setPorcentajeAnticipo(e.target.value ? parseFloat(e.target.value) : undefined)}
                                 className='mt-1 block w-full px-3 py-2 border border-zinc-800 bg-zinc-900 rounded-md shadow-sm focus:outline-none '
                             />
                         </div>

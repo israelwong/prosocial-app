@@ -4,7 +4,7 @@ import { obtenerCotizacionesPorEvento } from '@/app/admin/_lib/cotizacion.action
 import { obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/paquete.actions'
 import { Evento, Cotizacion, Paquete } from '@/app/admin/_lib/types'
 import { useRouter } from 'next/navigation'
-import { Copy, SquareArrowOutUpRight, Pencil, Send } from 'lucide-react'
+import { Copy, SquareArrowOutUpRight, Pencil } from 'lucide-react'
 import { Cliente } from '@/app/admin/_lib/types'
 
 interface Props {
@@ -71,28 +71,28 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente, onClose }) => {
                         }) : 'Fecha no disponible'}
                     </p>
                 </div>
-                <div className='space-x-2'>
-                    <button className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm'
+                <div className='space-x-6 items-center align-middle'>
+                    <button
                         onClick={() => router.push(`/admin/dashboard/cotizaciones/${cotizacion.id}`)}
                     >
                         <Pencil />
                     </button>
 
-                    <button className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm'
+                    <button
                         onClick={() => navigator.clipboard.writeText(`https://www.prosocial.mx/cotizacion/${cotizacion.id}`)}
                     >
                         <Copy />
                     </button>
 
-                    <button className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm'
+                    <button
                         onClick={() => window.open(`/cotizacion/${cotizacion.id}`, '_blank')}
                     >
                         <SquareArrowOutUpRight />
                     </button>
-                    <button className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm'
+                    <button
                         onClick={handleShareCotizacion}
                     >
-                        <Send />
+                        <i className="fab fa-whatsapp text-2xl"></i>
                     </button>
                 </div>
             </li >

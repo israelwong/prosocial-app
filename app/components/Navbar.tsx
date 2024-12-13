@@ -72,7 +72,7 @@ function Navbar() {
             <div className='flex gap-5 justify-center items-center'>
                 {links.map((link) => (
                     <Link key={link.href} href={link.href}>
-                        <span className={`text-gray-500 ${pathname.includes(link.href) ? 'font-bold text-white' : ''}`}>
+                        <span className={`text-gray-500 ${pathname && pathname.includes(link.href) ? 'font-bold text-white' : ''}`}>
                             {link.label}
                         </span>
                     </Link>

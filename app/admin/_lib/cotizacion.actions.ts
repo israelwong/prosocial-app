@@ -136,7 +136,11 @@ export async function cotizacionDetalle(id: string) {
         select: {
             eventoId: true,
             eventoTipoId: true,
-            nombre: true
+            nombre: true,
+            condicionesComercialesId: true,
+            condicionesComercialesMetodoPagoId: true,
+            status: true,
+            expiresAt: true,
         }
     });
 
@@ -169,6 +173,7 @@ export async function cotizacionDetalle(id: string) {
     }
 
     return {
+        cotizacion,
         evento,
         eventoTipo,
         cliente

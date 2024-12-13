@@ -5,13 +5,20 @@ import { CondicionesComerciales } from './types'
 const prisma = new PrismaClient()
 
 export async function obtenerCondicionesComerciales() {
-    return await prisma.condicionesComerciales.findMany()
+    return await prisma.condicionesComerciales.findMany({
+        orderBy: {
+            orden: 'asc'
+        }
+    })
 }
 
 export async function obtenerCondicionesComercialesActivas() {
     return await prisma.condicionesComerciales.findMany({
         where: {
             status: 'active'
+        },
+        orderBy: {
+            orden: 'asc'
         }
     })
 }
@@ -32,6 +39,7 @@ export async function crearCondicionComercial(condicionesComerciales: Condicione
                 nombre: condicionesComerciales.nombre ?? '',
                 descripcion: condicionesComerciales.descripcion,
                 descuento: condicionesComerciales.descuento,
+                porcentaje_anticipo: condicionesComerciales.porcentaje_anticipo,
             }
         });
 
@@ -59,6 +67,8 @@ export async function crearCondicionComercial(condicionesComerciales: Condicione
 
 export async function actualizarCondicionComercial(condicionesComerciales: CondicionesComerciales) {
 
+    console.log('condicionesComerciales', condicionesComerciales)
+
     await prisma.condicionesComerciales.update({
         where: {
             id: condicionesComerciales.id
@@ -67,6 +77,7 @@ export async function actualizarCondicionComercial(condicionesComerciales: Condi
             nombre: condicionesComerciales.nombre,
             descripcion: condicionesComerciales.descripcion,
             descuento: condicionesComerciales.descuento,
+            porcentaje_anticipo: condicionesComerciales.porcentaje_anticipo,
             status: condicionesComerciales.status
         }
     })
@@ -114,4 +125,17 @@ export async function eliminarCondicionComercial(id: string) {
             id
         }
     })
+}
+
+export async function ordenar(condicionesComerciales: CondicionesComerciales[]) {
+    condicionesComerciales.forEach(async (condicion) => {
+        await prisma.condicionesComerciales.update({
+            where: {
+                id: condicion.id
+            },
+            data: {
+                orden: condicion.orden
+            }
+        })
+    });
 }

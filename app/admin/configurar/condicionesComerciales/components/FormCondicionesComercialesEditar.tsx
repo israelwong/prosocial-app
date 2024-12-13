@@ -18,11 +18,12 @@ export default function FormCondicionesComercialesEditar({ condicionesComerciale
     const [descripcion, setDescripcion] = useState('')
     const [descuento, setDescuento] = useState<number | undefined>(undefined)
     const [errors, setErrors] = useState<{ nombre?: string }>({})
-    const [serverRresponse, setServerResponse] = useState('')
+    // const [serverRresponse, setServerResponse] = useState('')
     const [status, setStatus] = useState('')
 
     const [metodosPago, setMetodosPago] = useState([] as MetodoPago[])
     const [metodosPagoAceptados, setMetodosPagoAceptados] = useState([] as MetodoPago[])
+    const [porcentajeAnticipo, setPorcentajeAnticipo] = useState<number | undefined>(0)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -42,6 +43,7 @@ export default function FormCondicionesComercialesEditar({ condicionesComerciale
                     setDescripcion(condicionComercial.descripcion ?? '')
                     setDescuento(condicionComercial.descuento ?? undefined)
                     setStatus(condicionComercial.status ?? '')
+                    setPorcentajeAnticipo(condicionComercial.porcentaje_anticipo ?? 0)
 
                     const metodosPagoAceptados = await obtenerCondicionesComercialesMetodosPago(condicionesComercialesId)
                     setMetodosPagoAceptados(metodosPagoAceptados.map(metodo => ({
@@ -78,15 +80,17 @@ export default function FormCondicionesComercialesEditar({ condicionesComerciale
             descripcion,
             descuento,
             metodosPago: metodosPagoAceptados,
+            porcentaje_anticipo: porcentajeAnticipo,
             status: status
         }
 
         const response = await actualizarCondicionComercial(condicionComercialActualizadas)
         if (response) {
-            setServerResponse('Condición actualizada')
-            setTimeout(() => {
-                setServerResponse('')
-            }, 3000)
+            router.push('/admin/configurar/condicionesComerciales')
+            // setServerResponse('Condición actualizada')
+            // setTimeout(() => {
+            //     setServerResponse('')
+            // }, 3000)
 
         }
     }
@@ -162,6 +166,17 @@ export default function FormCondicionesComercialesEditar({ condicionesComerciale
                                 className='mt-1 block w-full px-3 py-2 border border-zinc-800 bg-zinc-900 rounded-md shadow-sm focus:outline-none '
                             />
                         </div>
+
+                        <div>
+                            <label className='block text-sm font-medium text-zinc-500'>Porcentaje anticipo</label>
+                            <input
+                                type='number'
+                                value={porcentajeAnticipo !== undefined ? porcentajeAnticipo : ''}
+                                onChange={(e) => setPorcentajeAnticipo(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                className='mt-1 block w-full px-3 py-2 border border-zinc-800 bg-zinc-900 rounded-md shadow-sm focus:outline-none '
+                            />
+                        </div>
+
                     </div>
 
                     <div className='mb-5 p-5 bg-zinc-900 rounded-md border border-zinc-800'>
@@ -172,11 +187,11 @@ export default function FormCondicionesComercialesEditar({ condicionesComerciale
                         />
                     </div>
 
-                    {serverRresponse && (
+                    {/* {serverRresponse && (
                         <div className='text-sm text-green-400 text-center p-3 bg-green-600/20 rounded-md mb-2'>
                             {serverRresponse}
                         </div>
-                    )}
+                    )} */}
 
                     <div>
                         <button
