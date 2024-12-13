@@ -32,7 +32,7 @@ app.post('/api/webhook', bodyParser.raw({ type: 'application/json' }), async (re
             await prisma.cotizacion.update({
                 where: { stripe_payment_id: paymentIntent.metadata.cotizacionId },
                 data: {
-                    estatus: 'succeeded'
+                    status: 'succeeded'
                 },
             });
             break;
@@ -44,7 +44,7 @@ app.post('/api/webhook', bodyParser.raw({ type: 'application/json' }), async (re
             await prisma.cotizacion.update({
                 where: { stripe_payment_id: paymentIntent.metadata.cotizacionId },
                 data: {
-                    estatus: 'failed'
+                    status: 'failed'
                 },
             });
             break;
