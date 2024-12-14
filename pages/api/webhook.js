@@ -2,9 +2,6 @@ import { buffer } from 'micro';
 import Stripe from 'stripe';
 import { PrismaClient } from '@prisma/client';
 
-console.log('STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY);
-console.log('STRIPE_WEBHOOK_SECRET:', process.env.STRIPE_WEBHOOK_SECRET);
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-08-16' });
 const prisma = new PrismaClient();
 
@@ -55,7 +52,7 @@ const webhookHandler = async (req, res) => {
 
                 // Actualizar estado en la base de datos
                 await prisma.cotizacion.update({
-                    where: { stripe_payment_id: failedIntent.metadata.cotizacionId },
+                    where: { stripe_session_id: failedIntent.metadata.cotizacionId },
                     data: { status: 'failed' },
                 });
                 break;
@@ -72,10 +69,16 @@ const webhookHandler = async (req, res) => {
                     : 'failed';
 
                 // Actualizar la cotización correspondiente
-                await prisma.pago.update({
+                const pago = await prisma.pago.findUnique({
                     where: { stripe_session_id: session.id },
-                    data: { status },
                 });
+
+                if (pago) {
+                    await prisma.pago.update({
+                        where: { id: pago.id },
+                        data: { status },
+                    });
+                }
                 break;
             }
 
