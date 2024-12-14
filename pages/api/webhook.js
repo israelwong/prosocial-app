@@ -1,6 +1,6 @@
 import { buffer } from 'micro';
 import Stripe from 'stripe';
-import { PrismaClient } from '@prisma/client';
+// import { PrismaClient } from '@prisma/client';
 import { handlePaymentCompleted } from '../../services/paymentEvents';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-08-16' });
