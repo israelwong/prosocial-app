@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import { handlePaymentCompleted } from '../../services/paymentEvents';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-08-16' });
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 export const config = {
     api: {
