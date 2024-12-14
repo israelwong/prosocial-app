@@ -39,18 +39,20 @@ const webhookHandler = async (req, res) => {
                 const paymentIntent = event.data.object;
                 console.log('✅ PaymentIntent exitoso:', paymentIntent.id);
                 await handlePaymentCompleted(event.data.object);
-                // Actualizar base de datos
-                // await prisma.pago.updateMany({
-                //     where: { stripe_session_id: paymentIntent.id },
-                //     data: { stripe_payment_id: paymentIntent.id, status: 'succeeded' },
-                // });
                 break;
             }
-
+            
             case 'payment_intent.payment_failed': {
                 const failedIntent = event.data.object;
                 console.error('❌ Pago fallido:', failedIntent.last_payment_error?.message);
-                // Actualizar estado en la base de datos
+                await handlePaymentCompleted(event.data.object);
+                break;
+            }
+
+            case 'checkout.session.completed': {
+                const session = event.data.object;
+                console.log('✅ Sesión de pago completada:', session.id);
+                await handlePaymentCompleted(event.data.object);
                 break;
             }
 

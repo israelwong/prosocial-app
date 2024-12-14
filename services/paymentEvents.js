@@ -4,22 +4,31 @@ import sendMail from './sendmail';
 
 const prisma = new PrismaClient();
 
-export async function handlePaymentCompleted(paymentIntent) {
+export async function handlePaymentCompleted(req, res) {
+    const paymentIntent = req.body;
 
     console.log('Payment completed:', paymentIntent);
-    
+
     // Obtener el pago correspondiente
     const pago = await prisma.pago.findFirst({
-        where: { stripe_session_id: session.id },
+        where: { stripe_session_id: paymentIntent.id },
     });
 
-    if (!pago) return;
+    if (!pago) {
+        console.log('No se encontró el pago correspondiente.');
+        res.status(404).send('Pago no encontrado');
+        return;
+    }
 
     const cliente = await prisma.cliente.findFirst({
         where: { id: pago.clienteId },
     });
 
-    if (!cliente) return;
+    if (!cliente) {
+        console.log('No se encontró el cliente correspondiente.');
+        res.status(404).send('Cliente no encontrado');
+        return;
+    }
 
     if (pago.cotizacionId) {
         const cotizacion = await prisma.cotizacion.findFirst({
@@ -27,7 +36,6 @@ export async function handlePaymentCompleted(paymentIntent) {
         });
 
         if (cotizacion.status !== 'aprobada') {
-            
             // Aprobar cotización y actualizar el pago
             await prisma.cotizacion.update({
                 where: { id: cotizacion.id },
@@ -64,11 +72,14 @@ export async function handlePaymentCompleted(paymentIntent) {
     await sendMail({
         to: cliente.email,
         subject: 'Pago recibido',
-        // template: 'paymentSuccess',
+        template: 'paymentSuccess',
         data: {
             cliente,
             balance,
             pago,
         },
     });
+
+    // Responder al servidor indicando que la función fue llamada
+    res.status(200).send('handlePaymentCompleted fue llamada');
 }
