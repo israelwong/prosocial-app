@@ -1,6 +1,7 @@
 import { buffer } from 'micro';
 import Stripe from 'stripe';
 import { PrismaClient } from '@prisma/client';
+import {handlePaymentCompleted} from '../../services/paymentEvents';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-08-16' });
 const prisma = new PrismaClient();
@@ -45,35 +46,37 @@ const webhookHandler = async (req, res) => {
             }
 
             case 'checkout.session.completed': {
-                const session = event.data.object;
-                const status = session.payment_status === 'paid'
-                    ? 'paid'
-                    : session.payment_status === 'unpaid'
-                    ? 'unpaid'
-                    : 'failed';
 
-                // Obtener el pago correspondiente
-                const pago = await prisma.pago.findFirst({
-                    where: { stripe_session_id: session.id },
-                });
+                handlePaymentCompleted(event.data.object);
+                // const session = event.data.object;
+                // const status = session.payment_status === 'paid'
+                //     ? 'paid'
+                //     : session.payment_status === 'unpaid'
+                //     ? 'unpaid'
+                //     : 'failed';
 
-                if (pago) {
+                // // Obtener el pago correspondiente
+                // const pago = await prisma.pago.findFirst({
+                //     where: { stripe_session_id: session.id },
+                // });
 
-                    // Actualizar el pago
-                    await prisma.pago.update({
-                        where: { id: pago.id },
-                        data: { status },
-                    });
+                // if (pago) {
 
-                    // Actualizar la cotización
-                    if (status === 'completed') {
-                        await prisma.cotizacion.update({
-                            where: { id: pago.cotizacionId },
-                            data: { status: 'aprobada' },
-                        });
-                    }
-                }
-                break;
+                //     // Actualizar el pago
+                //     await prisma.pago.update({
+                //         where: { id: pago.id },
+                //         data: { status },
+                //     });
+
+                //     // Actualizar la cotización
+                //     if (status === 'completed') {
+                //         await prisma.cotizacion.update({
+                //             where: { id: pago.cotizacionId },
+                //             data: { status: 'aprobada' },
+                //         });
+                //     }
+                // }
+                // break;
             }
 
             default:

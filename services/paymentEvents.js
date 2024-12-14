@@ -7,9 +7,10 @@ const prisma = new PrismaClient();
 export async function handlePaymentCompleted(paymentIntent) {
 
     console.log('Payment completed:', paymentIntent);
-
+    
+    // Obtener el pago correspondiente
     const pago = await prisma.pago.findFirst({
-        where: { stripe_payment_intent_id: paymentIntent.id },
+        where: { stripe_session_id: session.id },
     });
 
     if (!pago) return;
@@ -49,12 +50,12 @@ export async function handlePaymentCompleted(paymentIntent) {
     // Acreditar el pago
     await prisma.pago.update({
         where: { id: pago.id },
-        data: { status: 'completed' },
+        data: { status: 'paid' },
     });
 
     // Calcular balance total
     const pagos = await prisma.pago.findMany({
-        where: { clienteId: cliente.id, status: 'completed' },
+        where: { clienteId: cliente.id, status: 'paid' },
     });
 
     const balance = pagos.reduce((total, pago) => total + pago.monto, 0);
@@ -63,7 +64,7 @@ export async function handlePaymentCompleted(paymentIntent) {
     await sendMail({
         to: cliente.email,
         subject: 'Pago recibido',
-        template: 'paymentSuccess',
+        // template: 'paymentSuccess',
         data: {
             cliente,
             balance,
