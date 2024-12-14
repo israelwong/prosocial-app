@@ -33,31 +33,21 @@ const webhookHandler = async (req, res) => {
     try {
         switch (event.type) {
             
-
-            // case 'payment_intent.payment_failed': {
-            //     const failedIntent = event.data.object;
-            //     console.error('❌ Pago fallido:', failedIntent.last_payment_error?.message);
-
-            //     // Actualizar estado en la base de datos
-            //     await prisma.cotizacion.update({
-            //         where: { stripe_session_id: failedIntent.metadata.cotizacionId },
-            //         data: { status: 'failed' },
-            //     });
-            //     break;
-            // }
-
-            case 'checkout.session.completed': {
-                
+            case 'payment_intent.payment_failed': {
+                const failedIntent = event.data.object;
+                console.error('❌ Pago fallido:', failedIntent.last_payment_error?.message);
+                // Actualizar estado en la base de datos
+                await prisma.cotizacion.update({
+                    where: { stripe_session_id: failedIntent.metadata.cotizacionId },
+                    data: { status: 'failed' },
+                });
                 break;
             }
 
-            case 'payment_intent.succeeded': {
-
-
+            case 'checkout.session.completed': {
                 const session = event.data.object;
-
                 const status = session.payment_status === 'paid'
-                    ? 'completed'
+                    ? 'paid'
                     : session.payment_status === 'unpaid'
                     ? 'unpaid'
                     : 'failed';
@@ -83,6 +73,7 @@ const webhookHandler = async (req, res) => {
                         });
                     }
                 }
+                break;
             }
 
             default:
