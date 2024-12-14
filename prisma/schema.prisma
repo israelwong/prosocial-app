@@ -43,6 +43,7 @@ model Cliente {
   updatedAt DateTime   @updatedAt
   Evento    Evento[]
   Contrato  Contrato[]
+  Pago      Pago[]
 }
 
 model Evento {
@@ -106,6 +107,8 @@ model Contrato {
 
 model Pago {
   id                                 String                            @id @default(cuid())
+  clienteId                          String? //id del cliente
+  Cliente                            Cliente?                          @relation(fields: [clienteId], references: [id])
   cotizacionId                       String?
   Cotizacion                         Cotizacion?                       @relation(fields: [cotizacionId], references: [id])
   condicionesComercialesId           String?
@@ -135,7 +138,7 @@ model Cotizacion {
   CondicionesComerciales             CondicionesComerciales?            @relation(fields: [condicionesComercialesId], references: [id])
   condicionesComercialesMetodoPagoId String?
   CondicionesComercialesMetodoPago   CondicionesComercialesMetodoPago[]
-  status                             String                             @default("pendiente") //pendiente, aprobado, rechazado
+  status                             String                             @default("pending") //pendiente, aprobado, rechazado
   createdAt                          DateTime                           @default(now())
   updatedAt                          DateTime                           @updatedAt
   expiresAt                          DateTime?                          @default(dbgenerated("now() + interval '10 day'"))

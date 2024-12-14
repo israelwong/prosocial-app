@@ -101,6 +101,7 @@ export default async function handler(req, res) {
         //! Guardar el pago en la base de datos usando Prisma
         await prisma.pago.create({
             data: {
+                clienteId,
                 cotizacionId,
                 condicionesComercialesId,
                 condicionesComercialesMetodoPagoId: metodoPagoId,

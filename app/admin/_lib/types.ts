@@ -218,6 +218,7 @@ export interface CotizacionDetalleEvento {
 
 export interface Pago {
     id?: string
+    clienteId: string
     cotizacionId: string
     condicionesComercialesId: string
     condicionesComercialesMetodoPagoId: string

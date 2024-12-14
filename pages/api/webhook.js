@@ -1,6 +1,6 @@
 import { buffer } from 'micro';
 import Stripe from 'stripe';
-import { handlePaymentCompleted } from '@/services/paymentEvents';
+import { handlePaymentCompleted } from '../../services/paymentEvents';
 
 
 export const config = {
@@ -32,9 +32,10 @@ const webhookHandler = async (req, res) => {
     // Manejo de eventos específicos
     try {
         switch (event.type) {
-                        
             case 'payment_intent.succeeded': {
+                console.log('PaymentIntent was successful!');
                 await handlePaymentCompleted(event.data.object);
+                return res.status(200).send();
                 break;
             }
 
