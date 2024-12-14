@@ -59,7 +59,6 @@ export default async function handler(req, res) {
                 }
             );
 
-
             sessionParams.customer = customer.id;
             sessionParams.payment_method_types  = ['customer_balance'];
             sessionParams.payment_method_options ={    
@@ -98,7 +97,6 @@ export default async function handler(req, res) {
         }
 
         const session = await stripe.checkout.sessions.create(sessionParams);
-        console.log('Session created:', session);
         
         //! Guardar el pago en la base de datos usando Prisma
         await prisma.pago.create({

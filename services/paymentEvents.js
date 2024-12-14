@@ -6,6 +6,8 @@ const prisma = new PrismaClient();
 
 export async function handlePaymentCompleted(paymentIntent) {
 
+    console.log('Payment completed:', paymentIntent);
+
     const pago = await prisma.pago.findFirst({
         where: { stripe_payment_intent_id: paymentIntent.id },
     });
