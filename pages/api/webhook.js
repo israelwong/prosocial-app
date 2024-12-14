@@ -1,3 +1,4 @@
+import { buffer } from 'micro';
 import Stripe from 'stripe';
 import { PrismaClient } from '@prisma/client';
 
@@ -6,96 +7,85 @@ const prisma = new PrismaClient();
 
 export const config = {
     api: {
-        bodyParser: false,
+        bodyParser: false, // Necesario para recibir correctamente el raw body
     },
 };
 
 const webhookHandler = async (req, res) => {
-    if (req.method === 'POST') {
-        const buf = await buffer(req);
-        const sig = req.headers['stripe-signature'];
+    if (req.method !== 'POST') {
+        res.setHeader('Allow', 'POST');
+        return res.status(405).end('Method Not Allowed');
+    }
 
-        let event;
+    let event;
+    const buf = await buffer(req);
+    const sig = req.headers['stripe-signature'];
 
-        try {
-            event = stripe.webhooks.constructEvent(buf.toString(), sig, process.env.STRIPE_WEBHOOK_SECRET);
-        } catch (err) {
-            console.error('Webhook signature verification failed:', err.message);
-            return res.status(400).send(`Webhook Error: ${err.message}`);
-        }
+    try {
+        // Verifica la firma del webhook
+        event = stripe.webhooks.constructEvent(buf, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    } catch (err) {
+        console.error('⚠️ Error verificando el webhook:', err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
 
-        console.log('Received event:', event);
+    console.log('✔️ Evento recibido:', event.type);
 
-        // Handle the event
+    // Manejo de eventos específicos
+    try {
         switch (event.type) {
-            case 'payment_intent.succeeded':
+            case 'payment_intent.succeeded': {
                 const paymentIntent = event.data.object;
-                console.log('PaymentIntent was successful!');
+                console.log('✅ PaymentIntent exitoso:', paymentIntent.id);
 
-                // Actualiza la base de datos con el payment_intent
-                try {
-                    await prisma.pago.updateMany({
-                        where: { stripe_session_id: paymentIntent.id },
-                        data: { stripe_payment_id: paymentIntent.id, status: 'succeeded' },
-                    });
-                } catch (err) {
-                    console.error('Error updating database:', err.message);
-                    return res.status(500).send(`Database Error: ${err.message}`);
-                }
+                // Actualizar base de datos
+                await prisma.pago.updateMany({
+                    where: { stripe_session_id: paymentIntent.id },
+                    data: { stripe_payment_id: paymentIntent.id, status: 'succeeded' },
+                });
                 break;
+            }
 
-            case 'payment_intent.payment_failed':
+            case 'payment_intent.payment_failed': {
                 const failedIntent = event.data.object;
-                console.error(`❌ Fallo de pago: ${failedIntent.last_payment_error?.message}`);
-                // Registra el error o notifica al cliente
-                try {
-                    await prisma.cotizacion.update({
-                        where: { stripe_payment_id: failedIntent.metadata.cotizacionId },
-                        data: {
-                            status: 'failed'
-                        },
-                    });
-                } catch (err) {
-                    console.error('Error updating database:', err.message);
-                    return res.status(500).send(`Database Error: ${err.message}`);
-                }
-                break;
+                console.error('❌ Pago fallido:', failedIntent.last_payment_error?.message);
 
-            case 'checkout.session.completed':
+                // Actualizar estado en la base de datos
+                await prisma.cotizacion.update({
+                    where: { stripe_payment_id: failedIntent.metadata.cotizacionId },
+                    data: { status: 'failed' },
+                });
+                break;
+            }
+
+            case 'checkout.session.completed': {
                 const session = event.data.object;
-                let status = '';
-                if (session.payment_status === 'paid') {
-                    status = 'completed';
-                } else if (session.payment_status === 'unpaid') {
-                    status = 'unpaid';
-                } else {
-                    status = 'failed';
-                }
+                console.log('✅ Checkout session completada:', session.id);
 
-                // Procesa la orden correspondiente
-                try {
-                    await prisma.cotizacion.update({
-                        where: { stripe_session_id: session.id },
-                        data: {
-                            status
-                        },
-                    });
-                } catch (err) {
-                    console.error('Error updating database:', err.message);
-                    return res.status(500).send(`Database Error: ${err.message}`);
-                }
+                const status = session.payment_status === 'paid'
+                    ? 'completed'
+                    : session.payment_status === 'unpaid'
+                    ? 'unpaid'
+                    : 'failed';
+
+                // Actualizar la cotización correspondiente
+                await prisma.cotizacion.update({
+                    where: { stripe_session_id: session.id },
+                    data: { status },
+                });
                 break;
+            }
 
             default:
-                console.log(`ℹ️  Evento no manejado: ${event.type}`);
+                console.log(`ℹ️ Evento no manejado: ${event.type}`);
         }
-
-        // Responder 200 para indicar que el webhook fue recibido correctamente
-        res.status(200).send();
-    } else {
-        res.setHeader('Allow', 'POST');
-        res.status(405).end('Method Not Allowed');
+    } catch (err) {
+        console.error('⚠️ Error procesando el evento:', err.message);
+        return res.status(500).send(`Database Error: ${err.message}`);
     }
+
+    // Responder con éxito a Stripe
+    res.status(200).send();
 };
 
 export default webhookHandler;
