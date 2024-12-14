@@ -116,8 +116,8 @@ model Pago {
   monto                              Float
   concepto                           String
   descripcion                        String?
-  stripe_session_id                  String?
-  stripe_payment_id                  String?
+  stripe_session_id                  String?                           @unique
+  stripe_payment_id                  String?                           @unique
   status                             String                            @default("pending") //pending, succeeded, failed
   createdAt                          DateTime                          @default(now())
   updatedAt                          DateTime                          @updatedAt

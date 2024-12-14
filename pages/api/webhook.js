@@ -69,7 +69,7 @@ const webhookHandler = async (req, res) => {
                     : 'failed';
 
                 // Actualizar la cotización correspondiente
-                const pago = await prisma.pago.findUnique({
+                const pago = await prisma.pago.findFirst({
                     where: { stripe_session_id: session.id },
                 });
 
