@@ -72,7 +72,7 @@ const webhookHandler = async (req, res) => {
                     : 'failed';
 
                 // Actualizar la cotización correspondiente
-                await prisma.cotizacion.update({
+                await prisma.pago.update({
                     where: { stripe_session_id: session.id },
                     data: { status },
                 });
