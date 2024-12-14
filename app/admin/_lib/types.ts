@@ -225,6 +225,7 @@ export interface Pago {
     monto: number
     concepto: string
     descripcion?: string
+    stripe_session_id?: string | undefined
     stripe_payment_id?: string | undefined
     status?: string
     createdAt?: Date

@@ -244,7 +244,8 @@ export default function Cotizacion({ cotizacionId }: Props) {
             const data = await response.json();
 
             if (response.ok) {
-                window.location.href = data.url;
+                // window.location.href = data.url;
+                window.open(data.url, '_blank');
             } else {
                 console.error('Error:', data.error);
             }

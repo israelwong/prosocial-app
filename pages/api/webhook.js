@@ -49,11 +49,27 @@ app.post('/api/webhook', bodyParser.raw({ type: 'application/json' }), async (re
             });
             break;
 
-        // case 'checkout.session.completed':
-        //     const session = event.data.object;
-        //     console.log(`✅ Sesión completada: ${session.id}`);
-        //     // Procesa la orden correspondiente
-        //     break;
+        case 'checkout.session.completed':
+            const session = event.data.object;
+            let status =''
+            if (session.payment_status === 'paid') {
+                status = 'completed'
+            } else if (session.payment_status === 'unpaid') {
+                status = 'unpaid'
+            }
+            else {
+                status = 'failed'
+            }
+            
+            // Procesa la orden correspondiente
+            await prisma.cotizacion.update({
+                where: { stripe_session_id: session.id },
+                data: {
+                    status
+                },
+            });
+
+            break;
 
         default:
             console.log(`ℹ️  Evento no manejado: ${event.type}`);

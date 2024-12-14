@@ -78,6 +78,7 @@ export default async function handler(req, res) {
         }
 
         const session = await stripe.checkout.sessions.create(sessionParams);
+        console.log('Session created:', session);
         
         //! Guardar el pago en la base de datos usando Prisma
         await prisma.pago.create({
@@ -89,7 +90,8 @@ export default async function handler(req, res) {
                 monto,
                 concepto,
                 descripcion,
-                stripe_payment_id: session.payment_intent,
+                stripe_session_id: session.id,
+                stripe_payment_id: session.payment_intent ? session.payment_intent : null,
                 status: 'pending',
             },
         });        
