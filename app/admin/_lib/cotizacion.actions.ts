@@ -165,7 +165,7 @@ export async function cotizacionDetalle(id: string) {
 
     const cliente = await prisma.cliente.findUnique({
         where: { id: evento.clienteId },
-        select: { nombre: true }
+        select: { id: true, nombre: true, email: true, telefono: true }
     });
 
     if (!cliente) {

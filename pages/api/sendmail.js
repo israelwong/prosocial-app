@@ -1,37 +1,36 @@
-/*
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
-module.exports = async function (req, res) {
-  if (req.method === 'POST') {
-    const { to, subject, text, email } = req.body;
+// Configuración del transporte de Nodemailer
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
 
-    // Crear el transporter con las credenciales de Gmail
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
-      },
-    });
-
-    // Configura los datos del correo
-    const mailOptions = {
-      from: email,
-      to,
-      subject,
-      text,
-      replyTo: email
+export default async function sendMail({ to, subject, template, data }) {
+    // Renderizar la plantilla con datos dinámicos
+    const templates = {
+        welcome: (data) => `
+            <h1>¡Bienvenido, ${data.cliente.nombre}!</h1>
+            <p>Gracias por confiar en nosotros. Aquí tienes tu contrato:</p>
+            <p>${data.contrato}</p>
+        `,
+        paymentSuccess: (data) => `
+            <h1>¡Gracias por tu pago, ${data.cliente.nombre}!</h1>
+            <p>Hemos recibido tu pago de $${data.pago.monto}.</p>
+            <p>Tu balance total es de $${data.balance}.</p>
+        `,
     };
 
-    try {
-      // Enviar el correo
-      await transporter.sendMail(mailOptions);
-      res.status(200).json({ message: 'Correo enviado con éxito' });
-    } catch (error) {
-      res.status(500).json({ error: 'Error al enviar el correo', details: error.message });
-    }
-  } else {
-    res.status(405).json({ error: 'Método no permitido ' });
-  }
-};
-*/
+    const html = templates[template](data);
+
+    // Enviar el correo
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to,
+        subject,
+        html,
+    });
+}

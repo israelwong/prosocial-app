@@ -32,6 +32,9 @@ export default function Cotizacion({ cotizacionId }: Props) {
     const [condicionesComerciales, setCondicionesComerciales] = useState([] as CondicionesComerciales[]);
 
     const [nombreCliente, setNombreCliente] = useState('');
+    const [emailCliente, setEmailCliente] = useState('');
+    const [telefonoCliente, setTelefonoCliente] = useState('');
+    const [clienteId, setClienteId] = useState('');
     const [tipoEvento, setTipoEvento] = useState('');
     const [fechaEvento, setFechaEvento] = useState('');
     const [nombreEvento, setNombreEvento] = useState('');
@@ -110,7 +113,11 @@ export default function Cotizacion({ cotizacionId }: Props) {
             }
 
             if (cotizacionDetalleEvento) {
+                setClienteId(cotizacionDetalleEvento.cliente?.id || '');
                 setNombreCliente(cotizacionDetalleEvento.cliente?.nombre || '');
+                setEmailCliente(cotizacionDetalleEvento.cliente?.email || '');
+                setTelefonoCliente(cotizacionDetalleEvento.cliente?.telefono || '');
+
                 setNombreCotizacion(cotizacionDetalleEvento.cotizacion?.nombre || '');
                 setTipoEvento(cotizacionDetalleEvento.eventoTipo?.nombre || '');
                 setNombreEvento(cotizacionDetalleEvento.evento?.nombre || '');
@@ -231,6 +238,10 @@ export default function Cotizacion({ cotizacionId }: Props) {
                 cotizacionId,
                 condicionesComercialesId,
                 metodoPagoId,
+                clienteId,
+                nombreCliente,
+                emailCliente,
+                telefonoCliente,
             };
 
             const response = await fetch('/api/checkout', {

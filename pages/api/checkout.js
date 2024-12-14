@@ -16,7 +16,12 @@ export default async function handler(req, res) {
         const condicionesComercialesId = req.body.condicionesComercialesId;
         const metodoPagoId = req.body.metodoPagoId;
 
-        //! Validar que los datos sean correctos
+        const clienteId = req.body.clienteId;
+        const nombreCliente = req.body.nombreCliente;
+        const emailCliente = req.body.emailCliente; 
+        const telefonoCliente = req.body.telefonoCliente;
+
+        //! Crear objeto sesión de pago
         let sessionParams = {
             payment_method_types: [],
             line_items: [
@@ -33,13 +38,28 @@ export default async function handler(req, res) {
                 },
             ],
             mode: 'payment',
+            //endirección solo si paga con tarjeta
             success_url: `${req.headers.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${req.headers.origin}/cotizacion/${cotizacionId}`,
         };
 
         //! Configurar el método de pago
         if (metodoPago === 'spei') {
-            const customer = await stripe.customers.create();
+
+            const customer = await stripe.customers.create(
+                {
+                    name: nombreCliente,
+                    email: emailCliente,
+                    phone: telefonoCliente,
+                    metadata: {
+                        clienteId,
+                        cotizacionId,
+                        concepto
+                    },
+                }
+            );
+
+
             sessionParams.customer = customer.id;
             sessionParams.payment_method_types  = ['customer_balance'];
             sessionParams.payment_method_options ={    
