@@ -1,0 +1,111 @@
+<mjml>
+  <mj-head>
+    <mj-preview>Notificación de pago</mj-preview>
+    <mj-style inline="inline">
+      .logo { max-width: 50px; margin: 0 auto; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="rgba(0, 0, 0, 0.6)">
+    <!-- Contenedor principal -->
+    <mj-section>
+      <mj-column>
+        <!-- Logo -->
+        <mj-image
+          src="https://sfsjdyuwttrcgchbsxim.supabase.co/storage/v1/object/public/ProMedia/logo_completo_gris.png"
+          alt="Logo Empresa"
+          width="200px"
+          align="left"
+          padding="10px 0 0px 25px"
+        />
+      </mj-column>
+    </mj-section>
+
+    <!-- Cuerpo -->
+    <mj-section
+      padding="10px 20px 50px 20px"
+      background-color="rgba(0, 0, 0, 0.1)"
+    >
+      <mj-column>
+        <mj-text
+          align="left"
+          font-size="30px"
+          font-weight="bold"
+          color="#ffffff"
+          font-family="Arial, sans-serif"
+          padding="30px 0 20px 20px"
+          align="left"
+        >
+          Se proceso tu pago
+        </mj-text>
+
+        <mj-text
+          align="justify"
+          font-size="16px"
+          color="#555555"
+          font-family="Arial, sans-serif"
+          padding="20px 0px 0 20px"
+        >
+          Hola {{nombre}}! <br />
+          <br />
+          Hemos recibido y procesado tu pago exitosamente para tu evento de
+          {{tipoEvento}} de {{nombreEvento}} que celebrarás el día
+          {{diaEvento}}. <br />
+        </mj-text>
+
+        <mj-text
+          align="justify"
+          font-size="16px"
+          color="#555555"
+          font-family="Arial, sans-serif"
+          padding="20px"
+        >
+          <br />
+          <b>Fecha de pago:</b> {{fechaPago}} <br /><br />
+          <b>Monto pagado:</b> {{montoPago}} <br /><br />
+          <b>Método:</b> {{metodoPago}} <br /><br />
+          <b>Estado:</b> {{estadoPago}} <br /><br />
+          <b>Total pagado:</b> {{totalPagado}} <br /><br />
+          <b>Total pendiente:</b> {{totalPendiente}} <br />
+        </mj-text>
+
+        <mj-button
+          background-color="rgba(0, 0, 0, 0.1)"
+          color="white"
+          font-size="16px"
+          font-family="Arial, sans-serif"
+          align="left"
+          href="{{url}}"
+          padding="20px"
+        >
+          Ir a mi cuenta
+        </mj-button>
+
+        <mj-text
+          align="justify"
+          font-size="16px"
+          color="#555555"
+          font-family="Arial, sans-serif"
+        >
+          Dudas y aclaraciones al tel:. {{telefonoSoporte}}.
+          <br />
+          <br />
+          Gracias por confiar en nosotros.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Pie -->
+    <mj-section padding="20px">
+      <mj-column>
+        <mj-text
+          align="center"
+          font-size="14px"
+          color="#ffffff"
+          font-family="Arial, sans-serif"
+        >
+          <a href="{{paginaWeb}}" style="color: #ffffff">{{paginaWeb}}</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

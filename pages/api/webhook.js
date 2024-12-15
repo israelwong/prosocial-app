@@ -1,10 +1,8 @@
 import { buffer } from 'micro';
 import Stripe from 'stripe';
-// import { PrismaClient } from '@prisma/client';
 import { handlePaymentCompleted } from '../../services/paymentEvents';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-08-16' });
-// const prisma = new PrismaClient();
 
 export const config = {
     api: {
@@ -13,6 +11,7 @@ export const config = {
 };
 
 const webhookHandler = async (req, res) => {
+
     if (req.method !== 'POST') {
         res.setHeader('Allow', 'POST');
         return res.status(405).end('Method Not Allowed');
@@ -22,15 +21,13 @@ const webhookHandler = async (req, res) => {
     const buf = await buffer(req);
     const sig = req.headers['stripe-signature'];
 
+    // Verifica la firma del webhook
     try {
-        // Verifica la firma del webhook
         event = stripe.webhooks.constructEvent(buf, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {
         console.error('⚠️ Error verificando el webhook:', err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
-
-    console.log('✔️ Evento recibido:', event.type);
 
     // Manejo de eventos específicos
     try {
@@ -38,21 +35,21 @@ const webhookHandler = async (req, res) => {
             case 'payment_intent.succeeded': {
                 const session = event.data.object;
                 console.log('✅ Sesión de pago completada:', session);
-                await handlePaymentCompleted(event.data.object);
+                await handlePaymentCompleted(session, res);
                 break;
             }
             
             case 'payment_intent.payment_failed': {
                 const failedIntent = event.data.object;
                 console.error('❌ Pago fallido:', failedIntent.last_payment_error?.message);
-                await handlePaymentCompleted(event.data.object);
+                await handlePaymentCompleted(session, res);
                 break;
             }
 
             case 'checkout.session.completed': {
                 const session = event.data.object;
                 console.log('✅ Sesión de pago completada:', session);
-                await handlePaymentCompleted(event.data.object);
+                await handlePaymentCompleted(session, res);
                 break;
             }
 

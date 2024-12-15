@@ -1,0 +1,108 @@
+<mjml>
+  <mj-head>
+    <mj-preview>Notificación de pago</mj-preview>
+    <mj-style inline="inline">
+      .logo { max-width: 50px; margin: 0 auto; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="rgba(0, 0, 0, 0.6)">
+    <!-- Contenedor principal -->
+    <mj-section>
+      <mj-column>
+        <!-- Logo -->
+        <mj-image
+          src="https://sfsjdyuwttrcgchbsxim.supabase.co/storage/v1/object/public/ProMedia/logo_completo_gris.png"
+          alt="Logo Empresa"
+          width="200px"
+          align="left"
+          padding="10px 0 0px 25px"
+        />
+      </mj-column>
+    </mj-section>
+
+    <!-- Cuerpo -->
+    <mj-section
+      padding="10px 20px 50px 20px"
+      background-color="rgba(0, 0, 0, 0.1)"
+    >
+      <mj-column>
+        <mj-text
+          align="left"
+          font-size="30px"
+          font-weight="bold"
+          color="#ffffff"
+          font-family="Arial, sans-serif"
+          padding="30px 0 20px 20px"
+          align="left"
+        >
+          Bienvenido
+        </mj-text>
+
+        <mj-text
+          align="justify"
+          font-size="16px"
+          color="#555555"
+          font-family="Arial, sans-serif"
+          padding="20px 0px 0 20px"
+        >
+          {{nombre}}! <br />
+          <br />
+          Estamos muy contentos de ser parte de tu evento de {{tipoEvento}} de
+          {{nombreEvento}} que celebraremos el día {{diaEvento}}. <br />
+        </mj-text>
+
+        <mj-text
+          align="justify"
+          font-size="16px"
+          color="#555555"
+          font-family="Arial, sans-serif"
+          padding="20px"
+        >
+          Para nosotros es un placer poder acompañarte en este día tan especial.
+          <br />
+          <br />
+          Te recordamos que puedes acceder a tu cuenta en cualquier momento para
+          ver el estado de tu evento, así como los detalles del mismo.
+        </mj-text>
+
+        <mj-button
+          background-color="rgba(0, 0, 0, 0.1)"
+          color="white"
+          font-size="16px"
+          font-family="Arial, sans-serif"
+          align="left"
+          href="{{url}}"
+          padding="20px"
+        >
+          Ir a mi cuenta
+        </mj-button>
+
+        <mj-text
+          align="justify"
+          font-size="16px"
+          color="#555555"
+          font-family="Arial, sans-serif"
+        >
+          Gracias por confiar en nosotros.
+          <br />
+          <br />
+          Dudas y aclaraciones al tel:. {{telefonoSoporte}}.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Pie -->
+    <mj-section padding="20px">
+      <mj-column>
+        <mj-text
+          align="center"
+          font-size="14px"
+          color="#ffffff"
+          font-family="Arial, sans-serif"
+        >
+          <a href="{{paginaWeb}}" style="color: #ffffff">{{paginaWeb}}</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

@@ -1,36 +1,64 @@
 import nodemailer from 'nodemailer';
+import mjml2html from 'mjml';
+import fs from 'fs';
+import path from 'path';
 
 // Configuración del transporte de Nodemailer
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS,
     },
 });
 
 export default async function sendMail({ to, subject, template, data }) {
-    // Renderizar la plantilla con datos dinámicos
-    const templates = {
-        welcome: (data) => `
-            <h1>¡Bienvenido, ${data.cliente.nombre}!</h1>
-            <p>Gracias por confiar en nosotros. Aquí tienes tu contrato:</p>
-            <p>${data.contrato}</p>
-        `,
-        paymentSuccess: (data) => `
-            <h1>¡Gracias por tu pago, ${data.cliente.nombre}!</h1>
-            <p>Hemos recibido tu pago de $${data.pago.monto}.</p>
-            <p>Tu balance total es de $${data.balance}.</p>
-        `,
-    };
+    try {
+        console.log('Iniciando el proceso de envío de correo...');
+        
+        // Leer la plantilla MJML
+        const templatePath = path.join(process.cwd(), 'services/emailTemplates', `${template}.mjml`);
+        const mjmlTemplate = fs.readFileSync(templatePath, 'utf-8');
 
-    const html = templates[template](data);
+        // Reemplazar los datos dinámicos en la plantilla
+        let htmlTemplate = mjmlTemplate;
+        for (const key in data) {
+            if (data.hasOwnProperty(key)) {
+                const value = data[key];
+                htmlTemplate = htmlTemplate.replace(new RegExp(`{{${key}}}`, 'g'), value);
+            }
+        }
 
-    // Enviar el correo
-    await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to,
-        subject,
-        html,
-    });
+        // Convertir MJML a HTML
+        const { html } = mjml2html(htmlTemplate);
+
+        // Enviar el correo
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to,
+            subject,
+            html,
+        });
+    } catch (error) {
+        console.error('Error al enviar el correo:', error);
+        throw new Error('Error al enviar el correo');
+    }
+}
+
+export async function sendSuccessfulPaymentEmail(to, data) {
+    const subject = 'Pago Exitoso';
+    const template = 'successfulPayment';
+    await sendMail({ to, subject, template, data });
+}
+
+export async function sendFailedPaymentEmail(to, data) {
+    const subject = 'Pago Fallido';
+    const template = 'failedPayment';
+    await sendMail({ to, subject, template, data });
+}
+
+export async function sendWelcomeEmail(to, data) {
+    const subject = '¡Bienvenido a ProSocial!';
+    const template = 'welcome';
+    await sendMail({ to, subject, template, data });
 }
