@@ -41,7 +41,7 @@ export default async function sendMail({ to, subject, template, data }) {
         });
     } catch (error) {
         console.error('Error al enviar el correo:', error);
-        throw new Error('Error al enviar el correo');
+        throw new Error(`Error al enviar el correo ${error}`);
     }
 }
 
