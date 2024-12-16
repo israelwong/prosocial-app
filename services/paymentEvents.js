@@ -5,6 +5,8 @@ import {sendSuccessfulPaymentEmail, sendFailedPaymentEmail, sendWelcomeEmail} fr
 const prisma = new PrismaClient();
 
 export async function handlePaymentCompleted(session, res) {
+
+    res.status(200).send(`gestión completada ${session}`);
     try {
         const paymentIntent = session;
 
