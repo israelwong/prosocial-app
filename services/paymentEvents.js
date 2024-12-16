@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 
 export async function handlePaymentCompleted(session, res) {
 
+
     try {
         const paymentIntent = session;
 
@@ -59,7 +60,7 @@ export async function handlePaymentCompleted(session, res) {
             return;
         }
 
-        // Acreditar el pago solo si el estado del pago es 'paid'
+        // Acreditar el pago
         if (paymentIntent.payment_status === 'paid') {
             await prisma.pago.update({
             where: { id: pago.id },
@@ -107,6 +108,7 @@ export async function handlePaymentCompleted(session, res) {
                 data: { status: 'aprobada' },
             });
 
+
             //! Enviar correo de bienvenida
             await sendWelcomeEmail(
                 cliente.email,
@@ -124,34 +126,28 @@ export async function handlePaymentCompleted(session, res) {
         }
 
         //! Enviar correo de notificación de pago
-        if(paymentIntent.payment_status!== 'paid') {
-            
-            try {
-                await sendSuccessfulPaymentEmail(
-                    cliente.email,
-                    {
-                        nombre,
-                        tipoEvento: eventoTipo.nombre,
-                        nombreEvento,
-                        diaEvento,
-                        fechaPago,
-                        montoPago: montoPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                        metodoPago: metodoPago.toUpperCase(),
-                        estadoPago: estadoPago === 'paid' ? 'PAGADO' : estadoPago,
-                        totalPagado: totalPagado.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                        totalPendiente: totalPendiente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                        telfonoSoporte,
-                        clienteId,
-                        paginaWeb,
-                        url,
-                    }
-                );
-                res.status(200).send('gestión completada');
-            } catch (error) {
-                console.error(`Error al enviar el correo de pago exitoso: ${error}}`);
-                res.status(500).send(`Error ${error}`);
-            }
-        } 
+        if(paymentIntent.payment_status == 'paid') {
+            await sendSuccessfulPaymentEmail(
+                cliente.email,
+                {
+                nombre,
+                tipoEvento: eventoTipo.nombre,
+                nombreEvento,
+                diaEvento,
+                fechaPago,
+                montoPago: montoPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                metodoPago: metodoPago.toUpperCase(),
+                estadoPago: estadoPago === 'paid' ? 'PAGADO' : estadoPago,
+                totalPagado: totalPagado.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                totalPendiente: totalPendiente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                telfonoSoporte,
+                clienteId,
+                paginaWeb,
+                url,
+                
+            });
+            res.status(200).send('gestión completada');
+        }
 
         //! Enviar correo de notificación de pago rechazado
         if(paymentIntent.payment_status === 'failed') {
