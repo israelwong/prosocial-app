@@ -29,7 +29,7 @@ const webhookHandler = async (req, res) => {
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Manejo de eventos específicos
+    // Manejo de eventos específicos de Stripe
     try {
         switch (event.type) {
             case 'payment_intent.succeeded': {
