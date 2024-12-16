@@ -107,7 +107,6 @@ export async function handlePaymentCompleted(session, res) {
                 data: { status: 'aprobada' },
             });
 
-
             //! Enviar correo de bienvenida
             await sendWelcomeEmail(
                 cliente.email,
@@ -127,26 +126,31 @@ export async function handlePaymentCompleted(session, res) {
         //! Enviar correo de notificación de pago
         if(paymentIntent.payment_status!== 'paid') {
             
-            await sendSuccessfulPaymentEmail(
-                cliente.email,
-                {
-                nombre,
-                tipoEvento: eventoTipo.nombre,
-                nombreEvento,
-                diaEvento,
-                fechaPago,
-                montoPago: montoPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                metodoPago: metodoPago.toUpperCase(),
-                estadoPago: estadoPago === 'paid' ? 'PAGADO' : estadoPago,
-                totalPagado: totalPagado.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                totalPendiente: totalPendiente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                telfonoSoporte,
-                clienteId,
-                paginaWeb,
-                url,
-                
-            });
-            res.status(200).send('gestión completada');
+            try {
+                await sendSuccessfulPaymentEmail(
+                    cliente.email,
+                    {
+                        nombre,
+                        tipoEvento: eventoTipo.nombre,
+                        nombreEvento,
+                        diaEvento,
+                        fechaPago,
+                        montoPago: montoPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                        metodoPago: metodoPago.toUpperCase(),
+                        estadoPago: estadoPago === 'paid' ? 'PAGADO' : estadoPago,
+                        totalPagado: totalPagado.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                        totalPendiente: totalPendiente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                        telfonoSoporte,
+                        clienteId,
+                        paginaWeb,
+                        url,
+                    }
+                );
+                res.status(200).send('gestión completada');
+            } catch (error) {
+                console.error(`Error al enviar el correo de pago exitoso: ${error}}`);
+                res.status(500).send(`Error ${error}`);
+            }
         } 
 
         //! Enviar correo de notificación de pago rechazado
