@@ -33,21 +33,21 @@ const webhookHandler = async (req, res) => {
     try {
         switch (event.type) {
             case 'payment_intent.succeeded': {
-                const session = event.data.object;
+                const session = event;
                 console.log('✅ Sesión de pago completada:', session);
                 await handlePaymentCompleted(session, res);
                 break;
             }
             
             case 'payment_intent.payment_failed': {
-                const failedIntent = event.data.object;
+                const failedIntent = event;
                 console.error('❌ Pago fallido:', failedIntent.last_payment_error?.message);
                 await handlePaymentCompleted(session, res);
                 break;
             }
 
             case 'checkout.session.completed': {
-                const session = event.data.object;
+                const session = event;
                 console.log('✅ Sesión de pago completada:', session);
                 await handlePaymentCompleted(session, res);
                 break;

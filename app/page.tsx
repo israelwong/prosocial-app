@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "Bienvenido a ProSocial",
-  description: "Forogafía y video profesional para eventos sociales",
+  description: "Fotogafía y video profesional para eventos sociales",
 };
 
 
