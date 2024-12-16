@@ -164,11 +164,11 @@ export async function handlePaymentCompleted(session, res) {
                 url,
                 
             });
-            res.status(200).send('El pago ya fue rechazado');
+            res.status(200).send('El pago fue rechazado');
         }
 
     } catch (error) {
         console.error('Error al manejar el evento de pago:', error);
-        res.status(500).send('Error al manejar el evento de pago');
+        res.status(500).send('Error al manejar el evento de pago', error);
     }
 }
