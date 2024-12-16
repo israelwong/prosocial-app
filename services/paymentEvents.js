@@ -169,6 +169,6 @@ export async function handlePaymentCompleted(session, res) {
 
     } catch (error) {
         console.error('Error al manejar el evento de pago:', error);
-        res.status(500).send('Error al manejar el evento de pago', error);
+        res.status(500).send(`Error ${error}`);
     }
 }
