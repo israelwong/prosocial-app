@@ -7,12 +7,12 @@ const prisma = new PrismaClient();
 export async function handlePaymentCompleted(session, res) {
 
     const sessionData = `
-        ID de sesión: ${session.data.id}
-        Estado de pago: ${session.data.payment_status}
+        session.data.id: ${session.data.id}
+        session.data.object.id: ${session.data.object.id}
     `;
 
     res.status(200).send(`session object ${sessionData}`);
-    
+
     try {
         const paymentIntent = session;
 
