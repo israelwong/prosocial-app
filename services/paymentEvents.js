@@ -59,11 +59,13 @@ export async function handlePaymentCompleted(session, res) {
             return;
         }
 
-        // Acreditar el pago
-        await prisma.pago.update({
+        // Acreditar el pago solo si el estado del pago es 'paid'
+        if (paymentIntent.payment_status === 'paid') {
+            await prisma.pago.update({
             where: { id: pago.id },
             data: { status: 'paid' },
-        });
+            });
+        }
 
         // Calcular balance total
         const pagos = await prisma.pago.findMany({
@@ -124,6 +126,7 @@ export async function handlePaymentCompleted(session, res) {
 
         //! Enviar correo de notificación de pago
         if(paymentIntent.payment_status!== 'paid') {
+            
             await sendSuccessfulPaymentEmail(
                 cliente.email,
                 {
@@ -144,7 +147,7 @@ export async function handlePaymentCompleted(session, res) {
                 
             });
             res.status(200).send('gestión completada');
-        }
+        } 
 
         //! Enviar correo de notificación de pago rechazado
         if(paymentIntent.payment_status === 'failed') {
