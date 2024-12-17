@@ -59,14 +59,14 @@ export async function handlePaymentCompleted(session, res) {
         }
 
 
-         // Calcular balance total
-        const pagos = await prisma.pago.findMany({
-            where: { 
-                clienteId: cliente.id, 
-                cotizacionId: cotizacion.id,
-                status: 'paid' 
-            },
-        });
+        //  // Calcular balance total
+        // const pagos = await prisma.pago.findMany({
+        //     where: { 
+        //         clienteId: cliente.id, 
+        //         cotizacionId: cotizacion.id,
+        //         status: 'paid' 
+        //     },
+        // });
 
         const nombre = cliente.nombre;
             const nombreEvento = evento.nombre;
@@ -78,8 +78,8 @@ export async function handlePaymentCompleted(session, res) {
             });
             const montoPago = pago.monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
             const precio = cotizacion.precio;
-            const totalPagado = pagos.reduce((total, pago) => total + pago.monto, 0)
-            const totalPendiente = (precio - totalPagado);
+            // const totalPagado = pagos.reduce((total, pago) => total + pago.monto, 0)
+            // const totalPendiente = (precio - totalPagado);
             const metodoPago = pago.metodo_pago;
             const fechaPago = new Date(pago.createdAt).toLocaleDateString('es-ES', {
                 weekday: 'long',
@@ -147,8 +147,8 @@ export async function handlePaymentCompleted(session, res) {
                     montoPago: montoPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
                     metodoPago: metodoPago.toUpperCase(),
                     estadoPago: 'PAGADO',
-                    totalPagado: totalPagado.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                    totalPendiente: totalPendiente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                    // totalPagado: totalPagado.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                    // totalPendiente: totalPendiente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
                     telefonoSoporte,
                     clienteId,
                     paginaWeb,

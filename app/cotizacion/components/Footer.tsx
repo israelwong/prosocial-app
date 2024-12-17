@@ -49,7 +49,6 @@ export default function Footer({ telefono, asunto }: Props) {
                     </li>
                 </ul>
 
-
                 <div className='text-sm my-10'>
                     <p>@Todos los derechos reservados a prosocial.mx</p>
                     <p>
