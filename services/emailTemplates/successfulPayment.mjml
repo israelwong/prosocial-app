@@ -60,10 +60,7 @@
           <br /><br />
           <b style="color: #ffffff">Monto pagado:</b> {{montoPago}} <br /><br />
           <b style="color: #ffffff">Método:</b> {{metodoPago}} <br /><br />
-          <b style="color: #ffffff">Estado:</b> {{estadoPago}} <br /><br />
-          <b style="color: #ffffff">Total pagado:</b> {{totalPagado}}
-          <br /><br />
-          <b style="color: #ffffff">Total pendiente:</b> {{totalPendiente}}
+          <b style="color: #ffffff">Estado:</b> {{estadoPago}}
           <br />
         </mj-text>
 
