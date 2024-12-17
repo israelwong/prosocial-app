@@ -57,7 +57,7 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente, onClose }) => {
 
     const cotizacionesRenderizadas = useMemo(() => {
         return cotizaciones.map(cotizacion => (
-            <li key={cotizacion.id} className={`flex justify-between items-center relative ${cotizacion.status === 'pendiente' ? 'bg-zinc-900 rounded-md  p-5' : ''}`}>
+            <li key={cotizacion.id} className={`flex justify-between items-center relative mb-3 ${cotizacion.status === 'pendiente' ? 'bg-zinc-900 rounded-md  p-5' : 'bg-green-900/20 rounded-md  p-5'}`}>
                 <div>
                     <p>{cotizacion.nombre}</p>
                     <p className='text-xl'>

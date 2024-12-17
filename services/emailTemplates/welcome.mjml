@@ -5,7 +5,7 @@
       .logo { max-width: 50px; margin: 0 auto; }
     </mj-style>
   </mj-head>
-  <mj-body background-color="rgba(0, 0, 0, 0.6)">
+  <mj-body background-color="#121212">
     <!-- Contenedor principal -->
     <mj-section>
       <mj-column>
@@ -21,19 +21,15 @@
     </mj-section>
 
     <!-- Cuerpo -->
-    <mj-section
-      padding="10px 20px 50px 20px"
-      background-color="rgba(0, 0, 0, 0.1)"
-    >
+    <mj-section padding="10px 20px 50px 20px" background-color="#1E1E1E">
       <mj-column>
         <mj-text
           align="left"
           font-size="30px"
           font-weight="bold"
-          color="#ffffff"
+          color="#FFFFFF"
           font-family="Arial, sans-serif"
           padding="30px 0 20px 20px"
-          align="left"
         >
           Bienvenido
         </mj-text>
@@ -41,7 +37,7 @@
         <mj-text
           align="justify"
           font-size="16px"
-          color="#555555"
+          color="#CCCCCC"
           font-family="Arial, sans-serif"
           padding="20px 0px 0 20px"
         >
@@ -54,7 +50,7 @@
         <mj-text
           align="justify"
           font-size="16px"
-          color="#555555"
+          color="#CCCCCC"
           font-family="Arial, sans-serif"
           padding="20px"
         >
@@ -66,8 +62,8 @@
         </mj-text>
 
         <mj-button
-          background-color="rgba(0, 0, 0, 0.1)"
-          color="white"
+          background-color="#333333"
+          color="#FFFFFF"
           font-size="16px"
           font-family="Arial, sans-serif"
           align="left"
@@ -80,13 +76,13 @@
         <mj-text
           align="justify"
           font-size="16px"
-          color="#555555"
+          color="#CCCCCC"
           font-family="Arial, sans-serif"
         >
           Gracias por confiar en nosotros.
           <br />
           <br />
-          Dudas y aclaraciones al tel:. {{telefonoSoporte}}.
+          Dudas y aclaraciones al {{telefonoSoporte}}.
         </mj-text>
       </mj-column>
     </mj-section>
@@ -97,10 +93,10 @@
         <mj-text
           align="center"
           font-size="14px"
-          color="#ffffff"
+          color="#FFFFFF"
           font-family="Arial, sans-serif"
         >
-          <a href="{{paginaWeb}}" style="color: #ffffff">{{paginaWeb}}</a>
+          <a href="{{paginaWeb}}" style="color: #66ccff">{{paginaWeb}}</a>
         </mj-text>
       </mj-column>
     </mj-section>

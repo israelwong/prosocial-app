@@ -42,15 +42,13 @@ export default function FormCotizaacionNueva() {
     const [precioFinal, setPrecioFinal] = useState(0);
     const [utilidadDeVenta, setUtilidadDeVenta] = useState(0);
     const [utilidadSistema, setUtilidadSistema] = useState(0);
-
+    const [guardandoCotizacion, setGuardandoCotizacion] = useState(false);
     const [errors, setErrors] = useState({
         nombre: '',
     });
 
     const [condicionesComerciales, setCondicionesComerciales] = useState([] as CondicionesComerciales[]);
     const [codigoCotizacion, setCodigoCotizacion] = useState('');
-
-    const [respuestaGuardado, setRespuestaGuardado] = useState<string | null>(null);
 
     useEffect(() => {
 
@@ -234,6 +232,8 @@ export default function FormCotizaacionNueva() {
 
     const handleCrearCotizacion = async () => {
 
+        setGuardandoCotizacion(true);
+
         if (!nombreCotizacion) {
             setErrors(prevErrors => ({ ...prevErrors, nombre: 'El nombre de la cotización es requerido' }));
             return;
@@ -253,8 +253,8 @@ export default function FormCotizaacionNueva() {
             utilidadSistema: parseFloat(utilidadSistema.toFixed(2)),
         }
         // console.log(nuevaCotizacion);
-        const respuesta = await crearCotizacion(nuevaCotizacion);
-        setRespuestaGuardado(respuesta.success ? 'Cotización guardada' : respuesta.error || 'Error al guardar la cotización');
+        await crearCotizacion(nuevaCotizacion);
+        router.back();
 
     }
 
@@ -384,7 +384,6 @@ export default function FormCotizaacionNueva() {
                                     <p>{msi} pagos de {pagoMensual.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} cada uno</p>
                                 )}
 
-
                                 {condicionComercial?.nombre && (
                                     <div className='flex items-start'>
                                         <p className='pt-3 text-sm'>Condiciones comerciales:  <span className='text-zinc-600'> {condicionComercial?.nombre}. {condicionComercial?.descripcion}</span></p>
@@ -400,20 +399,15 @@ export default function FormCotizaacionNueva() {
                                         </button>
                                     </div>
                                 )}
-
-
                             </div>
 
-                            {/* //! Guardar corización */}
-                            {respuestaGuardado && (
-                                <p className='text-sm text-green-500 text-center bg-green-800/20 p-3 rounded-md mb-2'>
-                                    {respuestaGuardado}
-                                </p>
-                            )}
+                            {/* //!GUARDAR COTIZACIÓN */}
                             <button
-                                onClick={() => handleCrearCotizacion()}
+                                onClick={() => { handleCrearCotizacion(); }}
                                 className='bg-blue-900 text-white px-3 py-3 rounded-md w-full'
-                            >Guardar cotización
+                                disabled={guardandoCotizacion}
+                            >
+                                {guardandoCotizacion ? 'Guardando cotización...' : 'Guardar cotización'}
                             </button>
 
                             <p className={`text-sm italic text-center pt-3 text-zinc-600`}>

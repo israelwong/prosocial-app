@@ -4,20 +4,20 @@ import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actio
 import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
 import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
 import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
-import { cotizacionDetalle } from '@/app/admin/_lib/cotizacion.actions';
 import { Servicio, MetodoPago, CondicionesComerciales } from '@/app/admin/_lib/types'
+import { cotizacionDetalle } from '@/app/admin/_lib/cotizacion.actions';
 import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import Contrato from './Contrato';
-import Header from '../../componets/Header';
-import Footer from '../../componets/Footer';
+import SkeletonPendiente from './skeletonPendiente';
+
 import Wishlist from './Wishlist';
 
 interface Props {
     cotizacionId: string
 }
 
-export default function Cotizacion({ cotizacionId }: Props) {
+export default function CotizacionPendiente({ cotizacionId }: Props) {
 
     const [loading, setLoading] = useState(true);
     const [totalPrecioSistema, setTotalPrecioSistema] = useState(0);
@@ -48,6 +48,8 @@ export default function Cotizacion({ cotizacionId }: Props) {
     const [porcentajeAnticipo, setPorcentajeAnticipo] = useState(0);
     const [pagoAnticipo, setPagoAnticipo] = useState(0);
 
+    const [cotizacionStatus, setCotizacionStatus] = useState('');
+
 
     useEffect(() => {
         async function fetchData() {
@@ -71,7 +73,17 @@ export default function Cotizacion({ cotizacionId }: Props) {
                 //! determinar status de la cotización
                 const status = cotizacionDetalleData.cotizacion?.status || '';
                 const expiresAt = cotizacionDetalleData.cotizacion?.expiresAt ? new Date(cotizacionDetalleData.cotizacion.expiresAt) : new Date();
-                validarStatusCotizacion(status, expiresAt);
+
+                const currentDate = new Date();
+                const expirationDate = new Date(expiresAt);
+
+                if (status === 'aprobada') {
+                    setCotizacionStatus('aprobada');
+                } else if (currentDate > expirationDate) {
+                    setCotizacionStatus('expirada');
+                } else {
+                    setCotizacionStatus('pendiente');
+                }
 
                 setNombreCotizacion(cotizacion.nombre || '');
                 setCondicionComercialId(cotizacionDetalleData.cotizacion?.condicionesComercialesId ?? '');
@@ -126,28 +138,7 @@ export default function Cotizacion({ cotizacionId }: Props) {
             setLoading(false);
         }
         fetchData();
-    }, [cotizacionId]);
-
-    //! determinar estatus de la cotización
-    //! determinar estatus de la cotización
-    //! determinar estatus de la cotización
-    const validarStatusCotizacion = (status: string, expiresAt: Date) => {
-
-        const currentDate = new Date();
-        const expirationDate = new Date(expiresAt);
-
-        if (status === 'autorizada') {
-            console.log('cotizacion autorizada');
-        }
-
-        if (currentDate > expirationDate) {
-            // eviar a cotizacion/expired
-            console.log('cotizacion expirada');
-        } else {
-            //cotizacion pendiente
-        }
-
-    }
+    }, [cotizacionId])
 
     //! Calcular totales
     const calcularTotal = useCallback((servicios: Servicio[]) => {
@@ -158,7 +149,6 @@ export default function Cotizacion({ cotizacionId }: Props) {
         const precio_final = precioSistema - descuento;
 
         // console.log(metodoPago?.payment_method)
-
         setMsi(num_msi);
         setPagoMensual(pago_mensual);
         setDescuento(descuento);
@@ -269,18 +259,16 @@ export default function Cotizacion({ cotizacionId }: Props) {
         setIsProcessing(false);
     }
 
+    console.log('cotizacionStatus', cotizacionStatus);
+
     return (
         <div >
             {loading ? (
-                <div className="flex justify-center items-center h-screen">
-                    <p>Cargando...</p>
-                </div>
+                <SkeletonPendiente />
             ) : (
                 <div className=''>
-                    {/* HEADER */}
-                    <Header asunto='Cotización' />
 
-                    {/* BODY */}
+                    {/* <SkeletonPendiente /> */}
 
                     <div className={`max-w-screen-sm mx-auto`}>
 
@@ -481,7 +469,7 @@ export default function Cotizacion({ cotizacionId }: Props) {
 
                         </div>
 
-                        <Footer telefono='55 4454 6582' asunto='Hola, estoy en al pagina de cotización...' />
+
                     </div>
                 </div>
 

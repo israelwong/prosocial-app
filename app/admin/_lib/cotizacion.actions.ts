@@ -31,6 +31,7 @@ export async function crearCotizacion(data: Cotizacion) {
                 precio: data.precio,
                 condicionesComercialesId: data.condicionesComercialesId,
                 condicionesComercialesMetodoPagoId: data.condicionesComercialesMetodoPagoId,
+                status: 'pendiente',
             }
         })
 

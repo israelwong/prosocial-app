@@ -49,6 +49,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
     const [codigoCotizacion, setCodigoCotizacion] = useState('');
     const [respuestaGuardado, setRespuestaGuardado] = useState<string | null>(null);
     const [condicionesComercialesId, setCondicionComercialId] = useState<string | undefined>('');
+    const [cotizacionStatus, setCotizacionEstatus] = useState('');
 
     const [actualizando, setActualizando] = useState(false);
 
@@ -67,11 +68,13 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
             ]);
 
             if (cotizacion) {
+
                 setNombreCotizacion(cotizacion.nombre || '');
                 setEventoId(cotizacion.eventoId);
                 setEventoTipoId(cotizacion.eventoTipoId);
                 setCondicionComercialId(cotizacion.condicionesComercialesId ?? '');
                 setMetodoPagoId(cotizacion.condicionesComercialesMetodoPagoId ?? '');
+                setCotizacionEstatus(cotizacion.status);
 
                 // Obtener los servicios de la cotización
                 const serviciosCotizacion = await obtenerCotizacionServicios(cotizacionId);
@@ -283,9 +286,34 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                         <h1 className='text-2xl'>
                             Editar cotización
                         </h1>
-                        <button className='bg-red-700 px-3 py-2 rounded-md' onClick={() => router.back()}>
-                            Cerrar ventana
-                        </button>
+
+                        <div>
+                            {cotizacionStatus !== 'aprobada' ? (
+                                <button className='bg-blue-900 px-3 py-2 rounded-md mr-2'
+                                    onClick={() => {
+                                        window.open(`/cotizacion/${cotizacionId}`, '_blank');
+                                    }}
+                                >
+                                    Compartir
+                                </button>
+                            ) : (
+                                <button className='bg-green-700 px-3 py-2 rounded-md mr-2'
+                                    onClick={() => {
+                                        window.open(`/evento/${eventoId}`, '_blank');
+                                    }}
+                                >
+                                    Revisar Evento
+                                </button>
+                            )}
+
+                            <button className='bg-blue-900 px-3 py-2 rounded-md mr-2'>
+                                Confirmar
+                            </button>
+
+                            <button className='bg-red-700 px-3 py-2 rounded-md' onClick={() => router.back()}>
+                                Cerrar ventana
+                            </button>
+                        </div>
                     </div>
 
                     <div className='grid grid-cols-3 gap-5'>
@@ -476,7 +504,8 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                         </div>
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     )
 }

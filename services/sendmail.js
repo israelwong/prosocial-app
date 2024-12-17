@@ -45,20 +45,20 @@ export default async function sendMail({ to, subject, template, data }) {
     }
 }
 
-export async function sendSuccessfulPaymentEmail(to, data) {
+export async function sendWelcomeEmail(to, data) {
+    const subject = '¡Bienvenido a ProSocial!';
+    const template = 'welcome';
+    await sendMail({ to, subject, template, data });
+}
+
+export async function sendSuccessfulPayment(to, data) {
     const subject = 'Pago Exitoso';
     const template = 'successfulPayment';
     await sendMail({ to, subject, template, data });
 }
 
-export async function sendFailedPaymentEmail(to, data) {
-    const subject = 'Pago Fallido';
-    const template = 'failedPayment';
-    await sendMail({ to, subject, template, data });
-}
-
-export async function sendWelcomeEmail(to, data) {
-    const subject = '¡Bienvenido a ProSocial!';
-    const template = 'welcome';
+export async function sendPedingPayment(to, data) {
+    const subject = 'Pago pendiente';
+    const template = 'sendPedingPayment';
     await sendMail({ to, subject, template, data });
 }

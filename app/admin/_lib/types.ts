@@ -218,17 +218,17 @@ export interface CotizacionDetalleEvento {
 
 export interface Pago {
     id?: string
-    clienteId: string
-    cotizacionId: string
-    condicionesComercialesId: string
-    condicionesComercialesMetodoPagoId: string
+    clienteId: string | null
+    cotizacionId: string | null
+    condicionesComercialesId: string | null
+    condicionesComercialesMetodoPagoId: string | null
     metodo_pago: string
-    monto: number
+    monto: number | null
     concepto: string
-    descripcion?: string
-    stripe_session_id?: string | undefined
-    stripe_payment_id?: string | undefined
-    status?: string
+    descripcion?: string | null
+    stripe_session_id?: string | null
+    stripe_payment_id?: string | null
+    status?: string | null
     createdAt?: Date
     updatedAt?: Date
 }

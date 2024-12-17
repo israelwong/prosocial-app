@@ -1,3 +1,4 @@
+//! Archivo para hacer pruebas de la función handlePaymentCompleted desde thunder-client
 // pages/api/paymentEvents.js
 import { handlePaymentCompleted } from '../../services/paymentEvents';
 

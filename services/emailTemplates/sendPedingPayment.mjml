@@ -31,7 +31,7 @@
           font-family="Arial, sans-serif"
           padding="30px 0 20px 20px"
         >
-          Se procesó tu pago
+          Pendiente de velidación
         </mj-text>
 
         <mj-text
@@ -43,9 +43,13 @@
         >
           Hola {{nombre}}! <br />
           <br />
-          Hemos recibido y procesado tu pago exitosamente para tu evento de
-          {{tipoEvento}} de {{nombreEvento}} que celebrarás el día
-          {{diaEvento}}. <br />
+
+          Muchas gracias por transferencia electreónica, el pago aun se
+          encuentra pendiente de validación.
+          <br />
+          <br />
+          Estaremos atentos a la conciliación bancaria y te notificaremos cuando
+          este sea validado.<br />
         </mj-text>
 
         <mj-text
@@ -66,18 +70,6 @@
           <b style="color: #ffffff">Total pendiente:</b> {{totalPendiente}}
           <br />
         </mj-text>
-
-        <mj-button
-          background-color="#333333"
-          color="#FFFFFF"
-          font-size="16px"
-          font-family="Arial, sans-serif"
-          align="left"
-          href="{{url}}"
-          padding="20px"
-        >
-          Ir a mi cuenta
-        </mj-button>
 
         <mj-text
           align="justify"

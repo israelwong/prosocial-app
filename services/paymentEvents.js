@@ -1,6 +1,6 @@
 // services/paymentEvents.js
 import { PrismaClient } from "@prisma/client";
-import {sendSuccessfulPaymentEmail, sendFailedPaymentEmail, sendWelcomeEmail} from "./sendmail";
+import {sendSuccessfulPayment, sendWelcomeEmail, sendPedingPayment} from "./sendmail";
 
 const prisma = new PrismaClient();
 
@@ -46,9 +46,7 @@ export async function handlePaymentCompleted(session, res) {
         // Obtener el evento correspondiente
         const evento = await prisma.evento.findFirst({
             where: { id: cotizacion.eventoId },
-        });
-
-        
+        });        
 
         const eventoTipo = await prisma.eventoTipo.findFirst({
             where: { id: evento.eventoTipoId },
@@ -60,116 +58,123 @@ export async function handlePaymentCompleted(session, res) {
             return;
         }
 
-        // Acreditar el pago
-        if (paymentIntent.payment_status === 'paid') {
-            await prisma.pago.update({
-            where: { id: pago.id },
-            data: { status: 'paid' },
-            });
-        }
 
-        // Calcular balance total
+         // Calcular balance total
         const pagos = await prisma.pago.findMany({
             where: { clienteId: cliente.id, status: 'paid' },
         });
 
         const nombre = cliente.nombre;
-        const nombreEvento = evento.nombre;
-        const diaEvento = new Date(evento.fecha_evento).toLocaleDateString('es-ES', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-        const montoPago = pago.monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
-        const precio = cotizacion.precio;
-        const totalPagado = pagos.reduce((total, pago) => total + pago.monto, 0)
-        const totalPendiente = (precio - totalPagado);
-        const estadoPago = pago.status;
-        const metodoPago = pago.metodo_pago;
-        const fechaPago = new Date(pago.createdAt).toLocaleDateString('es-ES', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric',
-        });
-        const clienteId = cliente.id;
-        const telfonoSoporte = '5544546582';
-        const paginaWeb = 'www.prosocial.mx';
-        const url = `https://prosocial.mx/dashboard/${ cliente.id }`;
+            const nombreEvento = evento.nombre;
+            const diaEvento = new Date(evento.fecha_evento).toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            });
+            const montoPago = pago.monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+            const precio = cotizacion.precio;
+            const totalPagado = pagos.reduce((total, pago) => total + pago.monto, 0)
+            const totalPendiente = (precio - totalPagado);
+            const metodoPago = pago.metodo_pago;
+            const fechaPago = new Date(pago.createdAt).toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric',
+            });
+            const clienteId = cliente.id;
+            const telefonoSoporte = '5544546582';
+            const paginaWeb = 'www.prosocial.mx';
+            const url = `https://prosocial.mx/dashboard/${ cliente.id }`;
 
-        //! Verificar si el evento ya fue aprobado
-        if (cotizacion.status !== 'aprobada') {
-            await prisma.cotizacion.update({
-                where: { id: cotizacion.id },
-                data: { status: 'aprobada' },
+        //! Acreditar el pago
+        if ( paymentIntent.payment_method_types=='card' && paymentIntent.payment_status === 'paid') {
+            
+            // Actualizar el estatus del pago
+            await prisma.pago.update({
+                where: { id: pago.id },
+                data: { status: 'paid' },
             });
 
+            //actualizar status cliente
+            await prisma.cliente.update({
+                where: { id: cliente.id },
+                data: { status: 'cliente' },
+            });            
 
-            //! Enviar correo de bienvenida
-            await sendWelcomeEmail(
+            //! Verificar si el evento ya fue aprobado
+            if (cotizacion.status !== 'aprobada') {
+                
+                // Actualizar el estatus de la cotización
+                await prisma.cotizacion.update({
+                    where: { id: cotizacion.id },
+                    data: { status: 'aprobada' },
+                });
+
+                //! Enviar correo de bienvenida
+                await sendWelcomeEmail(
+                    cliente.email,
+                    {
+                        nombre,
+                        tipoEvento: eventoTipo.nombre,
+                        nombreEvento,
+                        diaEvento,
+                        telefonoSoporte,
+                        clienteId,
+                        paginaWeb,
+                        url,
+                    },
+                );
+            }
+
+            //! Enviar correo de notificación de pago
+            await sendSuccessfulPayment(
                 cliente.email,
                 {
                     nombre,
                     tipoEvento: eventoTipo.nombre,
                     nombreEvento,
                     diaEvento,
-                    telfonoSoporte,
+                    fechaPago,
+                    montoPago: montoPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                    metodoPago: metodoPago.toUpperCase(),
+                    estadoPago: 'PAGADO',
+                    totalPagado: totalPagado.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                    totalPendiente: totalPendiente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                    telefonoSoporte,
                     clienteId,
                     paginaWeb,
                     url,
-                },
-            );
-        }
-
-        //! Enviar correo de notificación de pago
-        if(paymentIntent.payment_status == 'paid') {
-            await sendSuccessfulPaymentEmail(
-                cliente.email,
-                {
-                nombre,
-                tipoEvento: eventoTipo.nombre,
-                nombreEvento,
-                diaEvento,
-                fechaPago,
-                montoPago: montoPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                metodoPago: metodoPago.toUpperCase(),
-                estadoPago: estadoPago === 'paid' ? 'PAGADO' : estadoPago,
-                totalPagado: totalPagado.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                totalPendiente: totalPendiente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                telfonoSoporte,
-                clienteId,
-                paginaWeb,
-                url,
-                
-            });
+                });
             res.status(200).send('gestión completada');
         }
 
-        //! Enviar correo de notificación de pago rechazado
-        if(paymentIntent.payment_status === 'failed') {
-            await sendFailedPaymentEmail(
+        //! Enviar correo de notificación pendiente
+        if(payment_method_types=='customer_balance'){
+
+            await sendPedingPayment(
                 cliente.email,
                 {
-                nombre,
-                tipoEvento: eventoTipo.nombre,
-                nombreEvento,
-                diaEvento,
-                fechaPago,
-                montoPago: montoPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                metodoPago: metodoPago.toUpperCase(),
-                estadoPago: estadoPago === 'paid' ? 'PAGADO' : estadoPago,
-                telfonoSoporte,
-                clienteId,
-                paginaWeb,
-                url,
-                
-            });
-            res.status(200).send('El pago fue rechazado');
-        }
+                    nombre,
+                    tipoEvento: eventoTipo.nombre,
+                    nombreEvento,
+                    diaEvento,
+                    fechaPago,
+                    montoPago: montoPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                    metodoPago: metodoPago.toUpperCase(),
+                    estadoPago:'PENDIENTE',
+                    telefonoSoporte,
+                    clienteId,
+                    paginaWeb,
+                    url,
+                });
+                es.status(200).send('El pago esta pendiente');
+            }
+
 
     } catch (error) {
         console.error('Error al manejar el evento de pago:', error);

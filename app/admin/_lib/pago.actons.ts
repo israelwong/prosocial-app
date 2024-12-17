@@ -25,14 +25,30 @@ export async function crearPago(data: Pago) {
             condicionesComercialesId: data.condicionesComercialesId,
             condicionesComercialesMetodoPagoId: data.condicionesComercialesMetodoPagoId,
             metodo_pago: data.metodo_pago,
-            monto: data.monto,
+            monto: data.monto ?? 0,
             concepto: data.concepto,
             descripcion: data.descripcion,
             stripe_payment_id: data.stripe_payment_id,
-            status: data.status
+            status: data.status ?? undefined
         }
     });
     return pago;
+}
+
+export async function obtenerPagoSesionStripe(stripe_session_id: string) {
+    const pago = await prisma.pago.findUnique({
+        where: {
+            stripe_session_id
+        }
+    });
+
+    const cliente = await prisma.cliente.findUnique({
+        where: {
+            id: pago?.clienteId ?? undefined
+        }
+    });
+
+    return { pago, cliente };
 }
 
 
