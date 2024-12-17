@@ -61,7 +61,11 @@ export async function handlePaymentCompleted(session, res) {
 
          // Calcular balance total
         const pagos = await prisma.pago.findMany({
-            where: { clienteId: cliente.id, status: 'paid' },
+            where: { 
+                clienteId: cliente.id, 
+                cotizacionId: cotizacion.id,
+                status: 'paid' 
+            },
         });
 
         const nombre = cliente.nombre;
@@ -172,7 +176,7 @@ export async function handlePaymentCompleted(session, res) {
                     paginaWeb,
                     url,
                 });
-                es.status(200).send('El pago esta pendiente');
+                res.status(200).send('El pago esta pendiente');
             }
 
 
