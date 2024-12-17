@@ -59,6 +59,6 @@ export async function sendSuccessfulPayment(to, data) {
 
 export async function sendPedingPayment(to, data) {
     const subject = 'Pago pendiente';
-    const template = 'sendPedingPayment';
+    const template = 'sendPendingPayment';
     await sendMail({ to, subject, template, data });
 }

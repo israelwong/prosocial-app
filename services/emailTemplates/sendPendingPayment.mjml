@@ -31,7 +31,7 @@
           font-family="Arial, sans-serif"
           padding="30px 0 20px 20px"
         >
-          Pendiente de velidación
+          Pago pendiente
         </mj-text>
 
         <mj-text
@@ -44,12 +44,12 @@
           Hola {{nombre}}! <br />
           <br />
 
-          Muchas gracias por transferencia electreónica, el pago aun se
-          encuentra pendiente de validación.
+          Muchas gracias por tu transferencia electrónica, el pago entrará a un
+          proceso de validación.
           <br />
           <br />
           Estaremos atentos a la conciliación bancaria y te notificaremos cuando
-          este sea validado.<br />
+          este lista.<br />
         </mj-text>
 
         <mj-text
@@ -65,9 +65,6 @@
           <b style="color: #ffffff">Monto pagado:</b> {{montoPago}} <br /><br />
           <b style="color: #ffffff">Método:</b> {{metodoPago}} <br /><br />
           <b style="color: #ffffff">Estado:</b> {{estadoPago}} <br /><br />
-          <b style="color: #ffffff">Total pagado:</b> {{totalPagado}}
-          <br /><br />
-          <b style="color: #ffffff">Total pendiente:</b> {{totalPendiente}}
           <br />
         </mj-text>
 
