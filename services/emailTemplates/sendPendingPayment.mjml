@@ -64,21 +64,24 @@
           <br /><br />
           <b style="color: #ffffff">Monto pagado:</b> {{montoPago}} <br /><br />
           <b style="color: #ffffff">Método:</b> {{metodoPago}} <br /><br />
-          <b style="color: #ffffff">Estado:</b> {{estadoPago}} <br /><br />
-          <br />
+          <b style="color: #ffffff">Estado:</b> {{estadoPago}} <br />
         </mj-text>
 
+        <!-- DATOS DE CONTACTO INICIO -->
+        <mj-divider padding="20px 0px" border-color="#333333" />
         <mj-text
-          align="justify"
-          font-size="16px"
-          color="#CCCCCC"
+          align="left"
+          font-size="14px"
+          color="#FFFFFF"
           font-family="Arial, sans-serif"
         >
-          Dudas y aclaraciones al {{telefonoSoporte}}.
-          <br />
-          <br />
-          Gracias por confiar en nosotros.
+          <p>¿Tienes alguna duda?</p>
+          <ul>
+            <li>Dudas y aclaraciones al {{telefonoSoporte}}.</li>
+            <li>Atención de lunes a viernes de 10:00 a 20:00</li>
+          </ul>
         </mj-text>
+        <!-- DATOS DE CONTACTO INICIO -->
       </mj-column>
     </mj-section>
 

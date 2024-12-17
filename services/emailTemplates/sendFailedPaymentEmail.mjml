@@ -5,7 +5,7 @@
       .logo { max-width: 50px; margin: 0 auto; }
     </mj-style>
   </mj-head>
-  <mj-body background-color="rgba(0, 0, 0, 0.6)">
+  <mj-body background-color="#121212">
     <!-- Contenedor principal -->
     <mj-section>
       <mj-column>
@@ -21,19 +21,15 @@
     </mj-section>
 
     <!-- Cuerpo -->
-    <mj-section
-      padding="10px 20px 50px 20px"
-      background-color="rgba(0, 0, 0, 0.1)"
-    >
+    <mj-section padding="10px 20px 50px 20px" background-color="#1E1E1E">
       <mj-column>
         <mj-text
           align="left"
           font-size="30px"
           font-weight="bold"
-          color="#ffffff"
+          color="#FFFFFF"
           font-family="Arial, sans-serif"
           padding="30px 0 20px 20px"
-          align="left"
         >
           Pago no procesado
         </mj-text>
@@ -41,7 +37,7 @@
         <mj-text
           align="justify"
           font-size="16px"
-          color="#555555"
+          color="#CCCCCC"
           font-family="Arial, sans-serif"
           padding="20px 0px 0 20px"
         >
@@ -54,13 +50,12 @@
         <mj-text
           align="justify"
           font-size="16px"
-          color="#555555"
+          color="#CCCCCC"
           font-family="Arial, sans-serif"
           padding="20px"
         >
-          <br />
           <b>Fecha de intento de pago:</b> {{fechaPago}} <br /><br />
-          <b>Monto no prcesado:</b> {{montoPago}} <br /><br />
+          <b>Monto no procesado:</b> {{montoPago}} <br /><br />
           <b>Método:</b> {{metodoPago}} <br /><br />
           <b>Estado:</b> {{estadoPago}}
         </mj-text>
@@ -68,25 +63,29 @@
         <mj-text
           align="justify"
           font-size="16px"
-          color="#555555"
+          color="#CCCCCC"
           font-family="Arial, sans-serif"
           padding="20px"
         >
           Por favor vuelve a intentar el pago nuevamente. Si necesitas apoyo no
-          dudes en contactarnos al tel:. {{telefonoSoporte}}..
+          dudes en contactarnos al tel:. {{telefonoSoporte}}.
         </mj-text>
 
-        <mj-button
-          background-color="rgba(0, 0, 0, 0.1)"
-          color="white"
-          font-size="16px"
-          font-family="Arial, sans-serif"
+        <!-- DATOS DE CONTACTO INICIO -->
+        <mj-divider padding="20px 0px" border-color="#333333" />
+        <mj-text
           align="left"
-          href="{{url}}"
-          padding="20px"
+          font-size="14px"
+          color="#FFFFFF"
+          font-family="Arial, sans-serif"
         >
-          Ir a mi cuenta
-        </mj-button>
+          <p>¿Tienes alguna duda?</p>
+          <ul>
+            <li>Dudas y aclaraciones al {{telefonoSoporte}}.</li>
+            <li>Atención de lunes a viernes de 10:00 a 20:00</li>
+          </ul>
+        </mj-text>
+        <!-- DATOS DE CONTACTO FIN -->
       </mj-column>
     </mj-section>
 
@@ -96,10 +95,10 @@
         <mj-text
           align="center"
           font-size="14px"
-          color="#ffffff"
+          color="#FFFFFF"
           font-family="Arial, sans-serif"
         >
-          <a href="{{paginaWeb}}" style="color: #ffffff">{{paginaWeb}}</a>
+          <a href="{{paginaWeb}}" style="color: #66ccff">{{paginaWeb}}</a>
         </mj-text>
       </mj-column>
     </mj-section>

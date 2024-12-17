@@ -85,11 +85,24 @@
           color="#CCCCCC"
           font-family="Arial, sans-serif"
         >
-          Dudas y aclaraciones al {{telefonoSoporte}}.
-          <br />
-          <br />
           Gracias por confiar en nosotros.
         </mj-text>
+
+        <!-- DATOS DE CONTACTO INICIO -->
+        <mj-divider padding="20px 0px" border-color="#333333" />
+        <mj-text
+          align="left"
+          font-size="14px"
+          color="#FFFFFF"
+          font-family="Arial, sans-serif"
+        >
+          <p>¿Tienes alguna duda?</p>
+          <ul>
+            <li>Dudas y aclaraciones al {{telefonoSoporte}}.</li>
+            <li>Atención de lunes a viernes de 10:00 a 20:00</li>
+          </ul>
+        </mj-text>
+        <!-- DATOS DE CONTACTO INICIO -->
       </mj-column>
     </mj-section>
 
@@ -102,6 +115,7 @@
           color="#FFFFFF"
           font-family="Arial, sans-serif"
         >
+          <p>@Todos los derechos reservados a prosocial.mx</p>
           <a href="{{paginaWeb}}" style="color: #ffffff">{{paginaWeb}}</a>
         </mj-text>
       </mj-column>
