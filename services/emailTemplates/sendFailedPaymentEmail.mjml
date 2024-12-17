@@ -70,22 +70,6 @@
           Por favor vuelve a intentar el pago nuevamente. Si necesitas apoyo no
           dudes en contactarnos al tel:. {{telefonoSoporte}}.
         </mj-text>
-
-        <!-- DATOS DE CONTACTO INICIO -->
-        <mj-divider padding="20px 0px" border-color="#333333" />
-        <mj-text
-          align="left"
-          font-size="14px"
-          color="#FFFFFF"
-          font-family="Arial, sans-serif"
-        >
-          <p>¿Tienes alguna duda?</p>
-          <ul>
-            <li>Dudas y aclaraciones al {{telefonoSoporte}}.</li>
-            <li>Atención de lunes a viernes de 10:00 a 20:00</li>
-          </ul>
-        </mj-text>
-        <!-- DATOS DE CONTACTO FIN -->
       </mj-column>
     </mj-section>
 
@@ -98,7 +82,7 @@
           color="#FFFFFF"
           font-family="Arial, sans-serif"
         >
-          <a href="{{paginaWeb}}" style="color: #66ccff">{{paginaWeb}}</a>
+          <a href="{{paginaWeb}}" style="color: #ffffff">{{paginaWeb}}</a>
         </mj-text>
       </mj-column>
     </mj-section>
