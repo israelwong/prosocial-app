@@ -154,7 +154,7 @@ export async function handlePaymentCompleted(session, res) {
         }
 
         //! Enviar correo de notificación pendiente
-        if(payment_method_types=='customer_balance'){
+        if ( paymentIntent.payment_method_types=='customer_balance'){
 
             await sendPedingPayment(
                 cliente.email,
