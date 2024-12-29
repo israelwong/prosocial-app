@@ -9,23 +9,16 @@ export async function handlePaymentCompleted(session, res) {
     try {
         const paymentIntent = session;
         
-        res.status(200).send('Sesión de pago en validación');
-
         // Obtener el pago correspondiente
         const pago = await prisma.pago.findFirst({
             where: { stripe_session_id: paymentIntent.id },
         });
-        
         
         if (!pago) {
             console.log(`No se encontró el pago correspondiente para la sesión: ${paymentIntent.id}`);
             res.status(404).send(`Pago no encontrado para la sesión: ${paymentIntent.id}`);
             return;
         }
-
-        // console.log('Pago encontrado:', pago);
-        // return res.status(200).send('gestión completada');
-        
         
         // Obtener el cliente correspondiente
         const cliente = await prisma.cliente.findFirst({
@@ -42,8 +35,6 @@ export async function handlePaymentCompleted(session, res) {
         const cotizacion = await prisma.cotizacion.findFirst({
             where: { id: pago.cotizacionId },
         });
-        // console.log(cliente);
-        // return res.status(200).send('gestión completada');
 
         if (!cotizacion) {
             console.log('No se encontró la cotización correspondiente.');
