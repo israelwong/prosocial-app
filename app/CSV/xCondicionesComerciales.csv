@@ -1,5 +1,0 @@
-id,nombre,descripcion,descuento,status,createdAt,updatedAt
-cm422qq920000mvbes3alwimt,Meses sin intereses,Compra a meses sin intereses con tarjetas participantes,NULL,active,1732844278117,1732992271059
-cm422ulc90001mvbejtvr21zr,Pago estándar 10% OFF,Reservación mínima del 30% y el resto diferido a liquidar 2 días antes del evento,10.0,active,1732844458377,1733336776075
-cm44iizwu0006svlag5gepdh4,Pago de contado 15% OFF,El descuento solo aplica pagando el total del servicio en una exhibición,15.0,active,1732991723599,1733336755107
-cm44it3hi000dsvla9ezoc9yh,Pago flexible 5% OFF,Reserva con el 10% y el resto diferido a liquidar 2 días antes al evento,5.0,inactive,1732992194790,1732993105038
