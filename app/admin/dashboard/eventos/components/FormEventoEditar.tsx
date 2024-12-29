@@ -29,6 +29,7 @@ export default function FormEventoEditar({ eventoId }: Props) {
     const [fechaEvento, setFechaEvento] = useState<Date | null>(null)
     const [clienteId, setClienteId] = useState<string | undefined>(undefined)
     const [fechaCreacion, setFechaCreacion] = useState<Date | null>(null)
+    const [fechaActualizacion, setFechaActualizacion] = useState<Date | null>(null)
     const [error, setError] = useState('')
     const router = useRouter()
     const [actualizandoEvento, setActualizandoEvento] = useState(false)
@@ -57,6 +58,7 @@ export default function FormEventoEditar({ eventoId }: Props) {
                     setFechaEvento(new Date(eventoPromise.fecha_evento));
                     setClienteId(eventoPromise.clienteId);
                     setFechaCreacion(new Date(eventoPromise.createdAt));
+                    setFechaActualizacion(new Date(eventoPromise.updatedAt));
 
                     if (eventoPromise.eventoTipoId) {
                         const tipoEvento = eventosTipoPromise.find(tipo => tipo.id === eventoPromise.eventoTipoId);
@@ -93,10 +95,8 @@ export default function FormEventoEditar({ eventoId }: Props) {
         const tipificacionStatusOptions = [
             'nuevo',
             'seguimiento',
-            'autorizado',
             'agendado',
             'en proceso',
-            'en garantia',
             'entregado',
             'cancelado'
         ];
@@ -307,6 +307,7 @@ export default function FormEventoEditar({ eventoId }: Props) {
                                     ))}
                                 </select>
                             </div>
+
                             <div className="mb-4">
                                 <label className="block text-zinc-600 text-sm mb-2" htmlFor="fechaevento">
                                     Fecha de evento
@@ -327,6 +328,14 @@ export default function FormEventoEditar({ eventoId }: Props) {
                                 }) : ''}
                             </p>
 
+                            <p className='text-sm text-zinc-500 italic mb-5'>
+                                Actualizado el {fechaActualizacion ? new Date(fechaActualizacion).toLocaleString('es-ES', {
+                                    year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric'
+                                }) : ''}
+                            </p>
+
+
+
                             <div className="space-y-3">
                                 {respuestaServidor &&
                                     <p className="p-3 bg-green-600 text-green-200 text-center rounded-md">{respuestaServidor}</p>
@@ -343,26 +352,26 @@ export default function FormEventoEditar({ eventoId }: Props) {
                                 <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
                                     onClick={() => router.push('/admin/dashboard/eventos')}
                                 >
-                                    Cancelar
+                                    Cerrar ventana
                                 </button>
 
-                                <button
-                                    onClick={() => handleEliminarEvento()}
-                                    className="text-red-500 py-2 flex items-center justify-center w-full text-sm"
-                                >
-                                    <Trash2 size={15} className='mr-2' />
-                                    Eliminar evento
-                                </button>
-
+                                {status !== 'seguimiento' && (
+                                    <button
+                                        onClick={() => handleEliminarEvento()}
+                                        className="text-red-500 py-2 flex items-center justify-center w-full text-sm"
+                                    >
+                                        <Trash2 size={15} className='mr-2' />
+                                        Eliminar evento
+                                    </button>
+                                )}
                                 {errorEliminar && <p className="text-red-500 text-sm">{errorEliminar}</p>}
-
                             </div>
 
                         </div>
                     </div>
                 </div>
 
-                {/* //! COTIZACIONES ASOCIADAS */}
+                {/* //! COTIZACIONES */}
                 <div className=''>
                     <div className='font-bold mb-5 text-xl text-zinc-500 flex justify-between items-center'>
                         <div>
@@ -370,7 +379,7 @@ export default function FormEventoEditar({ eventoId }: Props) {
                         </div>
                         <div>
                             {generandoCotizacion ? (
-                                <p className="text-sm text-zinc-500 italic">Generando cotización...</p>
+                                <p className="text-sm text-yellow-500 italic">Generando cotización...</p>
                             ) : (
                                 <select
                                     className='opciones_cotizacion bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm mr-2'

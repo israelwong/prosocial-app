@@ -90,16 +90,22 @@ export async function handlePaymentCompleted(session, res) {
             // Actualizar el estatus del pago
             await prisma.pago.update({
                 where: { id: pago.id },
-                data: { status: 'paid' },
+                data: { status: 'paid' },//! Cambiar a pagado
             });
 
             //actualizar status cliente
             await prisma.cliente.update({
                 where: { id: cliente.id },
-                data: { status: 'cliente' },
-            });            
+                data: { status: 'cliente' }, //! Cambiar a cliente
+            });        
+            
+            //actualizar status del evento
+            await prisma.evento.update({
+                where: { id: evento.id },
+                data: { status: 'agendado' },
+            });
 
-            //! Verificar si el evento ya fue aprobado
+            //! Verificar si la cotización ya fue aprobado
             if (cotizacion.status !== 'aprobada') {
                 
                 // Actualizar el estatus de la cotización
@@ -145,7 +151,7 @@ export async function handlePaymentCompleted(session, res) {
         }
 
         //! Enviar correo de notificación pendiente
-        if ( paymentIntent.payment_method_types=='customer_balance'){
+        if (paymentIntent.payment_method_types=='customer_balance'){
 
             await sendPedingPayment(
                 cliente.email,

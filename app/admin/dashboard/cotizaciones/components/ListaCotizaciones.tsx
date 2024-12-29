@@ -81,6 +81,7 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
                 </div>
 
                 <div className='items-center flex flex-wrap justify-start md:space-x-2 space-y-1 md:space-y-0'>
+
                     <button
                         onClick={() => navigator.clipboard.writeText(`https://www.prosocial.mx/cotizacion/${cotizacion.id}`)}
                         className='text-sm flex items-center px-3 py-2 leading-3 border border-zinc-800 rounded-md bg-zinc-900'
@@ -94,13 +95,15 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
                     >
                         <SquareArrowOutUpRight size={12} className='mr-1' /> Abrir
                     </button>
+
                     <button
                         onClick={handleShareCotizacion}
                         className='text-sm flex items-center px-3 py-2 leading-3 border border-zinc-800 rounded-md bg-zinc-900'
                     >
                         <i className="fab fa-whatsapp text-md mr-1"></i> Enviar
                     </button>
-                    {cotizacion.status !== 'autorizado' && (
+
+                    {cotizacion.status !== 'aprobada' && (
                         <button
                             onClick={() => cotizacion.id && handleEliminarCotizacion(cotizacion.id)}
                             className='text-sm flex items-center px-3 py-2 leading-3 border border-zinc-800 rounded-md bg-red-900'
@@ -109,6 +112,7 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
                             {eliminando ? 'Eliminando...' : 'Eliminar'}
                         </button>
                     )}
+
                 </div>
             </li >
         ))

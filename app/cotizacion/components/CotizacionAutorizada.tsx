@@ -38,7 +38,7 @@ export default function CotizacionAutorizada({ cotizacion }: Props) {
 
 
     return (
-        <div className="mt-10 mb-16 p-8">
+        <div className="mt-10 mb-16 md:p-0 p-5">
 
             <p className='font-Bebas-Neue text-xl text-left mb-10 text-green-600'>
                 Cotización autorizada
