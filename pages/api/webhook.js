@@ -33,32 +33,37 @@ const webhookHandler = async (req, res) => {
     try {
         switch (event.type) {
             case 'payment_intent.succeeded': {
-                console.log('✅ Sesión de pago completada:', session.data.object);
+                // console.log('✅ Sesión de pago completada:', session.data.object);
+                res.status(200).send('Sesión de pago completada');
                 await handlePaymentCompleted(event.data.object, res);
                 break;
             }
             
             case 'payment_intent.payment_failed': {
                 const failedIntent = event;
-                console.error('❌ Pago fallido:', failedIntent.last_payment_error?.message);
+                // console.error('❌ Pago fallido:', failedIntent.last_payment_error?.message);
+                res.status(200).send('Pago fallido');
                 await handlePaymentCompleted(event.data.object, res);
                 break;
             }
 
             case 'checkout.session.completed': {
                 const session = event;
-                console.log('✅ Sesión de pago completada:', session);
+                // console.log('✅ Sesión de pago completada:', session);
+                res.status(200).send('Sesión de pago completada');
                 await handlePaymentCompleted(event.data.object, res);
                 break;
             }
 
             default:
+                res.status(400).send(`Event type ${event.type} not yet handled`);
                 console.warn(`Unhandled event type ${event.type}`);
         }
 
         res.json({ received: true });
+
     } catch (err) {
-        console.error(`Error handling event: ${err.message}`);
+        // console.error(`Error handling event: ${err.message}`);
         res.status(500).send(`Server Error: ${err.message}`);
     }
 };

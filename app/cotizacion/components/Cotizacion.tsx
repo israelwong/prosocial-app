@@ -15,6 +15,7 @@ interface Props {
 }
 
 export default function Cotizacion({ cotizacionId }: Props) {
+
     const [cotizacion, setCotizacion] = useState<CotizacionType | null>(null)
     const [loading, setLoading] = useState(true)
 
@@ -47,7 +48,7 @@ export default function Cotizacion({ cotizacionId }: Props) {
             <Header asunto='Cotización' />
             {/* BODY */}
             <div className='max-w-screen-sm mx-auto'>
-                {cotizacion.status == 'autorizada' && <CotizacionAutorizada cotizacion={cotizacion} />}
+                {cotizacion.status == 'aprobada' && <CotizacionAutorizada cotizacion={cotizacion} />}
                 {cotizacion.status == 'pendiente' && cotizacion.id && <CotizacionPendiente cotizacionId={cotizacion.id} />}
                 {cotizacion.status == 'expirada' && <CotizacionExpirada />}
 
