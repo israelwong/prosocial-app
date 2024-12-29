@@ -50,7 +50,7 @@ const webhookHandler = async (req, res) => {
             case 'checkout.session.completed': {
                 const session = event;
                 console.log('✅ Sesión de pago completada:', session);
-                res.status(200).send('Sesión de pago enviada a handlePaymentCompleted');
+                // res.status(200).send('Sesión de pago enviada a handlePaymentCompleted');
                 await handlePaymentCompleted(event.data.object, res);
                 break;
             }
