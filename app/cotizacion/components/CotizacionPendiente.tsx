@@ -44,12 +44,10 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
     const [isProcessing, setIsProcessing] = useState(false);
 
     const [metodoPagoId, setMetodoPagoId] = useState<string | undefined>('');
-    const [condicionesComercialesId, setCondicionComercialId] = useState<string | undefined>('');
+    const [condicionComercialesId, setCondicionComercialId] = useState<string | undefined>('');
+
     const [porcentajeAnticipo, setPorcentajeAnticipo] = useState(0);
     const [pagoAnticipo, setPagoAnticipo] = useState(0);
-
-    const [cotizacionStatus, setCotizacionStatus] = useState('');
-
 
     useEffect(() => {
         async function fetchData() {
@@ -70,24 +68,18 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                 const cotizacionDetalleData = await cotizacionDetallePromise;
                 const serviciosCotizacion = await obtenerCotizacionServicios(cotizacionId);
 
-                //! determinar status de la cotización
-                const status = cotizacionDetalleData.cotizacion?.status || '';
-                const expiresAt = cotizacionDetalleData.cotizacion?.expiresAt ? new Date(cotizacionDetalleData.cotizacion.expiresAt) : new Date();
-
-                const currentDate = new Date();
-                const expirationDate = new Date(expiresAt);
-
-                if (status === 'aprobada') {
-                    setCotizacionStatus('aprobada');
-                } else if (currentDate > expirationDate) {
-                    setCotizacionStatus('expirada');
-                } else {
-                    setCotizacionStatus('pendiente');
-                }
-
                 setNombreCotizacion(cotizacion.nombre || '');
                 setCondicionComercialId(cotizacionDetalleData.cotizacion?.condicionesComercialesId ?? '');
                 setMetodoPagoId(cotizacionDetalleData.cotizacion?.condicionesComercialesMetodoPagoId ?? '');
+
+                if (cotizacionDetalleData.cotizacion?.condicionesComercialesId && cotizacionDetalleData.cotizacion?.condicionesComercialesMetodoPagoId) {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('condicionComercialId', cotizacionDetalleData.cotizacion?.condicionesComercialesId);
+                    url.searchParams.set('metodoPagoId', cotizacionDetalleData.cotizacion?.condicionesComercialesMetodoPagoId);
+                    window.history.replaceState(null, '', url.toString());
+                }
+
+
 
                 const serviciosData = await Promise.all(serviciosCotizacion.map(async (servicio: { servicioId: string; cantidad: number; posicion: number; servicioCategoriaId: string; }) => {
                     const servicioData = await obtenerServicio(servicio.servicioId);
@@ -148,7 +140,6 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         const descuento = precioSistema * ((condicionComercial?.descuento ?? 0) / 100);
         const precio_final = precioSistema - descuento;
 
-        // console.log(metodoPago?.payment_method)
         setMsi(num_msi);
         setPagoMensual(pago_mensual);
         setDescuento(descuento);
@@ -170,20 +161,25 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
 
         if (condicionComercialIdFromUrl) {
             setCondicionComercialId(condicionComercialIdFromUrl);
+        } else {
+            setCondicionComercialId(condicionComercial?.id || '');
         }
 
         if (metodoPagoIdFromUrl) {
             setMetodoPagoId(metodoPagoIdFromUrl);
+        } else {
+            setMetodoPagoId(metodoPago?.id || '');
         }
 
-        if (condicionesComercialesId && metodoPagoId) {
-            const condicion = condicionesComerciales.find(cond => cond.id === condicionesComercialesId);
+        if (condicionComercialesId && metodoPagoId) {
+            const condicion = condicionesComerciales.find(cond => cond.id === condicionComercialesId);
             const metodo = condicion?.metodosPago?.find(mp => mp.id === metodoPagoId);
             if (condicion && metodo) {
                 handleSeleccionCondicionMetodoPago(condicion, metodo);
             }
         }
-    }, [condicionesComercialesId, metodoPagoId, condicionesComerciales]);
+
+    }, [condicionComercialesId, metodoPagoId, condicionesComerciales, condicionComercial?.id, metodoPago?.id]);
 
     //! calcular totales cuando se actualiza la lista
     useEffect(() => {
@@ -226,7 +222,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                 paymentMethod: metodoPago?.payment_method || '',
                 num_msi: metodoPago?.num_msi?.toString() ?? '0',
                 cotizacionId,
-                condicionesComercialesId,
+                condicionComercialesId,
                 metodoPagoId,
                 clienteId,
                 nombreCliente,
@@ -246,7 +242,6 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
 
             if (response.ok) {
                 window.location.href = data.url;
-                // window.open(data.url, '_blank');
             } else {
                 console.error('Error:', data.error);
             }
@@ -256,10 +251,8 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         } finally {
             setIsProcessing(false);
         }
-        setIsProcessing(false);
+        // setIsProcessing(false);
     }
-
-    console.log('cotizacionStatus', cotizacionStatus);
 
     return (
         <div >
@@ -267,12 +260,9 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                 <SkeletonPendiente />
             ) : (
                 <div className=''>
-
-                    {/* <SkeletonPendiente /> */}
-
                     <div className={`max-w-screen-sm mx-auto`}>
 
-                        {/* MENSAJE */}
+                        {/* MENSAJE INICIAL */}
                         <div className='mt-8 p-5'>
                             <p className='text-left text-4xl font-Bebas-Neue mb-2 text-zinc-200'>
                                 Hola {nombreCliente},
@@ -303,8 +293,8 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                 </p>
 
                                 {condicionesComerciales.map((condicion, index) => (
-                                    <div key={index} className={`mb-3 px-5 py-3 ${condicion.id === condicionesComercialesId ? 'border-blue-500 bg-zinc-700/50 ' : 'border-zinc-800'} bg-zinc-900 border rounded-md`}>
 
+                                    <div key={index} className={`mb-3 px-5 py-3 ${condicion.id === condicionComercialesId && condicionComercialesId && metodoPagoId ? 'border-blue-500 bg-zinc-700/50 ' : 'border-zinc-800'} ${!condicion.id ? 'border-zinc-800' : ''} bg-zinc-900 border rounded-md`}>
                                         <p className='text-md text-zinc-300'>
                                             {condicion.nombre}
                                         </p>
@@ -318,6 +308,9 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                         <div className='flex justify-start gap-5'>
 
                                             {condicion.metodosPago && condicion.metodosPago.map((metodo, metodoIndex) => {
+                                                if (metodo.metodo_pago === 'Efectivo') {
+                                                    return null;
+                                                }
                                                 return (
                                                     <div key={metodoIndex} className='text-sm text-zinc-500'>
                                                         <input

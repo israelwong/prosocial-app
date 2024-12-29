@@ -1,6 +1,6 @@
 import React from 'react'
 import { Metadata } from 'next'
-import ListaProspectos from './components/ListaProspectos'
+import ListaContactos from './components/ListaContactos'
 
 export const metadata: Metadata = {
     title: 'Prospectos',
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 }
 
 function Prospectos() {
-    return <ListaProspectos />
+    return <ListaContactos />
 }
 
 export default Prospectos

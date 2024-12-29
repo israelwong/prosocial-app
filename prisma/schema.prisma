@@ -35,10 +35,10 @@ model Cliente {
   email     String?
   telefono  String?    @unique
   direccion String?
-  etapa     String     @default("prospecto") //prospecto, cliente, 
-  status    String     @default("activo") //activo, cancelado, archivado
+  status    String     @default("activo") //prospecto, cliente
   canalId   String?
   Canal     Canal?     @relation(fields: [canalId], references: [id])
+  userId    String?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   Evento    Evento[]
@@ -47,22 +47,23 @@ model Cliente {
 }
 
 model Evento {
-  id               String             @id @default(cuid())
-  clienteId        String
-  Cliente          Cliente            @relation(fields: [clienteId], references: [id])
-  eventoTipoId     String?
-  EventoTipo       EventoTipo?        @relation(fields: [eventoTipoId], references: [id])
-  nombre           String //boda de/ cumpleaños de/ etc
-  fecha_evento     DateTime
-  status           String             @default("active")
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  Contrato         Contrato[]
-  EventoComentario EventoComentario[]
-  Cotizacion       Cotizacion[]
+  id             String           @id @default(cuid())
+  clienteId      String
+  Cliente        Cliente          @relation(fields: [clienteId], references: [id])
+  eventoTipoId   String?
+  EventoTipo     EventoTipo?      @relation(fields: [eventoTipoId], references: [id])
+  nombre         String?          @default("Pendiente")
+  fecha_evento   DateTime
+  status         String           @default("active")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  userId         String?
+  Contrato       Contrato[]
+  EventoBitacora EventoBitacora[]
+  Cotizacion     Cotizacion[]
 }
 
-model EventoComentario {
+model EventoBitacora {
   id          String   @id @default(cuid())
   eventoId    String
   Evento      Evento   @relation(fields: [eventoId], references: [id])
@@ -82,6 +83,14 @@ model EventoTipo {
   Evento     Evento[]
   Paquete    Paquete[]
   Cotizacion Cotizacion[]
+}
+
+model EventoStatus {
+  id        String   @id @default(cuid())
+  nombre    String
+  posicion  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Canal {

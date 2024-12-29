@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { cerrarSesion } from '@/app/lib/auth';
@@ -10,8 +10,8 @@ import { User } from '@/app/admin/_lib/types';
 import { verifyToken } from '@/app/lib/auth';
 
 function Navbar() {
-
-    const [user, setUser] = React.useState<User | null>(null);
+    const [user, setUser] = useState<User | null>(null);
+    const [menuOpen, setMenuOpen] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
     const token = Cookies.get('token');
@@ -24,8 +24,8 @@ function Navbar() {
                     if (response.payload) {
                         const userData: User = response.payload as unknown as User;
                         userData.token = token;
-                        // console.log('userData:', userData);
                         setUser(userData);
+                        Cookies.set('user', JSON.stringify(userData));
                     } else {
                         router.push('/admin');
                     }
@@ -40,8 +40,9 @@ function Navbar() {
         validarToken(token);
     }, [token, router]);
 
-    async function handleCerrarSesion() {
+    // console.log('user:', Cookies.get('user'));
 
+    async function handleCerrarSesion() {
         if (confirm('¿Estás seguro de cerrar sesión?')) {
             if (user && user.token) {
                 console.log('cerrando sesión');
@@ -64,19 +65,28 @@ function Navbar() {
     }
 
     return (
-        <div className='flex flex-grow justify-between items-center px-5 py-2 border-b border-zinc-800'>
-            <div className='flex text-lg text-zinc-300'>
-                <Image className='mr-2' src='https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/isotipo_gris.svg' width={20} height={20} alt='Logo' />
-                ProSocial {user && <span className='text-zinc-600 ml-2'>{user.username}</span>}
+        <div className='flex flex-col md:flex-row justify-between items-center px-5 py-2 border-b border-zinc-800'>
+            <div className='flex justify-between w-full md:w-auto'>
+                <div className='flex text-lg text-zinc-300'>
+                    <Image className='mr-2' src='https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/isotipo_gris.svg' width={20} height={20} alt='Logo' />
+                    ProSocial {user && <span className='text-zinc-600 ml-2'>{user.username}</span>}
+                </div>
+                <button className='md:hidden' onClick={() => setMenuOpen(!menuOpen)}>
+                    <svg className='w-6 h-6 text-zinc-300' fill='none' stroke='currentColor' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M4 6h16M4 12h16m-7 6h7'></path>
+                    </svg>
+                </button>
             </div>
-            <div className='flex gap-5 justify-center items-center'>
-                {links.map((link) => (
-                    <Link key={link.href} href={link.href}>
-                        <span className={`text-gray-500 ${pathname && pathname.includes(link.href) ? 'font-bold text-white' : ''}`}>
-                            {link.label}
-                        </span>
-                    </Link>
-                ))}
+            <div className={`flex-col md:flex-row md:flex ${menuOpen ? 'flex' : 'hidden'} gap-5 justify-center items-center w-full md:w-auto md:py-0 py-5 md:items-center`}>
+                {user && user.role === 'admin' ? (
+                    links.map((link) => (
+                        <Link key={link.href} href={link.href}>
+                            <span className={`text-gray-500 ${pathname && pathname.includes(link.href) ? 'font-bold text-white' : ''}`}>
+                                {link.label}
+                            </span>
+                        </Link>
+                    ))
+                ) : null}
                 <button
                     className='border border-zinc-600 rounded-md text-sm leading-3 px-3 py-2'
                     onClick={handleCerrarSesion}

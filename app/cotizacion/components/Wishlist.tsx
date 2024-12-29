@@ -41,7 +41,6 @@ const uniqueServices = (name: string) => {
 const Wishlist: React.FC<Props> = ({ servicios }) => {
 
     const [categorias, setCategorias] = useState<ServicioCategoria[]>([])
-    const [modalSesionVestido, setModalSesionVestido] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -71,7 +70,7 @@ const Wishlist: React.FC<Props> = ({ servicios }) => {
                     </p>
                     <ul>
                         {serviciosFiltrados.map(servicio => (
-                            <li key={servicio.id} className="flex items-start leading-5">
+                            <li key={servicio.id} className="flex items-start leading-5 space-y-1">
                                 <p><ChevronRight size={16} className='mt-1 text-zinc-500' /></p>
                                 <p className='text-zinc-400'>
                                     {getServiceHours(servicio.nombre, servicio.cantidad)}
@@ -97,20 +96,6 @@ const Wishlist: React.FC<Props> = ({ servicios }) => {
                 )}
 
             </div>
-
-            {modalSesionVestido && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 w-full h-full">
-                    <div className="bg-white p-5 rounded-lg shadow-lg max-w-3xl w-full">
-                        <button
-                            onClick={() => setModalSesionVestido(false)}
-                            className="absolute top-3 right-3 text-black"
-                        >
-                            Close
-                        </button>
-
-                    </div>
-                </div>
-            )}
 
         </div>
     )

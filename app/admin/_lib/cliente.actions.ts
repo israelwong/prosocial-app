@@ -1,11 +1,14 @@
 'use server'
 import { PrismaClient } from "@prisma/client";
-import { crearEvento } from "./evento.actions";
 import { Cliente } from "./types";
 const prisma = new PrismaClient();
 
 export async function obtenerClientes() {
-    return await prisma.cliente.findMany();
+    return await prisma.cliente.findMany({
+        orderBy: {
+            nombre: 'asc'
+        }
+    });
 }
 
 export async function obtenerCliente(id: string) {
@@ -16,10 +19,10 @@ export async function obtenerCliente(id: string) {
     });
 }
 
-export async function obtenerClientePorEtapa(etapa: string) {
+export async function obtenerClientePorStatus(status: string) {
     return await prisma.cliente.findMany({
         where: {
-            etapa: etapa
+            status: status
         },
         orderBy: [
             {
@@ -32,7 +35,6 @@ export async function obtenerClientePorEtapa(etapa: string) {
     });
 }
 
-
 export async function crearCliente(cliente: Cliente) {
 
     // Verificar si el teléfono ya existe
@@ -44,33 +46,25 @@ export async function crearCliente(cliente: Cliente) {
 
     if (clienteExistente) {
         return { success: false, message: 'El teléfono ya existe', cliente: clienteExistente.id };
-    }
+    } else {
+        const result = await prisma.cliente.create({
+            data: {
+                nombre: cliente.nombre,
+                telefono: cliente.telefono,
+                email: cliente.email ?? null,
+                direccion: cliente.direccion ?? null,
+                status: cliente.status ?? 'Prospecto',
+                userId: cliente.userId ?? null,
+                canalId: cliente.canalId ?? null,
+            }
+        });
 
-    const result = await prisma.cliente.create({
-        data: {
-            nombre: cliente.nombre,
-            telefono: cliente.telefono,
-            email: cliente.email ?? null,
+        if (!result) {
+            return { success: false, message: 'No se pudo crear el cliente' };
         }
-    });
 
-    if (!result) {
-        return { success: false, message: 'No se pudo crear el cliente' };
+        return { success: true, clienteId: result.id };
     }
-
-    // Crear evento
-    const guardarEventoResponse = await crearEvento({
-        clienteId: result.id,
-        eventoTipoId: cliente.eventoTipoId ?? '',
-        nombre: cliente.nombreEvento ?? '',
-        fecha_evento: cliente.fechaCelebracion ? new Date(cliente.fechaCelebracion) : new Date(),
-    });
-
-    if (!guardarEventoResponse) {
-        return { success: false, message: 'No se pudo crear el evento' };
-    }
-
-    return { success: true, clienteId: result.id };
 
 }
 
@@ -84,7 +78,7 @@ export async function actualizarCliente(cliente: Cliente) {
             telefono: cliente.telefono,
             email: cliente.email,
             direccion: cliente.direccion,
-            etapa: cliente.etapa,
+            status: cliente.status,
         }
     });
 }

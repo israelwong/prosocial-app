@@ -41,3 +41,6 @@ next-env.d.ts
 
 # custom
 /app/seed.js
+/prisma/backup.json/
+/prisma/seed.js/
+/app/CSV/

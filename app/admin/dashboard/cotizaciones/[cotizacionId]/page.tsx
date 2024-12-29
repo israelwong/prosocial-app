@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import FormCotizaacionEditar from '../components/FormCotizacionEditar';
 
 export const metadata: Metadata = {
-    title: 'Cotizacion',
+    title: 'Cotización',
     description: 'Cotizacion',
 }
 

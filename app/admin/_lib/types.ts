@@ -110,16 +110,18 @@ export interface Cliente {
     email?: string | null;
     telefono: string | null;
     direccion?: string | null;
-    etapa: string; // prospecto, cliente
+    // etapa: string; // prospecto, cliente
     status?: string; // 1 nuevo, 2 seguimiento, 3 archivado
     canalId?: string | null; // canal de adquisición
+    canalNombre?: string | null; // canal de adquisición
     createdAt?: Date;
     updatedAt?: Date;
+    userId?: string | null; // usuario asignado
     // para asociar a evento
     nombreEvento?: string;
     fechaCelebracion?: Date;
     eventoTipoId?: string;
-
+    numero_eventos?: number;
 }
 
 export interface Evento {
@@ -127,9 +129,19 @@ export interface Evento {
     clienteId: string
     eventoTipoId: string | null //
     tipoEvento?: string // para mostrar en la lista de eventos
-    nombre: string
+    nombre: string | null
     fecha_evento: Date
     status?: string
+    createdAt?: Date
+    updatedAt?: Date
+    userId?: string | null
+    user?: User | null
+}
+
+export interface EventoStatus {
+    id?: string
+    nombre: string
+    posicion: number
     createdAt?: Date
     updatedAt?: Date
 }

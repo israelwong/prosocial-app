@@ -1,34 +1,37 @@
-'use client'
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation';
+import { Home, Calendar, Users, Wallet, Inbox } from 'lucide-react'
 
 const links = [
-    { href: '/admin/dashboard', label: 'Inicio' },
-    { href: '/admin/dashboard/prospectos', label: 'Prospectos' },
-    { href: '/admin/dashboard/cotizaciones', label: 'Cotizaciones' },
-    { href: '/admin/dashboard/clientes', label: 'Clientes' },
-    { href: '/admin/dashboard/finanzas', label: 'Finanzas' },
-];
+    { href: '/admin/dashboard', label: 'Inicio', icon: <Home size={24} /> },
+    { href: '/admin/dashboard/eventos', label: 'Eventos', icon: <Inbox size={24} /> },
+    { href: '/admin/dashboard/agenda', label: 'Agenda', icon: <Calendar size={24} /> },
+    { href: '/admin/dashboard/contactos', label: 'Contactos', icon: <Users size={24} /> },
+    { href: '/admin/dashboard/finanzas', label: 'Finanzas', icon: <Wallet size={24} /> },
+]
 
 function DashboardSideBar() {
-    const pathname = usePathname();
+    const [activeLink, setActiveLink] = useState('')
 
     return (
-        <div className='px-5 w-60 h-screen'>
-            <nav>
-                <ul className='py-5 h-full space-y-5'>
+        <div className='h-screen flex pt-5'>
+            <div className='relative flex'>
+                {/* Barra lateral fija con iconos */}
+                <div className='flex flex-col items-center text-white h-full p-3 space-y-10'>
+
                     {links.map((link) => (
-                        <li key={link.href}>
-                            <Link href={link.href}>
-                                <span className={`text-gray-500 ${pathname === link.href ? 'font-bold text-white' : ''}`}>
-                                    {link.label}
-                                </span>
-                            </Link>
-                        </li>
+                        <Link
+                            key={link.href}
+                            href={link.href}
+                            className={`p-2 rounded ${activeLink === link.href ? 'text-white' : 'text-zinc-500'}`}
+                            title={link.label}
+                            onClick={() => setActiveLink(link.href)}
+                        >
+                            {link.icon}
+                        </Link>
                     ))}
-                </ul>
-            </nav>
+                </div>
+            </div>
         </div>
     )
 }

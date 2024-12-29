@@ -12,19 +12,14 @@ export default function FormMetodoPagoNuevo() {
     const [numMsi, setNumMsi] = useState('')
     const [comisionMsiPorcentaje, setComisionMsiPorcentaje] = useState('')
     const [payment_method, setPaymentMethod] = useState('')
-    const [errors, setErrors] = useState({ metodoPago: '' })
+    const [errors] = useState({ metodoPago: '' })
 
-    const validate = () => {
-        const errors: { metodoPago: string } = { metodoPago: '' }
-        if (!metodoPago) errors.metodoPago = 'El nombre del método de pago es obligatorio'
-        setErrors(errors)
-        return Object.keys(errors).length === 0
-    }
+    const handleSubmit = async () => {
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-
-        if (!validate()) return
+        if (!metodoPago) {
+            errors.metodoPago = 'El nombre del método de pago es obligatorio'
+            return
+        }
 
         const nuevoMetodo = {
             metodo_pago: metodoPago.charAt(0).toUpperCase() + metodoPago.slice(1),
@@ -50,7 +45,7 @@ export default function FormMetodoPagoNuevo() {
             </div>
 
             {/* CONTENT */}
-            <form onSubmit={handleSubmit}>
+            <div>
                 <div className='mb-4'>
                     <label className='block text-zinc-500'>Nombre del método de Pago</label>
                     <input
@@ -106,7 +101,8 @@ export default function FormMetodoPagoNuevo() {
                         className='mt-1 block w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-md shadow-sm focus:outline-none'
                     />
                 </div>
-                <button type='submit' className='bg-blue-500 text-white px-3 py-2 rounded-md font-semibold w-full mb-3'>
+                <button type='submit' className='bg-blue-500 text-white px-3 py-2 rounded-md font-semibold w-full mb-3'
+                    onClick={() => handleSubmit()}>
                     Guardar
                 </button>
 
@@ -114,7 +110,7 @@ export default function FormMetodoPagoNuevo() {
                     onClick={() => router.back()}>
                     Cancelar
                 </button>
-            </form>
+            </div>
         </div>
     )
 }

@@ -58,16 +58,6 @@ export async function handlePaymentCompleted(session, res) {
             return;
         }
 
-
-        //  // Calcular balance total
-        // const pagos = await prisma.pago.findMany({
-        //     where: { 
-        //         clienteId: cliente.id, 
-        //         cotizacionId: cotizacion.id,
-        //         status: 'paid' 
-        //     },
-        // });
-
         const nombre = cliente.nombre;
             const nombreEvento = evento.nombre;
             const diaEvento = new Date(evento.fecha_evento).toLocaleDateString('es-ES', {
@@ -77,7 +67,7 @@ export async function handlePaymentCompleted(session, res) {
                 day: 'numeric',
             });
             const montoPago = pago.monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
-            const precio = cotizacion.precio;
+            // const precio = cotizacion.precio;
             // const totalPagado = pagos.reduce((total, pago) => total + pago.monto, 0)
             // const totalPendiente = (precio - totalPagado);
             const metodoPago = pago.metodo_pago;
@@ -147,8 +137,6 @@ export async function handlePaymentCompleted(session, res) {
                     montoPago: montoPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
                     metodoPago: metodoPago.toUpperCase(),
                     estadoPago: 'PAGADO',
-                    // totalPagado: totalPagado.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                    // totalPendiente: totalPendiente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
                     telefonoSoporte,
                     clienteId,
                     paginaWeb,

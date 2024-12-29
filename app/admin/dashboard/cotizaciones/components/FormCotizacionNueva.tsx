@@ -16,7 +16,7 @@ import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
 import { X } from 'lucide-react';
 import { crearCotizacion } from '@/app/admin/_lib/cotizacion.actions';
 
-export default function FormCotizaacionNueva() {
+export default function FormCotizacionNueva() {
 
     const router = useRouter();
     const [loading, setLoading] = useState(true); // Estado de carga
@@ -49,6 +49,7 @@ export default function FormCotizaacionNueva() {
 
     const [condicionesComerciales, setCondicionesComerciales] = useState([] as CondicionesComerciales[]);
     const [codigoCotizacion, setCodigoCotizacion] = useState('');
+    const [errorPrecioFinal, setErrorPrecioFinal] = useState(false);
 
     useEffect(() => {
 
@@ -160,6 +161,9 @@ export default function FormCotizaacionNueva() {
     //! Calcular totales
     const calcularTotal = useCallback((servicios: Servicio[]) => {
 
+        setErrorPrecioFinal(false);
+        setErrors(prevErrors => ({ ...prevErrors, nombre: '' }));
+
         const totalCostos = servicios.reduce((total, servicio) => total + (servicio.costo || 0) * (servicio.cantidad || 1), 0);
         const totalGastos = servicios.reduce((total, servicio) => total + (servicio.gasto || 0) * (servicio.cantidad || 1), 0);
         const precioSistema = servicios.reduce((total, servicio) => total + (servicio.precio_publico || 0) * (servicio.cantidad || 1), 0);
@@ -236,9 +240,17 @@ export default function FormCotizaacionNueva() {
 
         if (!nombreCotizacion) {
             setErrors(prevErrors => ({ ...prevErrors, nombre: 'El nombre de la cotización es requerido' }));
+            setGuardandoCotizacion(false);
             return;
         } else {
             setErrors(prevErrors => ({ ...prevErrors, nombre: '' }));
+        }
+
+        if (precioFinal <= 0) {
+            alert('El precio final no puede ser 0');
+            setGuardandoCotizacion(false);
+            setErrorPrecioFinal(true);
+            return;
         }
 
         const nuevaCotizacion = {
@@ -263,7 +275,7 @@ export default function FormCotizaacionNueva() {
         <div>
             {loading ? (
                 <div className="flex justify-center items-center h-screen">
-                    <p>Cargando...</p>
+                    <p>Cargando información ...</p>
                 </div>
             ) : (
                 <div>
@@ -380,6 +392,7 @@ export default function FormCotizaacionNueva() {
                                     )}
                                 </div>
 
+
                                 {msi > 0 && (
                                     <p>{msi} pagos de {pagoMensual.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} cada uno</p>
                                 )}
@@ -401,10 +414,16 @@ export default function FormCotizaacionNueva() {
                                 )}
                             </div>
 
+                            {errorPrecioFinal && (
+                                <p className='text-red-500 text-sm mb-5'>
+                                    El precio final no puede ser $0.
+                                </p>
+                            )}
+
                             {/* //!GUARDAR COTIZACIÓN */}
                             <button
                                 onClick={() => { handleCrearCotizacion(); }}
-                                className='bg-blue-900 text-white px-3 py-3 rounded-md w-full'
+                                className='bg-blue-900 text-white px-3 py-3 rounded-md w-full font-semibold'
                                 disabled={guardandoCotizacion}
                             >
                                 {guardandoCotizacion ? 'Guardando cotización...' : 'Guardar cotización'}

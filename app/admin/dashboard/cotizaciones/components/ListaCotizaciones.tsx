@@ -1,44 +1,36 @@
 'use client'
 import React, { useEffect, useState, useMemo, useCallback, memo } from 'react'
-import { obtenerCotizacionesPorEvento } from '@/app/admin/_lib/cotizacion.actions'
-import { obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/paquete.actions'
-import { Evento, Cotizacion, Paquete } from '@/app/admin/_lib/types'
-import { useRouter } from 'next/navigation'
+import { obtenerCotizacionesPorEvento, eliminarCotizacion } from '@/app/admin/_lib/cotizacion.actions'
+import { Evento, Cotizacion } from '@/app/admin/_lib/types'
 import { Copy, SquareArrowOutUpRight, Pencil } from 'lucide-react'
 import { Cliente } from '@/app/admin/_lib/types'
+import { useRouter } from 'next/navigation'
 
 interface Props {
     evento: Evento
     cliente: Cliente
-    onClose: () => void
 }
 
-const ListaCotizaciones: React.FC<Props> = ({ evento, cliente, onClose }) => {
+const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
 
+    const [loading, setLoading] = useState(false)
     const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
-    const [paquetes, setPaquetes] = useState<Paquete[]>([])
+    const [eliminando, setEliminando] = useState(false)
     const router = useRouter()
 
     useEffect(() => {
         const fetchData = async () => {
-            if (evento.id && evento.eventoTipoId) {
-                const [cotizacionesData, paquetesData] = await Promise.all([
-                    obtenerCotizacionesPorEvento(evento.id),
-                    obtenerPaquetesPorTipoEvento(evento.eventoTipoId)
-                ])
+            if (evento.id) {
+                setLoading(true)
+                const cotizacionesData = await obtenerCotizacionesPorEvento(evento.id)
                 setCotizaciones(cotizacionesData)
-                setPaquetes(paquetesData)
+                setLoading(false)
             }
         }
         fetchData()
-    }, [evento.id, evento.eventoTipoId])
-
-    const handleNuevaCotizacion = useCallback((paqueteId: string) => {
-        router.push(`/admin/dashboard/cotizaciones/nueva?eventoId=${evento.id}&eventoTipoId=${evento.eventoTipoId}&&paqueteId=${paqueteId}`)
-    }, [evento.id, evento.eventoTipoId, router])
+    }, [evento.id])
 
     const handleShareCotizacion = useCallback(() => {
-
         const fecha_evento = new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
             year: 'numeric',
             month: 'long',
@@ -50,116 +42,93 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente, onClose }) => {
 
         //envia mensaje con link de whatsapp
         window.open(`https://wa.me/${cliente.telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
-
-
-        console.log(mensaje)
+        // console.log(mensaje)
     }, [cliente, evento])
 
+    const handleEliminarCotizacion = useCallback(async (cotizacionId: string) => {
+        if (confirm('¿Estás seguro de eliminar esta cotización?')) {
+            setEliminando(true)
+            await eliminarCotizacion(cotizacionId)
+            setCotizaciones(cotizaciones.filter(cotizacion => cotizacion.id !== cotizacionId))
+            setEliminando(false)
+        }
+    }, [cotizaciones])
+
     const cotizacionesRenderizadas = useMemo(() => {
+
         return cotizaciones.map(cotizacion => (
-            <li key={cotizacion.id} className={`flex justify-between items-center relative mb-3 ${cotizacion.status === 'pendiente' ? 'bg-zinc-900 rounded-md  p-5' : 'bg-green-900/20 rounded-md  p-5'}`}>
-                <div>
-                    <p>{cotizacion.nombre}</p>
-                    <p className='text-xl'>
-                        {cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                    </p>
-                    <p className='text-sm text-zinc-600'>
-                        {cotizacion.createdAt ? new Date(cotizacion.createdAt).toLocaleDateString('es-MX', {
+
+            <li key={cotizacion.id} className={`mb-3 ${cotizacion.status === 'pendiente' ? 'bg-zinc-900 rounded-md  p-5' : 'bg-green-900/10 border border-green-950/30 rounded-md  p-5'}`}>
+
+                <div className='mb-4'>
+                    <button
+                        onClick={() => router.push(`/admin/dashboard/cotizaciones/${cotizacion.id}`)}
+                        className='flex items-center text-zinc-400 hover:text-zinc-100 mb-1 break-words text-start'
+                    >
+                        <Pencil size={12} className='md:mr-1 mr-3  ' />
+                        <span className='block'>
+                            {cotizacion.nombre} por {cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                        </span>
+                    </button>
+
+                    <p className='text-sm text-zinc-500 italic'>
+                        Creada el {cotizacion.createdAt ? new Date(cotizacion.createdAt).toLocaleDateString('es-MX', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric'
                         }) : 'Fecha no disponible'}
                     </p>
                 </div>
-                <div className='space-x-6 items-center align-middle'>
-                    <button
-                        onClick={() => router.push(`/admin/dashboard/cotizaciones/${cotizacion.id}`)}
-                    >
-                        <Pencil />
-                    </button>
 
+                <div className='items-center flex flex-wrap justify-start md:space-x-2 space-y-1 md:space-y-0'>
                     <button
                         onClick={() => navigator.clipboard.writeText(`https://www.prosocial.mx/cotizacion/${cotizacion.id}`)}
+                        className='text-sm flex items-center px-3 py-2 leading-3 border border-zinc-800 rounded-md bg-zinc-900'
                     >
-                        <Copy />
+                        <Copy size={12} className='mr-1' /> Copiar
                     </button>
 
                     <button
                         onClick={() => window.open(`/cotizacion/${cotizacion.id}`, '_blank')}
+                        className='text-sm flex items-center px-3 py-2 leading-3 border border-zinc-800 rounded-md bg-zinc-900'
                     >
-                        <SquareArrowOutUpRight />
+                        <SquareArrowOutUpRight size={12} className='mr-1' /> Abrir
                     </button>
                     <button
                         onClick={handleShareCotizacion}
+                        className='text-sm flex items-center px-3 py-2 leading-3 border border-zinc-800 rounded-md bg-zinc-900'
                     >
-                        <i className="fab fa-whatsapp text-2xl"></i>
+                        <i className="fab fa-whatsapp text-md mr-1"></i> Enviar
                     </button>
+                    {cotizacion.status !== 'autorizado' && (
+                        <button
+                            onClick={() => cotizacion.id && handleEliminarCotizacion(cotizacion.id)}
+                            className='text-sm flex items-center px-3 py-2 leading-3 border border-zinc-800 rounded-md bg-red-900'
+                            disabled={eliminando}
+                        >
+                            {eliminando ? 'Eliminando...' : 'Eliminar'}
+                        </button>
+                    )}
                 </div>
             </li >
         ))
-    }, [cotizaciones, router, handleShareCotizacion])
-
-    const paquetesRenderizados = useMemo(() => {
-        return paquetes.map(paquete => (
-            <option key={paquete.id} value={paquete.id}>
-                {paquete.nombre}
-            </option>
-        ))
-    }, [paquetes])
+    }, [cotizaciones, router, handleShareCotizacion, handleEliminarCotizacion, eliminando])
 
     return (
         <div>
             {evento.id ? (
                 <div>
-                    <div>
-                        {/* header */}
-                        <div className='flex justify-between items-center mb-5'>
-                            <h2 className=' text-xl text-zinc-300'>
-                                Cotizaciones {evento.nombre}
-                            </h2>
-                            <div className='flex'>
-                                {/* //! COmpartir paquetes */}
-                                <button
-                                    className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm mr-2'
-                                >
-                                    Compartir paquetes
-                                </button>
-
-                                <select
-                                    className='opciones_cotizacion bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm mr-2'
-                                    onChange={(e) => handleNuevaCotizacion(e.target.value)}
-                                >
-                                    <option>Opciones para crear cotización</option>
-                                    {paquetesRenderizados}
-                                    <option value="personalizada">Personalizada</option>
-                                </select>
-
-                                <button
-                                    onClick={onClose}
-                                    className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm'>
-                                    Cerrar
-                                </button>
-
-                            </div>
-                        </div>
-                        {/* content */}
-                        <div className='grid grid-cols-3 gap-4'>
-                            <div className='col-span-2'>
-                                {cotizaciones.length > 0 ? (
-                                    <ul>
-                                        {cotizacionesRenderizadas}
-                                    </ul>
-                                ) : (
-                                    <p>No hay cotizaciones disponibles.</p>
-                                )}
-                            </div>
-                            <div>
-                                <div className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-800 text-sm'>
-                                    Se compatió el paquete
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {loading ? (
+                        <p>Cargando cotizaciones...</p>
+                    ) : (
+                        cotizaciones.length > 0 ? (
+                            <ul>
+                                {cotizacionesRenderizadas}
+                            </ul>
+                        ) : (
+                            <p>No hay cotizaciones disponibles.</p>
+                        )
+                    )}
                 </div>
             ) : (
                 ''

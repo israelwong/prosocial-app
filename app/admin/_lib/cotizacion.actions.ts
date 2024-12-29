@@ -9,6 +9,9 @@ export async function obtenerCotizacionesPorEvento(eventoId: string) {
         where: {
             eventoId
         }
+        , orderBy: {
+            createdAt: 'desc'
+        }
     })
 }
 
@@ -59,6 +62,8 @@ export async function crearCotizacion(data: Cotizacion) {
 
 export async function actualizarCotizacion(data: Cotizacion) {
 
+
+
     try {
         await prisma.cotizacion.update({
             where: {
@@ -69,8 +74,9 @@ export async function actualizarCotizacion(data: Cotizacion) {
                 eventoId: data.eventoId,
                 nombre: data.nombre,
                 precio: data.precio,
-                condicionesComercialesId: data.condicionesComercialesId,
-                condicionesComercialesMetodoPagoId: data.condicionesComercialesMetodoPagoId,
+                condicionesComercialesId: data.condicionesComercialesId || null,
+                condicionesComercialesMetodoPagoId: data.condicionesComercialesMetodoPagoId || null,
+                status: data.status,
             }
         })
 
@@ -96,7 +102,10 @@ export async function actualizarCotizacion(data: Cotizacion) {
         }
 
         return { success: true }
-    } catch {
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return { error: 'Error updating cotizacion ' + error.message }
+        }
         return { error: 'Error updating cotizacion' }
     }
 }
@@ -138,6 +147,7 @@ export async function cotizacionDetalle(id: string) {
             eventoId: true,
             eventoTipoId: true,
             nombre: true,
+            precio: true,
             condicionesComercialesId: true,
             condicionesComercialesMetodoPagoId: true,
             status: true,

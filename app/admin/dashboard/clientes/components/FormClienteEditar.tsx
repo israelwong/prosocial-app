@@ -1,8 +1,9 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { Cliente } from '@/app/admin/_lib/types'
-import { obtenerCliente, actualizarCliente } from '@/app/admin/_lib/cliente.actions'
-import { useRouter } from 'next/navigation'
+import { obtenerCliente, actualizarCliente, eliminarCliente } from '@/app/admin/_lib/cliente.actions'
+import { RefreshCw, Trash } from 'lucide-react'
+import { obtenerCanales } from '@/app/admin/_lib/canal.actions'
 
 interface Props {
     clienteId: string
@@ -10,15 +11,12 @@ interface Props {
 
 function FormClienteEditar({ clienteId }: Props) {
 
-    const router = useRouter();
-
     const [cliente, setCliente] = useState<Cliente | null>(null);
     const [nombre, setNombre] = useState('');
     const [telefono, setTelefono] = useState('');
     const [email, setEmail] = useState('');
     const [direccion, setDireccion] = useState('');
-    const [etapa, setEtapa] = useState('prospecto');
-    const [estatus, setEstatus] = useState('activo');
+    const [estatus, setEstatus] = useState('prospecto');
     const [canal, setCanal] = useState('');
     const [fechaCreacion, setFechaCreacion] = useState('');
     const [fechaActualizacion, setFechaActualizacion] = useState('');
@@ -35,14 +33,19 @@ function FormClienteEditar({ clienteId }: Props) {
                     setTelefono(cliente.telefono ?? '');
                     setEmail(cliente.email ?? '');
                     setDireccion(cliente.direccion ?? '');
-                    setEtapa(cliente.etapa ?? '');
                     setEstatus(cliente.status ?? '');
                     setCanal(cliente.canalId ?? '');
                     setFechaCreacion(cliente.createdAt.toISOString());
                     setFechaActualizacion(cliente.updatedAt.toISOString());
                 }
             })
-    }, [clienteId]);
+
+        obtenerCanales().then((canales) => {
+            const canal = canales.find(c => c.id === cliente?.canalId);
+            setCanal(canal?.nombre ?? '');
+        })
+
+    }, [clienteId, cliente?.canalId]);
 
     const handleSubmit = () => {
 
@@ -62,7 +65,7 @@ function FormClienteEditar({ clienteId }: Props) {
             telefono,
             email,
             direccion,
-            etapa,
+            status: estatus,
             canal
         };
         actualizarCliente(updatedCliente)
@@ -87,18 +90,36 @@ function FormClienteEditar({ clienteId }: Props) {
             setTelefono(cliente.telefono ?? '');
             setEmail(cliente.email ?? '');
             setDireccion(cliente.direccion ?? '');
-            setEtapa(cliente.etapa ?? '');
             setEstatus(cliente.status ?? '');
             setCanal(cliente.canalId ?? '');
         }
     }
 
+    const handleEliminarCliente = () => {
+        if (!confirm('¿Estás seguro de eliminar este cliente?'))
+            return;
+
+        eliminarCliente(clienteId)
+            .then(() => {
+                window.location.href = '/admin/dashboard/contactos';
+            })
+            .catch((error) => {
+                console.error('Error eliminando cliente:', error);
+                alert('Hubo un error al eliminar el cliente');
+            });
+    }
+
     return (
-        <div className="max-w-md mx-auto p-5 border border-zinc-800 rounded-lg shadow-md">
+        <div className="">
 
-            <h1>Información general</h1>
+            <div className='flex justify-between items-center mb-3'>
+                <h2 className=' text-xl text-zinc-500'>Datos generales</h2>
+                <button onClick={handleReset} className="p-2">
+                    <RefreshCw size={16} className='inline-block ml-2' />
+                </button>
+            </div>
 
-            <div>
+            <div className='border border-zinc-700 rounded-lg shadow-md p-5'>
 
                 <div className="mb-4">
                     <label className="block text-zinc-700 mb-1 text-sm">Nombre</label>
@@ -137,17 +158,7 @@ function FormClienteEditar({ clienteId }: Props) {
                         className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-md"
                     />
                 </div>
-                <div className="mb-4">
-                    <label className="block text-zinc-700 mb-1 text-sm">Etapa</label>
-                    <select
-                        value={etapa}
-                        onChange={(e) => setEtapa(e.target.value)}
-                        className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-md"
-                    >
-                        <option value="prospecto">Prospecto</option>
-                        <option value="cliente">Cliente</option>
-                    </select>
-                </div>
+
                 <div className="mb-4">
                     <label className="block text-zinc-700 mb-1 text-sm">Estatus</label>
                     <select
@@ -155,15 +166,16 @@ function FormClienteEditar({ clienteId }: Props) {
                         onChange={(e) => setEstatus(e.target.value)}
                         className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-md"
                     >
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
+                        <option value="prospecto">Prospecto</option>
+                        <option value="cliente">Cliente</option>
                     </select>
                 </div>
-                <div className="mb-4">
-                    <p className="block text-zinc-700 mb-1 text-sm">
-                        Canal de adquición: {canal ? canal : 'No definido'}
-                    </p>
 
+                <div className="mb-4">
+                    <label className="block text-zinc-700 mb-1 text-sm">Canal de adquición</label>
+                    <p className="block text-zinc-500 mb-1 text-sm bg-zinc-900 px-3 py-2 rounded-md border border-zinc-800">
+                        {canal ? canal : 'No definido'}
+                    </p>
                 </div>
 
                 {/* fechas de creación y acrualización */}
@@ -188,7 +200,6 @@ function FormClienteEditar({ clienteId }: Props) {
                     </div>
                 </div>
 
-
                 {respuestaServidor &&
                     <p className="bg-green-700/20 p-5 rounded-md text-green-500 text-sm mb-4">{respuestaServidor}
                     </p>}
@@ -197,23 +208,14 @@ function FormClienteEditar({ clienteId }: Props) {
                     onClick={handleSubmit}
                     className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
                 >
-                    Actualizar
+                    Actualizar información
                 </button>
 
                 <button
-                    type="button"
-                    onClick={handleReset}
-                    className="w-full bg-yellow-700 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 mt-4"
+                    onClick={() => handleEliminarCliente()}
+                    className="w-full text-red-500 text-sm py-2 px-4 rounded-lg mt-4 items-center justify-center"
                 >
-                    Restaurar valores
-                </button>
-
-                <button
-                    type="button"
-                    onClick={() => router.back()}
-                    className="w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 mt-4"
-                >
-                    Cerrar ventana
+                    <Trash size={12} className='inline-block mr-1' /> Eliminar cliente
                 </button>
             </div>
         </div>

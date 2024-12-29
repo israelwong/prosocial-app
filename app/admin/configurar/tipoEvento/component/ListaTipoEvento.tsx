@@ -127,10 +127,9 @@ function ListaTipoEvento() {
                                                     handleUpdateTipoEvento(tipoEvento.id, newNombre);
                                                 }
                                             }
-                                        }
-                                        }
+                                        }}
 
-                                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                        className="shadow appearance-none border border-zinc-800 rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline bg-zinc-900 text-white"
                                     />
                                     <div>
                                         <button className='bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm'

@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function SkeletonPendiente() {
     return (
-        <div className="py-20">
+        <div className="py-20 max-w-screen-sm mx-auto px-5">
 
             <h3 className='text-2xl font-bold text-center text-zinc-400 mb-2'>
                 Un momento por favor...

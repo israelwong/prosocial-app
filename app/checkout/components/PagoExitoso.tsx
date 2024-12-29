@@ -28,9 +28,9 @@ export default function PagoExitoso() {
     }
 
     return (
-        <div className="mt-10 mb-16">
+        <div className="mt-10 mb-16 p-8">
 
-            <p className='font-Bebas-Neue text-2xl text-left mb-10 text-zinc-300'>
+            <p className='font-Bebas-Neue text-2xl text-left mb-10 text-green-700'>
                 Pago exitoso
             </p>
 
