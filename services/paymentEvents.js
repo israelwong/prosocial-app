@@ -9,7 +9,7 @@ export async function handlePaymentCompleted(session, res) {
     try {
         const paymentIntent = session;
         
-        res.status(200).send(paymentIntent);
+        res.status(200).send('Sesión de pago en validación');
 
         // Obtener el pago correspondiente
         const pago = await prisma.pago.findFirst({
