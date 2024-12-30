@@ -1,6 +1,7 @@
 'use server';
 import { PrismaClient } from "@prisma/client";
 import { Evento } from "./types";
+
 const prisma = new PrismaClient();
 
 export async function obtenerEventos() {
@@ -159,4 +160,67 @@ export async function actualizarEventoStatus(data: { eventoId: string, status: s
             status: data.status
         }
     });
+}
+
+export async function obtenerEventosAprobados() {
+    return prisma.evento.findMany({
+        where: {
+            status: 'aprobado'
+        }
+    });
+}
+
+export async function obtenerEventoSeguimiento(eventoId: string) {
+
+    const evento = await prisma.evento.findUnique({
+        where: {
+            id: eventoId
+        },
+        include: {
+            EventoTipo: {
+                select: {
+                    nombre: true
+                }
+            }
+        }
+    });
+
+    if (!evento) {
+        return { error: 'Evento no encontrado' };
+    }
+
+    const cliente = await prisma.cliente.findUnique({
+        where: {
+            id: evento.clienteId
+        }
+    });
+
+    const cotizacion = await prisma.cotizacion.findFirst({
+        where: {
+            eventoId,
+            status: 'aprobada'
+        }
+    });
+
+    const cotizacionServicio = await prisma.cotizacionServicio.findMany({
+        where: {
+            cotizacionId: cotizacion?.id
+        }
+    });
+
+    const pago = await prisma.pago.findMany({
+        where: {
+            cotizacionId: cotizacion?.id
+        }
+    });
+
+    return {
+        evento,
+        tipoEvento: evento.EventoTipo?.nombre,
+        cliente,
+        cotizacion,
+        cotizacionServicio,
+        pago,
+    };
+
 }

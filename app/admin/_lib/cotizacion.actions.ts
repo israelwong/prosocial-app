@@ -1,6 +1,6 @@
 'use server'
 import { PrismaClient } from '@prisma/client'
-import { Cotizacion } from './types'
+import { Cotizacion, CotizacionServicio } from './types'
 const prisma = new PrismaClient()
 
 export async function obtenerCotizacionesPorEvento(eventoId: string) {
@@ -61,8 +61,6 @@ export async function crearCotizacion(data: Cotizacion) {
 }
 
 export async function actualizarCotizacion(data: Cotizacion) {
-
-
 
     try {
         await prisma.cotizacion.update({
@@ -137,6 +135,24 @@ export async function obtenerCotizacionServicios(cotizacionId: string) {
             cotizacionId
         }
     })
+}
+
+export async function actualizarCotizacionServicio(data: CotizacionServicio) {
+    // try {
+    //     await prisma.cotizacionServicio.update({
+    //         where: {
+    //             id: data.id
+    //         },
+    //         data: {
+    //             cantidad: data.cantidad,
+    //             posicion: data.posicion
+    //         }
+    //     })
+
+    //     return { success: true }
+    // } catch {
+    //     return { error: 'Error updating cotizacion servicio' }
+    // }
 }
 
 export async function cotizacionDetalle(id: string) {

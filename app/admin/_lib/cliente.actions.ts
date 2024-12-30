@@ -69,18 +69,23 @@ export async function crearCliente(cliente: Cliente) {
 }
 
 export async function actualizarCliente(cliente: Cliente) {
-    return await prisma.cliente.update({
-        where: {
-            id: cliente.id
-        },
-        data: {
-            nombre: cliente.nombre,
-            telefono: cliente.telefono,
-            email: cliente.email,
-            direccion: cliente.direccion,
-            status: cliente.status,
-        }
-    });
+    try {
+        const updatedCliente = await prisma.cliente.update({
+            where: {
+                id: cliente.id
+            },
+            data: {
+                nombre: cliente.nombre,
+                telefono: cliente.telefono,
+                email: cliente.email,
+                direccion: cliente.direccion,
+                status: cliente.status,
+            }
+        });
+        return { success: true, cliente: updatedCliente };
+    } catch (error) {
+        return { success: false, message: 'No se pudo actualizar el cliente', error: (error as any).message };
+    }
 }
 
 export async function eliminarCliente(id: string) {

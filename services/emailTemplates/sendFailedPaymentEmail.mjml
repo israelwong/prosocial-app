@@ -1,6 +1,6 @@
 <mjml>
   <mj-head>
-    <mj-preview>Notificación de pago</mj-preview>
+    <mj-preview>No se proceso el pago</mj-preview>
     <mj-style inline="inline">
       .logo { max-width: 50px; margin: 0 auto; }
     </mj-style>

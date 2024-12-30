@@ -8,7 +8,7 @@ import { obtenerCanales } from '@/app/admin/_lib/canal.actions'
 import { useRouter } from 'next/navigation'
 import ListaCotizaciones from '../../cotizaciones/components/ListaCotizaciones'
 import { obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/paquete.actions'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Shuffle, Pencil, Trash2 } from 'lucide-react'
 
 interface Props {
     eventoId: string
@@ -95,7 +95,7 @@ export default function FormEventoEditar({ eventoId }: Props) {
         const tipificacionStatusOptions = [
             'nuevo',
             'seguimiento',
-            'agendado',
+            'aprobado',
             'en proceso',
             'entregado',
             'cancelado'
@@ -152,11 +152,20 @@ export default function FormEventoEditar({ eventoId }: Props) {
 
                 <div className="flex flex-col md:flex-row items-start space-y-2 md:space-y-0 md:space-x-2">
 
-                    <button
+                    {status === 'aprobado' && (
+                        <button
+                            className='bg-blue-500  text-white font-bold py-2 px-4 rounded flex items-center'
+                            onClick={() => router.push(`/admin/dashboard/seguimiento/${eventoId}`)}
+                        >
+                            <Shuffle size={15} className='mr-2' /> Gestionar
+                        </button>
+                    )}
+
+                    {/* <button
                         className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm mr-2'
                     >
                         Compartir paquetes
-                    </button>
+                    </button> */}
 
                     <button
                         onClick={() => router.push('/admin/dashboard/eventos')}
@@ -322,7 +331,7 @@ export default function FormEventoEditar({ eventoId }: Props) {
                                 />
                             </div>
 
-                            <p className='text-sm text-zinc-500 italic mb-3'>
+                            <p className='text-sm text-zinc-500 italic mb-0'>
                                 Creado el  {fechaCreacion ? new Date(fechaCreacion).toLocaleString('es-ES', {
                                     year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric'
                                 }) : ''}
@@ -350,20 +359,23 @@ export default function FormEventoEditar({ eventoId }: Props) {
                                 </button>
 
                                 <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
-                                    onClick={() => router.push('/admin/dashboard/eventos')}
+                                    onClick={() => router.back()}
                                 >
                                     Cerrar ventana
                                 </button>
 
-                                {status !== 'seguimiento' && (
-                                    <button
-                                        onClick={() => handleEliminarEvento()}
-                                        className="text-red-500 py-2 flex items-center justify-center w-full text-sm"
-                                    >
-                                        <Trash2 size={15} className='mr-2' />
-                                        Eliminar evento
-                                    </button>
-                                )}
+                                {/* //! DESCOMENTAR EN PRODUCCUÓN */}
+                                {/* //! DESCOMENTAR EN PRODUCCUÓN */}
+                                {/* //! DESCOMENTAR EN PRODUCCUÓN */}
+                                {/* {status !== 'seguimiento' && ( */}
+                                <button
+                                    onClick={() => handleEliminarEvento()}
+                                    className="text-red-500 py-2 flex items-center justify-center w-full text-sm"
+                                >
+                                    <Trash2 size={15} className='mr-2' />
+                                    Eliminar evento
+                                </button>
+                                {/* )} */}
                                 {errorEliminar && <p className="text-red-500 text-sm">{errorEliminar}</p>}
                             </div>
 

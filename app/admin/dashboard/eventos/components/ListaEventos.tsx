@@ -67,7 +67,7 @@ export default function ListaEventos() {
     const eventosPorEstado = {
         nuevos: eventosFiltrados.filter(evento => evento.status === 'nuevo'),
         seguimientos: eventosFiltrados.filter(evento => evento.status === 'seguimiento'),
-        autorizados: eventosFiltrados.filter(evento => evento.status === 'autorizado'),
+        aprobado: eventosFiltrados.filter(evento => evento.status === 'aprobado'),
         archivados: eventosFiltrados.filter(evento => evento.status === 'archivado')
     }
 

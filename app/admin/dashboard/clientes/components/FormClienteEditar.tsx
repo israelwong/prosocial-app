@@ -21,6 +21,7 @@ function FormClienteEditar({ clienteId }: Props) {
     const [fechaCreacion, setFechaCreacion] = useState('');
     const [fechaActualizacion, setFechaActualizacion] = useState('');
     const [respuestaServidor, setRespuestaServidor] = useState('');
+    const [errorActualizacion, setErrorActualizacion] = useState('');
 
     const [errors, setErrors] = useState<{ nombre?: string; telefono?: string }>({});
 
@@ -47,7 +48,7 @@ function FormClienteEditar({ clienteId }: Props) {
 
     }, [clienteId, cliente?.canalId]);
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
 
         if (!nombre) {
             setErrors({ nombre: 'El nombre es requerido' });
@@ -68,17 +69,27 @@ function FormClienteEditar({ clienteId }: Props) {
             status: estatus,
             canal
         };
-        actualizarCliente(updatedCliente)
-            .then(() => {
+
+        try {
+            const response = await actualizarCliente(updatedCliente);
+            if (response.success) {
                 setRespuestaServidor('Información actualizada correctamente');
                 setTimeout(() => {
                     setRespuestaServidor('');
                 }, 3000);
-            })
-            .catch((error) => {
-                console.error('Error actualizando cliente:', error);
-                alert('Hubo un error al actualizar el cliente');
-            });
+            } else {
+                const { error } = response;
+                if (error.includes('telefono')) {
+                    setErrorActualizacion('El teléfono que intentas actualizar está asignado a otro cliente');
+                } else {
+                    setErrorActualizacion(`Hubo un error al actualizar el cliente: ${error}`);
+                }
+            }
+        } catch (error) {
+            console.error('Error actualizando cliente:', error);
+            alert('Hubo un error al actualizar el cliente');
+        }
+
     };
 
     const handleReset = () => {
@@ -203,6 +214,8 @@ function FormClienteEditar({ clienteId }: Props) {
                 {respuestaServidor &&
                     <p className="bg-green-700/20 p-5 rounded-md text-green-500 text-sm mb-4">{respuestaServidor}
                     </p>}
+
+                {errorActualizacion && <p className="bg-red-700/20 p-5 rounded-md text-red-500 text-sm mb-4">{errorActualizacion}</p>}
 
                 <button
                     onClick={handleSubmit}

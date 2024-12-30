@@ -102,7 +102,7 @@ export async function handlePaymentCompleted(session, res) {
             //actualizar status del evento
             await prisma.evento.update({
                 where: { id: evento.id },
-                data: { status: 'agendado' },
+                data: { status: 'aprobado' },
             });
 
             //! Verificar si la cotización ya fue aprobado

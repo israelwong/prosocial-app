@@ -102,16 +102,16 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
                     >
                         <i className="fab fa-whatsapp text-md mr-1"></i> Enviar
                     </button>
-
-                    {cotizacion.status !== 'aprobada' && (
-                        <button
-                            onClick={() => cotizacion.id && handleEliminarCotizacion(cotizacion.id)}
-                            className='text-sm flex items-center px-3 py-2 leading-3 border border-zinc-800 rounded-md bg-red-900'
-                            disabled={eliminando}
-                        >
-                            {eliminando ? 'Eliminando...' : 'Eliminar'}
-                        </button>
-                    )}
+                    {/* //! DESCOMENTAR EN PRODUCCUÓN */}
+                    {/* {cotizacion.status !== 'aprobada' && ( */}
+                    <button
+                        onClick={() => cotizacion.id && handleEliminarCotizacion(cotizacion.id)}
+                        className='text-sm flex items-center px-3 py-2 leading-3 border border-zinc-800 rounded-md bg-red-900'
+                        disabled={eliminando}
+                    >
+                        {eliminando ? 'Eliminando...' : 'Eliminar'}
+                    </button>
+                    {/* )} */}
 
                 </div>
             </li >

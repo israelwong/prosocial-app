@@ -1,25 +1,20 @@
 'use client';
-import { Copy, SquareArrowOutUpRight } from 'lucide-react'
+import { Copy, Shuffle, SquareArrowOutUpRight, User } from 'lucide-react'
 import React, { useEffect, useState, useCallback } from 'react'
 import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
-
 import { obtenerCotizacion, obtenerCotizacionServicios, actualizarCotizacion, eliminarCotizacion } from '@/app/admin/_lib/cotizacion.actions';
 import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
 import { actualizarEventoStatus } from '@/app/admin/_lib/evento.actions';
-
 import { obtenerEventoPorId } from '@/app/admin/_lib/evento.actions';
 import { obtenerCliente } from '@/app/admin/_lib/cliente.actions';
-
 import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
 import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
 import { crearPago } from '@/app/admin/_lib/pago.actons';
-import { validarDisponibilidadFecha } from '@/app/admin/_lib/evento.actions';
+// import { validarDisponibilidadFecha } from '@/app/admin/_lib/evento.actions';
 
 import { Servicio, MetodoPago, CondicionesComerciales } from '@/app/admin/_lib/types'
-
 import ListaServicios from './ListaServicios'
 import Wishlist from './Wishlist'
-
 import { useRouter } from 'next/navigation'
 import { Trash, X } from 'lucide-react';
 
@@ -73,7 +68,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
     const [clienteNombre, setClienteNombre] = useState('');
     const [clienteTelefono, setClienteTelefono] = useState('');
 
-    const [errorFechaEvento, setErrorFechaEvento] = useState('');
+    // const [errorFechaEvento, setErrorFechaEvento] = useState('');
 
     useEffect(() => {
         async function fetchData() {
@@ -127,10 +122,10 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 }
 
                 //validar fecha de evento
-                const eventoDisponible = await validarDisponibilidadFecha(evento?.fecha_evento || new Date());
-                if (eventoDisponible) {
-                    setErrorFechaEvento('Fecha no disponible');
-                }
+                // const eventoDisponible = await validarDisponibilidadFecha(evento?.fecha_evento || new Date());
+                // if (eventoDisponible) {
+                //     setErrorFechaEvento('Fecha no disponible');
+                // }
             }
 
             if (configuracion) {
@@ -283,6 +278,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
     }
 
     const handleActualizarCotizacion = async () => {
+
         if (!nombreCotizacion) {
             setErrors(prevErrors => ({ ...prevErrors, nombre: 'El nombre de la cotización es requerido' }));
             return;
@@ -304,8 +300,11 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
             status: cotizacionStatus
         }
 
+
         setActualizando(true);
         const respuesta = await actualizarCotizacion(cotizacionActualizada);
+        // console.log(respuesta);
+        // return
         setRespuestaGuardado(respuesta.success ? 'Cotización actualizada' : respuesta.error || 'Error al actualizar la cotización');
         setTimeout(() => {
             setRespuestaGuardado(null);
@@ -412,9 +411,14 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
         setConfirmarPorcentajeAnticipo(condicionComercial?.porcentaje_anticipo?.toString() || '');
     }
 
-    const handleEnviarWhatsapp = () => {
-        const mensaje = `Hola ${clienteNombre}, te compartimos la cotización para el evento de ${eventoNombre} que celebrarán el día ${new Date(eventoFecha).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}:\n\nhttps://www.prosocial.mx/cotizacion/${cotizacionId}`;
-        window.open(`https://api.whatsapp.com/send?phone=52${clienteTelefono}&text=${encodeURIComponent(mensaje)}`, '_blank');
+    const handleEnviarWhatsapp = (asunto: string) => {
+        if (asunto === 'compatir') {
+            const mensaje = `Hola ${clienteNombre}, te compartimos la cotización para el evento de ${eventoNombre} que celebrarán el día ${new Date(eventoFecha).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}:\n\nhttps://www.prosocial.mx/cotizacion/${cotizacionId}`;
+            window.open(`https://api.whatsapp.com/send?phone=52${clienteTelefono}&text=${encodeURIComponent(mensaje)}`, '_blank');
+        } else {
+            window.open(`https://api.whatsapp.com/send?phone=52${clienteTelefono}`, '_blank');
+        }
+
     }
 
 
@@ -434,25 +438,18 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                             <h1 className='text-2xl'>
                                 Editar cotización
                             </h1>
+                            <p className='text-sm text-zinc-500 italic'>
 
-                            <ul className='text-zinc-500 text-sm mt-2'>
-                                <li>
-                                    Cliente @{clienteNombre} - {clienteTelefono}
-                                </li>
-                                <li>
-                                    Evento: {eventoNombre}
-                                </li>
-                                <li>
-                                    <p className='text-zinc-500 text-sm'>
-                                        Celebración: {eventoFecha ? new Date(eventoFecha).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}
-                                    </p>
-                                </li>
-                            </ul>
+                                Evento de <span className='text-yellow-500'>{eventoNombre}</span> para la celebrar el  {eventoFecha ? new Date(eventoFecha).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}
+                            </p>
                         </div>
+
+                        {/* //! MENU */}
+
 
                         <div className='items-center flex flex-wrap justify-start md:space-x-2 space-y-1 md:space-y-0'>
 
-                            {errorFechaEvento ? (
+                            {/* {errorFechaEvento ? (
                                 <p className='text-red-500 text-sm border border-red-500 px-3 py-2 rounded-md'>
                                     {errorFechaEvento}
                                 </p>
@@ -460,11 +457,49 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                 <p className='text-green-500 text-sm border border-green-500 px-3 py-2 rounded-md'>
                                     Fecha disponible
                                 </p>
-                            )}
+                            )} */}
 
-                            <p className={`text-center text-zinc-600 border border-zinc-800 rounded-md px-5 py-2`}>
-                                COD-{codigoCotizacion}
-                            </p>
+                            <button className='px-4 py-2 border border-zinc-800 rounded-md bg-zinc-900 flex items-center' onClick={() => router.push(`/admin/dashboard/contactos/${clienteId}`)}>
+                                <User size={16} className='mr-1' /> {clienteNombre}
+                            </button>
+
+                            <button
+                                onClick={() => handleCopiar()}
+                                className='flex items-center justify-center px-4 py-2 border border-zinc-800 rounded-md bg-zinc-900 mb-2 text-center'
+                            >
+                                <Copy size={12} className='mr-1' /> {copiado ? 'Copiado' : 'Copiar'} link
+                            </button>
+
+                            <button
+                                onClick={() => window.open(`/cotizacion/${cotizacionId}`, '_blank')}
+                                className='flex items-center px-4 py-2 border border-purple-800 rounded-md justify-center mb-2'
+                            >
+                                <SquareArrowOutUpRight size={12} className='mr-1' /> Vista previa
+                            </button>
+
+                            <button
+                                onClick={() => handleEnviarWhatsapp('compatir')}
+                                className='flex items-center px-4 py-2 border border-green-800 rounded-md  justify-center mb-2 text-green-600'
+                            >
+                                <i className="fab fa-whatsapp text-md mr-1"></i> Compartir
+                            </button>
+
+                            <button
+                                onClick={() => handleEnviarWhatsapp('conversar')}
+                                className='flex items-center px-4 py-2 border border-zinc-800 rounded-md bg-green-900 justify-center mb-2'
+                            >
+                                <i className="fab fa-whatsapp text-md mr-1"></i> Conversar
+                            </button>
+
+                            {cotizacionStatus === 'aprobada' && (
+                                <button
+                                    className='px-4 py-2 border border-blue-800 rounded-md bg-blue-900 flex items-center'
+                                    onClick={() => router.push(`/admin/dashboard/seguimiento/${eventoId}`)}
+                                >
+                                    <Shuffle size={16} className='mr-1' />
+                                    Gestionar
+                                </button>
+                            )}
 
                             <button
                                 className='flex items-center px-4 py-2 border border-red-800 rounded-md bg-red-900'
@@ -599,16 +634,10 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                 ))}
                             </div>
 
-                            {respuestaGuardado && (
-                                <p className='text-sm text-green-500 text-center bg-green-800/20 p-3 rounded-md mb-2'>
-                                    {respuestaGuardado}
-                                </p>
-                            )}
-
                             {/* //!CONFIRMAR MONTO A PAGAR */}
                             {condicionComercial && (
-                                <div>
-                                    <p className='text-xl text-zinc-500 mb-3'>
+                                <div className='mb-5'>
+                                    <p className='text-xl text-zinc-500 mb-2'>
                                         Confirmar monto a pagar
                                     </p>
 
@@ -667,6 +696,11 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                 </div>
                             )}
 
+                            {respuestaGuardado && (
+                                <p className='text-sm text-green-500 text-center bg-green-800/20 p-3 rounded-md mb-2'>
+                                    {respuestaGuardado}
+                                </p>
+                            )}
 
                             {metodoPago?.metodo_pago !== 'Efectivo' && (
                                 <button
@@ -678,7 +712,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                 </button>
                             )}
 
-                            <div className='grid grid-cols-3 gap-2'>
+                            {/* <div className='grid grid-cols-3 gap-2'>
 
                                 <button
                                     onClick={() => handleCopiar()}
@@ -700,15 +734,19 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                 >
                                     <i className="fab fa-whatsapp text-md mr-1"></i> Enviar
                                 </button>
-                            </div>
+                            </div> */}
 
 
                             <button
-                                className='bg-red-700 text-white px-3 py-3 w-full rounded-md'
+                                className='bg-red-700 text-white px-3 py-3 w-full rounded-md mb-2'
                                 onClick={() => router.back()}
                             >
                                 Cerrar ventana
                             </button>
+
+                            <p className={`text-center text-zinc-600 border border-zinc-800 rounded-md px-5 py-2`}>
+                                COD-{codigoCotizacion}
+                            </p>
 
                             <button
                                 className='text-red-700 px-3 py-3 rounded-md mt-3 flex items-center justify-center mx-auto'
@@ -718,9 +756,6 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                 Eliminar cotización
                             </button>
 
-                            <p className={`text-sm italic text-center text-zinc-600`}>
-                                COD-{codigoCotizacion}
-                            </p>
 
                         </div>
 

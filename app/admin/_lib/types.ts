@@ -1,9 +1,13 @@
 export interface User {
-    id?: number;
+    id?: string;
+    username: string | null;
     email: string;
-    username: string;
-    token: string;
-    role: string;
+    password: string;
+    role?: string;
+    status?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+    token?: string;
 }
 export interface EventoTipo {
     id: string
@@ -168,7 +172,7 @@ export interface CotizacionServicio {
     servicioCategoriaId?: string
     cantidad: number
     posicion: number
-    precio: number
+    precio?: number
     createdAt?: Date
     updatedAt?: Date
 }
