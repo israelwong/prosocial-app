@@ -1,9 +1,10 @@
 export interface User {
     id?: string;
     username: string | null;
-    email: string;
-    password: string;
+    email: string | null;
+    password?: string | null;
     role?: string;
+    telefono?: string | null;
     status?: string;
     createdAt?: Date;
     updatedAt?: Date;
@@ -37,6 +38,11 @@ export interface Servicio {
     status?: string
     createdAt?: Date
     updatedAt?: Date
+
+    userId?: string | null
+    statusCotizacionServicio?: string
+    fechaAsignacion?: Date
+    fechaEntrega?: Date
 }
 
 export interface ServicioGasto {
@@ -166,15 +172,23 @@ export interface Cotizacion {
 }
 
 export interface CotizacionServicio {
+    //extender con los campos de Servicio
+    nombre?: string
+    precio?: number
+    costo?: number
+    //extender con los campos de Servicio
     id?: string
     cotizacionId: string
     servicioId: string
     servicioCategoriaId?: string
     cantidad: number
     posicion: number
-    precio?: number
-    createdAt?: Date
-    updatedAt?: Date
+    createdAt?: Date | undefined
+    updatedAt?: Date | undefined
+    userId?: string | null
+    status?: string
+    fechaAsignacion?: Date | null
+    fechaEntrega?: Date | null
 }
 
 export interface MetodoPago {
@@ -191,6 +205,8 @@ export interface MetodoPago {
     updatedAt?: Date
     metodosPago?: MetodoPago[] | null
     nombre?: string
+    //
+    metodoPagoId?: string | null
 }
 
 export interface CondicionesComerciales {
@@ -234,10 +250,11 @@ export interface CotizacionDetalleEvento {
 
 export interface Pago {
     id?: string
-    clienteId: string | null
-    cotizacionId: string | null
-    condicionesComercialesId: string | null
-    condicionesComercialesMetodoPagoId: string | null
+    clienteId?: string | null
+    cotizacionId?: string | null
+    condicionesComercialesId?: string | null
+    condicionesComercialesMetodoPagoId?: string | null
+    metodoPagoId?: string | null
     metodo_pago: string
     monto: number | null
     concepto: string

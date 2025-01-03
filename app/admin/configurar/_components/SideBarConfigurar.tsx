@@ -5,13 +5,14 @@ import { usePathname } from 'next/navigation';
 
 const links = [
     { href: '/admin/configurar', label: 'Inicio' },
+    { href: '/admin/configurar/usuarios', label: 'Usuarios' },
     { href: '/admin/configurar/paquetes', label: 'Paquetes' },
     { href: '/admin/configurar/tipoEvento', label: 'Tipo de eventos' },
     { href: '/admin/configurar/servicios', label: 'Servicios' },
     { href: '/admin/configurar/categorias', label: 'Categorías de servicio' },
     { href: '/admin/configurar/condicionesComerciales', label: 'Condiciones comerciales' },
     { href: '/admin/configurar/metodoPago', label: 'Métodos de pago' },
-    { href: '/admin/configurar/parametros', label: 'Parámetros base' }
+    { href: '/admin/configurar/parametros', label: 'Parámetros base' },
 ];
 
 function DashboardSideBar() {

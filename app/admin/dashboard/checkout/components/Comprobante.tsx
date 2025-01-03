@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { obtenerDetallesPago } from '@/app/admin/_lib/pago.actons';
+import { obtenerDetallesPago } from '@/app/admin/_lib/pago.actions';
 import { Pago, Cliente, Evento, Cotizacion } from '@/app/admin/_lib/types';
 
 interface props {

@@ -32,13 +32,13 @@ export default function Footer({ telefono, asunto }: Props) {
                 </h3>
 
                 <ul className='mb-4 space-y-2 text-sm'>
-                    <li className='flex items-center'
+                    <li className='flex items-center cursor-pointer'
                         onClick={handleLlamada}
                     >
                         <i className="fas fa-phone-alt mr-2"></i>
                         Llama al {telefono}
                     </li>
-                    <li className='flex items-center'
+                    <li className='flex items-center cursor-pointer'
                         onClick={handleWhatsapp}
                     >
                         <i className="fab fa-whatsapp mr-2"></i>

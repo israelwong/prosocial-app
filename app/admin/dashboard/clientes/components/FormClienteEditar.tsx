@@ -79,7 +79,7 @@ function FormClienteEditar({ clienteId }: Props) {
                 }, 3000);
             } else {
                 const { error } = response;
-                if (error.includes('telefono')) {
+                if (error && error.includes('telefono')) {
                     setErrorActualizacion('El teléfono que intentas actualizar está asignado a otro cliente');
                 } else {
                     setErrorActualizacion(`Hubo un error al actualizar el cliente: ${error}`);

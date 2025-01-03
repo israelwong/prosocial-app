@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import SideBarConfigurar from './components/SideBarConfigurar'
+import SideBarConfigurar from './_components/SideBarConfigurar'
 import Navbar from '@/app/components/Navbar'
 
 export default function LayoutDashboard({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Shuffle, Home, Calendar, Users, Wallet, Inbox } from 'lucide-react'
-import { conteo } from '../admin/_lib/conteo.actions'
+import { conteo } from '@/app/admin/_lib/conteo.actions'
 
 const links = [
     { href: '/admin/dashboard', label: 'Inicio', icon: <Home size={24} /> },
@@ -25,21 +25,13 @@ function DashboardSideBar() {
             setSeguimientoCount(data.seguimiento)
             setGestionarCount(data.gestionar)
         })
-        // Aquí deberías hacer las llamadas a la API para obtener los números de eventos y seguimientos
-        // Ejemplo:
-        // fetch('/api/eventos/count').then(res => res.json()).then(data => setEventCount(data.count))
-        // fetch('/api/seguimiento/count').then(res => res.json()).then(data => setSeguimientoCount(data.count))
-
-        // Simulación de datos
-        // setEventCount(5)
-        // setSeguimientoCount(3)
     }, [])
 
     return (
         <div className='h-screen flex pt-5'>
             <div className='relative flex'>
                 {/* Barra lateral fija con iconos */}
-                <div className='flex flex-col items-center text-white h-full p-3 space-y-10'>
+                <div className='flex flex-col items-center text-white h-full p-2 space-y-10'>
 
                     {links.map((link) => (
                         <Link

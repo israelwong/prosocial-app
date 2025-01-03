@@ -1,36 +1,135 @@
-import React from 'react'
+'use client'
+
+import React, { useEffect, useState, useMemo, useRef } from 'react'
 import { CircleCheck } from 'lucide-react'
+import { Cliente, Cotizacion, CotizacionServicio, CondicionesComerciales, ServicioCategoria } from '@/app/admin/_lib/types'
+import { obtenerEventoContrato } from '@/app/admin/_lib/evento.actions'
+import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
+import { obtenerCategories } from '@/app/admin/_lib/categorias.actions'
+import FichaServicioContrato from '../../seguimiento/components/FichaServicioContrato'
 
 interface Props {
-    nombreCliente: string
-    nombreEvento: string
-    tipoEvento: string
-    fechaEvento: Date
-    condicionesComerciales: string
-
-    totalPrecioSistema: number
-    descuento: number
-    precioFinal: number
+    eventoId: string
 }
 
-export default function Contrato(
-    {
-        nombreCliente,
-        nombreEvento,
-        tipoEvento,
-        fechaEvento,
-        condicionesComerciales,
-        totalPrecioSistema,
-        descuento,
-        precioFinal
-    }: Props
-) {
+export default function Contrato({ eventoId }: Props) {
 
+    const divRef = useRef<HTMLDivElement | null>(null);
+    const [loading, setLoading] = useState(true)
+    const [nombreEvento, setNombreEvento] = useState<string | null>(null)
+    const [fechaEvento, setFechaEvento] = useState<Date | null>(null)
+    const [tipoEvento, setTipoEvento] = useState<string | null>(null)
+    const [condicionesComerciales, setCondicionesComerciales] = useState<CondicionesComerciales | null>(null)
+    const [cliente, setCliente] = useState<Cliente | null>(null)
+    const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null)
+    const [categorias, setCategorias] = useState<ServicioCategoria[]>([])
+    const [servicios, setServicios] = useState<CotizacionServicio[]>([])
+    // const [generandoPDF, setGenerandoPDF] = React.useState(false)
+
+    useEffect(() => {
+
+        const fetchData = async () => {
+            try {
+
+                const data = await obtenerEventoContrato(eventoId)
+                const { evento, tipoEvento, cliente, cotizacion, condicionesComerciales } = data
+
+                if (evento) {
+                    setNombreEvento(evento.nombre)
+                    setFechaEvento(evento.fecha_evento)
+                }
+                setTipoEvento(tipoEvento ?? null)
+                setCondicionesComerciales(condicionesComerciales)
+                setCotizacion(cotizacion)
+                setCliente(cliente)
+
+                if (cotizacion?.id) {
+                    obtenerCotizacionServicios(cotizacion.id).then(cotizacionServiciosData => {
+                        setServicios(cotizacionServiciosData)
+                    })
+                }
+
+                obtenerCategories().then(data => {
+                    setCategorias(data)
+                })
+
+            } catch (error) {
+                console.error('Error fetching data:', error)
+            }
+        }
+        fetchData()
+        setLoading(false)
+    }, [eventoId])
+
+    const categoriasRenderizadas = useMemo(() => {
+        return categorias
+            .map(categoria => {
+                const serviciosFiltrados = servicios.filter(servicio => servicio.servicioCategoriaId === categoria.id)
+                if (serviciosFiltrados.length === 0) {
+                    return null
+                }
+                return (
+                    <div key={categoria.id} className='mb-5 border border-dashed border-zinc-800 p-3 rounded-md bg-zinc-900'>
+                        <div className="px-0 pb-0 text-zinc-600 font-semibold uppercase">
+                            {categoria.nombre}
+                        </div>
+                        <ul>
+                            {serviciosFiltrados.map(servicio => {
+                                return (
+                                    <li key={servicio.id} className='px-0 py-2 '>
+                                        <FichaServicioContrato
+                                            cotizacionServicioId={servicio.id}
+                                        />
+                                    </li>
+                                )
+                            })}
+                        </ul>
+                    </div>
+                )
+            })
+            .filter(categoria => categoria !== null)
+    }, [categorias, servicios])
+
+    // const handleDescargarContrato = () => {
+    //     const element = divRef.current;
+
+    //     if (element) {
+    //         const printWindow = window.open('', '_blank');
+    //         if (printWindow) {
+    //             printWindow.document.write(`
+    //                 <html>
+    //                     <head>
+    //                         <title>Contrato</title>
+    //                         <style>
+    //                             body {
+    //                                 font-family: Arial, sans-serif;
+    //                                 margin: 20px;
+    //                             }
+    //                         </style>
+    //                     </head>
+    //                     <body>
+    //                         ${element.innerHTML}
+    //                     </body>
+    //                 </html>
+    //             `);
+    //             printWindow.document.close();
+    //             printWindow.print();
+    //         }
+    //     }
+    // };
+
+    if (loading) {
+        return <div className='flex items-center justify-center h-full'>
+            <p className='text-zinc-600 italic text-center'>
+                Generando contrato...
+            </p>
+        </div>
+    }
 
     return (
 
-        <div className=''>
-            <div className='px-5 py-3'>
+        <div className='max-w-2xl mx-auto '>
+            <div ref={divRef} className='px-5 py-3'>
                 <h1 className='text-xl font-semibold mb-5 uppercase'>
                     Contrato de prestación de servicios profesionales
                 </h1>
@@ -45,7 +144,7 @@ export default function Contrato(
                         </li>
                         <li>
                             <p className='font-semibold text-zinc-500'>Fecha de celebración:</p>
-                            {fechaEvento ? new Date(fechaEvento.getTime() + 86400000).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}
+                            {fechaEvento ? new Date(fechaEvento).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Obteniendo fecha...'}
 
                         </li>
                         <li>
@@ -57,7 +156,7 @@ export default function Contrato(
                     {/* CONTRATO */}
                     <p className='mb-10'>
                         Contrato de prestación de servicios profesionales de fotografía y cinematografía
-                        que celebran por una parte <span className='font-semibold text-zinc-500'>PROSOCIALMX</span> y por la otra en lo sucesivo el cliente <span className='font-semibold text-zinc-500 uppercase'>{nombreCliente}</span> instrumento que se celebra de conformidad con las
+                        que celebran por una parte <span className='font-semibold text-zinc-500'>PROSOCIALMX</span> y por la otra en lo sucesivo el cliente <span className='font-semibold text-zinc-500 uppercase'>{cliente?.nombre}</span> instrumento que se celebra de conformidad con las
                         siguientes declaraciones y cláusulas:
                     </p>
 
@@ -73,6 +172,14 @@ export default function Contrato(
                         <p className='mb-3 text-zinc-400'>Declaran las partes que por lo anterior, manifiestan su conformidad de celebrar este instrumento de conformidad a las siguientes cláusulas:</p>
                     </div>
 
+                    {/* //!SERVICIOS */}
+                    <div className='mb-10'>
+                        <h2 className='text-lg font-semibold mb-2 flex items-center'>
+                            <CircleCheck size={16} className='mr-2' /> SERVICIOS INCLUIDOS
+                        </h2>
+                        {categoriasRenderizadas}
+                    </div>
+
                     {/* HONORARIOS */}
                     <div className='mb-10'>
                         <h2 className='text-lg font-semibold mb-2 flex items-center'>
@@ -84,21 +191,15 @@ export default function Contrato(
                         </p>
 
                         <ul className='mb-5 list-inside text-zinc-400'>
-                            <li><span className='text-zinc-200'>Condiciones:</span> {condicionesComerciales}</li>
-                            {descuento > 0 && (
-                                <>
-                                    <li><span className='text-zinc-200'>Precio del servicio:</span> {totalPrecioSistema.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</li>
-                                    <li><span className='text-zinc-200'>Descuento aplicado:</span> {descuento.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</li>
-                                </>
-                            )}
-                            <li><span className='text-zinc-200'>Precio final:</span> {precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</li>
+                            <li>
+                                <span className='text-zinc-200'>Condiciones:</span> {condicionesComerciales?.nombre}. {condicionesComerciales?.descripcion}
+                            </li>
                         </ul>
                         <p className='text-zinc-400'>
                             Por la prestación de los servicios arriba establecidos,
                             el cliente pagará la cantidad de
-                            <span className='font-semibold bg-yellow-500 px-1 py-0.5 ms-1 text-yellow-900'>{precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</span> (pesos mexicanos 00/100 M.N.)
+                            <span className='font-semibold bg-yellow-500 px-1 py-0.5 ms-1 text-yellow-900'>{(cotizacion ? (cotizacion.precio - (condicionesComerciales?.descuento ?? 0)).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) : 'N/A')}</span> (pesos mexicanos 00/100 M.N.)
                         </p>
-
                     </div>
 
                     {/* REQUERIMIENTOS */}
@@ -135,7 +236,7 @@ export default function Contrato(
                         </p>
                     </div>
 
-                    {/* POLÍTICAS DE SERVICIO */}
+                    {/* COSTOS ADICIONALES */}
                     <div className='mb-10'>
                         <h2 className='text-lg font-semibold mb-2 flex items-center'>
                             <CircleCheck size={16} className='mr-2' /> COSTOS ADICIONALES
@@ -143,12 +244,11 @@ export default function Contrato(
                         <ul className='list-inside text-zinc-400'>
                             <li className='mb-3'><span className='font-semibold text-zinc-200'>Permiso de locación:</span> El cliente cubrirá permisos requeridos por la locación.</li>
                             <li className='mb-3'><span className='font-semibold text-zinc-200'>Horas extra:</span> Se agregarán al presupuesto y pagarán el día de la solicitud.</li>
-
                         </ul>
                     </div>
 
 
-                    <div className='mb-5'>
+                    <div className='mb-10'>
                         <h2 className='text-lg font-semibold mb-3 flex items-center'>
                             <CircleCheck size={16} className='mr-2' /> ENTREGA DEL SERVICIO
                         </h2>
@@ -159,11 +259,11 @@ export default function Contrato(
                         </ul>
                     </div>
 
-                    <div className=''>
+                    <div className='mb-10'>
                         <h2 className='text-lg font-semibold mb-3 flex items-center'>
                             <CircleCheck size={16} className='mr-2' /> GARANTÍAS EN SERVICIO
                         </h2>
-                        <ul className='list-inside text-zinc-400'>
+                        <ul className='text-zinc-400'>
                             <li className='mb-3'>Respaldo de material audio visual en disco externo dedicado.</li>
                             <li className='mb-3'>Copia y edición de material en discos duros de trabajo dedicados.</li>
                             <li className='mb-3'>Fotos en alta resolución formato JPG con revelado digital (ajuste de exposición y balance de blancos).</li>
@@ -174,7 +274,26 @@ export default function Contrato(
 
                 </div>
             </div>
-        </div >
+
+            <div>
+
+                {/* <button
+                    className="bg-blue-900 text-white p-2 rounded-md border border-blue-700 text-sm mb-3 w-full"
+                    onClick={handleDescargarContrato}
+                    disabled={generandoPDF}
+                >
+                    {generandoPDF ? 'Generando PDF...' : 'Descargar contrato en PDF'}
+                </button> */}
+
+                <button
+                    className="bg-red-600 text-white p-2 rounded-md border border-red-500 text-sm w-full"
+                    onClick={() => window.close()}
+                >
+                    Cerrar ventana
+                </button>
+            </div>
+
+        </div>
 
 
     )

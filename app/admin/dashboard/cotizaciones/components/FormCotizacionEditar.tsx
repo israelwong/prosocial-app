@@ -9,16 +9,12 @@ import { obtenerEventoPorId } from '@/app/admin/_lib/evento.actions';
 import { obtenerCliente } from '@/app/admin/_lib/cliente.actions';
 import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
 import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
-import { crearPago } from '@/app/admin/_lib/pago.actons';
-// import { validarDisponibilidadFecha } from '@/app/admin/_lib/evento.actions';
-
+import { crearPago } from '@/app/admin/_lib/pago.actions';
 import { Servicio, MetodoPago, CondicionesComerciales } from '@/app/admin/_lib/types'
 import ListaServicios from './ListaServicios'
 import Wishlist from './Wishlist'
 import { useRouter } from 'next/navigation'
 import { Trash, X } from 'lucide-react';
-
-
 
 interface Props {
     cotizacionId: string
@@ -95,6 +91,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
 
                 // Obtener los servicios de la cotización
                 const serviciosCotizacion = await obtenerCotizacionServicios(cotizacionId);
+                // console.log(serviciosCotizacion);
 
                 // Obtener los servicios
                 const serviciosData = await Promise.all(serviciosCotizacion.map(async (servicio) => {
@@ -105,6 +102,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                         nombre: servicioData?.nombre || '',
                         posicion: servicio.posicion,
                         servicioCategoriaId: servicio.servicioCategoriaId,
+                        userId: servicio.userId,
                     };
                 }));
                 setServicios(serviciosData);
@@ -120,12 +118,6 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                     setClienteNombre(cliente?.nombre || '');
                     setClienteTelefono(cliente?.telefono || '');
                 }
-
-                //validar fecha de evento
-                // const eventoDisponible = await validarDisponibilidadFecha(evento?.fecha_evento || new Date());
-                // if (eventoDisponible) {
-                //     setErrorFechaEvento('Fecha no disponible');
-                // }
             }
 
             if (configuracion) {
@@ -238,7 +230,6 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
 
             setConfirmarMonto(pago_anticipo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }));
             setConfirmarPorcentajeAnticipo(condicionComercial.porcentaje_anticipo.toString());
-
         }
 
         setCodigoCotizacion(codigo_cotizacion);
@@ -271,6 +262,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
     }, [servicios, sobreprecioPorcentaje, comisionVentaPorcentaje, condicionComercial, metodoPago, metodoPagoId, calcularTotal]);
 
     const handleSeleccionCondicionMetodoPago = (condicion: CondicionesComerciales, metodo: MetodoPago) => {
+        console.table(metodo.metodoPagoId);
         setMetodoPagoId(metodo.id);
         setMetodoPago(metodo);
         setCondicionComercial(condicion);
@@ -294,6 +286,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
             precio: parseFloat(precioFinal.toFixed(2)),
             condicionesComercialesId: condicionComercial?.id ?? null,
             condicionesComercialesMetodoPagoId: metodoPago?.id ?? null,
+            metodoPagoId: metodoPago?.id ?? null,
             servicios,
             utilidadDeVenta: parseFloat(utilidadDeVenta.toFixed(2)),
             utilidadSistema: parseFloat(utilidadSistema.toFixed(2)),
@@ -306,9 +299,9 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
         // console.log(respuesta);
         // return
         setRespuestaGuardado(respuesta.success ? 'Cotización actualizada' : respuesta.error || 'Error al actualizar la cotización');
-        setTimeout(() => {
-            setRespuestaGuardado(null);
-        }, 2000);
+        // setTimeout(() => {
+        // setRespuestaGuardado(null);
+        // }, 2000);
         setActualizando(false);
     }
 
@@ -344,6 +337,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 precio: parseFloat(precioFinal.toFixed(2)),
                 condicionesComercialesId: condicionComercial?.id ?? null,
                 condicionesComercialesMetodoPagoId: metodoPago?.id ?? null,
+                metodoPagoId: metodoPago?.metodoPagoId ?? null,
                 servicios,
                 utilidadDeVenta: parseFloat(utilidadDeVenta.toFixed(2)),
                 utilidadSistema: parseFloat(utilidadSistema.toFixed(2)),
@@ -351,10 +345,10 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
             }
             await actualizarCotizacion(cotizacionActualizada);
 
-            await actualizarEventoStatus({
-                eventoId: eventoId || '',
-                status: 'autorizado'
-            });
+            await actualizarEventoStatus(
+                eventoId || '',
+                'aprobada'
+            );
 
             //crear pago
             const pago = {
@@ -362,6 +356,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 clienteId,
                 condicionesComercialesId: condicionComercial?.id ?? null,
                 condicionesComercialesMetodoPagoId: metodoPago?.id ?? null,
+                metodoPagoId: metodoPago?.metodoPagoId ?? null,
                 metodo_pago: metodoPago?.metodo_pago ?? '',
                 monto: parseFloat(confirmarMonto.replace(/[^0-9.-]+/g, '')),
                 concepto: parseFloat(confirmarPorcentajeAnticipo) === 100 ? 'Pago del total del servicio' : `Pago del ${confirmarPorcentajeAnticipo}%  de anticipo`,
@@ -445,22 +440,10 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                         </div>
 
                         {/* //! MENU */}
-
-
                         <div className='items-center flex flex-wrap justify-start md:space-x-2 space-y-1 md:space-y-0'>
 
-                            {/* {errorFechaEvento ? (
-                                <p className='text-red-500 text-sm border border-red-500 px-3 py-2 rounded-md'>
-                                    {errorFechaEvento}
-                                </p>
-                            ) : (
-                                <p className='text-green-500 text-sm border border-green-500 px-3 py-2 rounded-md'>
-                                    Fecha disponible
-                                </p>
-                            )} */}
-
                             <button className='px-4 py-2 border border-zinc-800 rounded-md bg-zinc-900 flex items-center' onClick={() => router.push(`/admin/dashboard/contactos/${clienteId}`)}>
-                                <User size={16} className='mr-1' /> {clienteNombre}
+                                <User size={16} className='mr-1' /> Cliente {clienteNombre}
                             </button>
 
                             <button
@@ -586,9 +569,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                                 </div>
                                             )}
                                         </div>
-
                                     </div>
-
                                 </div>
                             </div>
 
@@ -711,31 +692,6 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                     {actualizando ? 'Actualizando...' : 'Actualizar cotización'}
                                 </button>
                             )}
-
-                            {/* <div className='grid grid-cols-3 gap-2'>
-
-                                <button
-                                    onClick={() => handleCopiar()}
-                                    className='flex items-center justify-center px-4 py-2 border border-zinc-800 rounded-md bg-zinc-900 w-full mb-2 text-center'
-                                >
-                                    <Copy size={12} className='mr-1' /> {copiado ? 'Copiado' : 'Copiar'} link
-                                </button>
-
-                                <button
-                                    onClick={() => window.open(`/cotizacion/${cotizacionId}`, '_blank')}
-                                    className='flex items-center px-4 py-2 border border-zinc-800 rounded-md bg-purple-900 justify-center w-full mb-2'
-                                >
-                                    <SquareArrowOutUpRight size={12} className='mr-1' /> Previsualizar
-                                </button>
-
-                                <button
-                                    onClick={() => handleEnviarWhatsapp()}
-                                    className='flex items-center px-4 py-2 border border-zinc-800 rounded-md bg-green-900 justify-center w-full mb-2'
-                                >
-                                    <i className="fab fa-whatsapp text-md mr-1"></i> Enviar
-                                </button>
-                            </div> */}
-
 
                             <button
                                 className='bg-red-700 text-white px-3 py-3 w-full rounded-md mb-2'

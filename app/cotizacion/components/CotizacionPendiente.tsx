@@ -36,7 +36,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
     const [telefonoCliente, setTelefonoCliente] = useState('');
     const [clienteId, setClienteId] = useState('');
     const [tipoEvento, setTipoEvento] = useState('');
-    const [fechaEvento, setFechaEvento] = useState('');
+    const [fechaEvento, setFechaEvento] = useState<Date | null>(null);
     const [nombreEvento, setNombreEvento] = useState('');
 
     const [confirmacionContrato, setConfirmacionContrato] = useState(false);
@@ -78,8 +78,6 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                     url.searchParams.set('metodoPagoId', cotizacionDetalleData.cotizacion?.condicionesComercialesMetodoPagoId);
                     window.history.replaceState(null, '', url.toString());
                 }
-
-
 
                 const serviciosData = await Promise.all(serviciosCotizacion.map(async (servicio: { servicioId: string; cantidad: number; posicion: number; servicioCategoriaId: string; }) => {
                     const servicioData = await obtenerServicio(servicio.servicioId);
@@ -125,7 +123,9 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                 setNombreCotizacion(cotizacionDetalleEvento.cotizacion?.nombre || '');
                 setTipoEvento(cotizacionDetalleEvento.eventoTipo?.nombre || '');
                 setNombreEvento(cotizacionDetalleEvento.evento?.nombre || '');
-                setFechaEvento(cotizacionDetalleEvento.evento?.fecha_evento ? cotizacionDetalleEvento.evento.fecha_evento.toISOString() : '');
+
+                setFechaEvento(cotizacionDetalleEvento.evento?.fecha_evento || null);
+
             }
             setLoading(false);
         }
@@ -192,11 +192,9 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         setMsi(metodo.num_msi || 0);
         setCondicionComercial(condicion);
         setCondicionComercialId(condicion.id);
-
         const url = new URL(window.location.href);
         url.searchParams.set('condicionComercialId', condicion.id || '');
         url.searchParams.set('metodoPagoId', metodo.id || '');
-
         window.history.replaceState(null, '', url.toString());
     }
 
@@ -210,7 +208,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         } else if (porcentajeAnticipo === 100) {
             concepto = `Pago total del servicio de ${tipoEvento} ${nombreEvento}`;
         }
-        const descripcion = `Fecha compromiso para el ${new Date(fechaEvento).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} ${metodoPago?.num_msi ? '. ' + metodoPago?.num_msi + ' MSI' : ''}. ${condicionComercial?.nombre}. ${condicionComercial?.descripcion}`;
+        const descripcion = `Fecha compromiso para el ${fechaEvento ? new Date(fechaEvento.getTime() + 86400000).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''} ${metodoPago?.num_msi ? '. ' + metodoPago?.num_msi + ' MSI' : ''}. ${condicionComercial?.nombre}. ${condicionComercial?.descripcion}`;
 
         try {
 
@@ -268,7 +266,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                 Hola {nombreCliente},
                             </p>
                             <p className='text-left  mx-auto text-zinc-500'>
-                                Te compartimos tu presupuesto <span className='uppercase font-semibold text-zinc-200'>{nombreCotizacion}</span> para el evento de {tipoEvento} de <span className='underline uppercase text-zinc-200'>{nombreEvento}</span> que celebrarás el {new Date(fechaEvento).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+                                Te compartimos tu cotización <span className='uppercase font-semibold text-zinc-200'>{nombreCotizacion}</span> para el evento de {tipoEvento} de <span className='underline uppercase text-zinc-200'>{nombreEvento}</span> que celebrarás el {fechaEvento ? new Date(fechaEvento.getTime() + 86400000).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}.
                             </p>
                         </div>
 
@@ -390,7 +388,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                             disabled={!metodoPagoId}
                                             onClick={() => setToggleContrato(prev => !prev)}
                                         >
-                                            {toggleContrato ? 'Ocultar Contrato' : 'Revisar contrato antes de pagar'}
+                                            {toggleContrato ? 'Ocultar borrador del contrato' : 'Revisar borrador de contrato antes de pagar'}
                                             {toggleContrato ? <ChevronUp className="ml-2" /> : <ChevronDown className="ml-2" />}
                                         </button>
 
@@ -400,7 +398,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                                     nombreCliente={nombreCliente}
                                                     nombreEvento={nombreEvento}
                                                     tipoEvento={tipoEvento}
-                                                    fechaEvento={fechaEvento}
+                                                    fechaEvento={fechaEvento || new Date()}
                                                     condicionesComerciales={condicionComercial?.nombre || ''}
                                                     totalPrecioSistema={totalPrecioSistema}
                                                     descuento={descuento}
@@ -412,7 +410,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                                     disabled={!metodoPagoId}
                                                     onClick={() => setToggleContrato(prev => !prev)}
                                                 >
-                                                    {toggleContrato ? 'Ocultar Contrato' : 'Revisar contrato antes de pagar'}
+                                                    {toggleContrato ? 'Ocultar borrador del contrato' : 'Revisar borrador de contrato antes de pagar'}
                                                     {toggleContrato ? <ChevronUp className="ml-2" /> : <ChevronDown className="ml-2" />}
                                                 </button>
 

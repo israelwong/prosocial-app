@@ -84,7 +84,7 @@ export async function actualizarCliente(cliente: Cliente) {
         });
         return { success: true, cliente: updatedCliente };
     } catch (error) {
-        return { success: false, message: 'No se pudo actualizar el cliente', error: (error as any).message };
+        return { success: false, message: 'No se pudo actualizar el cliente', error: (error as Error).message };
     }
 }
 

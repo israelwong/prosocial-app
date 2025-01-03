@@ -10,9 +10,10 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   username  String?
-  email     String   @unique
+  email     String?
   password  String
   role      String   @default("user")
+  telefono  String?
   status    String   @default("inactive")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -47,13 +48,17 @@ model Cliente {
 }
 
 model Evento {
-  id             String           @id @default(cuid())
-  clienteId      String
-  Cliente        Cliente          @relation(fields: [clienteId], references: [id])
-  eventoTipoId   String?
-  EventoTipo     EventoTipo?      @relation(fields: [eventoTipoId], references: [id])
-  nombre         String?          @default("Pendiente")
-  fecha_evento   DateTime
+  id           String      @id @default(cuid())
+  clienteId    String
+  Cliente      Cliente     @relation(fields: [clienteId], references: [id])
+  eventoTipoId String?
+  EventoTipo   EventoTipo? @relation(fields: [eventoTipoId], references: [id])
+  nombre       String?     @default("Pendiente")
+  fecha_evento DateTime
+
+  sede      String?
+  direccion String?
+
   status         String           @default("active")
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -62,6 +67,14 @@ model Evento {
   EventoBitacora EventoBitacora[]
   Cotizacion     Cotizacion[]
 }
+
+// model EventoProgreso{
+//   id          String   @id @default(cuid())
+//   eventoId    String
+//   status      String   @default("programado")
+//   createdAt   DateTime @default(now())
+//   updatedAt   DateTime @updatedAt
+// }
 
 model EventoBitacora {
   id          String   @id @default(cuid())
@@ -85,13 +98,13 @@ model EventoTipo {
   Cotizacion Cotizacion[]
 }
 
-model EventoStatus {
-  id        String   @id @default(cuid())
-  nombre    String
-  posicion  Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+// model EventoStatus {
+//   id        String   @id @default(cuid())
+//   nombre    String
+//   posicion  Int      @default(0)
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
 
 model Canal {
   id        String    @id @default(cuid())
@@ -115,24 +128,29 @@ model Contrato {
 }
 
 model Pago {
-  id                                 String                            @id @default(cuid())
-  clienteId                          String? //id del cliente
-  Cliente                            Cliente?                          @relation(fields: [clienteId], references: [id])
-  cotizacionId                       String?
-  Cotizacion                         Cotizacion?                       @relation(fields: [cotizacionId], references: [id])
+  id           String      @id @default(cuid())
+  clienteId    String? //id del cliente
+  Cliente      Cliente?    @relation(fields: [clienteId], references: [id])
+  cotizacionId String?
+  Cotizacion   Cotizacion? @relation(fields: [cotizacionId], references: [id])
+
   condicionesComercialesId           String?
   CondicionesComerciales             CondicionesComerciales?           @relation(fields: [condicionesComercialesId], references: [id])
   condicionesComercialesMetodoPagoId String?
   CondicionesComercialesMetodoPago   CondicionesComercialesMetodoPago? @relation(fields: [condicionesComercialesMetodoPagoId], references: [id])
-  metodo_pago                        String
-  monto                              Float
-  concepto                           String
-  descripcion                        String?
-  stripe_session_id                  String?                           @unique
-  stripe_payment_id                  String?                           @unique
-  status                             String                            @default("pending") //pending, succeeded, failed
-  createdAt                          DateTime                          @default(now())
-  updatedAt                          DateTime                          @updatedAt
+
+  metodoPagoId String?
+  MetodoPago   MetodoPago? @relation(fields: [metodoPagoId], references: [id])
+
+  metodo_pago       String
+  monto             Float
+  concepto          String
+  descripcion       String?
+  stripe_session_id String?  @unique
+  stripe_payment_id String?  @unique
+  status            String   @default("pending") //pending, succeeded, failed
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model Cotizacion {
@@ -167,9 +185,15 @@ model CotizacionServicio {
   ServicioCategoria   ServicioCategoria @relation(fields: [servicioCategoriaId], references: [id])
   cantidad            Int               @default(1)
   posicion            Int               @default(0)
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  Asignacion          Asignacion[]
+
+  userId          String?
+  fechaAsignacion DateTime?
+  FechaEntrega    DateTime?
+  status          String    @default("pendiente") //pendiente, asignada, pagada
+
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  Asignacion Asignacion[]
 }
 
 model Servicio {
@@ -342,6 +366,7 @@ model MetodoPago {
   createdAt                        DateTime                           @default(now())
   updatedAt                        DateTime                           @updatedAt
   CondicionesComercialesMetodoPago CondicionesComercialesMetodoPago[]
+  Pago                             Pago[]
 }
 
 model CondicionesComerciales {

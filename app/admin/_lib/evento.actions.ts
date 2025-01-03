@@ -151,13 +151,13 @@ export async function asignarEventoUser(eventoId: string, userId: string, status
 }
 
 
-export async function actualizarEventoStatus(data: { eventoId: string, status: string }) {
+export async function actualizarEventoStatus(eventoId: string, status: string) {
     await prisma.evento.update({
         where: {
-            id: data.eventoId
+            id: eventoId
         },
         data: {
-            status: data.status
+            status: status
         }
     });
 }
@@ -222,5 +222,57 @@ export async function obtenerEventoSeguimiento(eventoId: string) {
         cotizacionServicio,
         pago,
     };
+
+}
+
+export async function obtenerEventoContrato(eventoId: string) {
+
+    const evento = await prisma.evento.findUnique({
+        where: {
+            id: eventoId
+        },
+        include: {
+            EventoTipo: {
+                select: {
+                    nombre: true
+                }
+            }
+        }
+    });
+
+    const cotizacion = await prisma.cotizacion.findFirst({
+        where: {
+            eventoId,
+            status: 'aprobada'
+        }
+    });
+
+
+    const condicionesComerciales = await prisma.condicionesComerciales.findUnique({
+        where: {
+            id: cotizacion?.condicionesComercialesId ?? undefined
+        },
+        select: {
+            nombre: true,
+            descripcion: true,
+            descuento: true,
+        }
+    });
+
+    const cliente = await prisma.cliente.findUnique({
+        where: {
+            id: typeof evento?.clienteId === 'string' ? evento.clienteId : undefined
+        }
+    });
+
+    return {
+        evento,
+        tipoEvento: evento?.EventoTipo?.nombre,
+        cliente,
+        cotizacion,
+        condicionesComerciales
+    };
+
+
 
 }
