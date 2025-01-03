@@ -276,3 +276,46 @@ export async function obtenerEventoContrato(eventoId: string) {
 
 
 }
+
+export async function obtenerEventoCotizaciones(eventoId: string) {
+
+    const evento = await prisma.evento.findUnique({
+        where: {
+            id: eventoId
+        },
+        include: {
+            EventoTipo: {
+                select: {
+                    nombre: true
+                }
+            }
+        }
+    });
+
+    if (!evento) {
+        return { error: 'Evento no encontrado' };
+    }
+
+    const cliente = await prisma.cliente.findUnique({
+        where: {
+            id: evento.clienteId
+        }
+    });
+
+
+    const cotizaciones = await prisma.cotizacion.findMany({
+        where: {
+            eventoId
+        }
+    });
+
+    return {
+        evento,
+        tipoEvento: evento.EventoTipo?.nombre,
+        cliente,
+        cotizaciones
+    };
+
+
+
+}

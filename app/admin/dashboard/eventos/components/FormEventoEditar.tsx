@@ -96,7 +96,6 @@ export default function FormEventoEditar({ eventoId }: Props) {
             'nuevo',
             'seguimiento',
             'aprobado',
-            'en proceso',
             'entregado',
             'cancelado'
         ];
@@ -160,12 +159,6 @@ export default function FormEventoEditar({ eventoId }: Props) {
                             <Shuffle size={15} className='mr-2' /> Gestionar
                         </button>
                     )}
-
-                    {/* <button
-                        className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm mr-2'
-                    >
-                        Compartir paquetes
-                    </button> */}
 
                     <button
                         onClick={() => router.push('/admin/dashboard/eventos')}
@@ -367,7 +360,7 @@ export default function FormEventoEditar({ eventoId }: Props) {
                                 {/* //! DESCOMENTAR EN PRODUCCUÓN */}
                                 {/* //! DESCOMENTAR EN PRODUCCUÓN */}
                                 {/* //! DESCOMENTAR EN PRODUCCUÓN */}
-                                {/* {status !== 'seguimiento' && ( */}
+                                {/* {status !== 'aprobado' && ( */}
                                 <button
                                     onClick={() => handleEliminarEvento()}
                                     className="text-red-500 py-2 flex items-center justify-center w-full text-sm"

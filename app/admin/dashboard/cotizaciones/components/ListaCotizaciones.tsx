@@ -1,6 +1,7 @@
 'use client'
 import React, { useEffect, useState, useMemo, useCallback, memo } from 'react'
 import { obtenerCotizacionesPorEvento, eliminarCotizacion } from '@/app/admin/_lib/cotizacion.actions'
+import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
 import { Evento, Cotizacion } from '@/app/admin/_lib/types'
 import { Copy, SquareArrowOutUpRight, Pencil } from 'lucide-react'
 import { Cliente } from '@/app/admin/_lib/types'
@@ -16,6 +17,8 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
     const [loading, setLoading] = useState(false)
     const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
     const [eliminando, setEliminando] = useState(false)
+    const [cantidadCotizaciones, setCantidadCotizaciones] = useState(0)
+    const [eventoTipo, setEventoTipo] = useState<string>('')
     const router = useRouter()
 
     useEffect(() => {
@@ -23,7 +26,10 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
             if (evento.id) {
                 setLoading(true)
                 const cotizacionesData = await obtenerCotizacionesPorEvento(evento.id)
+                setCantidadCotizaciones(cotizacionesData.length)
                 setCotizaciones(cotizacionesData)
+                const eventoTipoData = evento.eventoTipoId ? await obtenerTipoEvento(evento.eventoTipoId) : null
+                setEventoTipo(eventoTipoData?.nombre || '')
                 setLoading(false)
             }
         }
@@ -38,12 +44,26 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
         })
 
         const link_cotizacion = `https://www.prosocial.mx/cotizacion/${evento.id}`
-        const mensaje = `Hola ${cliente.nombre}, te compartimos la cotización para el evento ${evento.tipoEvento} de ${evento.nombre} que celebrarás el ${fecha_evento}.\n\n${link_cotizacion}`
+        const mensaje = `Hola ${cliente.nombre}, te compartimos la cotización para el evento ${eventoTipo} de ${evento.nombre} que celebrarás el ${fecha_evento}.\n\n${link_cotizacion}`
 
         //envia mensaje con link de whatsapp
         window.open(`https://wa.me/${cliente.telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
-        // console.log(mensaje)
+
     }, [cliente, evento])
+
+    const handleShareTodasLasCotizaciones = () => {
+        const fecha_evento = new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })
+        const link_cotizacion = `https://www.prosocial.mx/cotizacion/evento/${evento.id}`
+        const mensaje = `Hola ${cliente.nombre}, te compartimos las cotizaciones para el evento ${eventoTipo} de ${evento.nombre} que celebrarás el ${fecha_evento}.\n\n${link_cotizacion}`
+
+        //envia mensaje con link de whatsapp
+        window.open(`https://wa.me/${cliente.telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+
+    }
 
     const handleEliminarCotizacion = useCallback(async (cotizacionId: string) => {
         if (confirm('¿Estás seguro de eliminar esta cotización?')) {
@@ -126,9 +146,50 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
                         <p>Cargando cotizaciones...</p>
                     ) : (
                         cotizaciones.length > 0 ? (
-                            <ul>
-                                {cotizacionesRenderizadas}
-                            </ul>
+                            <div>
+                                <div>
+
+                                    {cantidadCotizaciones > 1 && (
+                                        <div>
+
+
+
+                                            <div className='items-center flex flex-wrap justify-start md:space-x-2 space-y-1 md:space-y-0 mb-5'>
+                                                <p>Compartir todo:</p>
+
+
+                                                <button
+                                                    onClick={() => window.open(`/cotizacion/evento/${evento.id}`, '_blank')}
+                                                    className='text-sm flex items-center px-3 py-2 leading-3 border border-yellow-800 rounded-md bg-zinc-900'
+                                                >
+                                                    <SquareArrowOutUpRight size={12} className='mr-1' /> Abrir
+                                                </button>
+
+                                                <button
+                                                    onClick={() => navigator.clipboard.writeText(`https://www.prosocial.mx/cotizacion/evento/${evento.id}`)}
+                                                    className='text-sm flex items-center px-3 py-2 leading-3 border border-yellow-800 rounded-md bg-zinc-900'
+                                                >
+                                                    <Copy size={12} className='mr-1' /> Copiar url
+                                                </button>
+
+                                                <button
+                                                    onClick={handleShareTodasLasCotizaciones}
+                                                    className='text-sm flex items-center px-3 py-2 leading-3 border border-yellow-800 rounded-md bg-zinc-900'
+                                                >
+                                                    <i className="fab fa-whatsapp text-md mr-1"></i> Enviar
+                                                </button>
+
+
+                                            </div>
+
+                                        </div>
+                                    )}
+
+                                </div>
+                                <ul>
+                                    {cotizacionesRenderizadas}
+                                </ul>
+                            </div>
                         ) : (
                             <p>No hay cotizaciones disponibles.</p>
                         )

@@ -10,6 +10,8 @@ import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions'
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import Contrato from './Contrato';
 import SkeletonPendiente from './skeletonPendiente';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 import Wishlist from './Wishlist';
 
@@ -18,6 +20,8 @@ interface Props {
 }
 
 export default function CotizacionPendiente({ cotizacionId }: Props) {
+
+    const router = useRouter();
 
     const [loading, setLoading] = useState(true);
     const [totalPrecioSistema, setTotalPrecioSistema] = useState(0);
@@ -48,6 +52,10 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
 
     const [porcentajeAnticipo, setPorcentajeAnticipo] = useState(0);
     const [pagoAnticipo, setPagoAnticipo] = useState(0);
+
+    const [fromLista, setFromLista] = useState(false);
+
+    const searchParams = useSearchParams();
 
     useEffect(() => {
         async function fetchData() {
@@ -127,10 +135,21 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                 setFechaEvento(cotizacionDetalleEvento.evento?.fecha_evento || null);
 
             }
+
+            // REVISAR SI VIENE DE LISTA
+            if (searchParams) {
+                const fromListaParam = searchParams.get('param');
+                if (fromListaParam) {
+                    setFromLista(fromListaParam === 'lista');
+                    console.log('fromLista', fromListaParam);
+                }
+            }
+
+
             setLoading(false);
         }
         fetchData();
-    }, [cotizacionId])
+    }, [cotizacionId, searchParams]);
 
     //! Calcular totales
     const calcularTotal = useCallback((servicios: Servicio[]) => {
@@ -252,6 +271,10 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         // setIsProcessing(false);
     }
 
+    const handleRegresar = () => {
+        router.back()
+    }
+
     return (
         <div >
             {loading ? (
@@ -260,15 +283,41 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                 <div className=''>
                     <div className={`max-w-screen-sm mx-auto`}>
 
-                        {/* MENSAJE INICIAL */}
-                        <div className='mt-8 p-5'>
-                            <p className='text-left text-4xl font-Bebas-Neue mb-2 text-zinc-200'>
-                                Hola {nombreCliente},
-                            </p>
-                            <p className='text-left  mx-auto text-zinc-500'>
-                                Te compartimos tu cotización <span className='uppercase font-semibold text-zinc-200'>{nombreCotizacion}</span> para el evento de {tipoEvento} de <span className='underline uppercase text-zinc-200'>{nombreEvento}</span> que celebrarás el {fechaEvento ? new Date(fechaEvento.getTime() + 86400000).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}.
-                            </p>
+                        <div>
+                            {fromLista &&
+                                <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 mt-4 z-20">
+                                    <div className="relative">
+                                        <button onClick={handleRegresar} className="relative z-10 px-4 py-3 text-white bg-red-700 rounded-full hover:bg-red-600 text-sm">
+                                            Cerrar ventana
+                                        </button>
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="w-full h-full bg-red-500 rounded-full animate-ping opacity-50"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                         </div>
+
+                        {/* MENSAJE INICIAL */}
+                        {!fromLista ? (
+                            <div className='mt-8 p-5'>
+                                <p className='text-left text-4xl font-Bebas-Neue mb-2 text-zinc-200'>
+                                    Hola {nombreCliente},
+                                </p>
+                                <p className='text-left  mx-auto text-zinc-500'>
+                                    Te compartimos tu cotización <span className='uppercase font-semibold text-zinc-200'>{nombreCotizacion}</span> para el evento de {tipoEvento} de <span className='underline uppercase text-zinc-200'>{nombreEvento}</span> que celebrarás el {fechaEvento ? new Date(fechaEvento.getTime() + 86400000).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className='mt-8 p-5'>
+                                <p className='uppercase text-left text-2xl font-Bebas-Neue text-zinc-200'>
+                                    <span className='uppercase font-semibold text-zinc-200'>{nombreCotizacion}</span>
+                                </p>
+                                <p className='text-left  mx-auto text-zinc-500'>
+                                    para el evento de {tipoEvento} de <span className='underline uppercase text-zinc-200'>{nombreEvento}</span> que celebrarás el {fechaEvento ? new Date(fechaEvento.getTime() + 86400000).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}.
+                                </p>
+                            </div>
+                        )}
 
                         <div className='mx-auto p-5'>
 
