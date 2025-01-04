@@ -211,7 +211,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
 
     const handleSeleccionCondicionMetodoPago = (condicion: CondicionesComerciales, metodo: MetodoPago) => {
 
-        console.log('condicion', condicion, 'metodo', metodo);
+        // console.log('condicion', condicion, 'metodo', metodo);
 
         setMetodoPagoId(metodo.id);
         setMetodoPago(metodo);
