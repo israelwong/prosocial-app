@@ -146,15 +146,14 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                 const fromListaParam = searchParams.get('param');
                 if (fromListaParam) {
                     setFromLista(fromListaParam === 'lista');
-                    console.log('fromLista', fromListaParam);
+                    // console.log('fromLista', fromListaParam);
                 }
             }
-
 
             setLoading(false);
         }
         fetchData();
-    }, [cotizacionId, searchParams]);
+    }, [cotizacionId]);
 
     //! Calcular totales
     const calcularTotal = useCallback((servicios: Servicio[]) => {
@@ -211,6 +210,9 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
     }, [servicios, condicionComercial, metodoPago, metodoPagoId, calcularTotal]);
 
     const handleSeleccionCondicionMetodoPago = (condicion: CondicionesComerciales, metodo: MetodoPago) => {
+
+        console.log('condicion', condicion, 'metodo', metodo);
+
         setMetodoPagoId(metodo.id);
         setMetodoPago(metodo);
         setMsi(metodo.num_msi || 0);
@@ -220,6 +222,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         url.searchParams.set('condicionComercialId', condicion.id || '');
         url.searchParams.set('metodoPagoId', metodo.id || '');
         window.history.replaceState(null, '', url.toString());
+        return
     }
 
     const checkout = async () => {
@@ -273,7 +276,6 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         } finally {
             setIsProcessing(false);
         }
-        // setIsProcessing(false);
     }
 
     const handleRegresar = () => {
