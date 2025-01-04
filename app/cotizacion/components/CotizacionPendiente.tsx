@@ -1,18 +1,23 @@
 'use client';
+
 import React, { useEffect, useState, useCallback } from 'react'
-import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
-import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
-import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
-import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
-import { Servicio, MetodoPago, CondicionesComerciales } from '@/app/admin/_lib/types'
-import { cotizacionDetalle } from '@/app/admin/_lib/cotizacion.actions';
-import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import Contrato from './Contrato';
-import SkeletonPendiente from './skeletonPendiente';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 
+import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
+
+import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
+import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
+
+import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
+import { Servicio, MetodoPago, CondicionesComerciales } from '@/app/admin/_lib/types'
+
+import { cotizacionDetalle } from '@/app/admin/_lib/cotizacion.actions';
+import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
+
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import SkeletonPendiente from './skeletonPendiente';
+import Contrato from './Contrato';
 import Wishlist from './Wishlist';
 
 interface Props {
