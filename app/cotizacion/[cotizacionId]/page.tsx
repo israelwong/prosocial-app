@@ -1,7 +1,7 @@
 import React from 'react'
 import { Metadata } from 'next'
 import Cotizacion from '../components/Cotizacion'
-import "../../globals.css";
+import "../globals.css";
 
 export const metadata: Metadata = {
     title: 'Cotización personalizada'
