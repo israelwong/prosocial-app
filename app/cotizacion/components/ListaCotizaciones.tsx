@@ -80,8 +80,8 @@ export default function ListaCotizaciones({ eventoId }: Props) {
                     ))}
                 </div>
 
-                <div className='p-5'>
-                    <div className='w-full md:p-0 px-5 border border-yellow-500 p-5'>
+                <div className='md:p-0 p-5'>
+                    <div className='w-full px-5 border border-yellow-500  p-5'>
                         <h3 className='font-Bebas-Neue text-2xl text-yellow-600 mb-2 font-semibold'>Condiciones comerciales vigentes</h3>
                         <ul className='text-lg text-zinc-400'>
                             {condicionesComerciales?.map(condicion => (
