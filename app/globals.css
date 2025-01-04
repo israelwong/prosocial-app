@@ -44,7 +44,7 @@ body {
 
 @font-face {
   font-family: 'roboto';
-  src: url('./fonts/BebasNeue-Regular') format('woff');
+  src: url('./fonts/BebasNeue-Regular.ttf') format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: swap;

@@ -2,10 +2,12 @@
 import React, { useState, useEffect } from 'react'
 import Header from './Header'
 import Footer from './Footer'
-import { Evento, Cliente, Cotizacion } from '@/app/admin/_lib/types'
+import { Evento, Cliente, Cotizacion, CondicionesComerciales } from '@/app/admin/_lib/types'
 import { obtenerEventoCotizaciones } from '@/app/admin/_lib/evento.actions'
+import { obtenerCondicionesComercialesActivas } from '@/app/admin/_lib/condicionesComerciales.actions'
 import Skeleton from './skeleton'
 import { useRouter } from 'next/navigation'
+import { ArrowRight } from 'lucide-react'
 
 interface Props {
     eventoId: string
@@ -19,15 +21,18 @@ export default function ListaCotizaciones({ eventoId }: Props) {
     const [cliente, setCliente] = useState<Cliente | null>(null)
     const [eventoTipo, setEventoTipo] = useState<string | null>(null)
     const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
+    const [condicionesComerciales, setCondicionesComerciales] = useState<CondicionesComerciales[] | null>(null)
 
     useEffect(() => {
         const fetchData = async () => {
             const data = await obtenerEventoCotizaciones(eventoId)
+            const condicionesComercialesData = await obtenerCondicionesComercialesActivas()
 
             setEvento(data.evento ?? null)
             setCliente(data.cliente ?? null)
             setCotizaciones(data.cotizaciones ?? [])
             setEventoTipo(data.tipoEvento ?? null)
+            setCondicionesComerciales(condicionesComercialesData)
 
             setLoading(false)
         }
@@ -57,13 +62,13 @@ export default function ListaCotizaciones({ eventoId }: Props) {
                     </p>
                 </div>
 
-                <div className='w-full md:p-0 px-5'>
+                <div className='w-full md:p-0 px-5 mb-5'>
                     {cotizaciones.map(cotizacion => (
                         <div className='bg-zinc-900 border border-zinc-800 rounded my-3 w-full text-left mb-3 justify-between items-center p-5' key={cotizacion.id}>
 
                             <div className='mb-2'>
                                 <h4 className='text-lg md:text-xl md:pr-14'>
-                                    {cotizacion.nombre} <span className='text-md text-zinc-500'> por presupuesto de {cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</span>
+                                    {cotizacion.nombre} <span className='text-md text-zinc-500'> por solo <strong>{cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</strong></span>
                                 </h4>
                             </div>
 
@@ -74,6 +79,26 @@ export default function ListaCotizaciones({ eventoId }: Props) {
                         </div>
                     ))}
                 </div>
+
+                <div className='p-5'>
+                    <div className='w-full md:p-0 px-5 border border-yellow-500 p-5'>
+                        <h3 className='font-Bebas-Neue text-2xl text-yellow-600 mb-2 font-semibold'>Condiciones comerciales vigentes</h3>
+                        <ul className='text-lg text-zinc-400'>
+                            {condicionesComerciales?.map(condicion => (
+                                <li key={condicion.id} className='mb-2'>
+                                    <div className='flex items-start'>
+                                        <ArrowRight size={16} className='mr-2 mt-2' />
+                                        <p>
+
+                                            <span className='font-semibold'>{condicion.nombre}:</span> {condicion.descripcion}
+                                        </p>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+
             </div>
 
             <Footer telefono='5544546582' asunto='Listado de cotizaciones' />
