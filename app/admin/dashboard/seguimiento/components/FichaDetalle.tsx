@@ -5,10 +5,10 @@ import { obtenerEventoSeguimiento, actualizarEventoStatus } from '@/app/admin/_l
 import { useRouter } from 'next/navigation'
 import { obtenerCondicionComercial } from '@/app/admin/_lib/condicionesComerciales.actions';
 
-
 import Wishlist from './Wishlist'
 import FichaPresupuesto from './FichaPresupuesto'
 import FichaBalanceFinanciero from './FichaBalanceFinanciero'
+import FichaBitacora from '../../eventos/components/FichaBitacora'
 
 export interface Props {
     eventoId: string
@@ -40,6 +40,9 @@ export default function FichaDetalle({ eventoId }: Props) {
             }
         }
         fetchData()
+
+
+
     }, [eventoId])
 
     const handleActualizarEventoStatus = async (status: string) => {
@@ -71,16 +74,16 @@ export default function FichaDetalle({ eventoId }: Props) {
                             router.back()
                         }
                         }>
-                            Cerrar ventana
+                            <span className='hidden sm:inline'>Cerrar ventana</span>
+                            <span className='sm:hidden'>Cerrar</span>
                         </button>
                     </div>
                 </div>
 
-                <div className='grid grid-cols-4 gap-5'>
+                <div className='md:grid md:grid-cols-4 gap-5'>
 
                     {/* COLUMNA 1 */}
                     <div>
-
                         {/* //! EVENTO */}
                         <div className='bg-zinc-900 p-4 rounded-lg shadow-md mb-5 border border-zinc-800'>
 
@@ -119,7 +122,7 @@ export default function FichaDetalle({ eventoId }: Props) {
                         </div>
 
                         {/* //! CLIENTE */}
-                        <div className='bg-zinc-900 p-4 rounded-lg shadow-md mb-5 border border-zinc-800'>
+                        <div className='bg-zinc-900 p-4 rounded-lg shadow-md mb-5 border border-zinc-800 order-3'>
                             <div className='flex justify-between items-center mb-3'>
                                 <h3 className='text-xl text-zinc-200 font-semibold'>
                                     Cliente
@@ -149,43 +152,47 @@ export default function FichaDetalle({ eventoId }: Props) {
                             </ul>
                         </div>
 
-                        <button
-                            className='bg-blue-900 text-white p-2 rounded-md w-full mb-2'
-                            onClick={() => {
-                                window.open(`/admin/dashboard/contrato/${evento?.id}`, '_blank')
-                            }}
-                        >
-                            Contrato digital
-                        </button>
-
-                        {status === 'aprobado' && (
+                        {/* //! ACCIONES  */}
+                        <div className=''>
                             <button
-                                className='bg-zinc-700 px-3 py-2 text-white rounded-md w-full mb-2'
-                                onClick={async () => {
-                                    await handleActualizarEventoStatus('archivado')
-                                    setStatus('archivado')
+                                className='bg-blue-900 text-white p-2 rounded-md w-full mb-2'
+                                onClick={() => {
+                                    window.open(`/admin/dashboard/contrato/${evento?.id}`, '_blank')
                                 }}
                             >
-                                Archivar evento
+                                Contrato digital
                             </button>
-                        )}
-                        {status === 'archivado' && (
-                            <button
-                                className='border border-yellow-700 px-3 py-2 text-yellow-600 rounded-md w-full mb-2'
-                                onClick={async () => {
-                                    await handleActualizarEventoStatus('aprobado')
-                                    setStatus('aprobado')
-                                }}
-                            >
-                                Desarchivar
-                            </button>
-                        )}
 
-                        <button className='bg-red-700 text-white p-2 rounded-md mb-5 w-full'
-                            onClick={() => { router.back() }}
-                        >
-                            Cerrar ventana
-                        </button>
+                            {status === 'aprobado' && (
+                                <button
+                                    className='bg-zinc-700 px-3 py-2 text-white rounded-md w-full mb-2'
+                                    onClick={async () => {
+                                        await handleActualizarEventoStatus('archivado')
+                                        setStatus('archivado')
+                                    }}
+                                >
+                                    Archivar evento
+                                </button>
+                            )}
+                            {status === 'archivado' && (
+                                <button
+                                    className='border border-yellow-700 px-3 py-2 text-yellow-600 rounded-md w-full mb-2'
+                                    onClick={async () => {
+                                        await handleActualizarEventoStatus('aprobado')
+                                        setStatus('aprobado')
+                                    }}
+                                >
+                                    Desarchivar
+                                </button>
+                            )}
+
+                            <button className='bg-red-700 text-white p-2 rounded-md mb-5 w-full'
+                                onClick={() => { router.back() }}
+                            >
+                                Cerrar ventana
+                            </button>
+                        </div>
+
                     </div>
 
                     {/* COLUMNA 2 */}
@@ -197,7 +204,7 @@ export default function FichaDetalle({ eventoId }: Props) {
                             condicionComercial={condicionComercial}
                         />
 
-                        <div className='p-5 border border-zinc-800 rounded-md'>
+                        <div className='p-5 border border-zinc-800 rounded-md md:mb-0 mb-5'>
                             <FichaBalanceFinanciero
                                 cotizacionId={cotizacion?.id ?? ''}
                             />
@@ -205,6 +212,7 @@ export default function FichaDetalle({ eventoId }: Props) {
 
                     </div>
 
+                    {/* COLUMNA 3 */}
                     {/* //! SERVICIOS */}
                     <div className='mb-6 border border-zinc-800 p-5 rounded-md'>
                         <div className='flex justify-between items-center mb-4'>
@@ -212,7 +220,7 @@ export default function FichaDetalle({ eventoId }: Props) {
                                 Servicios asociados
                             </h3>
                             <button
-                                className='bg-zinc-900 text-white p-2 rounded-md' onClick={() => {
+                                className='bg-zinc-900 text-white p-2 rounded-md md:block hidden' onClick={() => {
                                     router.push(`/admin/dashboard/cotizaciones/${cotizacion?.id}`)
                                 }
                                 }>
@@ -223,9 +231,15 @@ export default function FichaDetalle({ eventoId }: Props) {
                         <Wishlist cotizacionId={cotizacion?.id ?? ''} />
                     </div>
 
+                    <div className='mb-6 border border-zinc-800 p-5 rounded-md'>
+                        <FichaBitacora eventoId={eventoId} />
+                    </div>
+
                 </div>
             </div>
 
-        </div >
+
+
+        </div>
     )
 }

@@ -7,10 +7,10 @@ export async function conteo() {
 
     const seguimiento = await prisma.evento.count({
         where: {
-            status: 'nuevo',
-            AND: {
-                status: 'seguimiento'
-            }
+            OR: [
+                { status: 'seguimiento' },
+                { status: 'nuevo' }
+            ]
         }
     });
 

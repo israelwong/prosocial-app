@@ -6,8 +6,8 @@ import Cookies from 'js-cookie'
 import { obtenerEventosDetalle, asignarEventoUser } from '@/app/admin/_lib/evento.actions'
 import { Calendar, CircleUserRound } from 'lucide-react'
 
-
 export default function ListaEventos() {
+
     interface EventoDetalle {
         id: string;
         evento: string;
@@ -67,8 +67,7 @@ export default function ListaEventos() {
     const eventosPorEstado = {
         nuevos: eventosFiltrados.filter(evento => evento.status === 'nuevo'),
         seguimientos: eventosFiltrados.filter(evento => evento.status === 'seguimiento'),
-        aprobado: eventosFiltrados.filter(evento => evento.status === 'aprobado'),
-        archivados: eventosFiltrados.filter(evento => evento.status === 'archivado')
+        // archivados: eventosFiltrados.filter(evento => evento.status === 'archivado')
     }
 
     const handleOpen = (id: string, status: string) => {
@@ -115,7 +114,7 @@ export default function ListaEventos() {
                         />
                     </div>
 
-                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4'>
                         {Object.entries(eventosPorEstado).map(([estado, eventos]) => (
                             <div key={estado}>
 
@@ -137,8 +136,9 @@ export default function ListaEventos() {
                                             </button>
                                         </h3>
 
-                                        <p className='flex items-center text-sm mb-2 text-zinc-300'>
-                                            <Calendar size={15} className='mr-2' /> {new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
+                                        <p className='flex items-center mb-2 text-zinc-300'>
+
+                                            <Calendar size={15} className='mr-2' /> Fecha de evento {new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
                                                 timeZone: 'UTC',
                                                 year: 'numeric',
                                                 month: 'long',
@@ -147,20 +147,19 @@ export default function ListaEventos() {
                                         </p>
 
                                         <div className='space-x-1 mb-2 flex items-center'>
-                                            <span className='px-2 py-1 leading-3 text-[12px] bg-zinc-700 rounded-md uppercase flex items-center'>
+                                            Lead <span className='ml-2 px-2 py-1 leading-3 text-[12px] bg-zinc-700 rounded-md uppercase flex items-center'>
                                                 <CircleUserRound size={15} className='mr-1' /> {evento.cliente}
                                             </span>
 
                                             {evento.user && (
-                                                <span className='px-2 py-1 leading-3 text-sm rounded-md flex text-purple-500 '>
+                                                <span className='px-2 py-1 leading-3 text-sm rounded-md flex text-purple-500'>
                                                     @{evento.user}
                                                 </span>
                                             )}
                                         </div>
 
                                         <p className='text-zinc-500 flex items-center text-sm'>
-
-                                            {new Date(evento.fecha_actualizacion).toLocaleDateString('es-MX', {
+                                            Registrado {new Date(evento.fecha_actualizacion).toLocaleDateString('es-MX', {
                                                 timeZone: 'UTC',
                                                 year: 'numeric',
                                                 month: 'long',

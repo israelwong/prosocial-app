@@ -21,7 +21,7 @@ export default function FormUsuarioNuevo() {
 
     const validate = () => {
         let valid = true
-        // let errors = { username: '', email: '', password: '', role: '', telefono: '' }
+        const errors = { username: '', email: '', password: '', role: '', telefono: '' }
 
         if (!username) {
             errors.username = 'El nombre de usuario es obligatorio'
@@ -50,8 +50,8 @@ export default function FormUsuarioNuevo() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
         if (validate()) {
-            // Lógica para crear usuario
             const nuevoUsuario: User = {
                 username: username || '',
                 email: email || '',
@@ -96,6 +96,7 @@ export default function FormUsuarioNuevo() {
                     />
                     {errors.username && <p className='text-red-500'>{errors.username}</p>}
                 </div>
+
                 <div className="mb-4">
                     <label className="block text-white mb-1">Teléfono</label>
                     <input
@@ -106,6 +107,7 @@ export default function FormUsuarioNuevo() {
                     />
                     {errors.telefono && <p className='text-red-500'>{errors.telefono}</p>}
                 </div>
+
                 <div className="mb-4">
                     <label className="block text-white mb-1">Correo electrónico <span className='text-zinc-500'>(Opcional)</span></label>
                     <input
@@ -116,16 +118,7 @@ export default function FormUsuarioNuevo() {
                     />
                     {errors.email && <p className='text-red-500'>{errors.email}</p>}
                 </div>
-                <div className="mb-4">
-                    <label className="block text-white mb-1">Contraseña <span className='text-zinc-500'>(Temporal)</span></label>
-                    <input
-                        type='text'
-                        className='w-full p-2 rounded bg-zinc-900 border border-zinc-700 text-white'
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                    {errors.password && <p className='text-red-500'>{errors.password}</p>}
-                </div>
+
                 <div className="mb-4">
                     <label className="block text-white mb-1">Rol</label>
                     <select
@@ -140,6 +133,19 @@ export default function FormUsuarioNuevo() {
                     </select>
                     {errors.role && <p className='text-red-500'>{errors.role}</p>}
                 </div>
+
+                {role !== 'proveedor' && (
+                    <div className="mb-4">
+                        <label className="block text-white mb-1">Contraseña <span className='text-zinc-500'>(Temporal)</span></label>
+                        <input
+                            type='text'
+                            className='w-full p-2 rounded bg-zinc-900 border border-zinc-700 text-white'
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                        {errors.password && <p className='text-red-500'>{errors.password}</p>}
+                    </div>
+                )}
 
                 {/* ACTIONS */}
                 <div>

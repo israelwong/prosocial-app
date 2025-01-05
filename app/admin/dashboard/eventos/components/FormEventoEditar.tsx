@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import ListaCotizaciones from '../../cotizaciones/components/ListaCotizaciones'
 import { obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/paquete.actions'
 import { Shuffle, Pencil, Trash2 } from 'lucide-react'
+import FichaBitacora from './FichaBitacora'
 
 interface Props {
     eventoId: string
@@ -291,6 +292,21 @@ export default function FormEventoEditar({ eventoId }: Props) {
                                     {tipoEvento}
                                 </div>
                             </div>
+
+                            <div className="mb-4">
+                                <label className="block text-zinc-600 text-sm mb-2" htmlFor="fechaevento">
+                                    Fecha de evento
+                                </label>
+                                <input
+                                    type="date"
+                                    id="fechaevento"
+                                    name="fechaevento"
+                                    value={fechaEvento ? fechaEvento.toISOString().split("T")[0] : ''} // Convierte al formato requerido
+                                    onChange={e => setFechaEvento(new Date(e.target.value))}
+                                    className="bg-zinc-900 border border-yellow-600 rounded w-full py-2 px-3 text-zinc-300"
+                                />
+                            </div>
+
                             <div className="mb-4">
                                 <label className="block text-zinc-600 text-sm mb-2" htmlFor="estatus">
                                     Estatus
@@ -310,33 +326,20 @@ export default function FormEventoEditar({ eventoId }: Props) {
                                 </select>
                             </div>
 
-                            <div className="mb-4">
-                                <label className="block text-zinc-600 text-sm mb-2" htmlFor="fechaevento">
-                                    Fecha de evento
-                                </label>
-                                <input
-                                    type="date"
-                                    id="fechaevento"
-                                    name="fechaevento"
-                                    value={fechaEvento ? fechaEvento.toISOString().split("T")[0] : ''} // Convierte al formato requerido
-                                    onChange={e => setFechaEvento(new Date(e.target.value))}
-                                    className="bg-zinc-900 border border-zinc-800 rounded w-full py-2 px-3 text-zinc-300"
-                                />
+                            <div className='grid grid-cols-2'>
+
+                                <p className='text-sm text-zinc-500 italic mb-0'>
+                                    Creación  {fechaCreacion ? new Date(fechaCreacion).toLocaleString('es-ES', {
+                                        year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric'
+                                    }) : ''}
+                                </p>
+
+                                <p className='text-sm text-zinc-500 italic mb-5'>
+                                    Actualización {fechaActualizacion ? new Date(fechaActualizacion).toLocaleString('es-ES', {
+                                        year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric'
+                                    }) : ''}
+                                </p>
                             </div>
-
-                            <p className='text-sm text-zinc-500 italic mb-0'>
-                                Creado el  {fechaCreacion ? new Date(fechaCreacion).toLocaleString('es-ES', {
-                                    year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric'
-                                }) : ''}
-                            </p>
-
-                            <p className='text-sm text-zinc-500 italic mb-5'>
-                                Actualizado el {fechaActualizacion ? new Date(fechaActualizacion).toLocaleString('es-ES', {
-                                    year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric'
-                                }) : ''}
-                            </p>
-
-
 
                             <div className="space-y-3">
                                 {respuestaServidor &&
@@ -405,20 +408,8 @@ export default function FormEventoEditar({ eventoId }: Props) {
                     </div>
                 </div>
 
-                <div>
-                    <div className='flex justify-between items-center pb-5'>
-
-                        <div className='text-zinc-500 text-xl font-bold'>
-                            Bitacora de seguimiento
-                        </div>
-                        <button className='bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm'>
-                            Agregar nota
-                        </button>
-                    </div>
-
-                    <div className='border border-zinc-800 rounded-md p-5'>
-                        <p className='text-zinc-300'>No hay registros </p>
-                    </div>
+                <div className=''>
+                    <FichaBitacora eventoId={eventoId} />
                 </div>
 
 

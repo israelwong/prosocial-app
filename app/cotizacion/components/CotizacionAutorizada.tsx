@@ -29,13 +29,10 @@ export default function CotizacionAutorizada({ cotizacion }: Props) {
                 if (response.eventoTipo) {
                     setEventoTipo(response.eventoTipo.nombre || '')
                 }
-
             })
-
         }
 
     }, [cotizacion.id])
-
 
     return (
         <div className="mt-10 mb-16 md:p-0 p-5">

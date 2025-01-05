@@ -256,7 +256,7 @@ export default function FormCotizacionNueva() {
         const nuevaCotizacion = {
             eventoTipoId: eventoTipoId || '',
             eventoId: eventoId || '',
-            nombre: nombreCotizacion,
+            nombre: nombreCotizacion.charAt(0).toUpperCase() + nombreCotizacion.slice(1),
             precio: parseFloat(precioFinal.toFixed(2)),
             condicionesComercialesId: condicionComercial?.id,
             condicionesComercialesMetodoPagoId: metodoPago?.id,
@@ -270,12 +270,11 @@ export default function FormCotizacionNueva() {
 
     }
 
-
     return (
         <div>
             {loading ? (
                 <div className="flex justify-center items-center h-screen">
-                    <p>Cargando información ...</p>
+                    <p className='text-zinc-500 italic'>Cargando información ...</p>
                 </div>
             ) : (
                 <div>
@@ -300,7 +299,7 @@ export default function FormCotizacionNueva() {
                             </p>
 
                             {/* NOMBRE COTIZACIÓN */}
-                            <div className='mb-2 rounded-md bg-zinc-900 border border-zinc-800 px-5 py-2 '>
+                            <div className='mb-2 rounded-md bg-zinc-900 border border-yellow-800 px-5 py-2 '>
                                 <p className='text-sm text-zinc-500 mb-1'>
                                     Nombre de la cotización
                                 </p>

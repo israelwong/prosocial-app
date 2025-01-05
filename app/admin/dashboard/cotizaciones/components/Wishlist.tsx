@@ -43,7 +43,7 @@ const Wishlist: React.FC<Props> = ({ servicios, onActualizarServicio }) => {
             if (serviciosFiltrados.length === 0) return null
             return (
                 <div key={categoria.id} className="mb-6 bg-zinc-900 border border-zinc-800 p-5 rounded-md">
-                    <table className="min-w-full table-fixed border-collapse border border-white rounded-md overflow-hidden">
+                    <table className="min-w-full table-fixed border-collapse border border-white rounded-md overflow-hidden ">
                         <thead>
                             <tr>
                                 <th className="p-3 text-start text-zinc-600 w-1/2">{categoria.nombre}</th>

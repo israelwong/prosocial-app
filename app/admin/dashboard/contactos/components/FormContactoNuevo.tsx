@@ -76,11 +76,10 @@ export default function FormContactoNuevo() {
             canalId: canalId,
             etapa: 'nuevo' // or any default value for etapa
 
-        }
-            ;
-        // setGuardandoCliente(true)
+        };
+        setGuardandoCliente(true)
         const result = await crearCliente(formData);
-        console.log(result.message);
+        // console.log(result.message);
 
         if (!result.success) {
             setErrorClienteExistente(result.message || '');

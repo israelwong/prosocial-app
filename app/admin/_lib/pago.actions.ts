@@ -159,3 +159,36 @@ export async function obtenerDetallesPago(pagoId: string) {
     return detallesPago;
 }
 
+export async function obtenerBalancePagosEvento(eventoId: string) {
+
+    // const evento = await prisma.evento.findUnique({
+    //     where: {
+    //         id: eventoId,
+    //         status: 'aprobado'
+    //     }
+    // })
+
+    const cotizacion = await prisma.cotizacion.findFirst({
+        where: {
+            eventoId,
+            status: 'aprobada'
+        }
+    });
+
+    const pagos = await prisma.pago.findMany({
+        where: {
+            cotizacionId: cotizacion?.id
+        }
+    });
+
+    const totalPagado = pagos.reduce((acc, pago) => {
+        return acc + pago.monto;
+    }, 0);
+
+    const precio = cotizacion?.precio ?? 0;
+
+    const balance = cotizacion && precio !== undefined ? precio - totalPagado : undefined;
+
+    return { precio, totalPagado, balance };
+
+}

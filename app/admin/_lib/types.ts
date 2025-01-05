@@ -265,3 +265,14 @@ export interface Pago {
     createdAt?: Date
     updatedAt?: Date
 }
+
+export interface EventoBitacora {
+    id?: string
+    eventoId: string
+    comentario: string
+    createdAt?: Date
+    updatedAt?: Date
+    status?: string | null
+    ipmortancia?: string | null
+
+}

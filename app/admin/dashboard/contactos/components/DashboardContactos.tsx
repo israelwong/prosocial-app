@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import FormClienteEditar from '@/app/admin/dashboard/clientes/components/FormClienteEditar';
+import FormClienteEditar from './FormClienteEditar';
 import ListaEventosCliente from '../../eventos/components/ListaEventosCliente';
 import { useRouter } from 'next/navigation';
 

@@ -248,7 +248,9 @@ function FormPaqueteEditar({ paqueteId }: Props) {
     };
 
     if (loading) {
-        return <p>Cargando...</p>
+        return <div className="flex items-center justify-center h-screen">
+            <p className="text-zinc-600">Cargando información del paquete...</p>
+        </div>
     }
 
     return (

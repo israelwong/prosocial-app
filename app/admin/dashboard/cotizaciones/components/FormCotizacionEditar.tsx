@@ -262,7 +262,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
     }, [servicios, sobreprecioPorcentaje, comisionVentaPorcentaje, condicionComercial, metodoPago, metodoPagoId, calcularTotal]);
 
     const handleSeleccionCondicionMetodoPago = (condicion: CondicionesComerciales, metodo: MetodoPago) => {
-        console.table(metodo.metodoPagoId);
+        // console.table(metodo.metodoPagoId);
         setMetodoPagoId(metodo.id);
         setMetodoPago(metodo);
         setCondicionComercial(condicion);
@@ -282,7 +282,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
             id: cotizacionId,
             eventoTipoId: eventoTipoId || '',
             eventoId: eventoId || '',
-            nombre: nombreCotizacion,
+            nombre: nombreCotizacion.charAt(0).toUpperCase() + nombreCotizacion.slice(1),
             precio: parseFloat(precioFinal.toFixed(2)),
             condicionesComercialesId: condicionComercial?.id ?? null,
             condicionesComercialesMetodoPagoId: metodoPago?.id ?? null,
@@ -333,7 +333,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 id: cotizacionId,
                 eventoTipoId: eventoTipoId || '',
                 eventoId: eventoId || '',
-                nombre: nombreCotizacion,
+                nombre: nombreCotizacion.charAt(0).toUpperCase() + nombreCotizacion.slice(1),
                 precio: parseFloat(precioFinal.toFixed(2)),
                 condicionesComercialesId: condicionComercial?.id ?? null,
                 condicionesComercialesMetodoPagoId: metodoPago?.id ?? null,
@@ -341,13 +341,13 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 servicios,
                 utilidadDeVenta: parseFloat(utilidadDeVenta.toFixed(2)),
                 utilidadSistema: parseFloat(utilidadSistema.toFixed(2)),
-                status: 'autorizada'
+                status: 'aprobada'
             }
             await actualizarCotizacion(cotizacionActualizada);
 
             await actualizarEventoStatus(
                 eventoId || '',
-                'aprobada'
+                'aprobado'
             );
 
             //crear pago
@@ -362,9 +362,8 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 concepto: parseFloat(confirmarPorcentajeAnticipo) === 100 ? 'Pago del total del servicio' : `Pago del ${confirmarPorcentajeAnticipo}%  de anticipo`,
                 status: 'Paid',
             }
-            const response = await crearPago(pago);
-            const pagoid = response.id;
-            router.push(`/admin/dashboard/checkout/comprobante/${pagoid}`);
+            await crearPago(pago);
+            router.push(`/admin/dashboard/seguimiento/${eventoId}`);
         }
     }
 
@@ -416,31 +415,29 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
 
     }
 
-
     return (
         <div>
             {loading ? (
-                <div className="flex justify-center items-center h-screen">
-                    <p>Cargando información...</p>
+                <div className="flex justify-center items-center h-screen text-zinc-500 italic">
+                    <p>Cargando cotización...</p>
                 </div>
             ) : (
-                <div>
+                <div className='w-full'>
 
                     {/* HEADER */}
-                    <div className='flex justify-between items-center mb-5'>
+                    <div className='md:flex justify-between items-center mb-5 flex flex-wrap'>
 
-                        <div>
+                        <div className='mb-5 md:mb-0'>
                             <h1 className='text-2xl'>
-                                Editar cotización
+                                Cotización del evento <span className='text-yellow-500'>{eventoNombre}</span>
                             </h1>
                             <p className='text-sm text-zinc-500 italic'>
-
-                                Evento de <span className='text-yellow-500'>{eventoNombre}</span> para la celebrar el  {eventoFecha ? new Date(eventoFecha).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}
+                                Celebración el <u>{eventoFecha ? new Date(eventoFecha).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</u>
                             </p>
                         </div>
 
                         {/* //! MENU */}
-                        <div className='items-center flex flex-wrap justify-start md:space-x-2 space-y-1 md:space-y-0'>
+                        <div className='items-center flex flex-wrap  justify-start md:space-x-2 space-y-1 md:space-y-0 gap-2 md:text-md text-sm'>
 
                             <button className='px-4 py-2 border border-zinc-800 rounded-md bg-zinc-900 flex items-center' onClick={() => router.push(`/admin/dashboard/contactos/${clienteId}`)}>
                                 <User size={16} className='mr-1' /> Cliente {clienteNombre}
@@ -464,7 +461,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                 onClick={() => handleEnviarWhatsapp('compatir')}
                                 className='flex items-center px-4 py-2 border border-green-800 rounded-md  justify-center mb-2 text-green-600'
                             >
-                                <i className="fab fa-whatsapp text-md mr-1"></i> Compartir
+                                <i className="fab fa-whatsapp text-md mr-1"></i> Compartir cotización
                             </button>
 
                             <button
@@ -492,17 +489,17 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                         </div>
                     </div>
 
-                    <div className='grid grid-cols-3 gap-5'>
+                    <div className='md:grid md:grid-cols-3 md:gap-5'>
 
                         {/* INFORMACIÓN DE LA COTIZACION */}
-                        <div className='sticky top-5'>
+                        <div className='md:sticky md:top-5 '>
 
                             <p className='text-xl text-zinc-500 mb-5'>
                                 Detalles del servicio
                             </p>
 
                             {/* NOMBRE COTIZACIÓN */}
-                            <div className='mb-2 rounded-md bg-zinc-900 border border-zinc-800 px-5 py-2 '>
+                            <div className='mb-2 rounded-md bg-zinc-900 border border-zinc-800 px-5 py-2 w-full'>
                                 <p className='text-sm text-zinc-500 mb-1'>
                                     Nombre de la cotización
                                 </p>

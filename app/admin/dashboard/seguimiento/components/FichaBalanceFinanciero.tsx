@@ -76,7 +76,7 @@ export default function FichaBalanceFinanciero({ cotizacionId }: Props) {
 
 
     return (
-        <div>
+        <div className=''>
             {/* HEADER */}
             <div className='flex justify-between items-center mb-5'>
                 <h4 className='text-lg font-semibold text-zinc-500'>
@@ -95,13 +95,13 @@ export default function FichaBalanceFinanciero({ cotizacionId }: Props) {
             <div className='grid grid-cols-2 gap-5 mb-5'>
                 <div className='bg-green-800/20 border border-green-700 p-4 rounded-lg shadow-md'>
                     <p>Pagado</p>
-                    <p className='text-2xl'>
+                    <p className='md:text-2xl text-lg font-semibold'>
                         {pagos?.reduce((acc, pago) => acc + (pago.monto ?? 0), 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
                     </p>
                 </div>
                 <div className='bg-red-800/20 border border-red-700 p-4 rounded-lg shadow-md'>
                     <p>Pendiente:</p>
-                    <p className='text-2xl'>
+                    <p className='md:text-2xl text-lg font-semibold'>
                         {((cotizacion?.precio ?? 0) - (pagos?.reduce((acc, pago) => acc + (pago.monto ?? 0), 0) || 0)).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
                     </p>
                 </div>
@@ -112,7 +112,7 @@ export default function FichaBalanceFinanciero({ cotizacionId }: Props) {
                 <div key={pago.id} className='bg-zinc-900 p-4 rounded-lg shadow-md mb-5 border border-zinc-800'>
 
                     <div className=''>
-                        <div className='grid grid-cols-3 gap-5'>
+                        <div className='md:grid md:grid-cols-3 gap-5'>
 
                             <div className='col-span-2'>
                                 <h3 className='text-zinc-200'>
@@ -133,10 +133,11 @@ export default function FichaBalanceFinanciero({ cotizacionId }: Props) {
                                 </p>
                             </div>
 
-                            <p className='text-lg text-white text-end'>
+                            <p className='text-white md:text-end text-left md:text-lg'>
                                 {pago.monto?.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
                             </p>
                         </div>
+
                         <div className='flex space-x-2 mt-3'>
 
                             <button
@@ -152,7 +153,7 @@ export default function FichaBalanceFinanciero({ cotizacionId }: Props) {
                                     window.open(`/admin/dashboard/pagos/${pago.id}`, '_blank')
                                 }}
                             >
-                                <Tickets size={14} className='mr-1' /> Comprobante
+                                <Tickets size={14} className='mr-1' /> <span className=''>Comprobante</span>
                             </button>
                             <button
                                 className='bg-zinc-900 text-white px-2 py-1 rounded-md border border-zinc-800 text-sm w-full flex items-center justify-center space-x-1'

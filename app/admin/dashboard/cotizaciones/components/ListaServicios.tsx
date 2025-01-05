@@ -14,6 +14,7 @@ const ListaServicios: React.FC<Props> = ({ onAgregarServicio }) => {
     const [categorias, setCategorias] = useState<ServicioCategoria[]>([])
     const [servicios, setServicios] = useState<{ [key: string]: Servicio[] }>({})
     const [notificacion, setNotificacion] = useState<string | null>(null)
+    const [categoriaAbierta, setCategoriaAbierta] = useState<string | null>(null)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -26,7 +27,6 @@ const ListaServicios: React.FC<Props> = ({ onAgregarServicio }) => {
             }))
             setServicios(serviciosData)
         }
-
         fetchData()
     }, [])
 
@@ -38,37 +38,49 @@ const ListaServicios: React.FC<Props> = ({ onAgregarServicio }) => {
         }, 2000)
     }, [onAgregarServicio])
 
+    const toggleCategoria = (categoriaId: string) => {
+        setCategoriaAbierta(prev => prev === categoriaId ? null : categoriaId)
+    }
+
     const categoriasRenderizadas = useMemo(() => {
         return categorias.map(categoria => (
-            <div key={categoria.id} className="mb-6 bg-zinc-900 border border-zinc-800 p-5 rounded-md">
-                <h2 className="text-lg text-zinc-500 font-bold mb-3">
+            <div key={categoria.id} className={`border ${categoriaAbierta === categoria.id ? 'border-yellow-700' : 'border-zinc-700'} rounded-md mb-3 p-3`}>
+                <h2
+                    className="text-md text-zinc-300 font-bold mb-0 cursor-pointer flex items-center"
+                    onClick={() => toggleCategoria(categoria.id)}
+                >
+                    <span className="mr-2">
+                        {categoriaAbierta === categoria.id ? '▲' : '▼'}
+                    </span>
                     {categoria.nombre}
                 </h2>
-                <ul className='space-y-2'>
-                    {servicios[categoria.id]?.map(servicio => (
-                        <li key={servicio.id}
-                            className="p-3 rounded-md border border-zinc-700 cursor-pointer"
-                            onClick={() => handleAgregarServicio(servicio)}
-                        >
-                            <div className='flex justify-between'>
-                                <p className='pr-5'>
-                                    {servicio.nombre}
-                                </p>
-                                <label>
-                                    {servicio.precio_publico?.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                </label>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
+                {categoriaAbierta === categoria.id && (
+                    <ul className='space-y-2 pt-3'>
+                        {servicios[categoria.id]?.map(servicio => (
+                            <li key={servicio.id}
+                                className="p-3 rounded-md border-dashed border border-zinc-800 bg-zinc-900 cursor-pointer hover:bg-zinc-800/80"
+                                onClick={() => handleAgregarServicio(servicio)}
+                            >
+                                <div className='flex justify-between'>
+                                    <p className='pr-5'>
+                                        {servicio.nombre}
+                                    </p>
+                                    <label>
+                                        {servicio.precio_publico?.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                    </label>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
         ))
-    }, [categorias, servicios, handleAgregarServicio])
+    }, [categorias, servicios, handleAgregarServicio, categoriaAbierta])
 
     return (
-        <div className="max-h-screen overflow-y-auto">
+        <div className="max-h-screen">
             {notificacion && (
-                <div className="fixed top-4 right-4 bg-green-500/80 text-white p-3 rounded-md shadow-lg w-1/5">
+                <div className="fixed bottom-10 right-5 bg-green-800/90 text-white rounded-md shadow-lg w-1/4 text-right py-3 px-5 italic justify-end border border-zinc-200">
                     {notificacion}
                 </div>
             )}

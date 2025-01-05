@@ -21,6 +21,7 @@ export default function FichaServicio({ usuarios, cotizacionServicioId }: Props)
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
     const [username, setUsername] = useState<string | null>(null);
+    const [asignandingResponsable, setAsignandingResponsable] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -71,12 +72,13 @@ export default function FichaServicio({ usuarios, cotizacionServicioId }: Props)
 
     //! Asignar Responsable a servicio
     const handleSeleccionarResponsable = (userId: string, username: string) => {
+        setAsignandingResponsable(true);
         asignarResponsableCotizacionServicio(userId, cotizacionServicioId!, userId).then(() => {
             setUserId(userId);
             setUsername(username);
             setIsModalOpen(false);
+            setAsignandingResponsable(false);
         })
-
     };
 
     const handleRemoveResponsable = () => {
@@ -115,14 +117,15 @@ export default function FichaServicio({ usuarios, cotizacionServicioId }: Props)
                                     </div>
                                 ) : (
                                     <button
-                                        className='text-blue-500'
+                                        className='text-blue-500 mb-1'
                                         onClick={handleOpenModal}
+                                        disabled={asignandingResponsable}
                                     >
-                                        Asignar Responsable
+                                        {asignandingResponsable ? 'Asignando responsable...' : 'Asignar responsable'}
                                     </button>
                                 )}
                                 <ul className="flex space-x-3">
-                                    <li>Honorarios:</li>
+                                    {/* <li className="hidden sm:block">Honorarios:</li> */}
                                     <li>P.U: {servicio.costo?.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) ?? "N/A"}</li>
                                     <li>Cant.: {servicio.cantidad}</li>
                                     <li>Total: {typeof servicio.costo === 'number' && typeof servicio.cantidad === 'number' ? (servicio.costo * servicio.cantidad).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) : "N/A"}</li>
@@ -136,6 +139,7 @@ export default function FichaServicio({ usuarios, cotizacionServicioId }: Props)
             {/* //! MODAL */}
             {isModalOpen && <ResponsableModal
                 usuarios={usuarios}
+                servicio={servicio?.nombre ?? ''}
                 onSeleccionarResponsable={handleSeleccionarResponsable}
                 onClose={handleCloseModal}
             />}

@@ -143,7 +143,7 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
             {evento.id ? (
                 <div>
                     {loading ? (
-                        <p>Cargando cotizaciones...</p>
+                        <p className='text-zinc-500 italic'>Cargando cotizaciones...</p>
                     ) : (
                         cotizaciones.length > 0 ? (
                             <div>

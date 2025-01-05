@@ -95,11 +95,13 @@ export default function FormEventoNuevo() {
             nombre: nombre.toLowerCase().replace(/\b\w/g, char => char.toUpperCase()),
             fecha_evento: fechaEvento || new Date(), // Ensure fecha_evento is always a Date
             status: 'seguimiento',
-            userid: user ? user.id : '',
+            userId: user ? user.id : '',
         }
+
 
         setGuardandoEvento(true)
         const response = await crearEvento(eventoNuevo)
+
         if (response) {
             router.push(`/admin/dashboard/eventos/${response.id}`)
         } else {
@@ -136,6 +138,8 @@ export default function FormEventoNuevo() {
             }
         })
     }
+
+    // console.log(user)
 
     return (
         <div className="max-w-md mx-auto shadow-md ">

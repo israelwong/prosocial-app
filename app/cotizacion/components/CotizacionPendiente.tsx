@@ -210,9 +210,6 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
     }, [servicios, condicionComercial, metodoPago, metodoPagoId, calcularTotal]);
 
     const handleSeleccionCondicionMetodoPago = (condicion: CondicionesComerciales, metodo: MetodoPago) => {
-
-        // console.log('condicion', condicion, 'metodo', metodo);
-
         setMetodoPagoId(metodo.id);
         setMetodoPago(metodo);
         setMsi(metodo.num_msi || 0);
@@ -222,7 +219,6 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         url.searchParams.set('condicionComercialId', condicion.id || '');
         url.searchParams.set('metodoPagoId', metodo.id || '');
         window.history.replaceState(null, '', url.toString());
-        return
     }
 
     const checkout = async () => {
@@ -273,7 +269,6 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
 
         } catch (error) {
             console.error('Error al procesar el pago:', error);
-        } finally {
             setIsProcessing(false);
         }
     }

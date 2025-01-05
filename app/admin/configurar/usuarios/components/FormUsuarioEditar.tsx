@@ -158,15 +158,6 @@ export default function FormUsuarioEditar({ usuarioId }: Props) {
                     />
                 </div>
 
-                <div className="mb-4">
-                    <label className="block text-white mb-1">Contraseña <span className='text-zinc-500'>(Temporal)</span></label>
-                    <input
-                        type='text'
-                        className='w-full p-2 rounded bg-zinc-900 border border-zinc-700 text-white'
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
 
                 <div className="mb-4">
                     <label className="block text-white mb-1">Rol</label>
@@ -182,6 +173,19 @@ export default function FormUsuarioEditar({ usuarioId }: Props) {
                     </select>
                     {errors.role && <p className='text-red-500'>{errors.role}</p>}
                 </div>
+
+                {role !== 'proveedor' && (
+                    <div className="mb-4">
+                        <label className="block text-white mb-1">Contraseña <span className='text-zinc-500'>(Temporal)</span></label>
+                        <input
+                            type='text'
+                            className='w-full p-2 rounded bg-zinc-900 border border-zinc-700 text-white'
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </div>
+                )}
+
 
                 <div className="mb-4">
                     <label className="block text-white mb-1">Estado</label>

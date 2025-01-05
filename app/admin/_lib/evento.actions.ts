@@ -53,11 +53,13 @@ export async function crearEvento(data: Evento) {
                 eventoTipoId: data.eventoTipoId,
                 nombre: data.nombre,
                 fecha_evento: data.fecha_evento,
-                status: data.status
+                status: data.status,
+                userId: data.userId || null // Ensure userId is passed correctly
             }
         });
         return { success: true, id: nuevoEvento.id };
-    } catch {
+    } catch (error) {
+        console.error(error);
         return { error: 'Error creating event' };
     }
 }
@@ -149,7 +151,6 @@ export async function asignarEventoUser(eventoId: string, userId: string, status
         }
     });
 }
-
 
 export async function actualizarEventoStatus(eventoId: string, status: string) {
     await prisma.evento.update({
