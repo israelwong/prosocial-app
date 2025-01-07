@@ -2,9 +2,10 @@
 import { PrismaClient } from "@prisma/client";
 import {sendSuccessfulPayment, sendWelcomeEmail, sendPedingPayment} from "./sendmail";
 
-const prisma = new PrismaClient();
 
 export async function handlePaymentCompleted(session, res) {
+
+    const prisma = new PrismaClient();
 
     try {
         const paymentIntent = session;
@@ -176,5 +177,7 @@ export async function handlePaymentCompleted(session, res) {
     } catch (error) {
         console.error('Error al manejar el evento de pago:', error);
         res.status(500).send(`Error ${error}`);
+    } finally {
+        await prisma.$disconnect();
     }
 }

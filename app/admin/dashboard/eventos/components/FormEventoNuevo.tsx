@@ -5,7 +5,7 @@ import { crearEvento, validarDisponibilidadFecha } from '@/app/admin/_lib/evento
 import { obtenerTiposEvento } from '@/app/admin/_lib/eventoTipo.actions'
 import { obtenerCliente, obtenerClientes } from '@/app/admin/_lib/cliente.actions'
 import { Cliente } from '@/app/admin/_lib/types'
-import { X } from 'lucide-react'
+import { X, Phone } from 'lucide-react'
 import Cookies from 'js-cookie'
 
 export default function FormEventoNuevo() {
@@ -117,11 +117,16 @@ export default function FormEventoNuevo() {
     }
 
     const handleEliminarClienteSeleccionado = () => {
-        if (confirm('¿Está seguro que deseas cambiar el cliente actual?')) {
-            setClienteSeleccionado(null)
-            setMostrarListaClientes(true)
-            router.push('')
+        // if (window.confirm('¿Está seguro que deseas cambiar el cliente actual?')) {
+        setClienteSeleccionado(null)
+        setMostrarListaClientes(true)
+        router.replace(``)
+        if (searchParams) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete('clienteId');
+            router.replace(`?${params.toString()}`);
         }
+
     }
 
     const validarFecha = (fecha: Date) => {
@@ -166,32 +171,39 @@ export default function FormEventoNuevo() {
                     <div className="mb-4">
                         {mostrarListaClientes ? (
                             <>
-                                <div className='flex justify-between items-center mb-4'>
-                                    <input
-                                        type="text"
-                                        placeholder="Buscar cliente..."
-                                        onChange={(e) => {
-                                            const filtro = e.target.value.toLowerCase()
-                                            setClientes(clientes.filter(cliente => cliente.nombre.toLowerCase().includes(filtro)))
-                                        }}
-                                        className="bg-zinc-900 border border-zinc-800 rounded w-full py-2 px-3 text-zinc-300"
-                                    />
 
-                                    <button
-                                        type="button"
-                                        onClick={() => router.push('/admin/dashboard/contactos/nuevo')}
-                                        className="bg-zinc-800 text-white py-2 px-4 rounded-tr-md rounded-br-md border-t border-r border-b border-zinc-800"
-                                    >
-                                        Crear
-                                    </button>
-                                </div>
-                                <ul className="bg-zinc-900 border border-zinc-800 rounded w-full py-2 px-3 text-zinc-300">
+                                <p className="text-zinc-500 text-xl mb-2">
+                                    Selecciona un contacto existente
+                                </p>
+
+                                <ul className="bg-zinc-900 border border-zinc-800 rounded w-full py-2 px-3 text-zinc-300 mb-2">
                                     {clientes.map(cliente => (
-                                        <li key={cliente.id} onClick={() => handleClienteSeleccionado(cliente)} className="cursor-pointer hover:bg-zinc-800">
+                                        <li key={cliente.id} onClick={() => handleClienteSeleccionado(cliente)} className="cursor-pointer hover:bg-zinc-800 flex">
                                             {cliente.nombre}
+                                            <span className='text-zinc-600 ms-2 italic text-sm flex items-center'>
+                                                <Phone size={12} className='mr-1' />{cliente.telefono}
+                                            </span>
                                         </li>
                                     ))}
                                 </ul>
+
+                                <div className="flex">
+                                    <button
+                                        className='border bg-zinc-800 text-white text-sm py-2 px-4 rounded-md rounded-bl-md border-t border-l border-b border-zinc-800 mr-2 w-full'
+                                        onClick={() => router.push('/admin/dashboard/contactos')}
+                                    >
+                                        Gestionar contactos
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => router.push('/admin/dashboard/contactos/nuevo')}
+                                        className="bg-blue-800 text-white text-sm py-2 px-4 rounded-md rounded-br-md border-t border-r border-b border-zinc-800 w-full"
+                                    >
+                                        Registrar contacto nuevo
+                                    </button>
+
+
+                                </div>
 
                             </>
                         ) : (
@@ -276,7 +288,7 @@ export default function FormEventoNuevo() {
                         </button>
                         <button
                             type="button"
-                            onClick={() => router.back()}
+                            onClick={() => router.push('/admin/dashboard/eventos')}
                             className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
                         >
                             Cancelar

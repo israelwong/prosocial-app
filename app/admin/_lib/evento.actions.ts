@@ -1,8 +1,9 @@
 'use server';
-import { PrismaClient } from "@prisma/client";
 import { Evento } from "./types";
 
-const prisma = new PrismaClient();
+// import { PrismaClient } from "@prisma/client";
+// const prisma = new PrismaClient();
+import prisma from './prismaClient';
 
 export async function obtenerEventos() {
     return prisma.evento.findMany({
@@ -30,8 +31,9 @@ export async function obtenerEventosPorCliente(clienteId: string) {
 }
 
 export async function validarDisponibilidadFecha(fecha_evento: Date) {
+
     const fechaSinHora = new Date(fecha_evento).toISOString().split('T')[0];
-    // console.log(fechaSinHora); // Salida: 2024-12-27
+
 
     const eventos = await prisma.evento.findMany({
         where: {
@@ -39,7 +41,7 @@ export async function validarDisponibilidadFecha(fecha_evento: Date) {
                 gte: new Date(fechaSinHora),
                 lt: new Date(new Date(fechaSinHora).getTime() + 24 * 60 * 60 * 1000) // Menor que el día siguiente
             },
-            status: 'autorizado'
+            status: 'aprobado'
         }
     });
     return eventos.length > 0;

@@ -276,3 +276,15 @@ export interface EventoBitacora {
     ipmortancia?: string | null
 
 }
+
+export interface EventoDetalle {
+    id: string;
+    evento: string;
+    cliente: string;
+    creacion: string;
+    status: string;
+    tipoEvento: string;
+    fecha_evento: string;
+    user: string;
+    fecha_actualizacion: string;
+}

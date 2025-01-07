@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { Cliente, Evento, Cotizacion } from '@/app/admin/_lib/types'
-import { obtenerEventoSeguimiento, actualizarEventoStatus } from '@/app/admin/_lib/evento.actions'
+import { obtenerEventoSeguimiento, actualizarEventoStatus, eliminarEvento } from '@/app/admin/_lib/evento.actions'
 import { useRouter } from 'next/navigation'
 import { obtenerCondicionComercial } from '@/app/admin/_lib/condicionesComerciales.actions';
 
@@ -9,6 +9,7 @@ import Wishlist from './Wishlist'
 import FichaPresupuesto from './FichaPresupuesto'
 import FichaBalanceFinanciero from './FichaBalanceFinanciero'
 import FichaBitacora from '../../eventos/components/FichaBitacora'
+import { Trash } from 'lucide-react'
 
 export interface Props {
     eventoId: string
@@ -40,13 +41,9 @@ export default function FichaDetalle({ eventoId }: Props) {
             }
         }
         fetchData()
-
-
-
     }, [eventoId])
 
     const handleActualizarEventoStatus = async (status: string) => {
-
         if (!confirm('¿Estás seguro de cambiar el status del evento?'))
             return
 
@@ -57,6 +54,17 @@ export default function FichaDetalle({ eventoId }: Props) {
         )
     }
 
+    const handleEliminarEvento = async () => {
+        if (!confirm('¿Estás seguro de eliminar el evento?'))
+            return
+        const response = await eliminarEvento(eventoId)
+        if (response.success) {
+            router.push('/admin/dashboard/seguimiento')
+        } else {
+            alert(response.message)
+        }
+    }
+
     return (
         <div>
 
@@ -64,8 +72,11 @@ export default function FichaDetalle({ eventoId }: Props) {
                 {/* header */}
                 <div className='flex justify-between items-center mb-5'>
 
-                    <h1 className='text-xl font-semibold'>
-                        Seguimiento de evento
+                    <h1 className='text-xl '>
+                        <span className='font-semibold'>Seguimiento de evento</span>
+                        <div className='bg-yellow-800/80 px-3 py-1 rounded-full shadow-md text-yellow-300 border border-yellow-700 inline-block text-sm ms-2'>
+                            Celebración: <span className='font-semibold'>{evento?.fecha_evento ? new Date(evento.fecha_evento).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}</span>
+                        </div>
                     </h1>
 
                     <div className='flex items-center space-x-2'>
@@ -114,10 +125,6 @@ export default function FichaDetalle({ eventoId }: Props) {
                                     <span className='text-zinc-500'>Dirección:</span> Dirección
                                 </li>
                             </ul>
-
-                            <div className='bg-yellow-800/80 px-2 py-1 rounded-full shadow-md text-yellow-300 border border-yellow-700 inline-block text-sm'>
-                                Fecha de celebración:<span className='font-semibold'> {evento?.fecha_evento?.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                            </div>
 
                         </div>
 
@@ -190,6 +197,14 @@ export default function FichaDetalle({ eventoId }: Props) {
                                 onClick={() => { router.back() }}
                             >
                                 Cerrar ventana
+                            </button>
+
+                            <button
+                                onClick={() => handleEliminarEvento()}
+                                className='text-red-700 flex items-center justify-center w-full'
+                            >
+                                <Trash size={16} className='mr-1' />
+                                Eliminar evento
                             </button>
                         </div>
 

@@ -3,8 +3,6 @@ import { Servicio, ServicioCategoria } from '@/app/admin/_lib/types'
 import { obtenerCategories } from '@/app/admin/_lib/categorias.actions'
 import { ChevronRight, Camera, BookImage, Settings, Video, Box } from 'lucide-react'
 
-// import Galeria from './Galeria'
-
 interface Props {
     servicios: Servicio[]
 }
@@ -39,7 +37,6 @@ const uniqueServices = (name: string) => {
 };
 
 const Wishlist: React.FC<Props> = ({ servicios }) => {
-
     const [categorias, setCategorias] = useState<ServicioCategoria[]>([])
 
     useEffect(() => {
@@ -52,7 +49,6 @@ const Wishlist: React.FC<Props> = ({ servicios }) => {
 
     const categoriasRenderizadas = useMemo(() => {
         return categorias.map(categoria => {
-
             const serviciosFiltrados = servicios
                 .filter(servicio => servicio.servicioCategoriaId === categoria.id)
                 .sort((a, b) => (a.posicion ?? 0) - (b.posicion ?? 0))
@@ -94,9 +90,7 @@ const Wishlist: React.FC<Props> = ({ servicios }) => {
                 ) : (
                     categoriasRenderizadas
                 )}
-
             </div>
-
         </div>
     )
 }

@@ -1,10 +1,11 @@
 'use server'
-import { PrismaClient } from "@prisma/client";
 import { Servicio } from "@/app/admin/_lib/types";
 import { crearGasto, eliminarGasto, obtenerGastosPorServicio } from '@/app/admin/_lib/gastos.actions';
 import { eliminarGastos } from '@/app/admin/_lib/gastos.actions';
 
-const prisma = new PrismaClient();
+// import { PrismaClient } from "@prisma/client";
+// const prisma = new PrismaClient();
+import prisma from './prismaClient';
 
 export async function obtenerServicos() {
     return prisma.servicio.findMany({

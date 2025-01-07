@@ -75,7 +75,8 @@ const LoginForm = () => {
             }
             catch (error) {
                 console.log(error);
-                setSessionError('Error al iniciar sesión');
+                setSessionError(`Error al iniciar sesión ${error}}`);
+                setLoading(false);
             }
 
         };

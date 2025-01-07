@@ -1,10 +1,10 @@
 'use server';
-
-import { PrismaClient } from "@prisma/client";
 import { User } from './types';
 import bcrypt from 'bcrypt';
+// import { PrismaClient } from "@prisma/client";
+// const prisma = new PrismaClient();
 
-const prisma = new PrismaClient();
+import prisma from './prismaClient';
 
 export async function obtenerUsuarios() {
     return await prisma.user.findMany({

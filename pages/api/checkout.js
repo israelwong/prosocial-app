@@ -1,8 +1,9 @@
 'use server'
+// import prisma from './prismaClient';
 import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 import Stripe from 'stripe';
 
-const prisma = new PrismaClient();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-08-16' });
 
 export default async function handler(req, res) {

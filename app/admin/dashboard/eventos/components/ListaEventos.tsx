@@ -4,7 +4,11 @@ import { useRouter } from 'next/navigation'
 import { User } from '@/app/admin/_lib/types'
 import Cookies from 'js-cookie'
 import { obtenerEventosDetalle, asignarEventoUser } from '@/app/admin/_lib/evento.actions'
-import { Calendar, CircleUserRound } from 'lucide-react'
+
+// import { supabase } from '@/app/admin/_lib/supabase'
+import FichaEvento from './FichaEvento'
+// import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
+// import { obtenerCliente } from '@/app/admin/_lib/cliente.actions'
 
 export default function ListaEventos() {
 
@@ -24,29 +28,73 @@ export default function ListaEventos() {
     const [loading, setLoading] = useState<boolean>(false)
     const [filtro, setFiltro] = useState<string>('')
     const [user, setUser] = useState<User>({} as User)
-
     const router = useRouter()
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true)
-            const eventosDetallePromise = await obtenerEventosDetalle()
-            setEventoDetalle(eventosDetallePromise.map(evento => ({
-                ...evento,
-                creacion: evento.creacion.toISOString(),
-                fecha_evento: evento.fecha_evento.toISOString(),
-                fecha_actualizacion: evento.fecha_actualizacion.toISOString(),
-                tipoEvento: evento.tipoEvento || '',
-                evento: evento.evento || '',
-                user: evento.user || ''
-            })))
-            setLoading(false)
-        }
-        fetchData()
+    const fetchData = async () => {
+        setLoading(true)
+        const eventosDetallePromise = await obtenerEventosDetalle()
+        setEventoDetalle(eventosDetallePromise.map(evento => ({
+            ...evento,
+            creacion: evento.creacion ? new Date(evento.creacion).toISOString() : '',
+            fecha_evento: evento.fecha_evento ? new Date(evento.fecha_evento).toISOString() : '',
+            fecha_actualizacion: evento.fecha_actualizacion ? new Date(evento.fecha_actualizacion).toISOString() : '',
+            tipoEvento: evento.tipoEvento || '', // Asegúrate de mapear correctamente el campo
+            evento: evento.evento || '',
+            cliente: evento.cliente || '',
+            user: evento.user || ''
+        })))
+        setLoading(false)
+    }
 
+    useEffect(() => {
+        fetchData()
+        // Obtener usuario de la cookie
         const userString = Cookies.get('user') || ''
         const userObject = userString ? JSON.parse(userString) : {} as User
         setUser(userObject)
+
+        // const subscriptionNuevo = supabase
+        //     .channel('realtime:Evento:nuevo')
+        //     .on(
+        //         'postgres_changes',
+        //         { event: 'INSERT', schema: 'public', table: 'Evento' },
+        //         async (payload) => {
+        //             console.log('Se realizo una insersión":', payload);
+        //             const newEvento = payload.new;
+
+        //             //newEvento: objeto que viene desde la base de datos de supabase y no trae el nombre del cliente ni el tipo de evento
+        //             const nombreCliente = await obtenerCliente(newEvento.clienteId)
+        //             const nombreTipoEvento = await obtenerTipoEvento(newEvento.eventoTipoId)
+
+        //             setEventoDetalle(prevEventos => [
+        //                 ...prevEventos,
+        //                 {
+        //                     id: newEvento.id,
+        //                     cliente: nombreCliente?.nombre || '',
+        //                     status: newEvento.status,
+        //                     creacion: newEvento.creacion ? new Date(newEvento.creacion).toISOString() : '',
+        //                     fecha_evento: newEvento.fecha_evento ? new Date(newEvento.fecha_evento).toISOString() : '',
+        //                     fecha_actualizacion: newEvento.fecha_actualizacion ? new Date(newEvento.fecha_actualizacion).toISOString() : '',
+        //                     tipoEvento: nombreTipoEvento?.nombre || '', // Asegúrate de mapear correctamente el campo
+        //                     evento: newEvento.evento || '',
+        //                     user: newEvento.user || ''
+        //                 }
+        //             ]);
+        //         }
+        //     )
+        //     .subscribe();
+
+        // // Obtener eventos
+        // fetchData();
+
+        // // Obtener usuario de la cookie
+        // const userString = Cookies.get('user') || ''
+        // const userObject = userString ? JSON.parse(userString) : {} as User
+        // setUser(userObject)
+
+        // return () => {
+        //     supabase.removeChannel(subscriptionNuevo);
+        // };
 
     }, [])
 
@@ -67,7 +115,6 @@ export default function ListaEventos() {
     const eventosPorEstado = {
         nuevos: eventosFiltrados.filter(evento => evento.status === 'nuevo'),
         seguimientos: eventosFiltrados.filter(evento => evento.status === 'seguimiento'),
-        // archivados: eventosFiltrados.filter(evento => evento.status === 'archivado')
     }
 
     const handleOpen = (id: string, status: string) => {
@@ -94,7 +141,7 @@ export default function ListaEventos() {
                 <div className='overflow-x-auto'>
                     <div className='flex justify-between items-center mb-5'>
                         <h1 className='text-2xl text-zinc-400'>
-                            Eventos registrados ({eventosDetalle.length})
+                            Eventos registrados
                         </h1>
                         <button
                             className='bg-zinc-800 border border-zinc-700 px-3 py-2 rounded-md text-zinc-300 text-sm'
@@ -117,56 +164,9 @@ export default function ListaEventos() {
                     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4'>
                         {Object.entries(eventosPorEstado).map(([estado, eventos]) => (
                             <div key={estado}>
-
                                 <h2 className='text-xl text-zinc-400 capitalize mb-4'>{estado}</h2>
-
                                 {eventos.map(evento => (
-                                    <div key={evento.id} className='relative px-4 py-2 border border-zinc-700 rounded-md mb-5'>
-
-                                        <h3 className='text-lg text-zinc-300 items-center'>
-                                            <button onClick={() => handleOpen(
-                                                evento.id,
-                                                evento.status
-                                            )}>
-                                                {evento.evento || 'Por configurar'}
-
-                                                <span className='ml-2 px-2 py-1 leading-3 text-[12px] bg-zinc-800 text-yellow-500 rounded-full'>
-                                                    {evento.tipoEvento}
-                                                </span>
-                                            </button>
-                                        </h3>
-
-                                        <p className='flex items-center mb-2 text-zinc-300'>
-
-                                            <Calendar size={15} className='mr-2' /> Fecha de evento {new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
-                                                timeZone: 'UTC',
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            })}
-                                        </p>
-
-                                        <div className='space-x-1 mb-2 flex items-center'>
-                                            Lead <span className='ml-2 px-2 py-1 leading-3 text-[12px] bg-zinc-700 rounded-md uppercase flex items-center'>
-                                                <CircleUserRound size={15} className='mr-1' /> {evento.cliente}
-                                            </span>
-
-                                            {evento.user && (
-                                                <span className='px-2 py-1 leading-3 text-sm rounded-md flex text-purple-500'>
-                                                    @{evento.user}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <p className='text-zinc-500 flex items-center text-sm'>
-                                            Registrado {new Date(evento.fecha_actualizacion).toLocaleDateString('es-MX', {
-                                                timeZone: 'UTC',
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            })}
-                                        </p>
-                                    </div>
+                                    <FichaEvento key={evento.id} evento={evento} handleOpen={handleOpen} />
                                 ))}
                             </div>
                         ))}

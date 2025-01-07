@@ -1,5 +1,3 @@
-// lib/dragAndDrop.ts
-
 import { useState, useEffect } from 'react';
 
 export function useDragAndDrop<T>(initialItems: T[]) {

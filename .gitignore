@@ -41,7 +41,8 @@ yarn-error.log*
 next-env.d.ts
 
 # custom
-/app/seed.js
 /prisma/backup.json/
-/prisma/seed.js/
-/app/CSV/
+/prisma/_backup.json/
+/prisma/export.js
+/prisma/seed.js
+/prisma/create_trigger.sql

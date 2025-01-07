@@ -1,8 +1,9 @@
 'use server'
-import { PrismaClient } from '@prisma/client'
 import { CondicionesComerciales } from './types'
 
-const prisma = new PrismaClient()
+// import { PrismaClient } from '@prisma/client'
+// const prisma = new PrismaClient()
+import prisma from './prismaClient';
 
 export async function obtenerCondicionesComerciales() {
     return await prisma.condicionesComerciales.findMany({

@@ -437,7 +437,7 @@ function FormPaqueteEditar({ paqueteId }: Props) {
                         <div className='flex justify-center mt-5'>
                             <button className='text-red-600 flex items-center text-sm'
                                 onClick={handleEliminarPaquete}>
-                                <Trash size={16} className='mr-2' /> Eliminar servicio
+                                <Trash size={16} className='mr-2' /> Eliminar paquete
                             </button>
 
                         </div>

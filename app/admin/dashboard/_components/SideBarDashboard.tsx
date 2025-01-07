@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Shuffle, Home, Calendar, Users, Wallet, Inbox } from 'lucide-react'
-import { conteo } from '@/app/admin/_lib/conteo.actions'
+// import { supabase } from '../../_lib/supabase'
 
 const links = [
     { href: '/admin/dashboard', label: 'Inicio', icon: <Home size={24} /> },
@@ -14,18 +14,85 @@ const links = [
 ]
 
 function DashboardSideBar() {
+
     const [activeLink, setActiveLink] = useState('')
+    // const [seguimientoCount, setSeguimientoCount] = useState(0)
+    // const [aprobadosCount, setAprobadosCount] = useState(0)
 
-    const [seguimientoCount, setSeguimientoCount] = useState(0)
-    const [gestionarCount, setGestionarCount] = useState(0)
+    //! Función para reproducir un sonido de notificación
+    // const playNotificationSound = () => {
+    //     try {
+    //         const audio = new Audio('/notificacion.m4a'); // Ruta del sonido en la carpeta public
+    //         const playPromise = audio.play();
+    //         if (playPromise !== undefined) {
+    //             playPromise.catch(error => {
+    //                 console.log('Failed to play audio:', error);
+    //             });
+    //         }
+    //     } catch (error) {
+    //         console.error('Error playing notification sound:', error);
+    //     }
+    // };
 
+    //! Función para obtener los conteos de eventos en seguimiento y aprobados
     useEffect(() => {
-        conteo().then(data => {
-            console.log(data)
-            setSeguimientoCount(data.seguimiento)
-            setGestionarCount(data.gestionar)
-        })
-    }, [])
+
+        // const fetchCounts = async () => {
+        //     console.log('Fetching counts...');
+
+        //     const { count: seguimientoCount, error: seguimientoError } = await supabase
+        //         .from('Evento')
+        //         .select('id', { count: 'exact' })
+        //         .in('status', ['nuevo', 'seguimiento']); // Filtra por múltiples valores
+
+        //     const { count: aprobadosCount, error: aprobadosError } = await supabase
+        //         .from('Evento')
+        //         .select('id', { count: 'exact' })
+        //         .eq('status', 'aprobado');
+
+        //     // Asegúrate de que no haya errores
+        //     if (seguimientoError) console.error('Error al obtener seguimiento leads:', seguimientoError);
+        //     if (aprobadosError) console.error('Error al obtener aprobados leads:', aprobadosError);
+
+        //     // Establecer los conteos
+        //     setSeguimientoCount(seguimientoCount || 0);
+        //     setAprobadosCount(aprobadosCount || 0);
+        // };
+
+        //! Suscripción a cambios en tiempo real   
+        // const subscription = supabase
+        //     .channel('realtime:Evento')
+        //     .on(
+        //         'postgres_changes',
+        //         { event: '*', schema: 'public', table: 'Evento' },
+        //         async (payload) => {
+
+        //             // console.log('Cambio detectado:', payload);
+        //             //! enviar sonido de notificación al insertar un nuevo evento
+        //             if (payload.eventType === 'INSERT') {
+        //                 playNotificationSound();
+        //             }
+
+        //             // Actualiza los conteos cuando cambian los datos
+        //             fetchCounts();
+        //         }
+        //     )
+        //     .subscribe((status, err) => {
+        //         if (err) {
+        //             console.error('Error en la suscripción:', err);
+        //         } else {
+        //             console.log('Estado de la suscripción:', status);
+        //         }
+        //     });
+
+        // //! Obtener los conteos iniciales
+        // fetchCounts();
+
+        // return () => {
+        //     //! Eliminar la suscripción cuando el componente se desmonta
+        //     supabase.removeChannel(subscription);
+        // };
+    }, []);
 
     return (
         <div className='h-screen flex pt-5'>
@@ -43,16 +110,16 @@ function DashboardSideBar() {
                         >
                             <div className='relative'>
                                 {link.icon}
-                                {(link.href === '/admin/dashboard/eventos' && seguimientoCount > 0) && (
+                                {/* {(link.href === '/admin/dashboard/eventos' && seguimientoCount > 0) && (
                                     <span className='absolute bottom-3 left-4 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center'>
                                         {seguimientoCount}
                                     </span>
                                 )}
-                                {(link.href === '/admin/dashboard/seguimiento' && gestionarCount > 0) && (
+                                {(link.href === '/admin/dashboard/seguimiento' && aprobadosCount > 0) && (
                                     <span className='absolute bottom-3 left-4 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center'>
-                                        {gestionarCount}
+                                        {aprobadosCount}
                                     </span>
-                                )}
+                                )} */}
                             </div>
                         </Link>
                     ))}

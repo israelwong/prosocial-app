@@ -1,18 +1,16 @@
 'use server'
-import { PrismaClient } from '@prisma/client';
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from 'bcrypt';
+
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export async function login(email: string, password: string) {
-    const response = {
-        status: false,
-        token: '',
-        error: {},
-        message: ''
-    };
+
+    const response = { status: false, token: '', error: {}, message: '' };
 
     try {
+
         const user = await prisma.user.findFirst({
             where: {
                 email

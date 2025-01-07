@@ -1,8 +1,9 @@
 'use server'
-import { PrismaClient } from "@prisma/client";
 import { Configuracion } from "@/app/admin/_lib/types";
 
-const prisma = new PrismaClient();
+// import { PrismaClient } from "@prisma/client";
+// const prisma = new PrismaClient();
+import prisma from './prismaClient';
 
 export async function obtenerConfiguraciones() {
     return await prisma.configuracion.findMany({

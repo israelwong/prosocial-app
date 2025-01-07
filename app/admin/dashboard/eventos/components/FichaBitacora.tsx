@@ -53,12 +53,12 @@ export default function FichaBitacora({ eventoId }: Props) {
 
     return (
         <div>
-            <div className='flex justify-between items-center mb-5 '>
+            <div className='flex justify-between items-center mb-5'>
                 <h3 className='text-xl font-semibold text-zinc-500'>
                     Comentarios
                 </h3>
                 <button
-                    className='bg-zinc-900 text-white p-2 rounded-md'
+                    className='bg-zinc-900 p-2 rounded-md border border-zinc-800 px-3 text-sm text-zinc-200'
                     onClick={() => setIsModalBitacoraNuevoOpen(true)}
                 >
                     Agregar nota

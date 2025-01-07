@@ -48,23 +48,18 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
     const [cotizacionStatus, setCotizacionEstatus] = useState('');
     const [copiado, setCopiado] = useState(false);
     const [pagoAnticipo, setPagoAnticipo] = useState(0);
-    // const [porcentajeAnticipo, setPorcentajeAnticipo] = useState(0);
     const [actualizando, setActualizando] = useState(false);
     const [pagandoEfectivo, setPagandoEfectivo] = useState(false);
-
     const [errorMonto, setErrorMonto] = useState('');
     const [confirmarMonto, setConfirmarMonto] = useState('');
     const [confirmarPorcentajeAnticipo, setConfirmarPorcentajeAnticipo] = useState('');
     const [pagoPendiente, setPagoPendiente] = useState(0);
     const [errorConfirmarMonto, setErrorConfirmarMonto] = useState(false);
-
     const [eventoNombre, setEventoNombre] = useState('');
     const [eventoFecha, setEventoFecha] = useState('');
     const [clienteId, setClienteId] = useState('');
     const [clienteNombre, setClienteNombre] = useState('');
     const [clienteTelefono, setClienteTelefono] = useState('');
-
-    // const [errorFechaEvento, setErrorFechaEvento] = useState('');
 
     useEffect(() => {
         async function fetchData() {
@@ -91,7 +86,6 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
 
                 // Obtener los servicios de la cotización
                 const serviciosCotizacion = await obtenerCotizacionServicios(cotizacionId);
-                // console.log(serviciosCotizacion);
 
                 // Obtener los servicios
                 const serviciosData = await Promise.all(serviciosCotizacion.map(async (servicio) => {
@@ -296,12 +290,10 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
 
         setActualizando(true);
         const respuesta = await actualizarCotizacion(cotizacionActualizada);
-        // console.log(respuesta);
-        // return
         setRespuestaGuardado(respuesta.success ? 'Cotización actualizada' : respuesta.error || 'Error al actualizar la cotización');
-        // setTimeout(() => {
-        // setRespuestaGuardado(null);
-        // }, 2000);
+        setTimeout(() => {
+            setRespuestaGuardado(null);
+        }, 2000);
         setActualizando(false);
     }
 
@@ -360,7 +352,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 metodo_pago: metodoPago?.metodo_pago ?? '',
                 monto: parseFloat(confirmarMonto.replace(/[^0-9.-]+/g, '')),
                 concepto: parseFloat(confirmarPorcentajeAnticipo) === 100 ? 'Pago del total del servicio' : `Pago del ${confirmarPorcentajeAnticipo}%  de anticipo`,
-                status: 'Paid',
+                status: 'paid',
             }
             await crearPago(pago);
             router.push(`/admin/dashboard/seguimiento/${eventoId}`);
@@ -412,7 +404,6 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
         } else {
             window.open(`https://api.whatsapp.com/send?phone=52${clienteTelefono}`, '_blank');
         }
-
     }
 
     return (
@@ -429,7 +420,18 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
 
                         <div className='mb-5 md:mb-0'>
                             <h1 className='text-2xl'>
-                                Cotización del evento <span className='text-yellow-500'>{eventoNombre}</span>
+                                Cotización del evento
+
+                                {nombreCotizacion === '' ? (
+                                    <span className='text-green-500'>
+                                        {eventoNombre}
+                                    </span>
+                                ) : (
+                                    <span className='bg-red-700 text-white px-3 py-1 rounded-full ml-2 text-sm leading-3 animate-pulse'>
+                                        Nombre del evento no definido
+                                    </span>
+                                )}
+
                             </h1>
                             <p className='text-sm text-zinc-500 italic'>
                                 Celebración el <u>{eventoFecha ? new Date(eventoFecha).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</u>
@@ -439,7 +441,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                         {/* //! MENU */}
                         <div className='items-center flex flex-wrap  justify-start md:space-x-2 space-y-1 md:space-y-0 gap-2 md:text-md text-sm'>
 
-                            <button className='px-4 py-2 border border-zinc-800 rounded-md bg-zinc-900 flex items-center' onClick={() => router.push(`/admin/dashboard/contactos/${clienteId}`)}>
+                            <button className='px-4 py-2 border border-yellow-800 rounded-md bg-zinc-900 flex items-center' onClick={() => router.push(`/admin/dashboard/contactos/${clienteId}`)}>
                                 <User size={16} className='mr-1' /> Cliente {clienteNombre}
                             </button>
 
