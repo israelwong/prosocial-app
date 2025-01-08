@@ -63,6 +63,7 @@ function SlideFotosSesionesCasuales() {
                   width={500} // Ajusta el ancho según sea necesario
                   height={500} // Ajusta la altura según sea necesario
                   className="m-auto max-h-full w-full max-w-full"
+                  unoptimized={true}
                 />
               </li>
             ))}

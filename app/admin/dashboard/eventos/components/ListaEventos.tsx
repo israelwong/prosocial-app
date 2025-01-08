@@ -1,14 +1,15 @@
 'use client'
 import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { User } from '@/app/admin/_lib/types'
 import Cookies from 'js-cookie'
+import { User } from '@/app/admin/_lib/types'
 import { obtenerEventosDetalle, asignarEventoUser } from '@/app/admin/_lib/evento.actions'
 
-// import { supabase } from '@/app/admin/_lib/supabase'
+import { supabase } from '@/app/admin/_lib/supabase'
 import FichaEvento from './FichaEvento'
-// import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
-// import { obtenerCliente } from '@/app/admin/_lib/cliente.actions'
+import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
+import { obtenerCliente } from '@/app/admin/_lib/cliente.actions'
 
 export default function ListaEventos() {
 
@@ -29,6 +30,7 @@ export default function ListaEventos() {
     const [filtro, setFiltro] = useState<string>('')
     const [user, setUser] = useState<User>({} as User)
     const router = useRouter()
+    const searchParams = useSearchParams()
 
     const fetchData = async () => {
         setLoading(true)
@@ -47,56 +49,52 @@ export default function ListaEventos() {
     }
 
     useEffect(() => {
-        fetchData()
+
+        const isSeguimiento = window.location.pathname.includes('/dashboard/eventos');
+
+        if (isSeguimiento) {
+
+            const subscriptionNuevo = supabase.channel('realtime:Evento:nuevo').on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'Evento' },
+                async (payload) => {
+                    // console.log('Se realizo una insersión":', payload);
+                    const newEvento = payload.new;
+
+                    //newEvento: objeto que viene desde la base de datos de supabase y no trae el nombre del cliente ni el tipo de evento
+                    const nombreCliente = await obtenerCliente(newEvento.clienteId)
+                    const nombreTipoEvento = await obtenerTipoEvento(newEvento.eventoTipoId)
+                    setEventoDetalle(prevEventos => [
+                        ...prevEventos,
+                        {
+                            id: newEvento.id,
+                            cliente: nombreCliente?.nombre || '',
+                            status: newEvento.status,
+                            creacion: newEvento.creacion ? new Date(newEvento.creacion).toISOString() : '',
+                            fecha_evento: newEvento.fecha_evento ? new Date(newEvento.fecha_evento).toISOString() : '',
+                            fecha_actualizacion: newEvento.fecha_actualizacion ? new Date(newEvento.fecha_actualizacion).toISOString() : '',
+                            tipoEvento: nombreTipoEvento?.nombre || '', // Asegúrate de mapear correctamente el campo
+                            evento: newEvento.evento || '',
+                            user: newEvento.user || ''
+                        }
+                    ]);
+                }
+            ).subscribe();
+
+            // Obtener eventos
+            fetchData();
+
+            return () => {
+                supabase.removeChannel(subscriptionNuevo);
+            };
+        }
+
         // Obtener usuario de la cookie
         const userString = Cookies.get('user') || ''
         const userObject = userString ? JSON.parse(userString) : {} as User
         setUser(userObject)
 
-        // const subscriptionNuevo = supabase
-        //     .channel('realtime:Evento:nuevo')
-        //     .on(
-        //         'postgres_changes',
-        //         { event: 'INSERT', schema: 'public', table: 'Evento' },
-        //         async (payload) => {
-        //             console.log('Se realizo una insersión":', payload);
-        //             const newEvento = payload.new;
-
-        //             //newEvento: objeto que viene desde la base de datos de supabase y no trae el nombre del cliente ni el tipo de evento
-        //             const nombreCliente = await obtenerCliente(newEvento.clienteId)
-        //             const nombreTipoEvento = await obtenerTipoEvento(newEvento.eventoTipoId)
-
-        //             setEventoDetalle(prevEventos => [
-        //                 ...prevEventos,
-        //                 {
-        //                     id: newEvento.id,
-        //                     cliente: nombreCliente?.nombre || '',
-        //                     status: newEvento.status,
-        //                     creacion: newEvento.creacion ? new Date(newEvento.creacion).toISOString() : '',
-        //                     fecha_evento: newEvento.fecha_evento ? new Date(newEvento.fecha_evento).toISOString() : '',
-        //                     fecha_actualizacion: newEvento.fecha_actualizacion ? new Date(newEvento.fecha_actualizacion).toISOString() : '',
-        //                     tipoEvento: nombreTipoEvento?.nombre || '', // Asegúrate de mapear correctamente el campo
-        //                     evento: newEvento.evento || '',
-        //                     user: newEvento.user || ''
-        //                 }
-        //             ]);
-        //         }
-        //     )
-        //     .subscribe();
-
-        // // Obtener eventos
-        // fetchData();
-
-        // // Obtener usuario de la cookie
-        // const userString = Cookies.get('user') || ''
-        // const userObject = userString ? JSON.parse(userString) : {} as User
-        // setUser(userObject)
-
-        // return () => {
-        //     supabase.removeChannel(subscriptionNuevo);
-        // };
-
-    }, [])
+    }, [searchParams])
 
     const eventosFiltrados = eventosDetalle.filter(evento => {
         const cumpleFiltro =

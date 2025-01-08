@@ -246,7 +246,7 @@ export default function FichaDetalle({ eventoId }: Props) {
                         <Wishlist cotizacionId={cotizacion?.id ?? ''} />
                     </div>
 
-                    <div className='mb-6 border border-zinc-800 p-5 rounded-md'>
+                    <div className='mb-6 '>
                         <FichaBitacora eventoId={eventoId} />
                     </div>
 

@@ -22,6 +22,7 @@ export default function Home() {
             height={120}
             alt="Logotipo de ProSocial"
             className="h-fit pb-5 text-center mx-auto"
+            unoptimized
           />
           <div className="pt-5 pb-10 text-center md:w-2/3 mx-auto px-8">
             <h2 className="

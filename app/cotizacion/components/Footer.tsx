@@ -66,6 +66,7 @@ export default function Footer({ telefono, asunto }: Props) {
                         height={100}
                         alt='Promedia México'
                         className=''
+                        unoptimized
                     />
                 </div>
 

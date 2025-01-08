@@ -14,12 +14,12 @@ export async function conteo() {
         }
     });
 
-    const gestionar = await prisma.evento.count({
+    const aprobados = await prisma.evento.count({
         where: {
             status: 'aprobado',
         }
     });
 
 
-    return { seguimiento, gestionar };
+    return { seguimiento, aprobados };
 }

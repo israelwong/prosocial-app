@@ -56,6 +56,7 @@ const SlideFotosSesionesVestido = () => {
                   width={500}
                   height={500}
                   className="m-auto max-h-full w-full max-w-full"
+                  unoptimized={true}
                 />
               </li>
             ))}

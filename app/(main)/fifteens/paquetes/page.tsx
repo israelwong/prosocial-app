@@ -38,12 +38,6 @@ function page() {
 
       </section>
 
-      {/* <Galeria
-        ruta={'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/'}
-        num_fotos={52}
-        rowHeight={250}
-      /> */}
-
       <BtnCerrar url={'/fifteens'} />
     </div>
   )

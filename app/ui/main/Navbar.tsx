@@ -47,6 +47,7 @@ export default function Navbar() {
                                 height={200}
                                 alt="Logotipo de ProSocial"
                                 className="w-1/2 h-fit"
+                                unoptimized
                             />
                         </Link>
                     </figure>

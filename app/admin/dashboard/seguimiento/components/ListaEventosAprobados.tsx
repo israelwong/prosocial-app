@@ -61,7 +61,7 @@ export default function ListaEventosAprobados() {
 
     if (loading) return <div>
         <div className='flex items-center justify-center py-20'>
-            <p className='text-zinc-500 text-center flex items-center justify-center h-screen'>Cargando eventos aprobados...</p>
+            <p className='text-zinc-500 text-center flex items-center justify-center'>Cargando eventos aprobados...</p>
         </div>
     </div>
 

@@ -63,6 +63,7 @@ function Footer() {
                                 height={200}
                                 alt="ProMedia"
                                 className="h-4 mx-auto inline-block"
+                                unoptimized
                             />
                         </Link>
                     </div>

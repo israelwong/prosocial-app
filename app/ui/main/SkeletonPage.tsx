@@ -91,6 +91,7 @@ function SkeletonPage() {
                         src='https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_gris.svg'
                         width={500} height={300}
                         className='mx-auto h-8 md:h-12'
+                        unoptimized
                     />
                 </div>
 

@@ -14,6 +14,7 @@ export default function page() {
                     height={50}
                     alt="ProSocial"
                     className='mb-10 mt-5'
+                    unoptimized
                 />
 
                 <h1 className="text-3xl font-bold mb-4">
