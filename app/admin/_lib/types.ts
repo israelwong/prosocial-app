@@ -288,3 +288,9 @@ export interface EventoDetalle {
     user: string;
     fecha_actualizacion: string;
 }
+
+export interface CotizacionVisita {
+    id?: string
+    cotizacionId: string
+    createdAt?: Date
+}

@@ -22,9 +22,11 @@ export default function ListaCotizaciones({ eventoId }: Props) {
     const [eventoTipo, setEventoTipo] = useState<string | null>(null)
     const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
     const [condicionesComerciales, setCondicionesComerciales] = useState<CondicionesComerciales[] | null>(null)
+    const [preview, setPreview] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
+
             const data = await obtenerEventoCotizaciones(eventoId)
             const condicionesComercialesData = await obtenerCondicionesComercialesActivas()
 
@@ -34,13 +36,24 @@ export default function ListaCotizaciones({ eventoId }: Props) {
             setEventoTipo(data.tipoEvento ?? null)
             setCondicionesComerciales(condicionesComercialesData)
 
+            const urlParams = new URLSearchParams(window.location.search);
+            const isPrev = urlParams.get('preview');
+            if (isPrev) {
+                setPreview(true);
+            }
+
             setLoading(false)
         }
         fetchData()
     }, [eventoId])
 
     const handleOpenCotizacion = (cotizacionId: string) => {
-        router.push(`/cotizacion/${cotizacionId}?param=lista`)
+        if (preview) {
+            router.push(`/cotizacion/${cotizacionId}?param=lista&preview=true`)
+            return
+        } else {
+            router.push(`/cotizacion/${cotizacionId}?param=lista`)
+        }
     }
 
     if (loading) {
@@ -74,7 +87,7 @@ export default function ListaCotizaciones({ eventoId }: Props) {
 
                             <button key={cotizacion.id} className='px-3 py-2 bg-purple-900 text-white rounded-md text-sm'
                                 onClick={() => cotizacion.id && handleOpenCotizacion(cotizacion.id)}>
-                                Ver cotización
+                                Ver cotización {preview ? 'en nueva ventana' : ''}
                             </button>
                         </div>
                     ))}

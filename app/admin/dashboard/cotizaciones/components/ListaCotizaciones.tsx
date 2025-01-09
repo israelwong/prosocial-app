@@ -34,7 +34,7 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
             }
         }
         fetchData()
-    }, [evento.id])
+    }, [evento.id, evento.eventoTipoId])
 
     const handleShareCotizacion = useCallback(() => {
         const fecha_evento = new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
@@ -49,7 +49,7 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
         //envia mensaje con link de whatsapp
         window.open(`https://wa.me/${cliente.telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
 
-    }, [cliente, evento])
+    }, [cliente, evento, eventoTipo])
 
     const handleShareTodasLasCotizaciones = () => {
         const fecha_evento = new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
@@ -110,7 +110,7 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
                     </button>
 
                     <button
-                        onClick={() => window.open(`/cotizacion/${cotizacion.id}`, '_blank')}
+                        onClick={() => window.open(`/cotizacion/${cotizacion.id}?preview=true`, '_blank')}
                         className='text-sm flex items-center px-3 py-2 leading-3 border border-zinc-800 rounded-md bg-zinc-900'
                     >
                         <SquareArrowOutUpRight size={12} className='mr-1' /> Abrir
@@ -129,7 +129,7 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
                         className='text-sm flex items-center px-3 py-2 leading-3 border border-zinc-800 rounded-md bg-red-900'
                         disabled={eliminando}
                     >
-                        {eliminando ? 'Eliminando...' : 'Eliminar'}
+                        {/* {eliminando ? 'Eliminando...' : 'Eliminar'} */}
                     </button>
                     {/* )} */}
 
@@ -155,11 +155,9 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
 
 
                                             <div className='items-center flex flex-wrap justify-start md:space-x-2 space-y-1 md:space-y-0 mb-5'>
-                                                <p>Compartir todo:</p>
-
-
+                                                <p className='text-zinc-400'>Compartir todo:</p>
                                                 <button
-                                                    onClick={() => window.open(`/cotizacion/evento/${evento.id}`, '_blank')}
+                                                    onClick={() => window.open(`/cotizacion/evento/${evento.id}?preview=true`, '_blank')}
                                                     className='text-sm flex items-center px-3 py-2 leading-3 border border-yellow-800 rounded-md bg-zinc-900'
                                                 >
                                                     <SquareArrowOutUpRight size={12} className='mr-1' /> Abrir
@@ -169,7 +167,7 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
                                                     onClick={() => navigator.clipboard.writeText(`https://www.prosocial.mx/cotizacion/evento/${evento.id}`)}
                                                     className='text-sm flex items-center px-3 py-2 leading-3 border border-yellow-800 rounded-md bg-zinc-900'
                                                 >
-                                                    <Copy size={12} className='mr-1' /> Copiar url
+                                                    <Copy size={12} className='mr-1' /> Copiar
                                                 </button>
 
                                                 <button

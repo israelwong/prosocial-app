@@ -221,14 +221,56 @@ export async function cotizacionDetalle(id: string) {
         select: { id: true, nombre: true, email: true, telefono: true }
     });
 
-    if (!cliente) {
-        return { error: 'Client not found' };
-    }
+    const cotizacionServicio = await prisma.cotizacionServicio.findMany({
+        where: { cotizacionId: id },
+        select: {
+            id: true,
+            servicioId: true,
+            cantidad: true,
+            posicion: true,
+            servicioCategoriaId: true,
+        }
+    });
+
+    const ServicioCategoria = await prisma.servicioCategoria.findMany();
+
+    const servicios = await prisma.servicio.findMany({
+        select: {
+            id: true,
+            nombre: true,
+            precio_publico: true,
+            servicioCategoriaId: true
+        }
+    });
+
+    const configuracion = await prisma.configuracion.findFirst({
+        where: {
+            status: 'active'
+        },
+        orderBy: {
+            updatedAt: 'desc'
+        }
+    });
+
+    const condicionesComerciales = await prisma.condicionesComerciales.findMany({
+        where: {
+            status: 'active'
+        },
+        orderBy: {
+            orden: 'asc'
+        }
+    })
 
     return {
         cotizacion,
         evento,
         eventoTipo,
-        cliente
-    }
+        cliente,
+        servicios,
+        ServicioCategoria,
+        cotizacionServicio,
+        configuracion,
+        condicionesComerciales
+
+    };
 }

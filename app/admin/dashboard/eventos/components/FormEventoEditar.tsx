@@ -387,7 +387,7 @@ export default function FormEventoEditar({ eventoId }: Props) {
                         </div>
                         <div>
                             {generandoCotizacion ? (
-                                <p className="text-sm text-yellow-500 italic">Generando cotización...</p>
+                                <p className="text-yellow-500 italic">Generando cotización...</p>
                             ) : (
                                 <select
                                     className='opciones_cotizacion bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm mr-2'

@@ -3,9 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  // directUrl = env("DIRECT_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -44,38 +44,26 @@ model Cliente {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Evento    Evento[]
-  // Contrato  Contrato[]
   Pago      Pago[]
 }
 
 model Evento {
-  id           String      @id @default(cuid())
-  clienteId    String
-  Cliente      Cliente     @relation(fields: [clienteId], references: [id])
-  eventoTipoId String?
-  EventoTipo   EventoTipo? @relation(fields: [eventoTipoId], references: [id])
-  nombre       String?     @default("Pendiente")
-  fecha_evento DateTime
-
-  sede      String?
-  direccion String?
-
+  id             String           @id @default(cuid())
+  clienteId      String
+  Cliente        Cliente          @relation(fields: [clienteId], references: [id])
+  eventoTipoId   String?
+  EventoTipo     EventoTipo?      @relation(fields: [eventoTipoId], references: [id])
+  nombre         String?          @default("Pendiente")
+  fecha_evento   DateTime
+  sede           String?
+  direccion      String?
   status         String           @default("active")
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   userId         String?
-  // Contrato       Contrato[]
   EventoBitacora EventoBitacora[]
   Cotizacion     Cotizacion[]
 }
-
-// model EventoProgreso{
-//   id          String   @id @default(cuid())
-//   eventoId    String
-//   status      String   @default("programado")
-//   createdAt   DateTime @default(now())
-//   updatedAt   DateTime @updatedAt
-// }
 
 model EventoBitacora {
   id          String   @id @default(cuid())
@@ -99,14 +87,6 @@ model EventoTipo {
   Cotizacion Cotizacion[]
 }
 
-// model EventoStatus {
-//   id        String   @id @default(cuid())
-//   nombre    String
-//   posicion  Int      @default(0)
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
 model Canal {
   id        String    @id @default(cuid())
   nombre    String
@@ -116,42 +96,27 @@ model Canal {
   Cliente   Cliente[]
 }
 
-// model Contrato {
-//   id             String       @id @default(cuid())
-//   eventoId       String
-//   Evento         Evento       @relation(fields: [eventoId], references: [id])
-//   fecha_contrato DateTime?
-//   status         String       @default("active")
-//   createdAt      DateTime     @default(now())
-//   updatedAt      DateTime     @updatedAt
-//   Cotizacion     Cotizacion[]
-//   Cliente        Cliente[]
-// }
-
 model Pago {
-  id           String      @id @default(cuid())
-  clienteId    String? //id del cliente
-  Cliente      Cliente?    @relation(fields: [clienteId], references: [id])
-  cotizacionId String?
-  Cotizacion   Cotizacion? @relation(fields: [cotizacionId], references: [id])
-
+  id                                 String                            @id @default(cuid())
+  clienteId                          String? //id del cliente
+  Cliente                            Cliente?                          @relation(fields: [clienteId], references: [id])
+  cotizacionId                       String?
+  Cotizacion                         Cotizacion?                       @relation(fields: [cotizacionId], references: [id])
   condicionesComercialesId           String?
   CondicionesComerciales             CondicionesComerciales?           @relation(fields: [condicionesComercialesId], references: [id])
   condicionesComercialesMetodoPagoId String?
   CondicionesComercialesMetodoPago   CondicionesComercialesMetodoPago? @relation(fields: [condicionesComercialesMetodoPagoId], references: [id])
-
-  metodoPagoId String?
-  MetodoPago   MetodoPago? @relation(fields: [metodoPagoId], references: [id])
-
-  metodo_pago       String
-  monto             Float
-  concepto          String
-  descripcion       String?
-  stripe_session_id String?  @unique
-  stripe_payment_id String?  @unique
-  status            String   @default("pending") //pending, succeeded, failed
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  metodoPagoId                       String?
+  MetodoPago                         MetodoPago?                       @relation(fields: [metodoPagoId], references: [id])
+  metodo_pago                        String
+  monto                              Float
+  concepto                           String
+  descripcion                        String?
+  stripe_session_id                  String?                           @unique
+  stripe_payment_id                  String?                           @unique
+  status                             String                            @default("pending") //pending, succeeded, failed
+  createdAt                          DateTime                          @default(now())
+  updatedAt                          DateTime                          @updatedAt
 }
 
 model Cotizacion {
@@ -171,7 +136,6 @@ model Cotizacion {
   updatedAt                          DateTime                           @updatedAt
   expiresAt                          DateTime?                          @default(dbgenerated("now() + interval '10 day'"))
   Servicio                           CotizacionServicio[]
-  // Contrato                           Contrato?                          @relation(fields: [contratoId], references: [id])
   contratoId                         String?
   Pago                               Pago[]
 }
@@ -190,11 +154,10 @@ model CotizacionServicio {
   userId          String?
   fechaAsignacion DateTime?
   FechaEntrega    DateTime?
-  status          String    @default("pendiente") //pendiente, asignada, pagada
+  status          String    @default("pendiente")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  // Asignacion Asignacion[]
 }
 
 model Servicio {
@@ -214,7 +177,6 @@ model Servicio {
   updatedAt           DateTime             @updatedAt
   ServicioGasto       ServicioGasto[]
   CotizacionServicio  CotizacionServicio[]
-  // Asignacion          Asignacion[]
   PaqueteServicio     PaqueteServicio[]
 }
 
@@ -271,77 +233,6 @@ model PaqueteServicio {
   updatedAt           DateTime          @updatedAt
 }
 
-// model Asignacion {
-//   id                     String                   @id @default(cuid())
-//   cotizacionServicioId   String
-//   CotizacionServicio     CotizacionServicio       @relation(fields: [cotizacionServicioId], references: [id])
-//   servicioId             String
-//   Servicio               Servicio                 @relation(fields: [servicioId], references: [id])
-//   empleadoId             String
-//   Empleado               Empleado                 @relation(fields: [empleadoId], references: [id])
-//   honorario              Float
-//   cantidad               Int
-//   status                 String                   @default("active")
-//   createdAt              DateTime                 @default(now())
-//   updatedAt              DateTime                 @updatedAt
-//   fecha_asignacion       DateTime
-//   fecha_programada       DateTime?
-//   fecha_entrega          DateTime
-//   AsignacionComentario   AsignacionComentario[]
-//   AsignacionRecordatorio AsignacionRecordatorio[]
-// }
-
-// model AsignacionComentario {
-//   id           String     @id @default(cuid())
-//   asignacionId String
-//   Asignacion   Asignacion @relation(fields: [asignacionId], references: [id])
-//   comentario   String
-//   importancia  String     @default("1")
-//   status       String     @default("active")
-//   createdAt    DateTime   @default(now())
-//   updatedAt    DateTime   @updatedAt
-// }
-
-// model AsignacionRecordatorio {
-//   id                 String     @id @default(cuid())
-//   asignacionId       String
-//   Asignacion         Asignacion @relation(fields: [asignacionId], references: [id])
-//   fecha_notificacion DateTime
-//   status             String     @default("active")
-//   createdAt          DateTime   @default(now())
-//   updatedAt          DateTime   @updatedAt
-// }
-
-// model Empleado {
-//   id         String       @id @default(cuid())
-//   nombre     String
-//   email      String?
-//   telefono   String?
-//   direccion  String?
-//   status     String       @default("active")
-//   createdAt  DateTime     @default(now())
-//   updatedAt  DateTime     @updatedAt
-//   Asignacion Asignacion[]
-// }
-
-// model CatalogoSesion {
-//   id              String            @id @default(cuid())
-//   nombre          String
-//   status          String            @default("active")
-//   createdAt       DateTime          @default(now())
-//   updatedAt       DateTime          @updatedAt
-//   CatalogoGaleria CatalogoGaleria[]
-// }
-
-// model CatalogoGaleria {
-//   id               String         @id @default(cuid())
-//   nombre           String
-//   catalogoSesionId String
-//   CatalogoSesion   CatalogoSesion @relation(fields: [catalogoSesionId], references: [id])
-//   createdAt        DateTime       @default(now())
-//   updatedAt        DateTime       @updatedAt
-// }
-
 model Configuracion {
   id                String   @id @default(cuid())
   nombre            String
@@ -397,4 +288,71 @@ model CondicionesComercialesMetodoPago {
   updatedAt                DateTime               @updatedAt
   Cotizacion               Cotizacion[]
   Pago                     Pago[]
+}
+
+model CotizacionVisita {
+  id           String   @id @default(cuid())
+  cotizacionId String
+  createdAt    DateTime @default(now())
+}
+
+//Anuncio
+model Campania {
+  id        String    @id @default(cuid())
+  nombre    String
+  status    String    @default("active")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Anuncio   Anuncio[]
+}
+
+model AnuncioPlataforma {
+  id        String    @id @default(cuid())
+  nombre    String //facebook, instagram, google, youtube, impreso
+  status    String    @default("active")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Anuncio   Anuncio[]
+}
+
+model AnuncioTipo {
+  id        String    @id @default(cuid())
+  nombre    String //imagen, video, carousel
+  status    String    @default("active")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  anuncio   Anuncio[]
+}
+
+model AnuncioCategoria {
+  id        String    @id @default(cuid())
+  nombre    String //banner, video, carousel
+  status    String    @default("active")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  anuncio   Anuncio[]
+}
+
+model Anuncio {
+  id                  String            @id @default(cuid())
+  campaniaId          String
+  Campania            Campania          @relation(fields: [campaniaId], references: [id])
+  nombre              String
+  anuncioTipoId       String
+  AnuncioTipo         AnuncioTipo       @relation(fields: [anuncioTipoId], references: [id])
+  anuncioCategoriaId  String
+  AnuncioCategoria    AnuncioCategoria  @relation(fields: [anuncioCategoriaId], references: [id])
+  anuncioPlataformaId String
+  AnuncioPlataforma   AnuncioPlataforma @relation(fields: [anuncioPlataformaId], references: [id])
+  imagen_url          String
+  status              String            @default("active")
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+}
+
+model AnuncioVisita {
+  id        String   @id @default(cuid())
+  anuncioId String
+  fecha     DateTime
+  createdAt DateTime @default(now())
 }

@@ -1,24 +1,18 @@
 'use client';
-
 import React, { useEffect, useState, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
-
-import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
-
-import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
+import { obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
 import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
-
-import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
-import { Servicio, MetodoPago, CondicionesComerciales } from '@/app/admin/_lib/types'
-
+import { Servicio, MetodoPago, CondicionesComerciales, ServicioCategoria } from '@/app/admin/_lib/types'
 import { cotizacionDetalle } from '@/app/admin/_lib/cotizacion.actions';
-import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
-
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import SkeletonPendiente from './skeletonPendiente';
 import Contrato from './Contrato';
 import Wishlist from './Wishlist';
+// import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
+// import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
+// import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
+import { registrarVisita } from '@/app/admin/_lib/cotizacionVisita.actions';
 
 interface Props {
     cotizacionId: string
@@ -27,7 +21,6 @@ interface Props {
 export default function CotizacionPendiente({ cotizacionId }: Props) {
 
     const router = useRouter();
-
     const [loading, setLoading] = useState(true);
     const [totalPrecioSistema, setTotalPrecioSistema] = useState(0);
     const [nombreCotizacion, setNombreCotizacion] = useState('');
@@ -57,43 +50,40 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
 
     const [porcentajeAnticipo, setPorcentajeAnticipo] = useState(0);
     const [pagoAnticipo, setPagoAnticipo] = useState(0);
+    const [categorias, setCategorias] = useState<ServicioCategoria[]>([])
 
     const [fromLista, setFromLista] = useState(false);
 
-    const searchParams = useSearchParams();
-
     useEffect(() => {
         async function fetchData() {
+
             setLoading(true);
-
-            const configuracionPromise = obtenerConfiguracionActiva();
-            const condicionesComercialesPromise = obtenerCondicionesComercialesActivas();
-            const cotizacionDetallePromise = cotizacionDetalle(cotizacionId);
-
-            const [cotizacion, condicionesComerciales, cotizacionDetalleEvento] = await Promise.all([
-                configuracionPromise,
-                condicionesComercialesPromise,
-                cotizacionDetallePromise
-            ]);
+            const {
+                cotizacion,
+                evento,
+                eventoTipo,
+                cliente,
+                servicios,
+                ServicioCategoria,
+                cotizacionServicio,
+                condicionesComerciales,
+            } = await cotizacionDetalle(cotizacionId);
 
             if (cotizacion) {
 
-                const cotizacionDetalleData = await cotizacionDetallePromise;
-                const serviciosCotizacion = await obtenerCotizacionServicios(cotizacionId);
-
                 setNombreCotizacion(cotizacion.nombre || '');
-                setCondicionComercialId(cotizacionDetalleData.cotizacion?.condicionesComercialesId ?? '');
-                setMetodoPagoId(cotizacionDetalleData.cotizacion?.condicionesComercialesMetodoPagoId ?? '');
+                setCondicionComercialId(cotizacion?.condicionesComercialesId ?? '');
+                setMetodoPagoId(cotizacion?.condicionesComercialesMetodoPagoId ?? '');
 
-                if (cotizacionDetalleData.cotizacion?.condicionesComercialesId && cotizacionDetalleData.cotizacion?.condicionesComercialesMetodoPagoId) {
+                if (cotizacion?.condicionesComercialesId && cotizacion?.condicionesComercialesMetodoPagoId) {
                     const url = new URL(window.location.href);
-                    url.searchParams.set('condicionComercialId', cotizacionDetalleData.cotizacion?.condicionesComercialesId);
-                    url.searchParams.set('metodoPagoId', cotizacionDetalleData.cotizacion?.condicionesComercialesMetodoPagoId);
+                    url.searchParams.set('condicionComercialId', cotizacion?.condicionesComercialesId);
+                    url.searchParams.set('metodoPagoId', cotizacion?.condicionesComercialesMetodoPagoId);
                     window.history.replaceState(null, '', url.toString());
                 }
 
-                const serviciosData = await Promise.all(serviciosCotizacion.map(async (servicio: { servicioId: string; cantidad: number; posicion: number; servicioCategoriaId: string; }) => {
-                    const servicioData = await obtenerServicio(servicio.servicioId);
+                const serviciosData = await Promise.all(cotizacionServicio.map(async (servicio: { servicioId: string; cantidad: number; posicion: number; servicioCategoriaId: string; }) => {
+                    const servicioData = servicios.find(servicioData => servicioData.id === servicio.servicioId);
                     return {
                         ...servicioData,
                         cantidad: servicio.cantidad,
@@ -103,6 +93,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                     };
                 }));
                 setServicios(serviciosData);
+                setCategorias(ServicioCategoria);
             }
 
             if (Array.isArray(condicionesComerciales)) {
@@ -127,29 +118,16 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                 setCondicionesComerciales(updatedCondicionesComerciales);
             }
 
-            if (cotizacionDetalleEvento) {
-                setClienteId(cotizacionDetalleEvento.cliente?.id || '');
-                setNombreCliente(cotizacionDetalleEvento.cliente?.nombre || '');
-                setEmailCliente(cotizacionDetalleEvento.cliente?.email || '');
-                setTelefonoCliente(cotizacionDetalleEvento.cliente?.telefono || '');
-
-                setNombreCotizacion(cotizacionDetalleEvento.cotizacion?.nombre || '');
-                setTipoEvento(cotizacionDetalleEvento.eventoTipo?.nombre || '');
-                setNombreEvento(cotizacionDetalleEvento.evento?.nombre || '');
-
-                setFechaEvento(cotizacionDetalleEvento.evento?.fecha_evento || null);
-
+            if (cliente) {
+                setClienteId(cliente?.id || '');
+                setNombreCliente(cliente?.nombre || '');
+                setEmailCliente(cliente?.email || '');
+                setTelefonoCliente(cliente?.telefono || '');
+                setNombreCotizacion(cotizacion?.nombre || '');
+                setTipoEvento(eventoTipo?.nombre || '');
+                setNombreEvento(evento?.nombre || '');
+                setFechaEvento(evento?.fecha_evento || null);
             }
-
-            // REVISAR SI VIENE DE LISTA
-            if (searchParams) {
-                const fromListaParam = searchParams.get('param');
-                if (fromListaParam) {
-                    setFromLista(fromListaParam === 'lista');
-                    // console.log('fromLista', fromListaParam);
-                }
-            }
-
             setLoading(false);
         }
         fetchData();
@@ -181,6 +159,18 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         const urlParams = new URLSearchParams(window.location.search);
         const condicionComercialIdFromUrl = urlParams.get('condicionComercialId');
         const metodoPagoIdFromUrl = urlParams.get('metodoPagoId');
+        const fromListaParam = urlParams.get('param');
+        const isPrev = urlParams.get('preview');
+
+
+        if (!isPrev && process.env.NODE_ENV !== 'development') {
+            registrarVisita(cotizacionId);
+        }
+
+        // REVISAR SI VIENE DE LISTA
+        if (fromListaParam) {
+            setFromLista(fromListaParam === 'lista');
+        }
 
         if (condicionComercialIdFromUrl) {
             setCondicionComercialId(condicionComercialIdFromUrl);
@@ -194,6 +184,8 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
             setMetodoPagoId(metodoPago?.id || '');
         }
 
+
+
         if (condicionComercialesId && metodoPagoId) {
             const condicion = condicionesComerciales.find(cond => cond.id === condicionComercialesId);
             const metodo = condicion?.metodosPago?.find(mp => mp.id === metodoPagoId);
@@ -202,7 +194,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
             }
         }
 
-    }, [condicionComercialesId, metodoPagoId, condicionesComerciales, condicionComercial?.id, metodoPago?.id]);
+    }, [cotizacionId, condicionComercialesId, metodoPagoId, condicionesComerciales, condicionComercial?.id, metodoPago?.id]);
 
     //! calcular totales cuando se actualiza la lista
     useEffect(() => {
@@ -330,7 +322,10 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                 </p>
                                 <div className='bg-zinc-900 border border-zinc-600 p-3 rounded-md mb-5'>
 
-                                    <Wishlist servicios={servicios} />
+                                    <Wishlist
+                                        servicios={servicios}
+                                        categorias={categorias}
+                                    />
                                 </div>
                             </div>
 

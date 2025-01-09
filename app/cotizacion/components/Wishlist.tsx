@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { Servicio, ServicioCategoria } from '@/app/admin/_lib/types'
-import { obtenerCategories } from '@/app/admin/_lib/categorias.actions'
+// import { obtenerCategories } from '@/app/admin/_lib/categorias.actions'
 import { ChevronRight, Camera, BookImage, Settings, Video, Box } from 'lucide-react'
 
 interface Props {
     servicios: Servicio[]
+    categorias: ServicioCategoria[]
 }
 
 const formatServiceName = (name: string) => {
@@ -36,16 +37,7 @@ const uniqueServices = (name: string) => {
     return '';
 };
 
-const Wishlist: React.FC<Props> = ({ servicios }) => {
-    const [categorias, setCategorias] = useState<ServicioCategoria[]>([])
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const categoriasData = await obtenerCategories()
-            setCategorias(categoriasData)
-        }
-        fetchData()
-    }, [])
+const Wishlist: React.FC<Props> = ({ servicios, categorias }) => {
 
     const categoriasRenderizadas = useMemo(() => {
         return categorias.map(categoria => {
