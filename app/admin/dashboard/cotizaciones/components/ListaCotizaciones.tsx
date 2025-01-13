@@ -27,18 +27,6 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
     const router = useRouter()
 
 
-    const fetchData = async () => {
-        if (evento.id) {
-            setLoading(true)
-            const cotizacionesData = await obtenerCotizacionesPorEvento(evento.id)
-            setCantidadCotizaciones(cotizacionesData.length)
-            setCotizaciones(cotizacionesData)
-            const eventoTipoData = evento.eventoTipoId ? await obtenerTipoEvento(evento.eventoTipoId) : null
-            setEventoTipo(eventoTipoData?.nombre || '')
-            setLoading(false)
-        }
-    }
-
     const suscripcionSupabase = () => {
         const subscription = supabase
             .channel('realtime:CotizacionVisita')
@@ -67,6 +55,18 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
     }
 
     useEffect(() => {
+        const fetchData = async () => {
+            if (evento.id) {
+                setLoading(true)
+                const cotizacionesData = await obtenerCotizacionesPorEvento(evento.id)
+                setCantidadCotizaciones(cotizacionesData.length)
+                setCotizaciones(cotizacionesData)
+                const eventoTipoData = evento.eventoTipoId ? await obtenerTipoEvento(evento.eventoTipoId) : null
+                setEventoTipo(eventoTipoData?.nombre || '')
+                setLoading(false)
+            }
+        }
+
         fetchData()
         suscripcionSupabase()
     }, [evento.id])
