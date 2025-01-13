@@ -54,7 +54,16 @@ export async function actualizarConfiguracion(configuracion: Configuracion) {
             utilidad_producto: Number(configuracion.utilidad_producto),
             utilidad_servicio: Number(configuracion.utilidad_servicio),
             comision_venta: Number(configuracion.comision_venta),
-            sobreprecio: Number(configuracion.sobreprecio)
+            sobreprecio: Number(configuracion.sobreprecio),
+            claveAutorizacion: configuracion.claveAutorizacion,
+        }
+    });
+}
+
+export async function validarCondigoAutorizacion(clave: string) {
+    return await prisma.configuracion.findFirst({
+        where: {
+            claveAutorizacion: clave
         }
     });
 }

@@ -11,7 +11,13 @@ export default function Skeleton({ footer }: Props) {
             <div className="max-w-screen-sm py-40 px-10 mx-auto">
                 <div className='my-5'>
                     <Image
-                        src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_gris.svg" alt="ProSocial MX" width={150} height={300} className="mx-auto" />
+                        src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_gris.svg"
+                        alt="ProSocial MX"
+                        className="mx-auto"
+                        width={150}
+                        height={300}
+                        style={{ width: 'auto', height: 'auto' }}
+                    />
                 </div>
 
                 <div className="flex flex-col space-y-4 mb-5">

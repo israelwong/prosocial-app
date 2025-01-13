@@ -11,7 +11,7 @@ export default function RootLayout({
       <head>
         <meta charSet="utf-8" />
         <link rel="icon" href="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/isotipo_gris.svg"
-          type="image/svg+xml"
+          style={{ width: 'auto', height: 'auto' }} type="image/svg+xml"
         />
         <Script
           id="fontawesome"

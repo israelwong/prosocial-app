@@ -1,7 +1,7 @@
 'use client'
-
 import React, { useEffect, useState, useMemo, useRef } from 'react'
 import { CircleCheck } from 'lucide-react'
+
 import { Cliente, Cotizacion, CotizacionServicio, CondicionesComerciales, ServicioCategoria } from '@/app/admin/_lib/types'
 import { obtenerEventoContrato } from '@/app/admin/_lib/evento.actions'
 import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
@@ -24,7 +24,6 @@ export default function Contrato({ eventoId }: Props) {
     const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null)
     const [categorias, setCategorias] = useState<ServicioCategoria[]>([])
     const [servicios, setServicios] = useState<CotizacionServicio[]>([])
-    // const [generandoPDF, setGenerandoPDF] = React.useState(false)
 
     useEffect(() => {
 
@@ -90,34 +89,6 @@ export default function Contrato({ eventoId }: Props) {
             .filter(categoria => categoria !== null)
     }, [categorias, servicios])
 
-    // const handleDescargarContrato = () => {
-    //     const element = divRef.current;
-
-    //     if (element) {
-    //         const printWindow = window.open('', '_blank');
-    //         if (printWindow) {
-    //             printWindow.document.write(`
-    //                 <html>
-    //                     <head>
-    //                         <title>Contrato</title>
-    //                         <style>
-    //                             body {
-    //                                 font-family: Arial, sans-serif;
-    //                                 margin: 20px;
-    //                             }
-    //                         </style>
-    //                     </head>
-    //                     <body>
-    //                         ${element.innerHTML}
-    //                     </body>
-    //                 </html>
-    //             `);
-    //             printWindow.document.close();
-    //             printWindow.print();
-    //         }
-    //     }
-    // };
-
     if (loading) {
         return <div className='flex items-center justify-center h-full'>
             <p className='text-zinc-600 italic text-center'>
@@ -144,7 +115,7 @@ export default function Contrato({ eventoId }: Props) {
                         </li>
                         <li>
                             <p className='font-semibold text-zinc-500'>Fecha de celebración:</p>
-                            {fechaEvento ? new Date(fechaEvento).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Obteniendo fecha...'}
+                            {fechaEvento ? new Date(new Date(fechaEvento).getTime() + new Date().getTimezoneOffset() * 60000).toLocaleString('es-ES', { dateStyle: 'full' }) : 'Obteniendo fecha...'}
 
                         </li>
                         <li>
@@ -276,14 +247,6 @@ export default function Contrato({ eventoId }: Props) {
             </div>
 
             <div>
-
-                {/* <button
-                    className="bg-blue-900 text-white p-2 rounded-md border border-blue-700 text-sm mb-3 w-full"
-                    onClick={handleDescargarContrato}
-                    disabled={generandoPDF}
-                >
-                    {generandoPDF ? 'Generando PDF...' : 'Descargar contrato en PDF'}
-                </button> */}
 
                 <button
                     className="bg-red-600 text-white p-2 rounded-md border border-red-500 text-sm w-full"

@@ -20,6 +20,7 @@ export default function ModalBitacoraEditar({ bitacoraId, onClose, onSubmit }: P
                 const bitacoraData = await obtenerBitacora(bitacoraId)
                 if (bitacoraData) {
                     setAnotacion(bitacoraData.comentario)
+                    setLoading(false)
                 }
             } catch (error) {
                 setError(`Error al obtener la bitácora ${error}}`)
@@ -66,7 +67,7 @@ export default function ModalBitacoraEditar({ bitacoraId, onClose, onSubmit }: P
                     <button className="bg-blue-600 py-2 px-3 rounded-md w-full"
                         onClick={handleActualizarBitacora}
                         disabled={loading}>
-                        {loading ? 'Actualizando...' : 'Actualizar'}
+                        {loading ? '...' : 'Actualizar'}
                     </button>
                     <button className="bg-red-600 py-2 px-3 rounded-md w-full mt-2"
                         onClick={onClose}

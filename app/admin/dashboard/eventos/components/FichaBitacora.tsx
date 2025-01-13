@@ -55,22 +55,23 @@ export default function FichaBitacora({ eventoId }: Props) {
         <div>
             <div className='flex justify-between items-center mb-5'>
                 <h3 className='text-xl font-semibold text-zinc-500'>
-                    Comentarios
+                    Notas
                 </h3>
                 <button
                     className='bg-zinc-900 p-2 rounded-md border border-zinc-800 px-3 text-sm text-zinc-200'
                     onClick={() => setIsModalBitacoraNuevoOpen(true)}
+                    disabled={!eventoId}
                 >
-                    Agregar nota
+                    {eventoId ? 'Agregar nota' : '...'}
                 </button>
             </div>
 
             <div>
                 {bitacora && bitacora.length > 0 ? (
                     bitacora.map((bitacora, index) => (
-                        <div key={index} className="py-2 mb-3 flex justify-between items-center bg-zinc-900 p-5">
+                        <div key={index} className="py-3 mb-3 flex justify-between items-center bg-zinc-900 p-5">
                             <div className="pr-5">
-                                <button className="text-lg text-zinc-200 text-left flex items-start"
+                                <button className="text-zinc-200 text-left flex items-start"
                                     onClick={() => bitacora.id && handleEditarBitacora(bitacora.id)}
                                 >
                                     <span className="flex-shrink">{bitacora.comentario}</span>
@@ -85,7 +86,9 @@ export default function FichaBitacora({ eventoId }: Props) {
                         </div>
                     ))
                 ) : (
-                    <p className="text-zinc-500">No hay comentarios registrados</p>
+                    <p className="text-zinc-600 p-5 bg-zinc-900 rounded-md border border-zinc-800">
+                        No hay comentarios registrados
+                    </p>
                 )}
             </div>
 

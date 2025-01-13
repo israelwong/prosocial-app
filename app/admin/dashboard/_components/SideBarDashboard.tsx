@@ -5,12 +5,12 @@ import { Shuffle, Home, Calendar, Users, Wallet, Inbox } from 'lucide-react'
 import { supabase } from '../../_lib/supabase'
 
 const links = [
-    { href: '/admin/dashboard', label: 'Inicio', icon: <Home size={24} /> },
-    { href: '/admin/dashboard/eventos', label: 'Eventos', icon: <Inbox size={24} />, count: 0 },
-    { href: '/admin/dashboard/seguimiento', label: 'Seguimiento', icon: <Shuffle size={24} />, count: 0 },
-    { href: '/admin/dashboard/agenda', label: 'Agenda', icon: <Calendar size={24} /> },
-    { href: '/admin/dashboard/contactos', label: 'Contactos', icon: <Users size={24} /> },
-    { href: '/admin/dashboard/finanzas', label: 'Finanzas', icon: <Wallet size={24} /> },
+    { href: '/admin/dashboard', label: 'Inicio', icon: <Home size={24} />, alt: 'Inicio' },
+    { href: '/admin/dashboard/eventos', label: 'Eventos', icon: <Inbox size={24} />, count: 0, alt: 'Promesas' },
+    { href: '/admin/dashboard/seguimiento', label: 'Gestión', icon: <Shuffle size={24} />, count: 0, alt: 'Eventos' },
+    { href: '/admin/dashboard/agenda', label: 'Agenda', icon: <Calendar size={24} />, alt: 'Agenda' },
+    { href: '/admin/dashboard/contactos', label: 'Contactos', icon: <Users size={24} />, alt: 'Contactos' },
+    { href: '/admin/dashboard/finanzas', label: 'Finanzas', icon: <Wallet size={24} />, alt: 'Finanzas' },
 ]
 
 function DashboardSideBar() {
@@ -18,6 +18,7 @@ function DashboardSideBar() {
     const [activeLink, setActiveLink] = useState('')
     const [seguimientoCount, setSeguimientoCount] = useState(0)
     const [aprobadosCount, setAprobadosCount] = useState(0)
+    const [agendaCount, setAgendaCount] = useState(0)
 
     //! Función para reproducir un sonido de notificación
     const playNotificationSound = () => {
@@ -38,26 +39,34 @@ function DashboardSideBar() {
     useEffect(() => {
 
         const fetchCounts = async () => {
-            // console.log('Fetching counts...');
+
             const { count: seguimientoCount, error: seguimientoError } = await supabase
                 .from('Evento')
                 .select('id', { count: 'exact' })
                 .in('status', ['nuevo', 'seguimiento']); // Filtra por múltiples valores
+
             const { count: aprobadosCount, error: aprobadosError } = await supabase
                 .from('Evento')
                 .select('id', { count: 'exact' })
                 .eq('status', 'aprobado');
-            // Asegúrate de que no haya errores
+
+            const { count: agendaCount, error: agendaError } = await supabase
+                .from('Agenda')
+                .select('id', { count: 'exact' })
+                .eq('status', 'pendiente');
+
             if (seguimientoError) console.error('Error al obtener seguimiento leads:', seguimientoError);
             if (aprobadosError) console.error('Error al obtener aprobados leads:', aprobadosError);
-            // Establecer los conteos
+            if (agendaError) console.error('Error al obtener aprobados leads:', agendaError);
+
             setSeguimientoCount(seguimientoCount || 0);
             setAprobadosCount(aprobadosCount || 0);
+            setAgendaCount(agendaCount || 0);
         };
 
         //! Suscripción a cambios en tiempo real   
         const subscription = supabase
-            .channel('realtime:Evento')
+            .channel('realtime:General')
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'Evento' },
@@ -67,7 +76,14 @@ function DashboardSideBar() {
                     if (payload.eventType === 'INSERT') {
                         playNotificationSound();
                     }
-                    // Actualiza los conteos cuando cambian los datos
+                    // Actualiza cuando cambian los datos
+                    fetchCounts();
+                }
+            ).on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'Agenda' },
+                async () => {
+                    // console.log('Cambio detectado:', payload);
                     fetchCounts();
                 }
             )
@@ -80,10 +96,12 @@ function DashboardSideBar() {
             });
         //! Obtener los conteos iniciales
         fetchCounts();
+
         return () => {
             //! Eliminar la suscripción cuando el componente se desmonta
             supabase.removeChannel(subscription);
         };
+
     }, []);
 
     return (
@@ -101,7 +119,7 @@ function DashboardSideBar() {
                             onClick={() => setActiveLink(link.href)}
                         >
                             <div className='relative'>
-                                {link.icon}
+                                {React.cloneElement(link.icon, { alt: link.alt })}
                                 {(link.href === '/admin/dashboard/eventos' && seguimientoCount > 0) && (
                                     <span className='absolute bottom-3 left-4 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center'>
                                         {seguimientoCount}
@@ -110,6 +128,11 @@ function DashboardSideBar() {
                                 {(link.href === '/admin/dashboard/seguimiento' && aprobadosCount > 0) && (
                                     <span className='absolute bottom-3 left-4 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center'>
                                         {aprobadosCount}
+                                    </span>
+                                )}
+                                {(link.href === '/admin/dashboard/agenda' && agendaCount > 0) && (
+                                    <span className='absolute bottom-3 left-4 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center'>
+                                        {agendaCount}
                                     </span>
                                 )}
                             </div>

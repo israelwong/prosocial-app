@@ -1,12 +1,9 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { Evento } from '@/app/admin/_lib/types'
-import { obtenerEventosAprobados } from '@/app/admin/_lib/evento.actions'
-import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
-import { obtenerBalancePagosEvento } from '@/app/admin/_lib/pago.actions'
-import { obtenerCliente } from '@/app/admin/_lib/cliente.actions'
 import { useRouter } from 'next/navigation'
 import { CircleDollarSign, Calendar, CircleUserRound } from 'lucide-react'
+import { obtenerEventosAprobadosV2 } from '@/app/admin/_lib/evento.actions'
 
 interface EventoExtendido extends Evento {
     clienteNombre: string
@@ -17,60 +14,45 @@ interface EventoExtendido extends Evento {
 }
 
 export default function ListaEventosAprobados() {
-
     const router = useRouter()
-    const [eventos, setEventos] = useState<EventoExtendido[]>([])
     const [filtro, setFiltro] = useState('')
     const [filtroBalance, setFiltroBalance] = useState<'todos' | 'pagados' | 'pendientes'>('todos')
     const [loading, setLoading] = useState(true)
+    const [eventosAprobadosV2, setEventosAprobadosV2] = useState<EventoExtendido[]>([])
 
     useEffect(() => {
         const fetchData = async () => {
-            const eventosAprobados = await obtenerEventosAprobados()
-            const eventosConTipoYBalance = await Promise.all(eventosAprobados.map(async (evento) => {
-                const eventoTipo = evento.eventoTipoId ? await obtenerTipoEvento(evento.eventoTipoId) : { nombre: 'Tipo desconocido' }
-                const balancePagos = await obtenerBalancePagosEvento(evento.id)
-                const cliente = await obtenerCliente(evento.clienteId)
-                return {
-                    ...evento,
-                    clienteNombre: cliente ? cliente.nombre : 'Cliente desconocido',
-                    tipoEvento: eventoTipo?.nombre ?? 'Tipo desconocido',
-                    precio: balancePagos.precio,
-                    totalPagado: balancePagos.totalPagado,
-                    balance: balancePagos.balance ?? 0
-                }
-            }))
-            setEventos(eventosConTipoYBalance)
+            const eventosAprobadosV2 = await obtenerEventosAprobadosV2()
+            setEventosAprobadosV2(eventosAprobadosV2)
             setLoading(false)
         }
         fetchData()
-
     }, [])
 
-    const eventosFiltrados = eventos.filter(evento =>
-        (evento.nombre?.toLowerCase().includes(filtro.toLowerCase()) ?? false) ||
-        evento.clienteNombre.toLowerCase().includes(filtro.toLowerCase()) ||
-        new Date(evento.fecha_evento).toLocaleString('es-ES', { dateStyle: 'full' }).includes(filtro) ||
-        evento.tipoEvento.toLowerCase().includes(filtro.toLowerCase()
-        )
-    ).filter(evento => {
-        if (filtroBalance === 'pagados') return evento.balance === 0
-        if (filtroBalance === 'pendientes') return evento.balance > 0
-        return true
-    })
+    const eventosFiltrados = useMemo(() => {
+        return eventosAprobadosV2.filter(evento =>
+            (evento.nombre?.toLowerCase().includes(filtro.toLowerCase()) ?? false) ||
+            evento.clienteNombre.toLowerCase().includes(filtro.toLowerCase()) ||
+            new Date(evento.fecha_evento).toLocaleString('es-ES', { dateStyle: 'full' }).includes(filtro) ||
+            evento.tipoEvento.toLowerCase().includes(filtro.toLowerCase())
+        ).filter(evento => {
+            if (filtroBalance === 'pagados') return evento.balance === 0
+            if (filtroBalance === 'pendientes') return evento.balance > 0
+            return true
+        })
+    }, [eventosAprobadosV2, filtro, filtroBalance])
 
-    if (loading) return <div>
-        <div className='flex items-center justify-center py-20'>
-            <p className='text-zinc-500 text-center flex items-center justify-center'>Cargando eventos aprobados...</p>
+    if (loading) return (
+        <div className='flex items-center justify-center h-screen'>
+            <p className='text-zinc-500 text-center'>Cargando eventos aprobados...</p>
         </div>
-    </div>
+    )
 
     return (
         <div className=''>
             <div className="grid grid-cols-1 gap-4 max-w-screen-sm mx-auto ">
-
                 <h1 className='text-xl font-semibold mb-2'>
-                    Seguimiento de eventos aprobados
+                    Gestión de eventos aprobados
                 </h1>
 
                 <div className='sticky top-0 mb-2'>
@@ -83,29 +65,20 @@ export default function ListaEventosAprobados() {
                     />
 
                     <div className="flex justify-between gap-2 text-sm">
-                        <button
-                            className={`p-2 rounded-md ${filtroBalance === 'todos' ? 'w-full bg-blue-500 text-white' : 'w-full bg-zinc-950 text-white'}`}
-                            onClick={() => setFiltroBalance('todos')}
-                        >
-                            Todos
-                        </button>
-                        <button
-                            className={`p-2 rounded-md ${filtroBalance === 'pagados' ? 'w-full bg-blue-500 text-white' : 'w-full bg-zinc-950 text-white'}`}
-                            onClick={() => setFiltroBalance('pagados')}
-                        >
-                            Pagados
-                        </button>
-                        <button
-                            className={`p-2 rounded-md ${filtroBalance === 'pendientes' ? 'w-full bg-blue-500 text-white' : 'w-full bg-zinc-950 text-white'}`}
-                            onClick={() => setFiltroBalance('pendientes')}
-                        >
-                            Pendientes
-                        </button>
+                        {['todos', 'pagados', 'pendientes'].map((estado) => (
+                            <button
+                                key={estado}
+                                className={`p-2 rounded-md ${filtroBalance === estado ? 'w-full bg-blue-500 text-white' : 'w-full bg-zinc-950 text-white'}`}
+                                onClick={() => setFiltroBalance(estado as 'todos' | 'pagados' | 'pendientes')}
+                            >
+                                {estado.charAt(0).toUpperCase() + estado.slice(1)}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
                 {eventosFiltrados.map(evento => (
-                    <div key={evento.id} className="p-4 border border-zinc-800 rounded-lg shadow-md flex justify-between"
+                    <div key={evento.id} className="p-4 border border-zinc-800 rounded-lg shadow-md flex justify-between cursor-pointer"
                         onClick={() => { router.push(`/admin/dashboard/seguimiento/${evento.id}`) }}
                     >
                         <div>
@@ -117,15 +90,14 @@ export default function ListaEventosAprobados() {
                                     className='text-xl font-bold'
                                     onClick={() => {
                                         router.push(`/admin/dashboard/seguimiento/${evento.id}`)
-                                    }
-                                    }>
+                                    }}>
                                     {evento.nombre}
                                 </button>
-
                             </div>
 
                             <p className="text-yellow-600 flex items-center">
-                                <Calendar className='mr-1' size={16} /> {new Date(evento.fecha_evento).toLocaleString('es-ES', { dateStyle: 'full' })}
+                                <Calendar className='mr-1' size={16} />
+                                {new Date(new Date(evento.fecha_evento).getTime() + new Date().getTimezoneOffset() * 60000).toLocaleString('es-ES', { dateStyle: 'full' })}
                             </p>
 
                             <p className='flex items-center'>
@@ -143,9 +115,7 @@ export default function ListaEventosAprobados() {
                                     </p>
                                 )}
                             </div>
-
                         </div>
-
                     </div>
                 ))}
             </div>

@@ -1,29 +1,42 @@
 import React from 'react';
 import { Calendar, CircleUserRound } from 'lucide-react';
+import { asignarEventoUser } from '@/app/admin/_lib/evento.actions'
+import { EventoDetalle } from '@/app/admin/_lib/types';
+import { useRouter } from 'next/navigation'
 
-interface FichaEventoProps {
-    evento: {
-        id: string;
-        evento: string;
-        cliente: string;
-        creacion: string;
-        status: string;
-        tipoEvento: string;
-        fecha_evento: string;
-        user: string;
-        fecha_actualizacion: string;
-    };
-    handleOpen: (id: string, status: string) => void;
+
+interface Props {
+    evento: EventoDetalle;
+    userId: string;
 }
 
-const FichaEvento: React.FC<FichaEventoProps> = ({ evento, handleOpen }) => {
+export default function FichaEvento({ evento, userId }: Props) {
+
+    const router = useRouter()
+
+    const handleOpen = async (id: string) => {
+
+        //si nuevo, actualizar a seguimiento y asignar a usuario quien lo abrio
+        if (evento.status === 'nuevo') {
+            console.log('Evento nuevo', userId, evento.id)
+            await asignarEventoUser(evento.id, userId, 'seguimiento')
+            router.push(`/admin/dashboard/eventos/${id}`)
+        }
+        router.push(`/admin/dashboard/eventos/${id}`)
+    }
+
     return (
         <div key={evento.id} className='relative px-4 py-2 border border-zinc-700 rounded-md mb-5'>
+
             <h3 className='text-lg text-zinc-300 items-center'>
-                <button onClick={() => handleOpen(evento.id, evento.status)}>
-                    {evento.evento || 'Por configurar'}
-                    <span className='ml-2 px-2 py-1 leading-3 text-[12px] bg-zinc-800 text-yellow-500 rounded-full'>
+                <button onClick={() => handleOpen(evento.id)}>
+
+                    <span className='mr-2 px-2 py-1 leading-3 text-[12px] bg-zinc-800 text-yellow-500 rounded-full'>
                         {evento.tipoEvento}
+                    </span>
+
+                    <span>
+                        {evento.evento || 'Por configurar'}
                     </span>
                 </button>
             </h3>
@@ -36,7 +49,7 @@ const FichaEvento: React.FC<FichaEventoProps> = ({ evento, handleOpen }) => {
                 })}
             </p>
             <div className='space-x-1 mb-2 flex items-center'>
-                Lead <span className='ml-2 px-2 py-1 leading-3 text-[12px] bg-zinc-700 rounded-md uppercase flex items-center'>
+                Prospecto <span className='ml-2 px-2 py-1 leading-3 text-[12px] bg-zinc-700 rounded-md uppercase flex items-center'>
                     <CircleUserRound size={15} className='mr-1' /> {evento.cliente}
                 </span>
                 {evento.user && (
@@ -45,16 +58,17 @@ const FichaEvento: React.FC<FichaEventoProps> = ({ evento, handleOpen }) => {
                     </span>
                 )}
             </div>
-            <p className='text-zinc-500 flex items-center text-sm'>
-                Registrado {new Date(evento.fecha_actualizacion).toLocaleDateString('es-MX', {
-                    timeZone: 'UTC',
+            <p className='text-zinc-500 flex items-center text-sm italic'>
+                Registrado {new Date(evento.creacion).toLocaleString('es-ES', {
                     year: 'numeric',
                     month: 'long',
-                    day: 'numeric'
+                    day: 'numeric',
+                })} a las {new Date(evento.creacion).toLocaleTimeString('es-ES', {
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    second: 'numeric'
                 })}
             </p>
         </div>
     );
 };
-
-export default FichaEvento;

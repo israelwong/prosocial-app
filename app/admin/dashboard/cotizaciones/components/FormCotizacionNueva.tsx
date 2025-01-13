@@ -1,37 +1,41 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Servicio, PaqueteServicio, MetodoPago } from '@/app/admin/_lib/types'
-import { obtenerPaquete } from '@/app/admin/_lib/paquete.actions'
 import { useRouter } from 'next/navigation'
+
+import { CondicionesComerciales, Servicio, PaqueteServicio, MetodoPago } from '@/app/admin/_lib/types'
+
+import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
+import { obtenerPaquete, obtenerServiciosPorPaquete } from '@/app/admin/_lib/paquete.actions'
 import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
-import { obtenerServiciosPorPaquete } from '@/app/admin/_lib/paquete.actions'
 import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
 import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
-import ListaServicios from './ListaServicios'
-import Wishlist from './Wishlist'
-import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
-import { CondicionesComerciales } from '@/app/admin/_lib/types';
 import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
+import { crearCotizacion, crearCotizacionAutorizada } from '@/app/admin/_lib/cotizacion.actions';
+import { crearPago } from '@/app/admin/_lib/pago.actions';
+
+import Wishlist from './Wishlist'
+import ListaServicios from './ListaServicios'
 import { X } from 'lucide-react';
-import { crearCotizacion } from '@/app/admin/_lib/cotizacion.actions';
 
 export default function FormCotizacionNueva() {
 
     const router = useRouter();
     const [loading, setLoading] = useState(true); // Estado de carga
+
     const searchParams = useSearchParams();
     const eventoId = searchParams ? searchParams.get('eventoId') : null; //para asociar la cotizacion a un evento
     const paqueteId = searchParams ? searchParams.get('paqueteId') : null;
     const eventoTipoId = searchParams ? searchParams.get('eventoTipoId') : null;
-    const [eventoTipo, setEventoTipo] = useState<string | undefined>('');
-    const [servicios, setServicios] = useState<Servicio[]>([]);
+    const clienteId = searchParams ? searchParams.get('clienteId') : null;
 
+    const [eventoTipo, setEventoTipo] = useState<string | undefined>('');
+    const [nombreCotizacion, setNombreCotizacion] = useState('');
     const [sobreprecioPorcentaje, setSobreprecioPorcentaje] = useState(0);
     const [comisionVentaPorcentaje, setComisionVentaPorcentaje] = useState(0);
     const [totalPrecioSistema, setTotalPrecioSistema] = useState(0);
 
-    const [nombreCotizacion, setNombreCotizacion] = useState('');
+    const [servicios, setServicios] = useState<Servicio[]>([]);
     const [listaBackup, setListaBackup] = useState<Servicio[]>([]);
 
     const [condicionComercial, setCondicionComercial] = useState<CondicionesComerciales | null>(null);
@@ -50,6 +54,17 @@ export default function FormCotizacionNueva() {
     const [condicionesComerciales, setCondicionesComerciales] = useState([] as CondicionesComerciales[]);
     const [codigoCotizacion, setCodigoCotizacion] = useState('');
     const [errorPrecioFinal, setErrorPrecioFinal] = useState(false);
+
+    //!added
+    const [pagoAnticipo, setPagoAnticipo] = useState(0);
+    const [pagandoEfectivo, setPagandoEfectivo] = useState(false);
+    const [confirmarMonto, setConfirmarMonto] = useState('');
+    const [confirmarPorcentajeAnticipo, setConfirmarPorcentajeAnticipo] = useState('');
+    const [pagoPendiente, setPagoPendiente] = useState(0);
+    const [metodoPagoId, setMetodoPagoId] = useState<string | undefined>('');
+    const [condicionesComercialesId, setCondicionComercialId] = useState<string | undefined>('');
+    const [errorConfirmarMonto, setErrorConfirmarMonto] = useState(false);
+    const [errorMonto, setErrorMonto] = useState('');
 
     useEffect(() => {
 
@@ -161,6 +176,7 @@ export default function FormCotizacionNueva() {
     //! Calcular totales
     const calcularTotal = useCallback((servicios: Servicio[]) => {
 
+        setPrecioFinal(0);
         setErrorPrecioFinal(false);
         setErrors(prevErrors => ({ ...prevErrors, nombre: '' }));
 
@@ -187,11 +203,8 @@ export default function FormCotizacionNueva() {
             (precio_final * Number((comision_msi_porcentaje ?? 0) / 100))
         )
 
-        // const depositoFintech = precio_final - comision_stripe - comision_pago_cuotas;
         const comisionVentaMonto = precio_final * (comisionVentaPorcentaje / 100);
         const utilidadDeVenta = precio_final - totalCostos - totalGastos - comisionVentaMonto - comision_stripe - comision_pago_cuotas;
-        // const comprobacion = precio_final - totalCostos - totalGastos - comisionVentaMonto - comision_stripe - comision_pago_cuotas;
-
         const perdida_ganancia = utilidadDeVenta - utilidadSistema;
 
         let codigo_cotizacion =
@@ -199,6 +212,18 @@ export default function FormCotizacionNueva() {
 
         if (perdida_ganancia < 0) {
             codigo_cotizacion += `-P${Math.floor(perdida_ganancia)}`;
+        }
+
+        //!added
+        if (condicionComercial?.porcentaje_anticipo) {
+            const pago_anticipo = precio_final * (condicionComercial.porcentaje_anticipo / 100);
+
+            setPagoAnticipo(pago_anticipo);
+            const pagoPendiente = precio_final - pago_anticipo;
+            setPagoPendiente(pagoPendiente);
+
+            setConfirmarMonto(pago_anticipo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }));
+            setConfirmarPorcentajeAnticipo(condicionComercial.porcentaje_anticipo.toString());
         }
 
         setCodigoCotizacion(codigo_cotizacion);
@@ -213,6 +238,30 @@ export default function FormCotizacionNueva() {
 
     }, [comisionVentaPorcentaje, condicionComercial, metodoPago]);
 
+    //! Obtener condición comercial y método de pago para llamar handleSeleccionCondicionMetodoPago y mostrar los datos
+    useEffect(() => {
+        if (condicionesComercialesId && metodoPagoId) {
+            const condicion = condicionesComerciales.find(cond => cond.id === condicionesComercialesId);
+            const metodo = condicion?.metodosPago?.find(mp => mp.id === metodoPagoId);
+            if (condicion && metodo) {
+                handleSeleccionCondicionMetodoPago(condicion, metodo);
+            }
+        }
+    }, [condicionesComercialesId, metodoPagoId, condicionesComerciales]);
+
+    //! calcular totales cuando se actualiza la lista
+    useEffect(() => {
+        calcularTotal(servicios);
+    }, [servicios, sobreprecioPorcentaje, comisionVentaPorcentaje, condicionComercial, metodoPago, calcularTotal]);
+
+    const handleSeleccionCondicionMetodoPago = (condicion: CondicionesComerciales, metodo: MetodoPago) => {
+        // console.table(metodo.metodoPagoId);
+        setMetodoPagoId(metodo.id);
+        setMetodoPago(metodo);
+        setCondicionComercial(condicion);
+        setCondicionComercialId(condicion.id);
+    }
+
     //! handle Lista
     const handleVaciarLista = () => {
         if (!confirm('¿Estás seguro de vaciar la lista?')) return
@@ -222,16 +271,6 @@ export default function FormCotizacionNueva() {
     const handleRestaurarLista = () => {
         if (!confirm('¿Estás seguro de restaurar la lista?')) return
         setServicios(listaBackup)
-    }
-
-    //! calcular totales cuando se actualiza la lista
-    useEffect(() => {
-        calcularTotal(servicios);
-    }, [servicios, sobreprecioPorcentaje, comisionVentaPorcentaje, condicionComercial, metodoPago, calcularTotal]);
-
-    const handleSeleccionCondicionMetodoPago = (condicion: CondicionesComerciales, metodo: MetodoPago) => {
-        setMetodoPago(metodo);
-        setCondicionComercial(condicion);
     }
 
     const handleCrearCotizacion = async () => {
@@ -268,6 +307,96 @@ export default function FormCotizacionNueva() {
         await crearCotizacion(nuevaCotizacion);
         router.back();
 
+    }
+
+    //! Pago en efectivo
+    const handlePagoEfectivo = async () => {
+        const confirmar = confirm('¿Estás seguro de confirmar el pago en efectivo?');
+        if (confirmar) {
+
+            if (!nombreCotizacion) {
+                setErrors(prevErrors => ({ ...prevErrors, nombre: 'El nombre de la cotización es requerido' }));
+                setGuardandoCotizacion(false);
+                return;
+            } else {
+                setErrors(prevErrors => ({ ...prevErrors, nombre: '' }));
+            }
+
+            if (precioFinal <= 0) {
+                alert('El precio final no puede ser 0');
+                setGuardandoCotizacion(false);
+                setErrorPrecioFinal(true);
+                return;
+            }
+
+            const nuevaCotizacion = {
+                eventoTipoId: eventoTipoId || '',
+                eventoId: eventoId || '',
+                nombre: nombreCotizacion.charAt(0).toUpperCase() + nombreCotizacion.slice(1),
+                precio: parseFloat(precioFinal.toFixed(2)),
+                condicionesComercialesId: condicionComercial?.id,
+                condicionesComercialesMetodoPagoId: metodoPago?.id,
+                servicios,
+                utilidadDeVenta: parseFloat(utilidadDeVenta.toFixed(2)),
+                utilidadSistema: parseFloat(utilidadSistema.toFixed(2)),
+            }
+
+            setPagandoEfectivo(true);
+            const result = await crearCotizacionAutorizada(nuevaCotizacion);
+
+            //crear pago
+            const pago = {
+                cotizacionId: result.cotizacionId,
+                clienteId,
+                condicionesComercialesId: condicionComercial?.id ?? null,
+                condicionesComercialesMetodoPagoId: metodoPago?.id ?? null,
+                metodoPagoId: metodoPago?.metodoPagoId ?? null,
+                metodo_pago: metodoPago?.metodo_pago ?? '',
+                monto: parseFloat(confirmarMonto.replace(/[^0-9.-]+/g, '')),
+                concepto: parseFloat(confirmarPorcentajeAnticipo) === 100 ? 'Pago del total del servicio' : `Pago del ${confirmarPorcentajeAnticipo}%  de anticipo`,
+                status: 'paid',
+            }
+            await crearPago(pago);
+            router.push(`/admin/dashboard/seguimiento/${eventoId}`);
+        }
+    }
+
+    const handleConfirmarMontoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+        const value = parseFloat(e.target.value.replace(/[^0-9.-]+/g, ''));
+        setConfirmarMonto(e.target.value);
+
+        if (isNaN(value)) {
+            setErrorMonto('El monto debe ser un número válido.');
+        } else if (value < pagoAnticipo) {
+            setErrorMonto('El monto debe ser igual o mayor al monto de anticipo.');
+            setErrorConfirmarMonto(true);
+        } else if (value > precioFinal) {
+            setErrorConfirmarMonto(true);
+            setErrorMonto('El monto no puede ser mayor al precio final.');
+        } else {
+            setErrorConfirmarMonto(true);
+            setErrorMonto('');
+        }
+
+        const porcentajeAnticipoCalculado = isNaN(value) || isNaN(precioFinal) ? 0 : (value / precioFinal) * 100;
+        setConfirmarPorcentajeAnticipo(porcentajeAnticipoCalculado.toFixed(2));
+
+        const pagoPendiente = isNaN(precioFinal) || isNaN(value) ? pagoAnticipo : precioFinal - value;
+        setPagoPendiente(pagoPendiente);
+
+        if (isNaN(value) || isNaN(precioFinal)) {
+            setErrorConfirmarMonto(true);
+        } else {
+            setErrorConfirmarMonto(false);
+        }
+
+    };
+
+    const handleResetPagoAnticipo = () => {
+        setConfirmarMonto(pagoAnticipo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }));
+        setErrorMonto('');
+        setConfirmarPorcentajeAnticipo(condicionComercial?.porcentaje_anticipo?.toString() || '');
     }
 
     return (
@@ -308,7 +437,7 @@ export default function FormCotizacionNueva() {
                                     id="nombreCotizacion"
                                     value={nombreCotizacion}
                                     onChange={(e) => {
-                                        const nuevoNombre = e.target.value;
+                                        const nuevoNombre = e.target.value || 'Personalizada';
                                         setNombreCotizacion(nuevoNombre);
                                     }}
                                     className='w-full text-xl rounded-md bg-zinc-900 border-foreground focus:outline-none'
@@ -419,14 +548,78 @@ export default function FormCotizacionNueva() {
                                 </p>
                             )}
 
+                            {/* //!CONFIRMAR MONTO A PAGAR */}
+                            {condicionComercial && (
+                                <div className='mb-5'>
+                                    <p className='text-xl text-zinc-500 mb-2'>
+                                        Confirmar monto a pagar
+                                    </p>
+
+                                    <div className='grid grid-cols-2 gap-5 rounded-md bg-zinc-900 p-5'>
+
+                                        <div>
+                                            <p className={`text-sm text-${parseFloat(confirmarPorcentajeAnticipo) === 100 ? 'green' : 'yellow'}-500 `}>
+                                                {parseFloat(confirmarPorcentajeAnticipo) === 100 ? 'Pago total del servicio' : `Pago del ${confirmarPorcentajeAnticipo}% de anticipo`}
+                                            </p>
+                                            <input
+                                                type="text"
+                                                id="monto"
+                                                value={confirmarMonto}
+                                                onChange={(e) => handleConfirmarMontoChange(e)}
+                                                className='w-full  border-foreground focus:outline-none text-2xl bg-zinc-900'
+                                                disabled={parseFloat(confirmarPorcentajeAnticipo) === 100}
+                                            />
+                                            {errorMonto && (
+                                                <div className='mt-3 flex items-start'>
+                                                    <p className='text-red-500 text-sm'>
+                                                        {errorMonto}
+                                                    </p>
+                                                    <button
+                                                        onClick={() => handleResetPagoAnticipo()}
+                                                        className='text-[10px] bg-zinc-900 text-red-400 px-2 py-1 rounded-md ml-2 border border-red-500'
+                                                    >
+                                                        Restaurar
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className='text-zinc-500 text-sm'>
+                                                Pendiente por pagar:
+                                            </p>
+                                            <p className='text-2xl'>
+                                                {pagoPendiente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                            </p>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+                            )}
+
+                            {/* //! PAGO EN EFECTIVO */}
+                            {metodoPago?.metodo_pago === 'Efectivo' && (
+                                <div>
+                                    <button
+                                        onClick={() => !pagandoEfectivo && !errorConfirmarMonto && handlePagoEfectivo()}
+                                        className={`bg-${errorConfirmarMonto ? 'yellow-700' : 'green-700'} text-white px-3 py-3 w-full rounded-md mb-2 ${pagandoEfectivo ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        disabled={pagandoEfectivo || errorConfirmarMonto}
+                                    >
+                                        {pagandoEfectivo ? 'Un momento por favor...' : errorConfirmarMonto ? 'Por favor, corrige el monto antes de confirmar el pago.' : 'Confirmar pago en efectivo'}
+                                    </button>
+                                </div>
+                            )}
+
                             {/* //!GUARDAR COTIZACIÓN */}
-                            <button
-                                onClick={() => { handleCrearCotizacion(); }}
-                                className='bg-blue-900 text-white px-3 py-3 rounded-md w-full font-semibold'
-                                disabled={guardandoCotizacion}
-                            >
-                                {guardandoCotizacion ? 'Guardando cotización...' : 'Guardar cotización'}
-                            </button>
+                            {!pagandoEfectivo && (
+                                <button
+                                    onClick={() => { handleCrearCotizacion(); }}
+                                    className='bg-blue-900 text-white px-3 py-3 rounded-md w-full font-semibold mb-2'
+                                    disabled={guardandoCotizacion}
+                                >
+                                    {guardandoCotizacion ? 'Guardando cotización...' : 'Guardar cotización'}
+                                </button>
+                            )}
 
                             <p className={`text-sm italic text-center pt-3 text-zinc-600`}>
                                 COD-{codigoCotizacion}

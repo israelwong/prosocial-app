@@ -45,10 +45,7 @@ export default function FormCrearConfiguracion({ onClose, onSubmit }: Props) {
             newErrors.utilidad_servicio = 'La utilidad para servicios requerida';
             valid = false;
         }
-        if (formData.utilidad_producto <= 0) {
-            newErrors.utilidad_producto = 'La utilidad para productos es requerida';
-            valid = false;
-        }
+
         if (formData.comision_venta <= 0) {
             newErrors.comision_venta = 'La comisión para ventas es requerida';
             valid = false;

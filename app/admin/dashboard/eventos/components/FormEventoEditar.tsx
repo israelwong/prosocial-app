@@ -1,15 +1,17 @@
 'use client'
 import React, { useEffect, useState, useCallback } from 'react'
 import { Cliente, Evento, Paquete } from '@/app/admin/_lib/types'
+
 import { actualizarEvento, obtenerEventoPorId, eliminarEvento } from '@/app/admin/_lib/evento.actions'
 import { obtenerTiposEvento } from '@/app/admin/_lib/eventoTipo.actions'
 import { obtenerCliente } from '@/app/admin/_lib/cliente.actions'
 import { obtenerCanales } from '@/app/admin/_lib/canal.actions'
-import { useRouter } from 'next/navigation'
-import ListaCotizaciones from '../../cotizaciones/components/ListaCotizaciones'
 import { obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/paquete.actions'
+
+import ListaCotizaciones from '../../cotizaciones/components/ListaCotizaciones'
 import { Shuffle, Pencil, Trash2 } from 'lucide-react'
 import FichaBitacora from './FichaBitacora'
+import { useRouter } from 'next/navigation'
 
 interface Props {
     eventoId: string
@@ -19,7 +21,6 @@ export default function FormEventoEditar({ eventoId }: Props) {
 
     const [evento, setEvento] = useState<Evento>()
     const [cliente, setCliente] = useState<Cliente>()
-
     const [tipificacionStatus, setTipificacionStatus] = useState<string[]>([])
 
     //! variables del evento
@@ -105,7 +106,6 @@ export default function FormEventoEditar({ eventoId }: Props) {
     }, [eventoId]);
 
     const handleSubmit = async () => {
-
         setError('')
         const response = await actualizarEvento(
             {
@@ -128,7 +128,7 @@ export default function FormEventoEditar({ eventoId }: Props) {
 
     const handleNuevaCotizacion = useCallback((paqueteId: string) => {
         setGenerandoCotizacion(true)
-        router.push(`/admin/dashboard/cotizaciones/nueva?eventoId=${evento?.id}&eventoTipoId=${evento?.eventoTipoId}&&paqueteId=${paqueteId}`)
+        router.push(`/admin/dashboard/cotizaciones/nueva?eventoId=${evento?.id}&eventoTipoId=${evento?.eventoTipoId}&&paqueteId=${paqueteId}&clienteId=${clienteId}`)
     }, [evento?.id, evento?.eventoTipoId, router])
 
     const handleEliminarEvento = async () => {
@@ -138,7 +138,7 @@ export default function FormEventoEditar({ eventoId }: Props) {
             if (response.success) {
                 router.push('/admin/dashboard/eventos')
             } else {
-                setErrorEliminar('No se puede eliminar este evento, primero debes eliminar las cotizaciones asociadas.')
+                setErrorEliminar('No se puede eliminar este evento, primero debes eliminar las cotizaciones y los comentarios asociados.')
             }
         }
     }
@@ -267,9 +267,6 @@ export default function FormEventoEditar({ eventoId }: Props) {
                             <div className="mb-4">
                                 <label className="block text-zinc-600 text-sm mb-2" htmlFor="nombre">
                                     Nombre del evento
-
-                                    {!nombre && <span className="bg-red-700 text-red-300 px-2 py-1 leading-3 rounded-full ml-2 text-[12px] animate-pulse">Por definir</span>}
-
                                 </label>
                                 <input
                                     type="text"
@@ -278,7 +275,7 @@ export default function FormEventoEditar({ eventoId }: Props) {
                                     value={nombre}
                                     onChange={(e) => setNombre(e.target.value)}
                                     placeholder='Nombre del evento'
-                                    className="bg-zinc-900 border border-zinc-800 rounded w-full py-2 px-3 text-zinc-600 placeholder-zinc-700 placeholder-italic"
+                                    className="bg-zinc-900 border border-zinc-800 rounded w-full py-2 px-3 text-white placeholder-zinc-700 placeholder-italic"
                                 />
                             </div>
                             <div className="mb-4">
@@ -387,13 +384,13 @@ export default function FormEventoEditar({ eventoId }: Props) {
                         </div>
                         <div>
                             {generandoCotizacion ? (
-                                <p className="text-yellow-500 italic">Generando cotización...</p>
+                                <p className="text-sm text-yellow-500 italic">Generando cotización...</p>
                             ) : (
                                 <select
-                                    className='opciones_cotizacion bg-zinc-900 px-3 py-2 rounded-md border border-zinc-600 text-sm mr-2'
+                                    className='opciones_cotizacion bg-zinc-900 px-3 py-2 rounded-md border border-zinc-800 text-sm mr-2'
                                     onChange={(e) => handleNuevaCotizacion(e.target.value)}
                                 >
-                                    <option>Generar nueva</option>
+                                    <option>Generar nueva cotización</option>
                                     {paquetes.map(paquete => (
                                         <option key={paquete.id} value={paquete.id}>{paquete.nombre}</option>
                                     ))}

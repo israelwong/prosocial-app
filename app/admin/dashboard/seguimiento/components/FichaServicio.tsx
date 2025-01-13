@@ -117,7 +117,7 @@ export default function FichaServicio({ usuarios, cotizacionServicioId }: Props)
                                     </div>
                                 ) : (
                                     <button
-                                        className='text-blue-500 mb-1'
+                                        className={`mb-1 ${asignandingResponsable ? 'text-yellow-500' : 'text-blue-500'}`}
                                         onClick={handleOpenModal}
                                         disabled={asignandingResponsable}
                                     >

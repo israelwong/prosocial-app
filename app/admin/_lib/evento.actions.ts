@@ -1,8 +1,10 @@
 'use server';
 import { Evento } from "./types";
+import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
+import { obtenerBalancePagosEvento } from '@/app/admin/_lib/pago.actions'
+import { obtenerCliente } from '@/app/admin/_lib/cliente.actions'
+import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions'
 
-// import { PrismaClient } from "@prisma/client";
-// const prisma = new PrismaClient();
 import prisma from './prismaClient';
 
 export async function obtenerEventos() {
@@ -169,6 +171,9 @@ export async function obtenerEventosAprobados() {
     return prisma.evento.findMany({
         where: {
             status: 'aprobado'
+        },
+        orderBy: {
+            fecha_evento: 'asc'
         }
     });
 }
@@ -205,11 +210,7 @@ export async function obtenerEventoSeguimiento(eventoId: string) {
         }
     });
 
-    const cotizacionServicio = await prisma.cotizacionServicio.findMany({
-        where: {
-            cotizacionId: cotizacion?.id
-        }
-    });
+    const cotizacionServicio = await obtenerCotizacionServicios(cotizacion?.id ?? '');
 
     const pago = await prisma.pago.findMany({
         where: {
@@ -217,12 +218,18 @@ export async function obtenerEventoSeguimiento(eventoId: string) {
         }
     });
 
+    const categorias = await prisma.servicioCategoria.findMany();
+
+    const usuarios = await prisma.user.findMany();
+
     return {
         evento,
         tipoEvento: evento.EventoTipo?.nombre,
         cliente,
         cotizacion,
         cotizacionServicio,
+        categorias,//
+        usuarios,//
         pago,
     };
 
@@ -318,7 +325,33 @@ export async function obtenerEventoCotizaciones(eventoId: string) {
         cliente,
         cotizaciones
     };
-
-
-
 }
+
+export async function obtenerEventosAprobadosV2() {
+
+    const eventos = await prisma.evento.findMany({
+        where: {
+            status: 'aprobado'
+        },
+        orderBy: {
+            fecha_evento: 'asc'
+        }
+    });
+
+    const eventosConTipoYBalance = await Promise.all(eventos.map(async (evento) => {
+        const [eventoTipo, balancePagos, cliente] = await Promise.all([
+            evento.eventoTipoId ? obtenerTipoEvento(evento.eventoTipoId) : { nombre: 'Tipo desconocido' },
+            obtenerBalancePagosEvento(evento.id),
+            obtenerCliente(evento.clienteId)
+        ]);
+        return {
+            ...evento,
+            clienteNombre: cliente ? cliente.nombre : 'Cliente desconocido',
+            tipoEvento: eventoTipo?.nombre ?? 'Tipo desconocido',
+            precio: balancePagos.precio,
+            totalPagado: balancePagos.totalPagado,
+            balance: balancePagos.balance ?? 0
+        };
+    }));
+    return eventosConTipoYBalance;
+};

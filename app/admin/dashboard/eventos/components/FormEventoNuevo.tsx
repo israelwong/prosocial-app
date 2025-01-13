@@ -6,19 +6,24 @@ import { obtenerTiposEvento } from '@/app/admin/_lib/eventoTipo.actions'
 import { obtenerCliente, obtenerClientes } from '@/app/admin/_lib/cliente.actions'
 import { Cliente } from '@/app/admin/_lib/types'
 import { X, Phone } from 'lucide-react'
+import { validarCondigoAutorizacion } from '@/app/admin/_lib/configuracion.actions'
 import Cookies from 'js-cookie'
 
 export default function FormEventoNuevo() {
 
     const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null)
     const [clientes, setClientes] = useState<Cliente[]>([])
+
     const [nombre, setNombre] = useState('')
     const [eventoTipoId, setEventoTipoId] = useState('')
     const [fechaEvento, setFechaEvento] = useState<Date | null>(null)
     const [tiposEvento, setTiposEvento] = useState<{ id: string, nombre: string }[]>([])
+
     const [errorEventoTipoId, setErrorEventoTipoId] = useState('')
     const [errorFechaEvento, setErrorFechaEvento] = useState('')
     const [errorCliente, setErrorCliente] = useState('')
+    const [errorNombre, setErrorNombre] = useState('')
+
     const [mostrarListaClientes, setMostrarListaClientes] = useState(false)
     const [guardandoEvento, setGuardandoEvento] = useState(false)
     const [fechaDisponible, setFechaDisponible] = useState(false)
@@ -27,9 +32,14 @@ export default function FormEventoNuevo() {
     const searchParams = useSearchParams();
     const router = useRouter()
 
+    const [desbloquearFechaDuplicada, setDesbloquearFechaDuplicada] = useState(false)
+    const [codigoAutorizacion, setCodigoAutorizacion] = useState('')
+    const [errorCodigoAutorizacion, setErrorCodigoAutorizacion] = useState('')
+
     useEffect(() => {
 
         const clienteId = searchParams ? searchParams.get('clienteId') : null;
+
         if (clienteId) {
             const fetchCliente = async () => {
                 const clientePromise = await obtenerCliente(clienteId)
@@ -85,6 +95,13 @@ export default function FormEventoNuevo() {
             setErrorCliente('')
         }
 
+        if (!nombre) {
+            setErrorNombre('El nombre es requerido')
+            hasError = true
+        } else {
+            setErrorNombre('')
+        }
+
         if (hasError) {
             return
         }
@@ -98,16 +115,14 @@ export default function FormEventoNuevo() {
             userId: user ? user.id : '',
         }
 
-
         setGuardandoEvento(true)
         const response = await crearEvento(eventoNuevo)
-
         if (response) {
             router.push(`/admin/dashboard/eventos/${response.id}`)
         } else {
             alert('Error al crear el evento')
+            setGuardandoEvento(false)
         }
-        // setGuardandoEvento(false)
     }
 
     const handleClienteSeleccionado = (cliente: Cliente) => {
@@ -117,7 +132,6 @@ export default function FormEventoNuevo() {
     }
 
     const handleEliminarClienteSeleccionado = () => {
-        // if (window.confirm('¿Está seguro que deseas cambiar el cliente actual?')) {
         setClienteSeleccionado(null)
         setMostrarListaClientes(true)
         router.replace(``)
@@ -126,14 +140,16 @@ export default function FormEventoNuevo() {
             params.delete('clienteId');
             router.replace(`?${params.toString()}`);
         }
-
     }
 
     const validarFecha = (fecha: Date) => {
+
         const fechaSinHora = new Date(fecha.toISOString()); // Solo la parte de la fecha
+
         setFechaEvento(fechaSinHora)
+
         validarDisponibilidadFecha(fechaSinHora).then(disponible => {
-            // console.log(disponible)
+
             if (!disponible) {
                 setFechaDisponible(true)
                 setErrorFechaEvento('')
@@ -144,7 +160,23 @@ export default function FormEventoNuevo() {
         })
     }
 
-    // console.log(user)
+    const handleDesbloquearFechaDuplicada = async () => {
+        setErrorCodigoAutorizacion('')
+
+        if (!codigoAutorizacion) {
+            setErrorCodigoAutorizacion('Ingrese un código de autorización')
+            return
+        }
+
+        if (codigoAutorizacion) {
+            const validacion = await validarCondigoAutorizacion(codigoAutorizacion)
+            if (validacion) {
+                setDesbloquearFechaDuplicada(true)
+            } else {
+                alert('Código de autorización incorrecto')
+            }
+        }
+    }
 
     return (
         <div className="max-w-md mx-auto shadow-md ">
@@ -236,8 +268,37 @@ export default function FormEventoNuevo() {
                             onChange={e => validarFecha(new Date(e.target.value))}
                             className="bg-zinc-900 border border-zinc-800 rounded w-full py-2 px-3 text-zinc-300"
                         />
-                        {errorFechaEvento ? (
-                            <p className="text-red-500 text-sm">{errorFechaEvento}</p>
+
+                        {errorFechaEvento && !desbloquearFechaDuplicada ? (
+                            <>
+                                <p
+                                    className="bg-red-800/20 text-red-600 text-sm p-3 my-3 text-center rounded border border-red-900">
+                                    {errorFechaEvento}
+                                </p>
+
+                                <div className="mb-4">
+                                    <div className='flex items-center'>
+                                        <input
+                                            type="password"
+                                            id="codigoAutorizacion"
+                                            name="codigoAutorizacion"
+                                            className="bg-zinc-900 border border-zinc-800 rounded py-2 px-3 text-zinc-300 mr-2 w-full placeholder-zinc-500"
+                                            onChange={(e) => setCodigoAutorizacion(e.target.value)}
+                                            value={codigoAutorizacion}
+                                            placeholder="Código de autorización"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDesbloquearFechaDuplicada()}
+                                            className="bg-red-600 text-white text-sm py-3 px-4 rounded whitespace-nowrap"
+                                        >
+                                            Desbloquear fecha
+                                        </button>
+                                    </div>
+                                    {errorCodigoAutorizacion && <p className="text-red-500 text-sm mt-2">{errorCodigoAutorizacion}</p>}
+                                </div>
+
+                            </>
                         ) : (
                             fechaDisponible && <p className="text-green-500 text-sm">Fecha disponible</p>
                         )}
@@ -266,7 +327,7 @@ export default function FormEventoNuevo() {
 
                     <div className="mb-4">
                         <label className="block text-zinc-600 text-sm mb-2" htmlFor="nombre">
-                            Nombre del evento (Opcional)
+                            Nombre del evento
                         </label>
                         <input
                             type="text"
@@ -276,16 +337,19 @@ export default function FormEventoNuevo() {
                             onChange={(e) => setNombre(e.target.value)}
                             className="bg-zinc-900 border border-zinc-800 rounded w-full py-2 px-3 text-zinc-300"
                         />
+                        {errorNombre && <p className="text-red-500 text-sm">{errorNombre}</p>}
                     </div>
 
                     <div className="space-y-3">
+
                         <button
                             type="submit"
-                            className={`font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${guardandoEvento || !fechaDisponible ? 'bg-zinc-800 text-zinc-500' : 'bg-blue-500 text-white'}`}
-                            disabled={guardandoEvento || !fechaDisponible}
+                            className={`font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full ${guardandoEvento || (!fechaDisponible && !desbloquearFechaDuplicada) ? 'bg-zinc-800 text-zinc-500' : 'bg-blue-500 text-white'}`}
+                            disabled={guardandoEvento || (!fechaDisponible && !desbloquearFechaDuplicada)}
                         >
                             {guardandoEvento ? 'Registrando nuevo evento...' : 'Registrar nuevo evento'}
                         </button>
+
                         <button
                             type="button"
                             onClick={() => router.push('/admin/dashboard/eventos')}

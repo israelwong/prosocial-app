@@ -16,6 +16,10 @@ import Wishlist from './Wishlist'
 import { useRouter } from 'next/navigation'
 import { Trash, X } from 'lucide-react';
 
+import { obtenerConteoCotizacionVisitas } from '@/app/admin/_lib/cotizacionVisita.actions'
+import { supabase } from '@/app/admin/_lib/supabase'
+import { Eye } from 'lucide-react'
+
 interface Props {
     cotizacionId: string
 }
@@ -61,6 +65,41 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
     const [clienteNombre, setClienteNombre] = useState('');
     const [clienteTelefono, setClienteTelefono] = useState('');
 
+    const [visitas, setVisitas] = useState<number>(0)
+
+
+    const suscripcionSupabase = () => {
+
+        console.log('Suscribiendo a cambios en CotizacionVisita');
+
+        const subscriptionVisita = supabase
+
+            .channel('realtime:CotizacionVisita')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'CotizacionVisita' },
+                async (payload) => {
+                    console.log('Cambio detectado en CotizacionVisita:', payload);
+
+                    obtenerConteoCotizacionVisitas(cotizacionId).then((conteo) => {
+                        console.log('Visitas realtime:', conteo);
+                        setVisitas(conteo);
+                    });
+                }
+            ).subscribe((status, err) => {
+                if (err) {
+                    console.error('Error en la suscripción CotizacionVisitaDashboard:', err);
+                } else {
+                    console.log('Estado de la suscripción en CotizacionVisitaDashboard:', status);
+                }
+            });
+
+        return () => {
+            //! Eliminar la suscripción cuando el componente se desmonta
+            supabase.removeChannel(subscriptionVisita);
+        };
+    }
+
     useEffect(() => {
         async function fetchData() {
             setLoading(true);
@@ -74,6 +113,11 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 configuracionPromise,
                 condicionesComercialesPromise
             ]);
+
+            obtenerConteoCotizacionVisitas(cotizacionId).then((conteo) => {
+                console.log('Visitas:', conteo);
+                setVisitas(conteo);
+            });
 
             if (cotizacion) {
 
@@ -99,6 +143,8 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                         userId: servicio.userId,
                     };
                 }));
+
+
                 setServicios(serviciosData);
 
                 //obtener evento por id
@@ -139,6 +185,9 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 }));
                 setCondicionesComerciales(updatedCondicionesComerciales);
             }
+
+            //suscribirse a cambios en la tabla CotizacionVisita
+            suscripcionSupabase()
 
             setLoading(false);
         }
@@ -420,16 +469,19 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
 
                         <div className='mb-5 md:mb-0'>
                             <h1 className='text-2xl'>
-                                Cotización del evento
-
-                                {nombreCotizacion === '' ? (
-                                    <span className='text-green-500'>
-                                        {eventoNombre}
-                                    </span>
-                                ) : (
+                                Cotización del evento {eventoNombre === '' ? (
                                     <span className='bg-red-700 text-white px-3 py-1 rounded-full ml-2 text-sm leading-3 animate-pulse'>
                                         Nombre del evento no definido
                                     </span>
+                                ) : (
+
+
+                                    <>
+                                        <span className='text-green-500'>
+                                            {eventoNombre}
+                                        </span>
+
+                                    </>
                                 )}
 
                             </h1>
@@ -440,6 +492,11 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
 
                         {/* //! MENU */}
                         <div className='items-center flex flex-wrap  justify-start md:space-x-2 space-y-1 md:space-y-0 gap-2 md:text-md text-sm'>
+
+                            <p className='text-yellow-500 text-lg flex items-center'>
+                                <Eye size={16} className='mr-2' /> {visitas}
+                            </p>
+
 
                             <button className='px-4 py-2 border border-yellow-800 rounded-md bg-zinc-900 flex items-center' onClick={() => router.push(`/admin/dashboard/contactos/${clienteId}`)}>
                                 <User size={16} className='mr-1' /> Cliente {clienteNombre}
@@ -453,7 +510,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                             </button>
 
                             <button
-                                onClick={() => window.open(`/cotizacion/${cotizacionId}`, '_blank')}
+                                onClick={() => window.open(`/cotizacion/${cotizacionId}?preview=true`, '_blank')}
                                 className='flex items-center px-4 py-2 border border-purple-800 rounded-md justify-center mb-2'
                             >
                                 <SquareArrowOutUpRight size={12} className='mr-1' /> Vista previa
@@ -664,7 +721,8 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                             )}
 
                             {/* //! PAGO EN EFECTIVO */}
-                            {metodoPago?.metodo_pago === 'Efectivo' && (
+
+                            {metodoPago?.metodo_pago === 'Efectivo' && cotizacionStatus !== 'aprobada' && (
                                 <div>
                                     <button
                                         onClick={() => !pagandoEfectivo && !errorConfirmarMonto && handlePagoEfectivo()}
@@ -682,13 +740,13 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                 </p>
                             )}
 
-                            {metodoPago?.metodo_pago !== 'Efectivo' && (
+                            {(metodoPago?.metodo_pago !== 'Efectivo' || cotizacionStatus === 'aprobada') && (
                                 <button
                                     onClick={() => !actualizando && handleActualizarCotizacion()}
                                     className={`bg-blue-900 text-white px-3 py-3 rounded-md w-full mb-2 ${actualizando ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     disabled={actualizando}
                                 >
-                                    {actualizando ? 'Actualizando...' : 'Actualizar cotización'}
+                                    {actualizando ? 'Actualizando información...' : 'Actualizar cotización'}
                                 </button>
                             )}
 

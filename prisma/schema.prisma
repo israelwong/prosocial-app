@@ -19,6 +19,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Sesion    Sesion[]
+  Agenda    Agenda[]
+  Pago      Pago[]
 }
 
 model Sesion {
@@ -63,6 +65,7 @@ model Evento {
   userId         String?
   EventoBitacora EventoBitacora[]
   Cotizacion     Cotizacion[]
+  Agenda         Agenda[]
 }
 
 model EventoBitacora {
@@ -117,6 +120,11 @@ model Pago {
   status                             String                            @default("pending") //pending, succeeded, failed
   createdAt                          DateTime                          @default(now())
   updatedAt                          DateTime                          @updatedAt
+  //agregadas
+  userId                             String?
+  User                               User?                             @relation(fields: [userId], references: [id])
+  tipo_transaccion                   String?                           @default("ingreso") //ingreso, egreso
+  categoria_transaccion              String?                           @default("abono") //abono, honorarios, servicio, producto, comision, ajuste
 }
 
 model Cotizacion {
@@ -138,6 +146,7 @@ model Cotizacion {
   Servicio                           CotizacionServicio[]
   contratoId                         String?
   Pago                               Pago[]
+  CotizacionVisita                   CotizacionVisita[]
 }
 
 model CotizacionServicio {
@@ -158,6 +167,13 @@ model CotizacionServicio {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model CotizacionVisita {
+  id           String     @id @default(cuid())
+  cotizacionId String
+  Cotizacion   Cotizacion @relation(fields: [cotizacionId], references: [id])
+  createdAt    DateTime   @default(now())
 }
 
 model Servicio {
@@ -240,6 +256,7 @@ model Configuracion {
   utilidad_producto Float
   comision_venta    Float
   sobreprecio       Float
+  claveAutorizacion String?
   status            String   @default("active")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -288,12 +305,6 @@ model CondicionesComercialesMetodoPago {
   updatedAt                DateTime               @updatedAt
   Cotizacion               Cotizacion[]
   Pago                     Pago[]
-}
-
-model CotizacionVisita {
-  id           String   @id @default(cuid())
-  cotizacionId String
-  createdAt    DateTime @default(now())
 }
 
 //Anuncio
@@ -355,4 +366,29 @@ model AnuncioVisita {
   anuncioId String
   fecha     DateTime
   createdAt DateTime @default(now())
+}
+
+model Agenda {
+  id            String    @id @default(cuid())
+  userId        String
+  User          User      @relation(fields: [userId], references: [id])
+  eventoId      String
+  Evento        Evento    @relation(fields: [eventoId], references: [id])
+  concepto      String?
+  descripcion   String?
+  googleMapsUrl String?
+  direccion     String?
+  fecha         DateTime?
+  hora          String?
+  status        String    @default("pendiente")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  agendaTipo    String?
+}
+
+model AgendaTipo {
+  id        String   @id @default(cuid())
+  nombre    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

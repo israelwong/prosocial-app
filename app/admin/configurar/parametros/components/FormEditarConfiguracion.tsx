@@ -32,6 +32,7 @@ export default function FormEditarConfiguracion({ configuracionId, onClose, onSu
                     comision_venta: data.comision_venta ?? 0,
                     sobreprecio: data.sobreprecio ?? 0,
                     status: data.status ?? 'activo',
+                    claveAutorizacion: data.claveAutorizacion ?? '',
                 });
             }
         };
@@ -58,10 +59,7 @@ export default function FormEditarConfiguracion({ configuracionId, onClose, onSu
             newErrors.utilidad_servicio = 'La utilidad para servicios requerida';
             valid = false;
         }
-        if ((formData?.utilidad_producto ?? 0) <= 0) {
-            newErrors.utilidad_producto = 'La utilidad para productos es requerida';
-            valid = false;
-        }
+
         if ((formData?.comision_venta ?? 0) <= 0) {
             newErrors.comision_venta = 'La comisión para ventas es requerida';
             valid = false;
@@ -137,6 +135,7 @@ export default function FormEditarConfiguracion({ configuracionId, onClose, onSu
                     />
                     {errors.comision_venta && <p className="text-red-500 text-sm">{errors.comision_venta}</p>}
                 </div>
+
                 <div className="mb-4">
                     <label className="block text-gray-700">Sobreprecio para promociones</label>
                     <input
@@ -148,6 +147,7 @@ export default function FormEditarConfiguracion({ configuracionId, onClose, onSu
                     />
                     {errors.sobreprecio && <p className="text-red-500 text-sm">{errors.sobreprecio}</p>}
                 </div>
+
                 <div className="mb-4">
                     <label className="block text-gray-700">Status</label>
                     <select
@@ -162,6 +162,20 @@ export default function FormEditarConfiguracion({ configuracionId, onClose, onSu
                     </select>
                     {errors.status && <p className="text-red-500 text-sm">{errors.status}</p>}
                 </div>
+
+
+                <div className="mb-4">
+                    <label className="block text-gray-700">Clave de autorizacion para desbloqueo de opciones</label>
+                    <input
+                        type="text"
+                        name="claveAutorizacion"
+                        value={formData.claveAutorizacion ?? ''}
+                        onChange={handleChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                    />
+                </div>
+
+
                 <button
                     type="submit"
                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"

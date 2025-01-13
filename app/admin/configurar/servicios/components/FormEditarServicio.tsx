@@ -38,6 +38,8 @@ const FormEditarServicio = ({ servicioId }: Props) => {
     const [gastosTemporales, setGastosTemporales] = useState([] as ServicioGasto[]);
     const [tipo, setTipo] = useState('servicio'); //tipo_utilidad
     const [statusUpdate, setStatusUpdate] = useState('');
+    const [actualizando, setActualizando] = useState(false);
+    const [actualizandoParaCerrar, setActualizandoParaCerrar] = useState(false);
 
     const [errors, setErrors] = useState<{
         nombre?: string; costo?: string; precio?: string; categoria?: string;
@@ -56,7 +58,7 @@ const FormEditarServicio = ({ servicioId }: Props) => {
 
         if (!nombre) newErrors.nombre = 'El nombre es requerido';
         if (!costo) newErrors.costo = 'El costo es requerido';
-        if (!utilidadPorcentaje) newErrors.utilidadPorcentaje = 'El porcentaje de utilidad es requerido';
+        if (utilidadPorcentaje === undefined) newErrors.utilidadPorcentaje = 'El porcentaje de utilidad es requerido';
         if (!utilidadMonto) newErrors.utilidadMonto = 'El monto de utilidad es requerido';
         if (!categoria) newErrors.categoria = 'La categoría es requerida';
         if (!precioPublico) newErrors.precio_publico = 'El precio público es requerido';
@@ -72,6 +74,8 @@ const FormEditarServicio = ({ servicioId }: Props) => {
     const handleSubmit = async (action: string) => {
 
         const newErrors = validate();
+        // console.log(newErrors);
+
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             return;
@@ -92,14 +96,16 @@ const FormEditarServicio = ({ servicioId }: Props) => {
 
         const result = await actualizarServicio(servicioActualizado);
         if (action === 'updateAndClose') {
+            setActualizandoParaCerrar(true);
             router.push('/admin/configurar/servicios');
         } else {
-
             if (result.success) {
+                setActualizando(true);
                 setStatusUpdate('Servicio actualizado correctamente');
                 setTimeout(() => {
                     setStatusUpdate('');
                 }, 2000);
+                setActualizando(false);
             }
         }
     };
@@ -132,7 +138,11 @@ const FormEditarServicio = ({ servicioId }: Props) => {
 
     useEffect(() => {
 
-        obtenerServicio(servicioId).then(servicio => {
+
+        Promise.all([
+            obtenerServicio(servicioId),
+            obtenerGastosPorServicio(servicioId)
+        ]).then(([servicio, gastos]) => {
             if (servicio) {
                 const selectedCategoria = categorias.find(cat => cat.id === servicio.servicioCategoriaId);
                 setCategoria(selectedCategoria || null);
@@ -150,9 +160,7 @@ const FormEditarServicio = ({ servicioId }: Props) => {
                 setTipo('producto');
                 setUtilidadPorcentaje(configuracion?.utilidad_producto);
             }
-        });
 
-        obtenerGastosPorServicio(servicioId).then(gastos => {
             if (gastos) {
                 setGastosTemporales(gastos);
             }
@@ -440,7 +448,6 @@ const FormEditarServicio = ({ servicioId }: Props) => {
                 {statusUpdate && <p
                     className="
                     bg-green-800/50 
-                    position: fixed
                     bottom-5
                     right-5
                     p-5 text-center 
@@ -453,20 +460,24 @@ const FormEditarServicio = ({ servicioId }: Props) => {
                 <div className='flex justify-between gap-2'>
                     <button
                         onClick={() => handleSubmit('updateAndClose')}
-                        className="w-full bg-green-700 text-white py-2 rounded hover:bg-blue-700">
-                        Actualizar y cerrar ventana
+                        className={`w-full py-2 rounded ${actualizandoParaCerrar ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-700 hover:bg-blue-700'} text-white`}
+                        disabled={actualizandoParaCerrar}
+                    >
+                        {actualizandoParaCerrar ? 'Actualizando...' : 'Actualizar y cerrar ventana'}
                     </button>
                     <button
                         onClick={() => handleSubmit('update')}
-                        className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-700">
-                        Actualizar
+                        className={`w-full py-2 rounded ${actualizando ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-700'} text-white`}
+                        disabled={actualizando}
+                    >
+                        {actualizando ? 'Actualizando...' : 'Actualizar'}
                     </button>
                 </div>
                 <button
                     onClick={() => router.push('/admin/configurar/servicios')}
                     className="w-full bg-red-500 text-white py-2 rounded mt-4 hover:bg-red-700"
                 >
-                    Cancelar
+                    Cerrar ventana
                 </button>
 
                 <div className='flex justify-center mt-4'>

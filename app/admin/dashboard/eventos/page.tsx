@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import ListaEventos from './components/ListaEventos';
 
 export const metadata: Metadata = {
-    title: 'Eventos',
+    title: 'Eventos en prospección',
 }
 
 export default function page() {

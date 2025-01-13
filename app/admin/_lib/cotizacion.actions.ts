@@ -6,22 +6,51 @@ import prisma from './prismaClient';
 
 export async function obtenerCotizacionesPorEvento(eventoId: string) {
 
-    return await prisma.cotizacion.findMany({
+    const cotizaciones = await prisma.cotizacion.findMany({
         where: {
-            eventoId
-        }
-        , orderBy: {
+            eventoId,
+        },
+        orderBy: {
             createdAt: 'desc'
         }
-    })
+    });
+
+    const cotizacionesWithVisitaCount = await Promise.all(cotizaciones.map(async (cotizacion) => {
+        const visitas = await prisma.cotizacionVisita.count({
+            where: {
+                cotizacionId: cotizacion.id
+            }
+        });
+        return {
+            ...cotizacion,
+            visitas
+        };
+    }));
+
+    return cotizacionesWithVisitaCount;
 }
 
 export async function obtenerCotizacion(cotizacionId: string) {
-    return await prisma.cotizacion.findUnique({
+    const cotizacion = await prisma.cotizacion.findUnique({
         where: {
             id: cotizacionId
         }
-    })
+    });
+
+    if (!cotizacion) {
+        return null;
+    }
+
+    const visitas = await prisma.cotizacionVisita.count({
+        where: {
+            cotizacionId: cotizacion.id
+        }
+    });
+
+    return {
+        ...cotizacion,
+        visitas
+    };
 }
 
 export async function crearCotizacion(data: Cotizacion) {
@@ -55,7 +84,44 @@ export async function crearCotizacion(data: Cotizacion) {
             }
         }
 
-        return { success: true }
+        return { success: true, cotizacionId: response.id };
+    } catch {
+        return { error: 'Error creating cotizacion' }
+    }
+}
+
+export async function crearCotizacionAutorizada(data: Cotizacion) {
+
+    try {
+        const response = await prisma.cotizacion.create({
+            data: {
+                eventoTipoId: data.eventoTipoId,
+                eventoId: data.eventoId,
+                nombre: data.nombre,
+                precio: data.precio,
+                condicionesComercialesId: data.condicionesComercialesId,
+                condicionesComercialesMetodoPagoId: data.condicionesComercialesMetodoPagoId,
+                status: 'aprobada',
+            }
+        })
+
+        if (response.id) {
+            if (data.servicios) {
+                for (const servicio of data.servicios) {
+                    await prisma.cotizacionServicio.create({
+                        data: {
+                            cotizacionId: response.id!,
+                            servicioId: servicio.id ?? '',
+                            cantidad: servicio.cantidad,
+                            posicion: servicio.posicion,
+                            servicioCategoriaId: servicio.servicioCategoriaId ?? '',
+                        }
+                    })
+                }
+            }
+        }
+
+        return { success: true, cotizacionId: response.id };
     } catch {
         return { error: 'Error creating cotizacion' }
     }
@@ -129,6 +195,12 @@ export async function eliminarCotizacion(cotizacionId: string) {
 
     try {
         await prisma.cotizacionServicio.deleteMany({
+            where: {
+                cotizacionId
+            }
+        })
+
+        await prisma.cotizacionVisita.deleteMany({
             where: {
                 cotizacionId
             }

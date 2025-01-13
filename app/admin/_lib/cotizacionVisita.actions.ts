@@ -8,3 +8,12 @@ export async function registrarVisita(cotizacionId: string) {
         }
     })
 }
+
+export async function obtenerConteoCotizacionVisitas(cotizacionId: string) {
+    const count = await prisma.cotizacionVisita.count({
+        where: {
+            cotizacionId
+        },
+    });
+    return count;
+}

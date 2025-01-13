@@ -51,7 +51,7 @@ export default function FichaBalanceFinanciero({ cotizacionId }: Props) {
     }, [cotizacionId, pagoRegistrado, pagoEliminado, pagoActualizado])
 
     const handlePagoRegistrado = (success: boolean) => {
-        console.log('Pago registrado', success)
+        // console.log('Pago registrado', success)
         if (success) {
             setPagoRegistrado(true)
             setIsModalPagoNuevoOpen(false)

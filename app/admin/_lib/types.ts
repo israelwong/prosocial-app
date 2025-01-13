@@ -62,18 +62,7 @@ export interface Configuracion {
     comision_venta: number
     sobreprecio: number
     status?: string | null
-    createdAt?: Date | undefined
-    updatedAt?: Date | undefined
-}
-
-export interface Configuracion {
-    id?: string
-    nombre: string
-    utilidad_producto: number
-    utilidad_servicio: number
-    comision_venta: number
-    sobreprecio: number
-    status?: string | null
+    claveAutorizacion?: string | null
     createdAt?: Date | undefined
     updatedAt?: Date | undefined
 }
@@ -293,4 +282,70 @@ export interface CotizacionVisita {
     id?: string
     cotizacionId: string
     createdAt?: Date
+}
+
+export interface Agenda {
+    id?: string | undefined
+    userId?: string | null
+    eventoId?: string | null
+    concepto?: string | null
+    descripcion?: string | null
+    googleMapsUrl?: string | null
+    direccion?: string | null
+    fecha?: Date | null
+    hora?: string | null
+    status?: string | null
+    createdAt?: Date | null
+    updatedAt?: Date | null
+    agendaTipo?: string | null;
+}
+
+export interface AgendaTipo {
+    id?: string
+    nombre: string
+    createdAt?: Date
+    updatedAt?: Date
+}
+
+export interface Campania {
+    id?: string
+    nombre: string
+    status?: string
+    createdAt?: Date
+    updatedAt?: Date
+    Anuncio?: Anuncio[]
+}
+
+export interface AnuncioPlataforma {
+    id?: string
+    nombre: string // facebook, instagram, google, youtube, impreso
+    status?: string
+    createdAt?: Date
+    updatedAt?: Date
+    Anuncio?: Anuncio[]
+}
+
+export interface AnuncioTipo {
+    id?: string
+    nombre: string // imagen, video, carousel
+    status?: string
+    createdAt?: Date
+    updatedAt?: Date
+    anuncio?: Anuncio[]
+}
+
+export interface Anuncio {
+    id?: string
+    campaniaId: string
+    Campania?: Campania
+    nombre: string
+    anuncioTipoId: string
+    AnuncioTipo?: AnuncioTipo
+    anuncioCategoriaId: string
+    anuncioPlataformaId: string
+    AnuncioPlataforma?: AnuncioPlataforma
+    imagen_url: string
+    status: string
+    createdAt?: Date
+    updatedAt?: Date
 }

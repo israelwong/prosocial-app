@@ -87,11 +87,11 @@ function SkeletonPage() {
 
                 <div className='py-6 mx-auto text-center'>
                     <Image
-                        alt='ProSocial'
-                        src='https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_gris.svg'
-                        width={500} height={300}
-                        className='mx-auto h-8 md:h-12'
-                        unoptimized
+                        src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_gris.svg"
+                        alt="ProSocial MX"
+                        className="mx-auto"
+                        width={150}
+                        height={300}
                     />
                 </div>
 

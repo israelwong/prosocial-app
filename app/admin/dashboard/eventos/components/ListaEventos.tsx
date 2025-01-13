@@ -1,36 +1,25 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import Cookies from 'js-cookie'
-import { User } from '@/app/admin/_lib/types'
-import { obtenerEventosDetalle, asignarEventoUser } from '@/app/admin/_lib/evento.actions'
 
+import Cookies from 'js-cookie'
 import { supabase } from '@/app/admin/_lib/supabase'
-import FichaEvento from './FichaEvento'
+
+import { User, EventoDetalle } from '@/app/admin/_lib/types'
+
+import { obtenerEventosDetalle } from '@/app/admin/_lib/evento.actions'
 import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
 import { obtenerCliente } from '@/app/admin/_lib/cliente.actions'
 
+import FichaEvento from './FichaEvento'
+
 export default function ListaEventos() {
 
-    interface EventoDetalle {
-        id: string;
-        evento: string;
-        cliente: string;
-        creacion: string;
-        status: string;
-        tipoEvento: string;
-        fecha_evento: string;
-        user: string;
-        fecha_actualizacion: string;
-    }
-
+    const router = useRouter()
     const [eventosDetalle, setEventoDetalle] = useState<EventoDetalle[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const [filtro, setFiltro] = useState<string>('')
-    const [user, setUser] = useState<User>({} as User)
-    const router = useRouter()
-    const searchParams = useSearchParams()
+    const [userId, setUserId] = useState<string>('')
 
     const fetchData = async () => {
         setLoading(true)
@@ -48,53 +37,56 @@ export default function ListaEventos() {
         setLoading(false)
     }
 
+    const suscripcionSupabase = () => {
+        const subscriptionNuevo = supabase.channel('realtime:Evento:nuevo').on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'Evento' },
+            async (payload) => {
+                const newEvento = payload.new;
+                // console.log('Se realizo una insersión":', payload);
+                // console.log('Nuevo evento:', newEvento);
+                //newEvento: objeto que viene desde la base de datos de supabase y no trae el nombre del cliente ni el tipo de evento
+                const nombreCliente = await obtenerCliente(newEvento.clienteId)
+                const nombreTipoEvento = await obtenerTipoEvento(newEvento.eventoTipoId)
+                setEventoDetalle(prevEventos => [
+                    ...prevEventos,
+                    {
+                        id: newEvento.id,
+                        cliente: nombreCliente?.nombre || '',
+                        status: newEvento.status,
+                        creacion: newEvento.creacion ? new Date(newEvento.creacion).toISOString() : '',
+                        fecha_evento: newEvento.fecha_evento ? new Date(newEvento.fecha_evento).toISOString() : '',
+                        fecha_actualizacion: newEvento.fecha_actualizacion ? new Date(newEvento.fecha_actualizacion).toISOString() : '',
+                        tipoEvento: nombreTipoEvento?.nombre || '',
+                        evento: newEvento.nombre || '',
+                        user: newEvento.user || ''
+                    }
+                ]);
+            }
+        ).subscribe(status => {
+            console.log('Estado de la suscripción:', status)
+        });
+
+        return () => {
+            supabase.removeChannel(subscriptionNuevo);
+        };
+    }
+
+
     useEffect(() => {
 
-        const isSeguimiento = window.location.pathname.includes('/dashboard/eventos');
-
-        if (isSeguimiento) {
-
-            const subscriptionNuevo = supabase.channel('realtime:Evento:nuevo').on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'Evento' },
-                async (payload) => {
-                    // console.log('Se realizo una insersión":', payload);
-                    const newEvento = payload.new;
-
-                    //newEvento: objeto que viene desde la base de datos de supabase y no trae el nombre del cliente ni el tipo de evento
-                    const nombreCliente = await obtenerCliente(newEvento.clienteId)
-                    const nombreTipoEvento = await obtenerTipoEvento(newEvento.eventoTipoId)
-                    setEventoDetalle(prevEventos => [
-                        ...prevEventos,
-                        {
-                            id: newEvento.id,
-                            cliente: nombreCliente?.nombre || '',
-                            status: newEvento.status,
-                            creacion: newEvento.creacion ? new Date(newEvento.creacion).toISOString() : '',
-                            fecha_evento: newEvento.fecha_evento ? new Date(newEvento.fecha_evento).toISOString() : '',
-                            fecha_actualizacion: newEvento.fecha_actualizacion ? new Date(newEvento.fecha_actualizacion).toISOString() : '',
-                            tipoEvento: nombreTipoEvento?.nombre || '', // Asegúrate de mapear correctamente el campo
-                            evento: newEvento.evento || '',
-                            user: newEvento.user || ''
-                        }
-                    ]);
-                }
-            ).subscribe();
-
-            // Obtener eventos
-            fetchData();
-
-            return () => {
-                supabase.removeChannel(subscriptionNuevo);
-            };
-        }
-
-        // Obtener usuario de la cookie
+        // Obtener usuario actual
         const userString = Cookies.get('user') || ''
         const userObject = userString ? JSON.parse(userString) : {} as User
-        setUser(userObject)
+        setUserId(userObject.id || '')
 
-    }, [searchParams])
+        // Obtener eventos
+        fetchData();
+
+        // Suscripción a eventos nuevos
+        suscripcionSupabase();
+
+    }, [])
 
     const eventosFiltrados = eventosDetalle.filter(evento => {
         const cumpleFiltro =
@@ -115,18 +107,6 @@ export default function ListaEventos() {
         seguimientos: eventosFiltrados.filter(evento => evento.status === 'seguimiento'),
     }
 
-    const handleOpen = (id: string, status: string) => {
-
-        if (status === 'nuevo') {
-            asignarEventoUser(id, user.id?.toString() || '', 'seguimiento').then(() => {
-                router.push(`/admin/dashboard/eventos/${id}`)
-            })
-        }
-
-        //si status es nuevo, actualizar a seguimiento y asignar a usuario quien lo abrio
-        router.push(`/admin/dashboard/eventos/${id}`)
-    }
-
     return (
         <div className='mx-auto max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg xl:max-w-screen-xl'>
             {loading ? (
@@ -139,7 +119,7 @@ export default function ListaEventos() {
                 <div className='overflow-x-auto'>
                     <div className='flex justify-between items-center mb-5'>
                         <h1 className='text-2xl text-zinc-400'>
-                            Eventos registrados
+                            Promesas
                         </h1>
                         <button
                             className='bg-zinc-800 border border-zinc-700 px-3 py-2 rounded-md text-zinc-300 text-sm'
@@ -164,7 +144,11 @@ export default function ListaEventos() {
                             <div key={estado}>
                                 <h2 className='text-xl text-zinc-400 capitalize mb-4'>{estado}</h2>
                                 {eventos.map(evento => (
-                                    <FichaEvento key={evento.id} evento={evento} handleOpen={handleOpen} />
+                                    <FichaEvento
+                                        key={evento.id}
+                                        evento={evento}
+                                        userId={userId}
+                                    />
                                 ))}
                             </div>
                         ))}

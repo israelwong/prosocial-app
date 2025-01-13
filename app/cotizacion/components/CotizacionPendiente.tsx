@@ -1,18 +1,19 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation';
+
+import { Servicio, MetodoPago, CondicionesComerciales, ServicioCategoria } from '@/app/admin/_lib/types'
 import { obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
 import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
-import { Servicio, MetodoPago, CondicionesComerciales, ServicioCategoria } from '@/app/admin/_lib/types'
 import { cotizacionDetalle } from '@/app/admin/_lib/cotizacion.actions';
+import { registrarVisita } from '@/app/admin/_lib/cotizacionVisita.actions';
+
 import { ChevronDown, ChevronUp } from 'lucide-react';
+
 import SkeletonPendiente from './skeletonPendiente';
 import Contrato from './Contrato';
 import Wishlist from './Wishlist';
-// import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
-// import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
-// import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
-import { registrarVisita } from '@/app/admin/_lib/cotizacionVisita.actions';
+
 
 interface Props {
     cotizacionId: string
@@ -162,9 +163,11 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         const fromListaParam = urlParams.get('param');
         const isPrev = urlParams.get('preview');
 
-
-        if (!isPrev && process.env.NODE_ENV !== 'development') {
-            registrarVisita(cotizacionId);
+        if (!isPrev) {
+            if (!sessionStorage.getItem('visitaRegistrada')) {
+                registrarVisita(cotizacionId);
+                sessionStorage.setItem('visitaRegistrada', 'true');
+            }
         }
 
         // REVISAR SI VIENE DE LISTA
@@ -183,8 +186,6 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         } else {
             setMetodoPagoId(metodoPago?.id || '');
         }
-
-
 
         if (condicionComercialesId && metodoPagoId) {
             const condicion = condicionesComerciales.find(cond => cond.id === condicionComercialesId);
@@ -266,6 +267,10 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
     }
 
     const handleRegresar = () => {
+        if (!sessionStorage.getItem('visitaRegistrada')) {
+            registrarVisita(cotizacionId);
+            sessionStorage.setItem('visitaRegistrada', 'true');
+        }
         router.back()
     }
 

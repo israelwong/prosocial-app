@@ -2,14 +2,17 @@
 import React, { useState, useEffect } from 'react'
 import { Cliente } from '@/app/admin/_lib/types'
 import { obtenerCliente, actualizarCliente, eliminarCliente } from '@/app/admin/_lib/cliente.actions'
-import { RefreshCw, Trash } from 'lucide-react'
+import { Trash } from 'lucide-react'
 import { obtenerCanales } from '@/app/admin/_lib/canal.actions'
+import { useRouter } from 'next/navigation'
 
 interface Props {
     clienteId: string
 }
 
 function FormClienteEditar({ clienteId }: Props) {
+
+    const router = useRouter();
 
     const [cliente, setCliente] = useState<Cliente | null>(null);
     const [nombre, setNombre] = useState('');
@@ -125,8 +128,10 @@ function FormClienteEditar({ clienteId }: Props) {
 
             <div className='flex justify-between items-center mb-3'>
                 <h2 className=' text-xl text-zinc-500'>Datos generales</h2>
-                <button onClick={handleReset} className="p-2">
-                    <RefreshCw size={16} className='inline-block ml-2' />
+                <button onClick={handleReset}
+                    className="bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md text-sm px-4 py-2"
+                >
+                    Restaurar valores
                 </button>
             </div>
 
@@ -207,7 +212,6 @@ function FormClienteEditar({ clienteId }: Props) {
                         <p className='text-sm text-zinc-500'>
                             {new Date(fechaActualizacion).toLocaleDateString()}
                         </p>
-
                     </div>
                 </div>
 
@@ -219,16 +223,23 @@ function FormClienteEditar({ clienteId }: Props) {
 
                 <button
                     onClick={handleSubmit}
-                    className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                    className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
                 >
                     Actualizar información
+                </button>
+
+                <button
+                    onClick={() => router.back()}
+                    className="w-full bg-red-600 text-white py-2 px-4 rounded-lg mt-4 items-center justify-center"
+                >
+                    Cerrar ventana
                 </button>
 
                 <button
                     onClick={() => handleEliminarCliente()}
                     className="w-full text-red-500 text-sm py-2 px-4 rounded-lg mt-4 items-center justify-center"
                 >
-                    <Trash size={12} className='inline-block mr-1' /> Eliminar cliente
+                    <Trash size={12} className='inline-block mr-1' /> Eliminar contacto
                 </button>
             </div>
         </div>

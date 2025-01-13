@@ -68,7 +68,7 @@ function Navbar() {
         <div className='flex flex-col md:flex-row justify-between items-center px-5 py-2 border-b border-zinc-800'>
             <div className='flex justify-between w-full md:w-auto'>
                 <div className='flex text-lg text-zinc-300'>
-                    <Image unoptimized className='mr-2' src='https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/isotipo_gris.svg' width={20} height={20} alt='Logo' />
+                    <Image className='mr-2' src='https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/isotipo_gris.svg' width={20} height={20} alt='Logo' />
                     ProSocial {user && <span className='text-zinc-600 ml-2'>{user.username}</span>}
                 </div>
                 <button className='md:hidden' onClick={() => setMenuOpen(!menuOpen)}>
