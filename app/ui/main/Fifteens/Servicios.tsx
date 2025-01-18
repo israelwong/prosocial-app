@@ -1,12 +1,12 @@
 'use client';
 import React from 'react'
-// import { Fade } from 'react-awesome-reveal';
 import TitlePulse from '@/app/ui/main/TitlePulse';
 import SlideFotosSesionesVestido from '@/app/ui/main/Fifteens/SlideFotosSesionesVestido';
 import SlideFotosSesionesCasuales from '@/app/ui/main/Fifteens/SlideFotosSesionesCasuales';
 import SlideFotosEvento from '@/app/ui/main/Fifteens/SlideFotosEvento';
 import VideoPlayer from '@/app/ui/main/VideoPlayer';
 import Hook from '@/app/ui/main/Hook';
+import { ArrowDown } from 'lucide-react';
 
 function Servicios() {
 
@@ -42,7 +42,7 @@ function Servicios() {
 
             {/* <!-- Separador --> */}
             <div className="text-center mx-auto animate-pulse">
-                <i className="text-xl fas fa-plus-circle"></i>
+                <ArrowDown className="mx-auto" />
             </div>
             {/* <!-- Separador --> */}
 
@@ -61,7 +61,7 @@ function Servicios() {
 
             {/* <!-- Separador --> */}
             <div className="text-center mx-auto animate-pulse">
-                <i className="text-xl fas fa-plus-circle"></i>
+                <ArrowDown className="mx-auto" />
             </div>
             {/* <!-- Separador --> */}
 
@@ -89,7 +89,7 @@ function Servicios() {
 
             {/* <!-- Separador --> */}
             <div className="text-center mx-auto animate-pulse">
-                <i className="text-xl fas fa-plus-circle"></i>
+                <ArrowDown className="mx-auto" />
             </div>
             {/* <!-- Separador --> */}
 
@@ -105,14 +105,14 @@ function Servicios() {
                     </p>
                 </div>
 
-                <div className="max-w-screen-md mx-auto">
+                {/* <div className="max-w-screen-md mx-auto">
                     <VideoPlayer
                         src={'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/reels/fifteens/reel_sesiones_2019.mp4?t=2024-09-29T01%3A57%3A43.146Z'}
                         autoPlay={true}
                         muted={true}
                         loop={true}
                     />
-                </div>
+                </div> */}
 
             </div>
             {/* </Fade> */}
@@ -137,12 +137,11 @@ function Servicios() {
 
             {/* <!-- Separador --> */}
             <div className="text-center mx-auto animate-pulse">
-                <i className="text-xl fas fa-plus-circle"></i>
+                <ArrowDown className="mx-auto" />
             </div>
             {/* <!-- Separador --> */}
 
             {/* <!-- VIDEO DE EVENTO --> */}
-            {/* <Fade > */}
             <div className="mb-5">
                 <div className="pt-10 px-10 md:max-w-screen-md mx-auto">
                     <TitlePulse titulo={"Cinematografía para evento"} />
@@ -160,9 +159,6 @@ function Servicios() {
                 </div>
 
             </div>
-            {/* </Fade> */}
-
-
 
         </div>
     )

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import VideoPlayer from "./VideoPlayer";
+// import VideoPlayer from "./VideoPlayer";
 
 function SlideVideoProduccionSesiones() {
   useEffect(() => {
@@ -43,20 +43,20 @@ function SlideVideoProduccionSesiones() {
         <div className="overflow-hidden" data-glide-el="track">
           <ul className="whitespace-no-wrap flex-no-wrap [backface-visibility: hidden] [transform-style: preserve-3d] [touch-action: pan-Y] [will-change: transform] relative flex w-full overflow-hidden p-0">
             <li className="text-center">
-              <VideoPlayer
+              {/* <VideoPlayer
                 src={"./video/produccion/Dron-low-m.mp4"}
                 autoPlay={true}
                 muted={true}
                 loop={0}
-              />
+              /> */}
             </li>
             <li className="text-center">
-              <VideoPlayer
+              {/* <VideoPlayer
                 src={"./video/produccion/Ronin-low-m.mp4"}
                 autoPlay={true}
                 muted={true}
                 loop={0}
-              />
+              /> */}
             </li>
           </ul>
         </div>

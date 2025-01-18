@@ -9,9 +9,11 @@ export default function AdminLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <div className="antialiased h-screen">
+        <div className="antialiased h-screen flex flex-col">
             <Navbar />
-            {children}
+            <main className="flex-grow">
+                {children}
+            </main>
             <Footer />
             <GoogleTagManager gtmId="GTM-WCG8X7J" />
         </div>

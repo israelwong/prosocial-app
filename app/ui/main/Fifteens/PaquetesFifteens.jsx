@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import BtnPromocion from "@/app/ui/main/BtnPromocion";
 import Link from "next/link";
+import { Check, CircleX } from "lucide-react";
 
 export default function PaquetesFifteens() {
   const [tabSelected, setTabSelected] = useState(1);
@@ -42,9 +43,9 @@ export default function PaquetesFifteens() {
                 </td>
                 <td className="border border-slate-700 p-3">
                   {item.included ? (
-                    <i className="text-pink-500 fas fa-check-circle"></i>
+                    <Check />
                   ) : (
-                    <i className="text-slate-700 fas fa-times-circle"></i>
+                    <CircleX />
                   )}
                 </td>
               </tr>

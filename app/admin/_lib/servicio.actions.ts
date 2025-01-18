@@ -2,9 +2,6 @@
 import { Servicio } from "@/app/admin/_lib/types";
 import { crearGasto, eliminarGasto, obtenerGastosPorServicio } from '@/app/admin/_lib/gastos.actions';
 import { eliminarGastos } from '@/app/admin/_lib/gastos.actions';
-
-// import { PrismaClient } from "@prisma/client";
-// const prisma = new PrismaClient();
 import prisma from './prismaClient';
 
 export async function obtenerServicos() {

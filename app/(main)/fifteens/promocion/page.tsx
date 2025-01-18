@@ -47,35 +47,20 @@ function page() {
               />
 
               {/* <!-- lista --> */}
-              <ul className="list-none text-md font-light text-slate-300">
+              <ul className="list-disc text-md font-light text-slate-300 ">
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">Vestido por 2 hrs en locación a elegir.</p>
                 </li>
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">Sesión con 2 cambios casuales.</p>
                 </li>
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">Todas las fotografías de la sesión en digital alta resolución.</p>
                 </li>
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">12 fotos en retoque fino.</p>
                 </li>
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">1 Cuadro de acrílico 24x36&quot; </p>
                 </li>
               </ul>
@@ -85,17 +70,11 @@ function page() {
               <TitlePulse
                 titulo={"Cinemática de sesión"}
               />
-              <ul className="list-none text-md font-light text-slate-300">
+              <ul className="list-disc text-md font-light text-slate-300 ">
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">Producción de video profesonal para tu sesion con estabilizador en piso y dron.</p>
                 </li>
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">1 video cinemático de hasta 3 min musicalizado.</p>
                 </li>
               </ul>
@@ -105,23 +84,14 @@ function page() {
               <TitlePulse
                 titulo={"Fotografía para evento"}
               />
-              <ul className="list-none text-md font-light text-slate-300">
+              <ul className="list-disc text-md font-light text-slate-300 ">
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">Hasta 8 horas de servicio profesional dedicado.</p>
                 </li>
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">1 Fotógrafo profesional con kit iluminación profesional.</p>
                 </li>
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">Todas las fotos de tu evento en digital con revelado ligero en alta calidad.</p>
                 </li>
               </ul>
@@ -131,41 +101,23 @@ function page() {
               <TitlePulse
                 titulo={"Cinematografía para evento"}
               />
-              <ul className="list-none text-md font-light text-slate-300">
+              <ul className="list-disc text-md font-light text-slate-300 ">
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">Hasta 8 horas de servicio profesional dedicado.</p>
                 </li>
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">1 Camarógrafo profesional con estabilizador y dron para tomas aéreas en momentos clave.</p>
                 </li>
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">Kit de iluminación profesional.</p>
                 </li>
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">Kit de audio profesional.</p>
                 </li>
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">1 video extendido de 60 min o más en alta resolución.</p>
                 </li>
                 <li className="grid grid-cols-12">
-                  <span className="flex pt-1 justify-center col-span-1">
-                    <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                  </span>
                   <p className="col-span-11">1 video extendido de 60 min o más en alta resolució.</p>
                 </li>
               </ul>
@@ -179,35 +131,22 @@ function page() {
             </p>
           </div>
 
-
           <div className="mb-5">
             <h3 className="text-lg">Entregamos tu servicio:</h3>
             <ul className="">
 
               <li className="grid grid-cols-12">
-                <span className="flex pt-1 justify-center col-span-1">
-                  <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                </span>
                 <p className="col-span-11">20 días hábiles posteriores a tu evento.</p>
               </li>
 
               <li className="grid grid-cols-12">
-                <span className="flex pt-1 justify-center col-span-1">
-                  <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                </span>
                 <p className="col-span-11">Garantía en las fotos en retoque fino .</p>
               </li>
               <li className="grid grid-cols-12">
-                <span className="flex pt-1 justify-center col-span-1">
-                  <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                </span>
                 <p className="col-span-11">Garantía de edición en tus videos.</p>
               </li>
 
               <li className="grid grid-cols-12">
-                <span className="flex pt-1 justify-center col-span-1">
-                  <i className="fas fa-check-circle text-pink-950 text-sm"></i>
-                </span>
                 <p className="col-span-11">Todos los archivos en digital alta resolución en 1 link permanente de google drive para descargar.</p>
               </li>
 

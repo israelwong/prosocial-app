@@ -1,15 +1,16 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Cookies from 'js-cookie';
-import { cerrarSesion } from '@/app/lib/auth';
-import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+
 import { User } from '@/app/admin/_lib/types';
 import { verifyToken } from '@/app/lib/auth';
+import { cerrarSesion } from '@/app/lib/auth';
 
 function Navbar() {
+
     const [user, setUser] = useState<User | null>(null);
     const [menuOpen, setMenuOpen] = useState(false);
     const pathname = usePathname();
@@ -40,8 +41,6 @@ function Navbar() {
         validarToken(token);
     }, [token, router]);
 
-    // console.log('user:', Cookies.get('user'));
-
     async function handleCerrarSesion() {
         if (confirm('¿Estás seguro de cerrar sesión?')) {
             if (user && user.token) {
@@ -58,10 +57,14 @@ function Navbar() {
 
     const links = [
         { href: '/admin/dashboard', label: 'Dashboard' },
+        { href: '/admin/presentacion', label: 'Presentar' }
     ];
 
     if (user && user.role === 'admin') {
-        links.push({ href: '/admin/configurar', label: 'Configurar' });
+        links.push(
+            { href: '/admin/marketing', label: 'Marketing' },
+            { href: '/admin/configurar', label: 'Marketing' },
+        );
     }
 
     return (

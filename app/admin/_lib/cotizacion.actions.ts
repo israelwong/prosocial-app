@@ -1,7 +1,5 @@
 'use server'
 import { Cotizacion } from './types'
-// import { PrismaClient } from '@prisma/client'
-// const prisma = new PrismaClient()
 import prisma from './prismaClient';
 
 export async function obtenerCotizacionesPorEvento(eventoId: string) {

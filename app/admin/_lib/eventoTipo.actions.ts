@@ -1,10 +1,6 @@
 'use server'
 import { EventoTipo } from "@/app/admin/_lib/types";
-
-// import { PrismaClient } from "@prisma/client";
-// const prisma = new PrismaClient();
 import prisma from './prismaClient';
-
 
 export async function obtenerTiposEvento() {
     return await prisma.eventoTipo.findMany({
@@ -44,7 +40,6 @@ export async function eliminarTipoEvento(id: string) {
 }
 
 export async function actualizarPosicionTipoEvento(data: EventoTipo[]) {
-    // console.log('Actualizar posiciones tipo de evento:', data);
     data.forEach(async (item) => {
         await prisma.eventoTipo.update({
             where: { id: item.id },

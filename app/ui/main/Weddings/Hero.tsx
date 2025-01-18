@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import VideoPlayer from '@/app/ui/main/VideoPlayer'
+// import VideoPlayer from '@/app/ui/main/VideoPlayer'
 import BtnPromocion from '@/app/ui/main/BtnPromocion'
 
 function Hero() {
@@ -25,12 +25,12 @@ function Hero() {
                     </h1>
                 </div>
 
-                <VideoPlayer
+                {/* <VideoPlayer
                     src={'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/reels_evento_2018.mp4'}
                     muted={true}
                     controls={false}
                     loop={true}
-                />
+                /> */}
 
                 <p className="mt-4 text-lg md:text-xl text-gray-200 font-light text-center md:px-20 px-8 mb-4">
                     &quot;Estamos comprometidos a capturar los momentos más especiales de tu vida. Nosotros nos encargaremos de capturar cada detalle de tu boda para que la puedas revivir una y otra vez.&quot;

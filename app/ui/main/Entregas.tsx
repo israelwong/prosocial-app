@@ -1,5 +1,5 @@
 'use client';
-// import { Fade } from 'react-awesome-reveal';
+import { CircleCheck } from "lucide-react";
 
 function Entregas() {
     return (
@@ -16,38 +16,34 @@ function Entregas() {
             <p className="text-2xl pb-5 font-light ">
                 Nos comprometemos a entregarte en 20 días hábiles posteriores a a tu evento</p>
 
-            <ul className="
-    font-light list-image-none text-gray-300 text-left
-    grid grid-flow-row gap-2
-    md:text-2xl
-    ">
+            <ul className="font-light list-image-none text-gray-300 text-left grid grid-flow-row gap-2 md:text-2xl">
 
-                {/* <Fade> */}
-                <li className="grid grid-cols-6">
-                    <i className="p-3 col-span-1 animate-pulse text-pink-500 fas fa-check text-center md:text-2xl"></i>
+                <li className="flex items-center">
+                    <span>
+                        <CircleCheck className="text-pink-700 mr-5" size={35} />
+                    </span>
                     <p className="col-span-5">
                         <u>Fotografías en alta resolución</u>, listas para impresión o compartir en redes.
                     </p>
                 </li>
-                {/* </Fade> */}
 
-                {/* <Fade> */}
-                <li className="grid grid-cols-6">
-                    <i className="p-3 col-span-1 animate-pulse text-pink-500 fas fa-check text-center md:text-2xl"></i>
+                <li className="flex items-center">
+                    <span>
+                        <CircleCheck className="text-pink-700 mr-5" size={35} />
+                    </span>
                     <p className="col-span-5">
-                        <u>Videos cinemáticos en alta resolución entre 45min y 2hrs </u> que capturan la esencia y emoción de tu evento.
+                        <u>Videos cinemáticos en alta resolución entre 45min y 2hrs</u> que capturan la esencia y emoción de tu evento.
                     </p>
                 </li>
-                {/* </Fade> */}
 
-                {/* <Fade> */}
-                <li className="grid grid-cols-6">
-                    <i className="p-3 col-span-1 animate-pulse text-pink-500 fas fa-check text-center md:text-2xl"></i>
+                <li className="flex items-center">
+                    <span>
+                        <CircleCheck className="text-pink-700 mr-5" size={35} />
+                    </span>
                     <p className="col-span-5">
                         <u>Garantías post producción</u> en la edición de video sin costo adicional.
                     </p>
                 </li>
-                {/* </Fade> */}
 
             </ul>
 

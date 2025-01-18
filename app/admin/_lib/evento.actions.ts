@@ -282,9 +282,6 @@ export async function obtenerEventoContrato(eventoId: string) {
         cotizacion,
         condicionesComerciales
     };
-
-
-
 }
 
 export async function obtenerEventoCotizaciones(eventoId: string) {

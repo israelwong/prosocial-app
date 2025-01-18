@@ -15,11 +15,11 @@ function Nosotros() {
                 </p>
 
                 <h2 className="font-Bebas-Neue text-4xl md:text-5xl font-bold mb-2">
-                    Más de <u>10 años de experiencia</u> cubriendo momentos especiales
+                    Más de <u>10 años de experiencia</u>
                 </h2>
 
                 <p className="md:text-3xl text-2xl pb-5 font-light mb-3">
-                    Te brindamos un servicio personalizado y profesional en todo momento.
+                    Servicio personalizado y profesional en todo momento.
                 </p>
 
                 <div className="grid md:grid-cols-2 grid-flow-row gap-3 justify-center align-middle">

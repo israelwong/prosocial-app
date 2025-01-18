@@ -1,8 +1,6 @@
 'use server'
 import { ServicioCategoria } from "@/app/admin/_lib/types";
 import prisma from './prismaClient';
-// import { PrismaClient } from "@prisma/client";
-// const prisma = new PrismaClient();
 
 export async function obtenerCategories() {
     return prisma.servicioCategoria.findMany({

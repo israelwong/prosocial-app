@@ -1,8 +1,5 @@
 'use server'
 import { Paquete, PaqueteServicio } from "./types";
-
-// import { PrismaClient } from "@prisma/client";
-// const prisma = new PrismaClient();
 import prisma from './prismaClient';
 
 export async function obtenerPaquetesPorTipoEvento(eventoTipoId: string) {

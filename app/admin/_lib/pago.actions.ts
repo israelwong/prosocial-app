@@ -1,8 +1,5 @@
 'use server';
 import { Pago } from "@/app/admin/_lib/types";
-
-// import { PrismaClient } from "@prisma/client";
-// const prisma = new PrismaClient();
 import prisma from './prismaClient';
 
 export async function obtenerPagos() {

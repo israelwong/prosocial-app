@@ -88,7 +88,7 @@ function SlideTestimonios() {
                       <blockquote className="p-6 text-sm leading-relaxed text-white">
                         <p>{testimonio.msg}</p>
                       </blockquote>
-                      <i className="text-6xl opacity-30 absolute left-6 top-32 z-0 h-16 fas fa-quote-left"></i>
+                      {/* <i className="text-6xl opacity-30 absolute left-6 top-32 z-0 h-16 fas fa-quote-left"></i> */}
                     </div>
                   </div>
                 </div>

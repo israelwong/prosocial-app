@@ -88,11 +88,6 @@ function SlideTestimonios() {
                   <div className="h-full overflow-hidden text-slate-500 border border-slate-500 rounded-md">
                     <div className="relative p-6">
                       <figcaption className="flex items-center gap-4 p-3 text-sm text-slate-500">
-                        {/* <Image
-                          alt="Testimonios de clientes ProSocial "
-                          className="w-16 h-16 rounded-full border-4 border-shite max-w-full shrink-0"
-                          src={testimonio.icon}
-                        /> */}
                         <div className="flex flex-col gap-1">
                           <span className="font-bold uppercase text-2xl pr-12">
                             {testimonio.cliente}
@@ -103,7 +98,6 @@ function SlideTestimonios() {
                       <blockquote className="p-6 text-sm leading-relaxed text-white">
                         <p>{testimonio.msg}</p>
                       </blockquote>
-                      <i className="text-6xl opacity-30 absolute left-6 top-32 z-0 h-16 fas fa-quote-left"></i>
                     </div>
                   </div>
                 </div>

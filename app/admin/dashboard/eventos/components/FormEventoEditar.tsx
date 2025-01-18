@@ -198,7 +198,7 @@ export default function FormEventoEditar({ eventoId }: Props) {
 
                         <ul className='mb-5 space-y-1 text-sm text-zinc-500'>
                             <li>
-                                <span className='text-zinc-300'>Correo:</span> {cliente?.email}
+                                <span className='text-zinc-300'>Correo:</span> {cliente?.email ? cliente.email : 'Pendiente'}
                             </li>
                             <li>
                                 <span className='text-zinc-300'>Teléfono:</span> {cliente?.telefono}

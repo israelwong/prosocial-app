@@ -349,3 +349,12 @@ export interface Anuncio {
     createdAt?: Date
     updatedAt?: Date
 }
+
+export interface LeadForm {
+    nombre: string
+    email: string
+    telefono: string
+    fecha_evento: Date
+    eventoTipoId: string
+    nombreEvento: string
+}

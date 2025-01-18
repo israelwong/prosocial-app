@@ -1,9 +1,6 @@
 'use server';
 import { User } from './types';
 import bcrypt from 'bcrypt';
-// import { PrismaClient } from "@prisma/client";
-// const prisma = new PrismaClient();
-
 import prisma from './prismaClient';
 
 export async function obtenerUsuarios() {
