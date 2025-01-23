@@ -55,7 +55,7 @@ export default function FichaBitacora({ eventoId }: Props) {
         <div>
             <div className='flex justify-between items-center mb-5'>
                 <h3 className='text-xl font-semibold text-zinc-500'>
-                    Notas
+                    Bitácora
                 </h3>
                 <button
                     className='bg-zinc-900 p-2 rounded-md border border-zinc-800 px-3 text-sm text-zinc-200'

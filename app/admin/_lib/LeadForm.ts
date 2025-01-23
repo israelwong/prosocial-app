@@ -2,49 +2,50 @@
 import { LeadForm } from './types';
 import { crearCliente } from './cliente.actions';
 import { crearEvento } from './evento.actions';
+import { obtenerEtapa1 } from './EventoEtapa.actions';
 import prisma from './prismaClient';
+
 
 export async function registrarLead(lead: LeadForm) {
 
     try {
-
         const clienteExistente = await prisma.cliente.findFirst({
             where: {
-                OR: [
-                    { telefono: lead.telefono },
-                    { email: lead.email }
-                ]
+                telefono: lead.telefono
             }
         });
 
         if (clienteExistente) {
-            if (clienteExistente.telefono === lead.telefono && clienteExistente.email === lead.email) {
-                console.log('Cliente already exists:', clienteExistente);
-                return { success: false, message: 'El cliente ya existe', cliente: clienteExistente.id };
-            } else {
-                const message = clienteExistente.telefono === lead.telefono ? 'El teléfono ya existe' : 'El email ya existe';
-                return { success: false, message, cliente: clienteExistente.id };
-            }
+            console.log('Cliente already exists:', clienteExistente);
+            return { success: false, message: 'Teléfono existente' };
         } else {
+
+            //crear cliente
             const cliente = await crearCliente({
                 nombre: lead.nombre,
                 telefono: lead.telefono,
                 email: lead.email ?? null,
                 status: 'Prospecto',
-                canalId: 'cm3xmmmcc000cnoqpfs80lwgc',
+                canalId: 'cm3xmmmcc000cnoqpfs80lwgc',// Canal de ventas leadform
             });
 
             if (cliente.success) {
-                console.log('Cliente created successfully:', cliente);
-                console.log('Creating evento...');
+                // console.log('Cliente created successfully:', cliente);
+
+                //obtener etapa 1
+                const etapaId = await obtenerEtapa1();
+
+
+                // console.log('Creating evento...');
                 await crearEvento({
                     clienteId: cliente.clienteId!,
                     eventoTipoId: lead.eventoTipoId,
-                    nombre: lead.nombreEvento,
+                    nombre: '',
                     fecha_evento: lead.fecha_evento,
-                    status: 'nuevo'
+                    eventoEtapaId: etapaId,
                 });
-                console.log('Evento created successfully');
+
+                // console.log('Evento created successfully');
                 return { success: true, message: 'Lead form created successfully' };
             } else {
                 console.log('Failed to create cliente');
@@ -55,8 +56,5 @@ export async function registrarLead(lead: LeadForm) {
     } catch (error) {
         return { success: false, message: (error as Error).message };
     }
-
-
-
 
 }

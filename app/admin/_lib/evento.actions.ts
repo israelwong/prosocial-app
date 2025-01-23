@@ -17,7 +17,25 @@ export async function obtenerEventos() {
 
 export async function obtenerEventoPorId(id: string) {
     return prisma.evento.findUnique({
-        where: { id }
+        where: { id },
+        include: {
+            EventoTipo: {
+                select: {
+                    nombre: true,
+                }
+            },
+            Cliente: {
+                select: {
+                    nombre: true,
+                    telefono: true
+                }
+            },
+            EventoEtapa: {
+                select: {
+                    nombre: true
+                }
+            }
+        }
     });
 }
 
@@ -53,12 +71,13 @@ export async function crearEvento(data: Evento) {
     try {
         const nuevoEvento = await prisma.evento.create({
             data: {
-                clienteId: data.clienteId,
+                clienteId: data.clienteId ?? '',
                 eventoTipoId: data.eventoTipoId,
                 nombre: data.nombre,
                 fecha_evento: data.fecha_evento,
                 status: data.status,
-                userId: data.userId || null // Ensure userId is passed correctly
+                userId: data.userId || null,
+                eventoEtapaId: data.eventoEtapaId || null
             }
         });
         return { success: true, id: nuevoEvento.id };
@@ -76,10 +95,9 @@ export async function actualizarEvento(evento: Evento) {
                 id: evento.id
             },
             data: {
-                eventoTipoId: evento.eventoTipoId,
                 nombre: evento.nombre,
                 fecha_evento: evento.fecha_evento,
-                status: evento.status
+                // status: evento.status
             }
         });
         return { success: true };
@@ -138,22 +156,40 @@ export async function obtenerEventosDetalle() {
             creacion: evento.createdAt,
             fecha_actualizacion: evento.updatedAt,
             status: evento.status,
+            eventoEtapaId: evento.eventoEtapaId
         };
     }));
 
     return eventosDetalle;
 }
 
-export async function asignarEventoUser(eventoId: string, userId: string, status: string) {
+export async function asignarEventoUser(eventoId: string, userId: string, eventoEtapaId: string) {
     await prisma.evento.update({
         where: {
             id: eventoId
         },
         data: {
             userId,
-            status
+            eventoEtapaId
         }
     });
+}
+
+export async function liberarEventoUser(eventoId: string) {
+    try {
+        await prisma.evento.update({
+            where: {
+                id: eventoId
+            },
+            data: {
+                userId: null
+            }
+        });
+        return { success: true };
+    } catch (error) {
+        console.error(error);
+        return { error: 'Error releasing event user' };
+    }
 }
 
 export async function actualizarEventoStatus(eventoId: string, status: string) {
@@ -327,9 +363,6 @@ export async function obtenerEventoCotizaciones(eventoId: string) {
 export async function obtenerEventosAprobadosV2() {
 
     const eventos = await prisma.evento.findMany({
-        where: {
-            status: 'aprobado'
-        },
         orderBy: {
             fecha_evento: 'asc'
         }
@@ -352,3 +385,118 @@ export async function obtenerEventosAprobadosV2() {
     }));
     return eventosConTipoYBalance;
 };
+
+export async function actualizarEtapa(eventoId: string, eventoEtapaId: string) {
+    try {
+        await prisma.evento.update({
+            where: {
+                id: eventoId
+            },
+            data: {
+                eventoEtapaId
+            }
+        });
+        return { success: true };
+    } catch (error) {
+        console.error(error);
+        return { error: 'Error updating event stage' };
+    }
+
+}
+
+export async function obtenerEventoDetalleCompartirInformacion(eventoId: string) {
+
+    const evento = await prisma.evento.findUnique({
+        where: {
+            id: eventoId
+        },
+        include: {
+            EventoTipo: {
+                select: {
+                    nombre: true
+                }
+            },
+            Cliente: {
+                select: {
+                    nombre: true,
+                    telefono: true,
+                    email: true
+                }
+            }
+        }
+    });
+
+    return {
+        evento
+    };
+}
+
+export async function obtenerEventosPorEtapa(etapas: number[]) {
+    console.log('Etapas:', etapas);
+    const eventos = await prisma.evento.findMany({
+        where: {
+            EventoEtapa: {
+                posicion: {
+                    in: etapas
+                }
+            }
+        },
+        include: {
+            EventoTipo: {
+                select: {
+                    nombre: true
+                }
+            },
+            Cliente: {
+                select: {
+                    nombre: true
+                }
+            },
+            EventoEtapa: {
+                select: {
+                    nombre: true,
+                    posicion: true
+                }
+            },
+            Cotizacion: {
+                where: {
+                    status: 'aprobada'
+                },
+                select: {
+                    id: true,
+                    precio: true,
+                    status: true,
+                    Pago: {
+                        select: {
+                            id: true,
+                            monto: true,
+                            createdAt: true
+                        }
+                    }
+                }
+            },
+            User: {
+                select: {
+                    username: true
+                }
+            }
+        },
+        orderBy: {
+            fecha_evento: 'asc'
+        }
+    });
+
+    const eventosConTotalPagado = eventos.map(evento => {
+        const totalPagado = evento.Cotizacion.reduce((acc, cotizacion) => {
+            const totalPagos = cotizacion.Pago.reduce((sum, pago) => sum + pago.monto, 0);
+            return acc + totalPagos;
+        }, 0);
+
+        return {
+            ...evento,
+            total_pagado: totalPagado
+        };
+    });
+
+    return eventosConTotalPagado;
+}

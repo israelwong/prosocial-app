@@ -56,21 +56,27 @@ const ListaServicios: React.FC<Props> = ({ onAgregarServicio }) => {
                 </h2>
                 {categoriaAbierta === categoria.id && (
                     <ul className='space-y-2 pt-3'>
-                        {servicios[categoria.id]?.map(servicio => (
-                            <li key={servicio.id}
-                                className="p-3 rounded-md border-dashed border border-zinc-800 bg-zinc-900 cursor-pointer hover:bg-zinc-800/80"
-                                onClick={() => handleAgregarServicio(servicio)}
-                            >
-                                <div className='flex justify-between'>
-                                    <p className='pr-5'>
-                                        {servicio.nombre}
-                                    </p>
-                                    <label>
-                                        {servicio.precio_publico?.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                    </label>
-                                </div>
+                        {servicios[categoria.id] ? (
+                            servicios[categoria.id].map(servicio => (
+                                <li key={servicio.id}
+                                    className="p-3 rounded-md border-dashed border border-zinc-800 bg-zinc-900 cursor-pointer hover:bg-zinc-800/80"
+                                    onClick={() => handleAgregarServicio(servicio)}
+                                >
+                                    <div className='flex justify-between'>
+                                        <p className='pr-5'>
+                                            {servicio.nombre}
+                                        </p>
+                                        <label>
+                                            {servicio.precio_publico?.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                        </label>
+                                    </div>
+                                </li>
+                            ))
+                        ) : (
+                            <li className="p-3 rounded-md border-dashed border border-zinc-800 bg-zinc-900 text-zinc-500 italic">
+                                Cargando servicios...
                             </li>
-                        ))}
+                        )}
                     </ul>
                 )}
             </div>

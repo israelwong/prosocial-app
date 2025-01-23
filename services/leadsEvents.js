@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-// import  prisma from "@/app/admin/PrismaClient";
 
 export async function leadsHandle(lead, res) {
     const prisma = new PrismaClient();
@@ -18,7 +17,7 @@ export async function leadsHandle(lead, res) {
             nombre: nombreLead,
             email,
             telefono,
-            status: 'nuevo',
+            status: 'prospecto',
             canalId
         };
         
@@ -36,11 +35,19 @@ export async function leadsHandle(lead, res) {
             clienteId = newCliente.id;
         }
 
+        //Obtener el eventoetapaId del paso 1
+        const eventoEtapa = await prisma.eventoEtapa.findFirst({
+            where: { eventoTipoId },
+            orderBy: { posicion: 'asc' }
+        });
+        const eventoEtapaId = eventoEtapa ? eventoEtapa.id : null;
+
         const evento = {
             nombre: nombreEvento,
             eventoTipoId,
             fecha_evento: new Date(fecha_evento),
-            status: 'nuevo',
+            // status: 'nuevo',
+            eventoEtapaId,
             clienteId: clienteId
         };
 

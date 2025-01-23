@@ -1,9 +1,10 @@
 'use client'
-import React, { useEffect, useState, useMemo } from 'react'
-import { Cliente, Evento, Cotizacion, ServicioCategoria, User, CotizacionServicio } from '@/app/admin/_lib/types'
-import { obtenerEventoSeguimiento } from '@/app/admin/_lib/evento.actions'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import { Cliente, Evento, Cotizacion, ServicioCategoria, User, CotizacionServicio, EventoEtapa } from '@/app/admin/_lib/types'
+import { obtenerEventoSeguimiento, actualizarEtapa } from '@/app/admin/_lib/evento.actions'
 import { obtenerCondicionComercial } from '@/app/admin/_lib/condicionesComerciales.actions';
 import { useRouter } from 'next/navigation'
+import { obtenerEventoEtapas } from '@/app/admin/_lib/EventoEtapa.actions';
 
 import Wishlist from './Wishlist'
 import FichaPresupuesto from './FichaPresupuesto'
@@ -31,14 +32,25 @@ export default function FichaDetalle({ eventoId }: Props) {
     const [servicioCategoria, setServicioCategoria] = useState<ServicioCategoria[] | null>(null)
     const [users, setUsers] = useState<User[] | null>(null)
     const [cotizacionServicio, setCotizacionServicio] = useState<CotizacionServicio[] | null>(null)
+    const [etapas, setEtapas] = useState<EventoEtapa[]>([])
+    const [etapaActual, setEtapaActual] = useState<string | null>(null)
+    const [actualizandoEtapa, setActualizandoEtapa] = useState<boolean>(false)
+    const [etapaActualizada, setEtapaActualizada] = useState<boolean>(false)
 
 
     useEffect(() => {
         const fetchData = async () => {
             try {
+
+                obtenerEventoEtapas().then((etapas) => {
+                    setEtapas(etapas);
+                });
+
                 const data = await obtenerEventoSeguimiento(eventoId)
 
                 setEvento(data.evento ?? null)
+                setEtapaActual(data.evento?.eventoEtapaId ?? null)
+
                 setCliente(data.cliente ?? null)
                 setCotizacion(data.cotizacion ?? null)
                 setTipoEvento(data.tipoEvento ?? null)
@@ -62,11 +74,27 @@ export default function FichaDetalle({ eventoId }: Props) {
 
     }, [eventoId])
 
-
-
     const fechaCelebracion = useMemo(() => {
         return evento?.fecha_evento ? new Date(new Date(evento.fecha_evento).getTime() + new Date().getTimezoneOffset() * 60000).toLocaleString('es-ES', { dateStyle: 'full' }) : ''
     }, [evento?.fecha_evento])
+
+    const handleActualizarEtapa = useCallback(async (etapaId: string) => {
+        try {
+            setActualizandoEtapa(true);
+            await actualizarEtapa(eventoId, etapaId);
+            setEtapaActual(etapaId);
+
+            setTimeout(() => {
+                setActualizandoEtapa(false);
+                setEtapaActualizada(true);
+            }, 3000);
+
+        } catch (error) {
+            console.error('Error updating stage:', error);
+        }
+
+
+    }, [eventoId]);
 
     return (
         <div>
@@ -91,6 +119,52 @@ export default function FichaDetalle({ eventoId }: Props) {
                     {/* COLUMNA 1 */}
                     <div>
                         {/* //! EVENTO */}
+
+                        <div className='mb-5'>
+                            <label className='block text-zinc-500 mb-2'>Etapa actual:</label>
+                            <select
+                                className='bg-zinc-900 text-white p-2 rounded-md w-full'
+                                value={etapaActual ?? ''}
+                                onChange={(e) => {
+                                    const selectedEtapa = etapas.find(etapa => etapa.id === e.target.value);
+                                    if (selectedEtapa) {
+                                        if (selectedEtapa.id) {
+                                            handleActualizarEtapa(selectedEtapa.id);
+                                        }
+                                        setEvento(prev => prev ? { ...prev, eventoEtapaId: selectedEtapa.id } : null);
+                                    }
+                                }}
+                                disabled={etapas.length === 0}
+                            >
+                                <option value="" disabled className='text-zinc-500'>
+                                    {etapas.length === 0 ? 'Cargando etapas...' : 'Seleccione una etapa'}
+                                </option>
+                                {etapas.length === 0 ? (
+                                    <option value="" disabled>
+                                        ...
+                                    </option>
+                                ) : (
+                                    etapas.map(etapa => (
+                                        <option key={etapa.id} value={etapa.id}>
+                                            {etapa.nombre}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
+                            {actualizandoEtapa && (
+                                <p className='text-yellow-500 text-sm mt-2'>
+                                    Actualizando etapa...
+                                </p>
+                            )}
+                            {etapaActualizada && (
+                                <p className='text-green-500 text-sm mt-2'>
+                                    Etapa actualizada
+                                </p>
+                            )}
+                        </div>
+
+
+
                         <div className='bg-yellow-800/80 px-3 py-3 rounded-md shadow-md text-yellow-300 border border-yellow-700 inline-block w-full mb-5'>
                             Celebración: <span className='font-semibold'>{fechaCelebracion}</span>
                         </div>

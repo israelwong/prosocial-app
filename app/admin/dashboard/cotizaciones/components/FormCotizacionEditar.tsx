@@ -1,6 +1,8 @@
 'use client';
 import { Copy, Shuffle, SquareArrowOutUpRight, User } from 'lucide-react'
 import React, { useEffect, useState, useCallback } from 'react'
+import { Servicio, MetodoPago, CondicionesComerciales } from '@/app/admin/_lib/types'
+
 import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
 import { obtenerCotizacion, obtenerCotizacionServicios, actualizarCotizacion, eliminarCotizacion } from '@/app/admin/_lib/cotizacion.actions';
 import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
@@ -10,14 +12,14 @@ import { obtenerCliente } from '@/app/admin/_lib/cliente.actions';
 import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
 import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
 import { crearPago } from '@/app/admin/_lib/pago.actions';
-import { Servicio, MetodoPago, CondicionesComerciales } from '@/app/admin/_lib/types'
+import { obtenerConteoCotizacionVisitas } from '@/app/admin/_lib/cotizacionVisita.actions'
+
 import ListaServicios from './ListaServicios'
 import Wishlist from './Wishlist'
+
 import { useRouter } from 'next/navigation'
 import { Trash, X } from 'lucide-react';
 
-import { obtenerConteoCotizacionVisitas } from '@/app/admin/_lib/cotizacionVisita.actions'
-import { supabase } from '@/app/admin/_lib/supabase'
 import { Eye } from 'lucide-react'
 
 interface Props {
@@ -66,39 +68,6 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
     const [clienteTelefono, setClienteTelefono] = useState('');
 
     const [visitas, setVisitas] = useState<number>(0)
-
-
-    const suscripcionSupabase = () => {
-
-        console.log('Suscribiendo a cambios en CotizacionVisita');
-
-        const subscriptionVisita = supabase
-
-            .channel('realtime:CotizacionVisita')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'CotizacionVisita' },
-                async (payload) => {
-                    console.log('Cambio detectado en CotizacionVisita:', payload);
-
-                    obtenerConteoCotizacionVisitas(cotizacionId).then((conteo) => {
-                        console.log('Visitas realtime:', conteo);
-                        setVisitas(conteo);
-                    });
-                }
-            ).subscribe((status, err) => {
-                if (err) {
-                    console.error('Error en la suscripción CotizacionVisitaDashboard:', err);
-                } else {
-                    console.log('Estado de la suscripción en CotizacionVisitaDashboard:', status);
-                }
-            });
-
-        return () => {
-            //! Eliminar la suscripción cuando el componente se desmonta
-            supabase.removeChannel(subscriptionVisita);
-        };
-    }
 
     useEffect(() => {
         async function fetchData() {
@@ -185,9 +154,6 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 }));
                 setCondicionesComerciales(updatedCondicionesComerciales);
             }
-
-            //suscribirse a cambios en la tabla CotizacionVisita
-            suscripcionSupabase()
 
             setLoading(false);
         }
@@ -474,13 +440,10 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                         Nombre del evento no definido
                                     </span>
                                 ) : (
-
-
                                     <>
                                         <span className='text-green-500'>
                                             {eventoNombre}
                                         </span>
-
                                     </>
                                 )}
 

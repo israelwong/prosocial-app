@@ -21,6 +21,7 @@ model User {
   Sesion    Sesion[]
   Agenda    Agenda[]
   Pago      Pago[]
+  Evento    Evento[]
 }
 
 model Sesion {
@@ -50,19 +51,25 @@ model Cliente {
 }
 
 model Evento {
-  id             String           @id @default(cuid())
-  clienteId      String
-  Cliente        Cliente          @relation(fields: [clienteId], references: [id])
-  eventoTipoId   String?
-  EventoTipo     EventoTipo?      @relation(fields: [eventoTipoId], references: [id])
-  nombre         String?          @default("Pendiente")
-  fecha_evento   DateTime
-  sede           String?
-  direccion      String?
-  status         String           @default("active")
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  userId         String?
+  id           String      @id @default(cuid())
+  clienteId    String
+  Cliente      Cliente     @relation(fields: [clienteId], references: [id])
+  eventoTipoId String?
+  EventoTipo   EventoTipo? @relation(fields: [eventoTipoId], references: [id])
+  nombre       String?     @default("Pendiente")
+  fecha_evento DateTime
+  sede         String?
+  direccion    String?
+  status       String      @default("active")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  userId String?
+  User   User?   @relation(fields: [userId], references: [id])
+
+  eventoEtapaId String?
+  EventoEtapa   EventoEtapa? @relation(fields: [eventoEtapaId], references: [id])
+
   EventoBitacora EventoBitacora[]
   Cotizacion     Cotizacion[]
   Agenda         Agenda[]
@@ -88,6 +95,15 @@ model EventoTipo {
   Evento     Evento[]
   Paquete    Paquete[]
   Cotizacion Cotizacion[]
+}
+
+model EventoEtapa {
+  id        String   @id @default(cuid())
+  nombre    String
+  posicion  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Evento    Evento[]
 }
 
 model Canal {
@@ -250,16 +266,17 @@ model PaqueteServicio {
 }
 
 model Configuracion {
-  id                String   @id @default(cuid())
-  nombre            String
-  utilidad_servicio Float
-  utilidad_producto Float
-  comision_venta    Float
-  sobreprecio       Float
-  claveAutorizacion String?
-  status            String   @default("active")
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                          String   @id @default(cuid())
+  nombre                      String
+  utilidad_servicio           Float
+  utilidad_producto           Float
+  comision_venta              Float
+  sobreprecio                 Float
+  claveAutorizacion           String? //!added
+  numeroMaximoServiciosPorDia Int? //!added
+  status                      String   @default("active")
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
 }
 
 model MetodoPago {

@@ -8,10 +8,7 @@ import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
 import { cotizacionDetalle } from '@/app/admin/_lib/cotizacion.actions';
 import { registrarVisita } from '@/app/admin/_lib/cotizacionVisita.actions';
 
-import { ChevronDown, ChevronUp } from 'lucide-react';
-
 import SkeletonPendiente from './skeletonPendiente';
-import Contrato from './Contrato';
 import Wishlist from './Wishlist';
 
 
@@ -42,12 +39,10 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
     const [fechaEvento, setFechaEvento] = useState<Date | null>(null);
     const [nombreEvento, setNombreEvento] = useState('');
 
-    const [confirmacionContrato, setConfirmacionContrato] = useState(false);
-    const [toggleContrato, setToggleContrato] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
     const [metodoPagoId, setMetodoPagoId] = useState<string | undefined>('');
-    const [condicionComercialesId, setCondicionComercialId] = useState<string | undefined>('');
+    const [condicionesComercialesId, setCondicionesComercialId] = useState<string | undefined>('');
 
     const [porcentajeAnticipo, setPorcentajeAnticipo] = useState(0);
     const [pagoAnticipo, setPagoAnticipo] = useState(0);
@@ -73,15 +68,6 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
             if (cotizacion) {
 
                 setNombreCotizacion(cotizacion.nombre || '');
-                setCondicionComercialId(cotizacion?.condicionesComercialesId ?? '');
-                setMetodoPagoId(cotizacion?.condicionesComercialesMetodoPagoId ?? '');
-
-                if (cotizacion?.condicionesComercialesId && cotizacion?.condicionesComercialesMetodoPagoId) {
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('condicionComercialId', cotizacion?.condicionesComercialesId);
-                    url.searchParams.set('metodoPagoId', cotizacion?.condicionesComercialesMetodoPagoId);
-                    window.history.replaceState(null, '', url.toString());
-                }
 
                 const serviciosData = await Promise.all(cotizacionServicio.map(async (servicio: { servicioId: string; cantidad: number; posicion: number; servicioCategoriaId: string; }) => {
                     const servicioData = servicios.find(servicioData => servicioData.id === servicio.servicioId);
@@ -158,8 +144,6 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
     useEffect(() => {
 
         const urlParams = new URLSearchParams(window.location.search);
-        const condicionComercialIdFromUrl = urlParams.get('condicionComercialId');
-        const metodoPagoIdFromUrl = urlParams.get('metodoPagoId');
         const fromListaParam = urlParams.get('param');
         const isPrev = urlParams.get('preview');
 
@@ -175,27 +159,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
             setFromLista(fromListaParam === 'lista');
         }
 
-        if (condicionComercialIdFromUrl) {
-            setCondicionComercialId(condicionComercialIdFromUrl);
-        } else {
-            setCondicionComercialId(condicionComercial?.id || '');
-        }
-
-        if (metodoPagoIdFromUrl) {
-            setMetodoPagoId(metodoPagoIdFromUrl);
-        } else {
-            setMetodoPagoId(metodoPago?.id || '');
-        }
-
-        if (condicionComercialesId && metodoPagoId) {
-            const condicion = condicionesComerciales.find(cond => cond.id === condicionComercialesId);
-            const metodo = condicion?.metodosPago?.find(mp => mp.id === metodoPagoId);
-            if (condicion && metodo) {
-                handleSeleccionCondicionMetodoPago(condicion, metodo);
-            }
-        }
-
-    }, [cotizacionId, condicionComercialesId, metodoPagoId, condicionesComerciales, condicionComercial?.id, metodoPago?.id]);
+    }, [cotizacionId, condicionesComercialesId, metodoPagoId, condicionesComerciales, condicionComercial?.id, metodoPago?.id]);
 
     //! calcular totales cuando se actualiza la lista
     useEffect(() => {
@@ -207,28 +171,20 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         setMetodoPago(metodo);
         setMsi(metodo.num_msi || 0);
         setCondicionComercial(condicion);
-        setCondicionComercialId(condicion.id);
-        const url = new URL(window.location.href);
-        url.searchParams.set('condicionComercialId', condicion.id || '');
-        url.searchParams.set('metodoPagoId', metodo.id || '');
-        window.history.replaceState(null, '', url.toString());
+        setCondicionesComercialId(condicion.id);
     }
 
+    //! Procesar pago con tarjeta
     const checkout = async () => {
-
-        setIsProcessing(true);
-
         let concepto = '';
         if (porcentajeAnticipo > 0 && porcentajeAnticipo < 100) {
-            concepto = `Pago del ${porcentajeAnticipo}% del servicio de ${tipoEvento} ${nombreEvento}`;
+            concepto = `Pago del ${porcentajeAnticipo}% de anticipo del servicio`;
         } else if (porcentajeAnticipo === 100) {
-            concepto = `Pago total del servicio de ${tipoEvento} ${nombreEvento}`;
+            concepto = `Pago total del servicio`;
         }
         const descripcion = `Fecha compromiso para el ${fechaEvento ? new Date(fechaEvento.getTime() + 86400000).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''} ${metodoPago?.num_msi ? '. ' + metodoPago?.num_msi + ' MSI' : ''}. ${condicionComercial?.nombre}. ${condicionComercial?.descripcion}`;
 
         try {
-
-            //! Procesar pago con tarjeta
             const datosPagoTarjeta = {
                 monto: parseFloat(pagoAnticipo.toFixed(2)),
                 concepto,
@@ -236,14 +192,17 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                 paymentMethod: metodoPago?.payment_method || '',
                 num_msi: metodoPago?.num_msi?.toString() ?? '0',
                 cotizacionId,
-                condicionComercialesId,
+                condicionesComercialesId,
                 metodoPagoId,
                 clienteId,
                 nombreCliente,
                 emailCliente,
                 telefonoCliente,
+                precioFinal: parseFloat(precioFinal.toFixed(2)),
             };
 
+            // console.log('datosPagoTarjeta', datosPagoTarjeta)
+            setIsProcessing(true);
             const response = await fetch('/api/checkout', {
                 method: 'POST',
                 headers: {
@@ -266,6 +225,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
         }
     }
 
+    //! Regresar a la lista y limpiar sessionStorage
     const handleRegresar = () => {
         sessionStorage.removeItem('visitaRegistrada');
         router.back()
@@ -333,14 +293,14 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
 
 
                             {/* //! CONDICIONES COMERCIALES */}
-                            <div className='mb-10'>
+                            <div className='mb-8'>
                                 <p className='text-xl text-zinc-500 mb-3'>
                                     Elige una condición comercial
                                 </p>
 
                                 {condicionesComerciales.map((condicion, index) => (
 
-                                    <div key={index} className={`mb-3 px-5 py-3 ${condicion.id === condicionComercialesId && condicionComercialesId && metodoPagoId ? 'border-blue-500 bg-zinc-700/50 ' : 'border-zinc-800'} ${!condicion.id ? 'border-zinc-800' : ''} bg-zinc-900 border rounded-md`}>
+                                    <div key={index} className={`mb-3 px-5 py-3 ${condicion.id === condicionesComercialesId && condicionesComercialesId && metodoPagoId ? 'border-blue-500 bg-zinc-700/50 ' : 'border-zinc-800'} ${!condicion.id ? 'border-zinc-800' : ''} bg-zinc-900 border rounded-md`}>
                                         <p className='text-md text-zinc-300'>
                                             {condicion.nombre}
                                         </p>
@@ -385,10 +345,19 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
 
                                 {/* //! TOTAL A PAGAR */}
                                 <p className='text-xl text-zinc-500 mb-2'>
-                                    Proyección financiera
+                                    Total a pagar por el servicio
                                 </p>
 
                                 <div className='border border-zinc-400 p-5 rounded-md'>
+
+                                    {/* //!descuento */}
+                                    {descuento > 0 && (
+                                        <p className='text-zinc-900 mt-2 py-2 px-2 leading-3 bg-yellow-500 inline-block mb-3'>Descuento del {condicionComercial?.descuento}%
+                                            <span className='font-bold ml-1'>
+                                                {descuento.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                            </span>
+                                        </p>
+                                    )}
 
                                     <div className='flex'>
                                         <p className={`text-3xl mr-5 ${descuento > 0 ? 'line-through text-zinc-500' : ''}`}>
@@ -402,105 +371,46 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                         )}
                                     </div>
 
-                                    {descuento > 0 && (
-                                        <p className='text-zinc-900 mt-2 py-2 px-2 leading-3 bg-yellow-500 inline-block'>DESC.{condicionComercial?.descuento}% OFF
-                                            <span className='font-bold ml-1'>
-                                                {descuento.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+
+                                    {msi > 0 && (
+                                        <p className='text-zinc-400'>{msi} pagos sin intereses de {pagoMensual.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</p>
+                                    )}
+
+                                    {metodoPagoId && porcentajeAnticipo < 100 && (
+                                        <p className='text-zinc-300 text-sm mt-2'>
+                                            <span className=''>
+                                                Total a diferir en comodos pagos a liquidar 2 días antes del evento: <b>{(precioFinal - pagoAnticipo).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</b>
                                             </span>
                                         </p>
                                     )}
 
-                                    {msi > 0 && (
-                                        <p>{msi} pagos de {pagoMensual.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} cada uno</p>
-                                    )}
-
-                                    {metodoPagoId && porcentajeAnticipo < 100 && (
-                                        <p className='text-blue-500 mt-2 '>
-                                            Anticipo del {porcentajeAnticipo}%: <span className='font-semibold'>{pagoAnticipo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</span>
-                                        </p>
-                                    )}
-
-                                    {condicionComercial?.nombre && (
-                                        <div className=''>
-                                            <p className='pt-3 text-sm'>Condiciones comerciales:  <span className='text-zinc-600'> {condicionComercial?.nombre}. {condicionComercial?.descripcion}</span></p>
-                                        </div>
-                                    )}
                                 </div>
-
-                                {/* //!VER CONTRATO */}
-                                {metodoPagoId && (
-                                    <div className='mt-5 border border-zinc-600 rounded-md mb-5 '>
-
-                                        <button
-                                            className={`${metodoPagoId ? '' : 'bg-zinc-600'} w-full px-3 py-3 font-semibold rounded-md text-sm flex items-center text-zinc-200 justify-start`}
-                                            disabled={!metodoPagoId}
-                                            onClick={() => setToggleContrato(prev => !prev)}
-                                        >
-                                            {toggleContrato ? 'Ocultar borrador del contrato' : 'Revisar borrador de contrato antes de pagar'}
-                                            {toggleContrato ? <ChevronUp className="ml-2" /> : <ChevronDown className="ml-2" />}
-                                        </button>
-
-                                        {toggleContrato && (
-                                            <div className="">
-                                                <Contrato
-                                                    nombreCliente={nombreCliente}
-                                                    nombreEvento={nombreEvento}
-                                                    tipoEvento={tipoEvento}
-                                                    fechaEvento={fechaEvento || new Date()}
-                                                    condicionesComerciales={condicionComercial?.nombre || ''}
-                                                    totalPrecioSistema={totalPrecioSistema}
-                                                    descuento={descuento}
-                                                    precioFinal={precioFinal}
-                                                />
-
-                                                <button
-                                                    className={`${metodoPagoId ? '' : 'bg-zinc-600'} w-full px-3 py-3 font-semibold rounded-md text-sm flex items-center text-zinc-200 justify-start`}
-                                                    disabled={!metodoPagoId}
-                                                    onClick={() => setToggleContrato(prev => !prev)}
-                                                >
-                                                    {toggleContrato ? 'Ocultar borrador del contrato' : 'Revisar borrador de contrato antes de pagar'}
-                                                    {toggleContrato ? <ChevronUp className="ml-2" /> : <ChevronDown className="ml-2" />}
-                                                </button>
-
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
                             </div>
 
                             {metodoPagoId ? (
                                 <>
-                                    {/* //! CONFIRMACIÓN CONDICIONES CONTRATO */}
-                                    <div className='p-2 mb-5 leading-5 text-sm'>
-                                        <label htmlFor="confirmacionContrato" className="flex items-center cursor-pointer">
-                                            <div className="relative">
-                                                <input
-                                                    type="checkbox"
-                                                    id="confirmacionContrato"
-                                                    checked={confirmacionContrato}
-                                                    onChange={(e) => setConfirmacionContrato(e.target.checked)}
-                                                    className="sr-only"
-                                                />
-                                                <div className={`block w-14 h-8 rounded-full ${confirmacionContrato ? 'bg-green-600' : 'bg-zinc-600'}`}></div>
-                                                <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition ${confirmacionContrato ? 'transform translate-x-full bg-blue-600' : ''}`}></div>
-                                            </div>
-                                            <span className="ml-3 text-gray-200">Confirmo haber leído el contrato y estoy de acuerdo con los términos y condiciones.</span>
-                                        </label>
-                                    </div>
-
                                     {/* //!CHECKOUT */}
                                     <button
-                                        className={`${confirmacionContrato ? 'bg-blue-600' : 'bg-zinc-600'} w-full px-3 py-3 font-semibold rounded-md uppercase text-sm flex items-center text-zinc-200 justify-center mt-3`}
-                                        disabled={!confirmacionContrato || isProcessing}
+                                        className={`w-full px-3 py-4 font-semibold rounded-md uppercase text-sm flex items-center justify-center mt-3 mb-3 ${isProcessing ? 'bg-zinc-600' : 'bg-blue-600 text-zinc-200'}`}
+                                        disabled={isProcessing}
                                         onClick={checkout}
                                     >
-                                        {isProcessing ? 'Procesando...' : porcentajeAnticipo === 100 ? 'Pagarás el total' : `Pagarás el ${porcentajeAnticipo}% de anticipo ${pagoAnticipo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`}
+                                        {isProcessing ? 'Un momento por favor...' : porcentajeAnticipo === 100 ? (msi > 0 ? `Pagarás el total a ${msi} MSI` : 'Pagarás en una sola exhibición') : `Pagarás el ${porcentajeAnticipo}% anticipo: ${pagoAnticipo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`}
                                     </button>
+
+                                    {/* {condicionComercial?.nombre && (
+                                        <div className=''>
+                                            <p className='pt-3 text-sm'>Condiciones comerciales:  <span className='text-zinc-600'> {condicionComercial?.nombre}. {condicionComercial?.descripcion}</span></p>
+                                        </div>
+                                    )} */}
+
+                                    <p className='text-sm mt-3 text-zinc-600'>
+                                        Al presionar el botón de &quot;Pagar&quot; serás redirigido a la plataforma de pagos segura para completar tu transacción.
+                                    </p>
                                 </>
                             ) :
                                 (
-                                    <div className='p-5 mb-10'>
+                                    <div className='p-5'>
                                         <p className='text-red-500'>Selecciona una condición comercial y método de pago para continuar.</p>
                                     </div>
                                 )

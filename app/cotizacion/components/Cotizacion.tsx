@@ -3,12 +3,10 @@ import React, { useEffect, useState } from 'react'
 import { obtenerCotizacion } from '@/app/admin/_lib/cotizacion.actions'
 import { Cotizacion as CotizacionType } from '@/app/admin/_lib/types'
 
-import CotizacionPendiente from './CotizacionPendiente'
+import CotizacionPendiente from './CotizacionPendiente-v2'
 import CotizacionAutorizada from './CotizacionAutorizada'
 import CotizacionExpirada from './CotizacionExpirada'
 import CotizacionNoDisponible from './CotizacionNoDisponible'
-
-
 
 import Header from './Header';
 import Footer from './Footer';

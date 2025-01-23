@@ -1,18 +1,14 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { Cliente } from '@/app/admin/_lib/types'
-import { obtenerCliente, actualizarCliente, eliminarCliente } from '@/app/admin/_lib/cliente.actions'
-import { Trash } from 'lucide-react'
+import { obtenerCliente, actualizarCliente } from '@/app/admin/_lib/cliente.actions'
 import { obtenerCanales } from '@/app/admin/_lib/canal.actions'
-import { useRouter } from 'next/navigation'
 
 interface Props {
     clienteId: string
 }
 
-function FormClienteEditar({ clienteId }: Props) {
-
-    const router = useRouter();
+function FichaClienteEditar({ clienteId }: Props) {
 
     const [cliente, setCliente] = useState<Cliente | null>(null);
     const [nombre, setNombre] = useState('');
@@ -25,10 +21,11 @@ function FormClienteEditar({ clienteId }: Props) {
     const [fechaActualizacion, setFechaActualizacion] = useState('');
     const [respuestaServidor, setRespuestaServidor] = useState('');
     const [errorActualizacion, setErrorActualizacion] = useState('');
-
     const [errors, setErrors] = useState<{ nombre?: string; telefono?: string }>({});
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        setLoading(true);
         obtenerCliente(clienteId)
             .then((cliente) => {
                 setCliente(cliente);
@@ -47,6 +44,7 @@ function FormClienteEditar({ clienteId }: Props) {
             const canal = canales.find(c => c.id === cliente?.canalId);
             setCanal(canal?.nombre ?? '');
         })
+        setLoading(false);
 
     }, [clienteId, cliente?.canalId]);
 
@@ -78,7 +76,7 @@ function FormClienteEditar({ clienteId }: Props) {
                 setRespuestaServidor('Información actualizada correctamente');
                 setTimeout(() => {
                     setRespuestaServidor('');
-                }, 2000);
+                }, 3000);
             } else {
                 const { error } = response;
                 if (error && error.includes('telefono')) {
@@ -108,25 +106,19 @@ function FormClienteEditar({ clienteId }: Props) {
         }
     }
 
-    const handleEliminarCliente = () => {
-        if (!confirm('¿Estás seguro de eliminar este cliente?'))
-            return;
-
-        eliminarCliente(clienteId)
-            .then(() => {
-                window.location.href = '/admin/dashboard/contactos';
-            })
-            .catch((error) => {
-                console.error('Error eliminando cliente:', error);
-                alert('Hubo un error al eliminar el cliente');
-            });
+    if (loading) {
+        return <p className='text-zinc-500 p-5 border border-zinc-800 rounded-md'>
+            Cargando información del prospecto...
+        </p>
     }
 
     return (
         <div className="">
 
-            <div className='flex justify-between items-center mb-3'>
-                <h2 className=' text-xl text-zinc-500'>Datos generales</h2>
+            <div className='flex justify-between items-center mb-5'>
+                <h2 className='font-bold text-xl text-zinc-500'>
+                    Información del prospecto
+                </h2>
                 <button onClick={handleReset}
                     className="bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md text-sm px-4 py-2"
                 >
@@ -134,7 +126,7 @@ function FormClienteEditar({ clienteId }: Props) {
                 </button>
             </div>
 
-            <div className='border border-zinc-700 rounded-lg shadow-md p-5'>
+            <div className='border border-zinc-800 rounded-lg shadow-md p-5'>
 
                 <div className="mb-4">
                     <label className="block text-zinc-700 mb-1 text-sm">Nombre</label>
@@ -146,6 +138,7 @@ function FormClienteEditar({ clienteId }: Props) {
                     />
                     {errors.nombre && <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>}
                 </div>
+
                 <div className="mb-4">
                     <label className="block text-zinc-700 mb-1 text-sm">Teléfono</label>
                     <input
@@ -156,8 +149,11 @@ function FormClienteEditar({ clienteId }: Props) {
                     />
                     {errors.telefono && <p className="text-red-500 text-sm mt-1">{errors.telefono}</p>}
                 </div>
+
                 <div className="mb-4">
-                    <label className="block text-zinc-700 mb-1 text-sm">Email</label>
+                    <label className="block text-zinc-700 mb-1 text-sm">
+                        Email <span className='text-yellow-900'>(Usado para contrato y comprobantes de pago)</span>
+                    </label>
                     <input
                         type="email"
                         value={email}
@@ -165,6 +161,7 @@ function FormClienteEditar({ clienteId }: Props) {
                         className="w-full px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-md"
                     />
                 </div>
+
                 <div className="mb-4">
                     <label className="block text-zinc-700 mb-1 text-sm">Dirección</label>
                     <textarea
@@ -222,27 +219,15 @@ function FormClienteEditar({ clienteId }: Props) {
 
                 <button
                     onClick={handleSubmit}
-                    className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                    className={`w-full py-2 px-4 rounded-md ${!cliente ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
+                    disabled={!cliente}
                 >
-                    Actualizar información
+                    {cliente ? 'Actualizar información' : '...'}
                 </button>
 
-                <button
-                    onClick={() => router.back()}
-                    className="w-full bg-red-600 text-white py-2 px-4 rounded-lg mt-4 items-center justify-center"
-                >
-                    Cerrar ventana
-                </button>
-
-                <button
-                    onClick={() => handleEliminarCliente()}
-                    className="w-full text-red-500 text-sm py-2 px-4 rounded-lg mt-4 items-center justify-center"
-                >
-                    <Trash size={12} className='inline-block mr-1' /> Eliminar contacto
-                </button>
             </div>
         </div>
     )
 }
 
-export default FormClienteEditar
+export default FichaClienteEditar

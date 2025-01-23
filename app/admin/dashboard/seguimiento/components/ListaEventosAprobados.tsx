@@ -91,7 +91,7 @@ export default function ListaEventosAprobados() {
                                     onClick={() => {
                                         router.push(`/admin/dashboard/seguimiento/${evento.id}`)
                                     }}>
-                                    {evento.nombre}
+                                    {evento.nombre} {evento.eventoEtapaId}
                                 </button>
                             </div>
 

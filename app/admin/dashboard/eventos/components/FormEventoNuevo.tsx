@@ -1,12 +1,16 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { crearEvento, validarDisponibilidadFecha } from '@/app/admin/_lib/evento.actions'
+
 import { obtenerTiposEvento } from '@/app/admin/_lib/eventoTipo.actions'
+import { crearEvento, validarDisponibilidadFecha } from '@/app/admin/_lib/evento.actions'
 import { obtenerCliente, obtenerClientes } from '@/app/admin/_lib/cliente.actions'
+import { validarCondigoAutorizacion } from '@/app/admin/_lib/configuracion.actions'
+import { obtenerEtapa2 } from '@/app/admin/_lib/EventoEtapa.actions'
+
 import { Cliente } from '@/app/admin/_lib/types'
 import { X, Phone } from 'lucide-react'
-import { validarCondigoAutorizacion } from '@/app/admin/_lib/configuracion.actions'
+
 import Cookies from 'js-cookie'
 
 export default function FormEventoNuevo() {
@@ -35,10 +39,18 @@ export default function FormEventoNuevo() {
     const [desbloquearFechaDuplicada, setDesbloquearFechaDuplicada] = useState(false)
     const [codigoAutorizacion, setCodigoAutorizacion] = useState('')
     const [errorCodigoAutorizacion, setErrorCodigoAutorizacion] = useState('')
+    const [eventoEtapa2Id, setEventoEtapa2Id] = useState<string | null>(null)
 
     useEffect(() => {
 
         const clienteId = searchParams ? searchParams.get('clienteId') : null;
+
+        obtenerEtapa2().then((data) => {
+            if (data) {
+                setEventoEtapa2Id(data.etapaId ?? null)
+
+            }
+        })
 
         if (clienteId) {
             const fetchCliente = async () => {
@@ -111,7 +123,8 @@ export default function FormEventoNuevo() {
             eventoTipoId,
             nombre: nombre.toLowerCase().replace(/\b\w/g, char => char.toUpperCase()),
             fecha_evento: fechaEvento || new Date(), // Ensure fecha_evento is always a Date
-            status: 'seguimiento',
+            // status: 'seguimiento',
+            eventoEtapaId: eventoEtapa2Id,//seguimiento
             userId: user ? user.id : '',
         }
 

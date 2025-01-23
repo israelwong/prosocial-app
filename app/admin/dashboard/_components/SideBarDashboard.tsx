@@ -11,6 +11,7 @@ const links = [
     { href: '/admin/dashboard/agenda', label: 'Agenda', icon: <Calendar size={24} />, alt: 'Agenda' },
     { href: '/admin/dashboard/contactos', label: 'Contactos', icon: <Users size={24} />, alt: 'Contactos' },
     { href: '/admin/dashboard/finanzas', label: 'Finanzas', icon: <Wallet size={24} />, alt: 'Finanzas' },
+    // { href: '/admin/dashboard/servicios', label: 'Finanzas', icon: <List size={24} />, alt: 'Servicios' },
 ]
 
 function DashboardSideBar() {
@@ -43,12 +44,20 @@ function DashboardSideBar() {
             const { count: seguimientoCount, error: seguimientoError } = await supabase
                 .from('Evento')
                 .select('id', { count: 'exact' })
-                .in('status', ['nuevo', 'seguimiento']); // Filtra por múltiples valores
+                .in('eventoEtapaId', ['cm6498oqp0000gu1ax8qnuuu8', 'cm6498zw00001gu1a67s88y5h']); // Filtra por múltiples valores
 
             const { count: aprobadosCount, error: aprobadosError } = await supabase
                 .from('Evento')
                 .select('id', { count: 'exact' })
-                .eq('status', 'aprobado');
+                .in('eventoEtapaId', [
+                    'cm6499aqs0002gu1ae4k1a7ls',
+                    'cm6499n9v0003gu1a9bj1neri',
+                    'cm649aflf0004gu1agr90z9o3',
+                    'cm649d1380005gu1ar0xr7qev',
+                    'cm64bpdlt0001guqkujuf5jfr',
+                    'cm64bp2ba0000guqkip3liohc',
+                ]);
+            // console.log('Aprobados:', aprobadosCount)
 
             const { count: agendaCount, error: agendaError } = await supabase
                 .from('Agenda')

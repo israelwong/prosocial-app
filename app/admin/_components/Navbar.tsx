@@ -63,7 +63,7 @@ function Navbar() {
     if (user && user.role === 'admin') {
         links.push(
             { href: '/admin/marketing', label: 'Marketing' },
-            { href: '/admin/configurar', label: 'Marketing' },
+            { href: '/admin/configurar', label: 'Configurar' },
         );
     }
 

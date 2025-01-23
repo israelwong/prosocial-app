@@ -14,6 +14,13 @@ export async function obtenerCliente(id: string) {
     return await prisma.cliente.findUnique({
         where: {
             id: id
+        },
+        include: {
+            Canal: {
+                select: {
+                    nombre: true
+                }
+            }
         }
     });
 }

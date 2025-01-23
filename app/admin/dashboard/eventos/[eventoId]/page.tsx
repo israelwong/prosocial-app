@@ -1,6 +1,6 @@
 import React from 'react'
 import { Metadata } from 'next';
-import FormEventoEditar from '../components/FormEventoEditar';
+import FormEventoEditar from '../components/FormEventoEditarV2';
 
 export const metadata: Metadata = {
     title: 'Detalles del evento',

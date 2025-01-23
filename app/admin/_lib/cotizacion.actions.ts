@@ -344,3 +344,54 @@ export async function cotizacionDetalle(id: string) {
 
     };
 }
+
+export async function clonarCotizacion(cotizacionId: string) {
+    const cotizacion = await prisma.cotizacion.findUnique({
+        where: { id: cotizacionId }
+    });
+
+    if (!cotizacion) {
+        return { error: 'Cotizacion not found' };
+    }
+
+    const cotizacionServicios = await prisma.cotizacionServicio.findMany({
+        where: { cotizacionId }
+    });
+
+    const existingCotizaciones = await prisma.cotizacion.findMany({
+        where: {
+            nombre: {
+                startsWith: cotizacion.nombre
+            }
+        }
+    });
+
+    const copyNumber = existingCotizaciones.length + 1;
+    const newCotizacionNombre = `${cotizacion.nombre} - (copia ${copyNumber})`;
+
+    const newCotizacion = await prisma.cotizacion.create({
+        data: {
+            eventoId: cotizacion.eventoId,
+            eventoTipoId: cotizacion.eventoTipoId,
+            nombre: newCotizacionNombre,
+            precio: cotizacion.precio,
+            status: 'pendiente',
+        }
+    });
+
+    for (const cotizacionServicio of cotizacionServicios) {
+        await prisma.cotizacionServicio.create({
+            data: {
+                cotizacionId: newCotizacion.id,
+                servicioId: cotizacionServicio.servicioId,
+                cantidad: cotizacionServicio.cantidad,
+                posicion: cotizacionServicio.posicion,
+                servicioCategoriaId: cotizacionServicio.servicioCategoriaId,
+            }
+        });
+    }
+
+    return {
+        success: true, cotizacionId: newCotizacion.id
+    };
+}

@@ -47,20 +47,21 @@ export default function ListaProspectos() {
                 className='mb-5 p-2 border border-gray-300 rounded-md w-full text-zinc-800'
             />
             {loading ? (
-                <p>Cargando contactos...</p>
+                <p className='text-zinc-400'>
+                    Cargando contactos...
+                </p>
             ) : (
                 filteredClientes.length > 0 ? (
                     <div className='grid grid-cols-1 gap-4'>
                         {filteredClientes.map(cliente => (
-                            <div key={cliente.id} className='border border-zinc-800 p-4 rounded-md bg-zinc-900'>
+                            <div key={cliente.id} className='border border-zinc-800 p-4 rounded-md bg-zinc-900 cursor-pointer'
+                                onClick={() => router.push(`/admin/dashboard/contactos/${cliente.id}`)}>
                                 <div className='flex justify-between items-center'>
                                     <h2 className='text-xl text-zinc-300'>{cliente.nombre}</h2>
-                                    <button
-                                        className='text-zinc-500 bg-zinc-800 px-2 py-1 rounded-md'
-                                        onClick={() => router.push(`/admin/dashboard/contactos/${cliente.id}`)}
-                                    >
-                                        Detalles
-                                    </button>
+                                    <span
+                                        className={`uppercase px-2 py-1 rounded-full text-[10px] font-semibold leading-3 ${cliente.status === 'cliente' ? 'bg-green-800 text-green-400' : 'bg-red-800 text-red-400'}`}>
+                                        {cliente.status}
+                                    </span>
                                 </div>
                                 <p className='text-zinc-400 italic'>
                                     Creado el {cliente.createdAt ? new Date(cliente.createdAt).toLocaleString('es-ES', { dateStyle: 'full', timeStyle: 'medium' }) : 'N/A'}

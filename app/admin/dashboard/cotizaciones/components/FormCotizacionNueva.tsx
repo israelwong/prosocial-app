@@ -614,7 +614,7 @@ export default function FormCotizacionNueva() {
                             {!pagandoEfectivo && (
                                 <button
                                     onClick={() => { handleCrearCotizacion(); }}
-                                    className='bg-blue-900 text-white px-3 py-3 rounded-md w-full font-semibold mb-2'
+                                    className={`text-white px-3 py-3 rounded-md w-full font-semibold mb-2 ${guardandoCotizacion ? 'bg-zinc-500' : 'bg-blue-900'}`}
                                     disabled={guardandoCotizacion}
                                 >
                                     {guardandoCotizacion ? 'Guardando cotización...' : 'Guardar cotización'}

@@ -14,6 +14,7 @@ export default async function handler(req, res) {
         const metodoPago = req.body.paymentMethod;
         const num_msi = parseInt(req.body.num_msi, 10);
         const cotizacionId = req.body.cotizacionId;
+        
         const condicionesComercialesId = req.body.condicionesComercialesId;
         const metodoPagoId = req.body.metodoPagoId;
 
@@ -21,6 +22,8 @@ export default async function handler(req, res) {
         const nombreCliente = req.body.nombreCliente;
         const emailCliente = req.body.emailCliente; 
         const telefonoCliente = req.body.telefonoCliente;
+
+        const precioFinal = req.body.precioFinal;
 
         //! Crear objeto sesión de pago
         let sessionParams = {
@@ -115,6 +118,16 @@ export default async function handler(req, res) {
                 status: 'pending',
             },
         });        
+
+        //! Actualizar la cotización con las nuevas condiciones comerciales
+        await prisma.cotizacion.update({
+            where: { id: cotizacionId },
+            data: {
+                precio: precioFinal,
+                condicionesComercialesId,
+                condicionesComercialesMetodoPagoId: metodoPagoId,
+            },
+        });
 
         res.status(200).json({ url: session.url });
     } catch (error) {

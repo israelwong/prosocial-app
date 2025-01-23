@@ -10,10 +10,122 @@ export interface User {
     updatedAt?: Date;
     token?: string;
 }
+
+export interface Evento {
+    id?: string
+    clienteId?: string
+    eventoTipoId?: string | null //
+    tipoEvento?: string // para mostrar en la lista de eventos
+    nombre: string | null
+    fecha_evento: Date
+    status?: string
+    createdAt?: Date
+    updatedAt?: Date
+    userId?: string | null
+    user?: User | null
+    eventoEtapaId?: string | null
+    eventoTipo?: {
+        nombre: string
+    }
+}
+
+export interface EventoBitacora {
+    id?: string
+    eventoId: string
+    comentario: string
+    createdAt?: Date
+    updatedAt?: Date
+    status?: string | null
+    importancia?: string | null
+}
+
+export interface EventosPorEtapa {
+    total_pagado: number;
+    Cliente: {
+        nombre: string;
+    };
+    EventoTipo: {
+        nombre: string;
+    } | null;
+    EventoEtapa: {
+        nombre: string;
+        posicion: number;
+    } | null;
+    Cotizacion: {
+        Pago: {
+            id: string;
+            createdAt: Date;
+            monto: number;
+        }[];
+        id: string;
+        status: string;
+        precio: number;
+    }[];
+    User: {
+        username: string | null;
+    } | null;
+    id: string;
+    nombre: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    clienteId: string;
+    eventoTipoId: string | null;
+    fecha_evento: Date;
+    sede: string | null;
+    direccion: string | null;
+    status: string;
+    userId: string | null;
+    eventoEtapaId: string | null;
+}
+
+export interface EventoConTotalPagado {
+    total_pagado: number;
+    Cliente: {
+        nombre: string;
+    };
+    EventoTipo: {
+        nombre: string;
+    } | null;
+    EventoEtapa: {
+        nombre: string;
+        posicion: number;
+    } | null;
+    Cotizacion: {
+        Pago: {
+            id: string;
+            createdAt: Date;
+            monto: number;
+        }[];
+        id: string;
+        status: string;
+        precio: number;
+    }[];
+    id: string;
+    clienteId: string;
+    eventoTipoId: string | null;
+    nombre: string | null;
+    fecha_evento: Date;
+    sede: string | null;
+    direccion: string | null;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+    userId: string | null;
+    eventoEtapaId: string | null;
+}
+
 export interface EventoTipo {
     id: string
     nombre: string
     posicion: number
+}
+
+export interface EventoEtapa {
+    id?: string
+    nombre: string
+    posicion: number
+    createdAt?: Date
+    updatedAt?: Date
 }
 
 export interface ServicioCategoria {
@@ -123,28 +235,6 @@ export interface Cliente {
     numero_eventos?: number;
 }
 
-export interface Evento {
-    id?: string
-    clienteId: string
-    eventoTipoId: string | null //
-    tipoEvento?: string // para mostrar en la lista de eventos
-    nombre: string | null
-    fecha_evento: Date
-    status?: string
-    createdAt?: Date
-    updatedAt?: Date
-    userId?: string | null
-    user?: User | null
-}
-
-export interface EventoStatus {
-    id?: string
-    nombre: string
-    posicion: number
-    createdAt?: Date
-    updatedAt?: Date
-}
-
 export interface Cotizacion {
     id?: string
     eventoTipoId: string
@@ -155,6 +245,7 @@ export interface Cotizacion {
     condicionesComercialesMetodoPagoId?: string | null
     status?: string
     servicios?: Servicio[];
+    visitas?: number
     createdAt?: Date
     expiresAt?: Date | null
     updatedAt?: Date
@@ -255,29 +346,6 @@ export interface Pago {
     updatedAt?: Date
 }
 
-export interface EventoBitacora {
-    id?: string
-    eventoId: string
-    comentario: string
-    createdAt?: Date
-    updatedAt?: Date
-    status?: string | null
-    ipmortancia?: string | null
-
-}
-
-export interface EventoDetalle {
-    id: string;
-    evento: string;
-    cliente: string;
-    creacion: string;
-    status: string;
-    tipoEvento: string;
-    fecha_evento: string;
-    user: string;
-    fecha_actualizacion: string;
-}
-
 export interface CotizacionVisita {
     id?: string
     cotizacionId: string
@@ -352,9 +420,10 @@ export interface Anuncio {
 
 export interface LeadForm {
     nombre: string
-    email: string
+    email?: string
     telefono: string
     fecha_evento: Date
     eventoTipoId: string
-    nombreEvento: string
+    nombreEvento?: string
 }
+

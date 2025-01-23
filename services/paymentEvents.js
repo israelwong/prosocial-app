@@ -1,4 +1,3 @@
-// services/paymentEvents.js
 import { PrismaClient } from "@prisma/client";
 import {sendSuccessfulPayment, sendWelcomeEmail, sendPedingPayment} from "./sendmail";
 
@@ -9,6 +8,8 @@ export async function handlePaymentCompleted(session, res) {
 
     try {
         const paymentIntent = session;
+
+        const emailPayment = paymentIntent.customer_details.email;
         
         // Obtener el pago correspondiente
         const pago = await prisma.pago.findFirst({
@@ -67,9 +68,6 @@ export async function handlePaymentCompleted(session, res) {
                 day: 'numeric',
             });
             const montoPago = pago.monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
-            // const precio = cotizacion.precio;
-            // const totalPagado = pagos.reduce((total, pago) => total + pago.monto, 0)
-            // const totalPendiente = (precio - totalPagado);
             const metodoPago = pago.metodo_pago;
             const fechaPago = new Date(pago.createdAt).toLocaleDateString('es-ES', {
                 weekday: 'long',
@@ -100,40 +98,60 @@ export async function handlePaymentCompleted(session, res) {
                 data: { status: 'cliente' }, //! Cambiar a cliente
             });        
             
-            //actualizar status del evento
-            await prisma.evento.update({
-                where: { id: evento.id },
-                data: { status: 'aprobado' },
-            });
-
-            //! Verificar si la cotización ya fue aprobado
+            
+            //! Si la cotización no ha sido aprobada anteriormnte
             if (cotizacion.status !== 'aprobada') {
+
+                const eventoEtapaId = await prisma.eventoEtapa.findFirst({
+                    where: { posicion: 2 },                
+                });
                 
-                // Actualizar el estatus de la cotización
+                //! Actualizar el estatus de la cotización
                 await prisma.cotizacion.update({
                     where: { id: cotizacion.id },
                     data: { status: 'aprobada' },
                 });
 
-                //! Enviar correo de bienvenida
-                await sendWelcomeEmail(
-                    cliente.email,
-                    {
-                        nombre,
-                        tipoEvento: eventoTipo.nombre,
-                        nombreEvento,
-                        diaEvento,
-                        telefonoSoporte,
-                        clienteId,
-                        paginaWeb,
-                        url,
+                //! actualizar etapa del evento
+                await prisma.evento.update({
+                    where: { id: evento.id },
+                    data: { 
+                        eventoEtapaId
                     },
-                );
+                });
+
+                //! Crear agenda
+                await prisma.agenda.create({
+                    data: {
+                        concepto: `Cobertura de evento ${evento.nombre}`,
+                        fecha: evento.fecha_evento,
+                        eventoId: evento.id,
+                        agendaTipo:'Evento',
+                        status: 'pendiente',
+                    },
+                });
+
+                //! Enviar correo de bienvenida
+                if(emailPayment){
+                    await sendWelcomeEmail(
+                        emailPayment,
+                        {
+                            nombre,
+                            tipoEvento: eventoTipo.nombre,
+                            nombreEvento,
+                            diaEvento,
+                            telefonoSoporte,
+                            clienteId,
+                            paginaWeb,
+                            url,
+                        },
+                    );
+                }
             }
 
             //! Enviar correo de notificación de pago
             await sendSuccessfulPayment(
-                cliente.email,
+                emailPayment,
                 {
                     nombre,
                     tipoEvento: eventoTipo.nombre,
@@ -149,13 +167,14 @@ export async function handlePaymentCompleted(session, res) {
                     url,
                 });
             res.status(200).send('gestión completada');
+
         }
 
         //! Enviar correo de notificación pendiente
         if (paymentIntent.payment_method_types=='customer_balance'){
 
             await sendPedingPayment(
-                cliente.email,
+                emailPayment,
                 {
                     nombre,
                     tipoEvento: eventoTipo.nombre,

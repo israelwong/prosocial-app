@@ -56,6 +56,7 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
 
     useEffect(() => {
         const fetchData = async () => {
+
             if (evento.id) {
                 setLoading(true)
                 const cotizacionesData = await obtenerCotizacionesPorEvento(evento.id)
@@ -65,6 +66,8 @@ const ListaCotizaciones: React.FC<Props> = ({ evento, cliente }) => {
                 setEventoTipo(eventoTipoData?.nombre || '')
                 setLoading(false)
             }
+
+
         }
 
         fetchData()

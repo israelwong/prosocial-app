@@ -13,7 +13,7 @@ export default function FormContactoNuevo() {
     const [telefono, setTelefono] = useState('');
     const [correo, setCorreo] = useState('');
     const [guardandoCliente, setGuardandoCliente] = useState(false);
-    const [errors, setErrors] = useState({} as { nombreInteresado?: string, telefono?: string, fechaEvento?: string, tipoEvento?: string, nombreEvento?: string, correo?: string, canalId?: string });
+    const [errors, setErrors] = useState({} as { nombreInteresado?: string, telefono?: string, fechaEvento?: string, tipoEvento?: string, nombreEvento?: string, canalId?: string });
     const [clienteIdExistente, setClienteIdExistente] = useState('');
     const [errorClienteExistente, setErrorClienteExistente] = useState('');
     const [canales, setCanales] = useState([] as Canal[]);
@@ -35,7 +35,7 @@ export default function FormContactoNuevo() {
     }, [])
 
     const validar = () => {
-        const newErrors = {} as { nombreInteresado?: string, telefono?: string, fechaEvento?: string, tipoEvento?: string, nombreEvento?: string, correo?: string, canalId?: string };
+        const newErrors = {} as { nombreInteresado?: string, telefono?: string, fechaEvento?: string, tipoEvento?: string, nombreEvento?: string, canalId?: string };
 
         if (!nombreInteresado) {
             newErrors.nombreInteresado = 'El nombre es requerido';
@@ -45,10 +45,6 @@ export default function FormContactoNuevo() {
             newErrors.telefono = 'El teléfono es requerido';
         } else if (!/^\d{10}$/.test(telefono)) {
             newErrors.telefono = 'El teléfono debe tener 10 dígitos';
-        }
-
-        if (!correo) {
-            newErrors.correo = 'El correo es requerido';
         }
 
         if (!canalId) {
@@ -121,14 +117,13 @@ export default function FormContactoNuevo() {
                         {errors.telefono && <span className="text-red-500">{errors.telefono}</span>}
                     </div>
                     <div>
-                        <label className="block mb-1 text-sm text-zinc-500">Correo:</label>
+                        <label className="block mb-1 text-sm text-zinc-500">Correo: <span className='text-zinc-700'>(Opcional)</span></label>
                         <input
                             type="email"
                             value={correo}
                             onChange={(e) => setCorreo(e.target.value)}
                             className="w-full bg-zinc-900 p-2 border border-zinc-800 rounded-md"
                         />
-                        {errors.correo && <span className="text-red-500">{errors.correo}</span>}
                     </div>
 
                     <div>
