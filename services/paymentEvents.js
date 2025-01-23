@@ -167,7 +167,6 @@ export async function handlePaymentCompleted(session, res) {
                     url,
                 });
             res.status(200).send('gestión completada');
-
         }
 
         //! Enviar correo de notificación pendiente
