@@ -102,16 +102,24 @@ export async function handlePaymentCompleted(session, res) {
             //! Si la cotización no ha sido aprobada anteriormnte
             if (cotizacion.status !== 'aprobada') {
 
-                const eventoEtapaId = await prisma.eventoEtapa.findFirst({
-                    where: { posicion: 2 },                
-                });
-                
                 //! Actualizar el estatus de la cotización
                 await prisma.cotizacion.update({
                     where: { id: cotizacion.id },
                     data: { status: 'aprobada' },
                 });
 
+                const eventoEtapa = await prisma.eventoEtapa.findFirst({
+                    where: { posicion: 2 },                
+                });
+
+                const eventoEtapaId = eventoEtapa ? eventoEtapa.id : null;
+
+                if (!eventoEtapaId) {
+                    console.log('No se encontró la etapa del evento correspondiente.');
+                    res.status(404).send('Etapa del evento no encontrada');
+                    return;
+                }
+                
                 //! actualizar etapa del evento
                 await prisma.evento.update({
                     where: { id: evento.id },
