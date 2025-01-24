@@ -128,7 +128,7 @@ const ListaCotizaciones: React.FC<Props> = ({ eventoId, eventoTipoId, eventoAsig
                                 className="bg-zinc-900 border border-zinc-800 rounded w-full py-2 px-3 text-zinc-500"
                                 disabled
                             >
-                                <option value=''>Asignate el evento para desbloquar</option>
+                                <option value=''>Primero asignate el evento</option>
                             </select>
                         </>
                     )}

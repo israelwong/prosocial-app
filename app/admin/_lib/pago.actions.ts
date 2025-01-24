@@ -190,3 +190,37 @@ export async function obtenerBalancePagosEvento(eventoId: string) {
     return { precio, totalPagado, balance };
 
 }
+
+export async function ontenerDetallesPago(pagoId: string) {
+    const pago = await prisma.pago.findUnique({
+        where: {
+            id: pagoId
+        }
+    });
+
+    const cliente = await prisma.cliente.findUnique({
+        where: {
+            id: pago?.clienteId ?? undefined
+        }
+    });
+
+    const cotizacion = await prisma.cotizacion.findUnique({
+        where: {
+            id: pago?.cotizacionId ?? undefined
+        }
+    });
+
+    const evento = await prisma.evento.findUnique({
+        where: {
+            id: cotizacion?.eventoId ?? undefined
+        }
+    });
+
+    const detallesPago = {
+        pago,
+        cliente,
+        cotizacion,
+        evento
+    };
+    return detallesPago;
+}

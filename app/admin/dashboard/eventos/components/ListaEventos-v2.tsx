@@ -8,47 +8,7 @@ import { obtenerEventosPorEtapa } from '@/app/admin/_lib/evento.actions'
 import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
 import { obtenerCliente } from '@/app/admin/_lib/cliente.actions'
 import { obtenerEventoEtapas, obtenerEtapasFiltradas } from '@/app/admin/_lib/EventoEtapa.actions'
-
 import FichaEvento from './FichaEvento'
-
-// interface EventosConTotalPagado {
-//     total_pagado: number;
-//     Cliente: {
-//         nombre: string;
-//     };
-//     EventoTipo: {
-//         nombre: string;
-//     } | null;
-//     EventoEtapa: {
-//         nombre: string;
-//         posicion: number;
-//     } | null;
-//     Cotizacion: {
-//         Pago: {
-//             id: string;
-//             createdAt: Date;
-//             monto: number;
-//         }[];
-//         id: string;
-//         status: string;
-//         precio: number;
-//     }[];
-//     User: {
-//         username: string | null;
-//     } | null;
-//     id: string;
-//     nombre: string | null;
-//     createdAt: Date;
-//     updatedAt: Date;
-//     clienteId: string;
-//     eventoTipoId: string | null;
-//     fecha_evento: Date;
-//     sede: string | null;
-//     direccion: string | null;
-//     status: string;
-//     userId: string | null;
-//     eventoEtapaId: string | null;
-// }
 
 export default function ListaEventos() {
 

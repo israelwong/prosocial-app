@@ -1,8 +1,12 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Shuffle, Home, Calendar, Users, Wallet, Inbox } from 'lucide-react'
 import { supabase } from '../../_lib/supabase'
+// import { obtenerEventoPorId } from '../../_lib/evento.actions'
+import { obtenerDetallesPago } from '../../_lib/pago.actions'
+import { obtenerEventoEtapas } from '../../_lib/EventoEtapa.actions'
+import { EventoEtapa } from '../../_lib/types'
 
 const links = [
     { href: '/admin/dashboard', label: 'Inicio', icon: <Home size={24} />, alt: 'Inicio' },
@@ -11,7 +15,6 @@ const links = [
     { href: '/admin/dashboard/agenda', label: 'Agenda', icon: <Calendar size={24} />, alt: 'Agenda' },
     { href: '/admin/dashboard/contactos', label: 'Contactos', icon: <Users size={24} />, alt: 'Contactos' },
     { href: '/admin/dashboard/finanzas', label: 'Finanzas', icon: <Wallet size={24} />, alt: 'Finanzas' },
-    // { href: '/admin/dashboard/servicios', label: 'Finanzas', icon: <List size={24} />, alt: 'Servicios' },
 ]
 
 function DashboardSideBar() {
@@ -20,8 +23,9 @@ function DashboardSideBar() {
     const [seguimientoCount, setSeguimientoCount] = useState(0)
     const [aprobadosCount, setAprobadosCount] = useState(0)
     const [agendaCount, setAgendaCount] = useState(0)
+    const [etapas, setEtapas] = useState<EventoEtapa[]>([])
 
-    //! Función para reproducir un sonido de notificación
+    //! NOTIFICACIÓN SONIDO
     const playNotificationSound = () => {
         try {
             const audio = new Audio('/notificacion.m4a'); // Ruta del sonido en la carpeta public
@@ -36,82 +40,135 @@ function DashboardSideBar() {
         }
     };
 
-    //! Función para obtener los conteos de eventos en seguimiento y aprobados
-    useEffect(() => {
+    //! CONTEO DE EVENTOS
+    const fetchCounts = useCallback(async () => {
 
-        const fetchCounts = async () => {
+        const filtroEtapasPosicionSeguimiento = etapas.filter((etapa) => etapa.posicion === 1 || etapa.posicion === 2).map((etapa) => etapa.id);
+        const { count: seguimientoCount, error: seguimientoError } = await supabase
+            .from('Evento')
+            .select('id', { count: 'exact' })
+            .in('eventoEtapaId', filtroEtapasPosicionSeguimiento); // Filtra por múltiples valores
 
-            const { count: seguimientoCount, error: seguimientoError } = await supabase
-                .from('Evento')
-                .select('id', { count: 'exact' })
-                .in('eventoEtapaId', ['cm6498oqp0000gu1ax8qnuuu8', 'cm6498zw00001gu1a67s88y5h']); // Filtra por múltiples valores
+        const filtroEtapasPosicionAprobadas = etapas.filter((etapa) => etapa.posicion >= 3 && etapa.posicion < 9).map((etapa) => etapa.id);
+        const { count: aprobadosCount, error: aprobadosError } = await supabase
+            .from('Evento')
+            .select('id', { count: 'exact' })
+            .in('eventoEtapaId', filtroEtapasPosicionAprobadas);
 
-            const { count: aprobadosCount, error: aprobadosError } = await supabase
-                .from('Evento')
-                .select('id', { count: 'exact' })
-                .in('eventoEtapaId', [
-                    'cm6499aqs0002gu1ae4k1a7ls',
-                    'cm6499n9v0003gu1a9bj1neri',
-                    'cm649aflf0004gu1agr90z9o3',
-                    'cm649d1380005gu1ar0xr7qev',
-                    'cm64bpdlt0001guqkujuf5jfr',
-                    'cm64bp2ba0000guqkip3liohc',
-                ]);
-            // console.log('Aprobados:', aprobadosCount)
+        const { count: agendaCount, error: agendaError } = await supabase
+            .from('Agenda')
+            .select('id', { count: 'exact' })
+            .eq('status', 'pendiente');
 
-            const { count: agendaCount, error: agendaError } = await supabase
-                .from('Agenda')
-                .select('id', { count: 'exact' })
-                .eq('status', 'pendiente');
+        if (seguimientoError) console.error('Error al obtener seguimiento leads:', seguimientoError);
+        if (aprobadosError) console.error('Error al obtener aprobados leads:', aprobadosError);
+        if (agendaError) console.error('Error al obtener aprobados leads:', agendaError);
 
-            if (seguimientoError) console.error('Error al obtener seguimiento leads:', seguimientoError);
-            if (aprobadosError) console.error('Error al obtener aprobados leads:', aprobadosError);
-            if (agendaError) console.error('Error al obtener aprobados leads:', agendaError);
+        setSeguimientoCount(seguimientoCount || 0);
+        setAprobadosCount(aprobadosCount || 0);
+        setAgendaCount(agendaCount || 0);
+    }, [etapas]);
 
-            setSeguimientoCount(seguimientoCount || 0);
-            setAprobadosCount(aprobadosCount || 0);
-            setAgendaCount(agendaCount || 0);
-        };
+    const revisarPago = async (id: string) => {
+        const transaccion = await obtenerDetallesPago(id);
 
-        //! Suscripción a cambios en tiempo real   
-        const subscription = supabase
-            .channel('realtime:General')
+        if ((transaccion.evento?.eventoEtapaId === etapas[0].id || transaccion.evento?.eventoEtapaId === etapas[1].id) && transaccion.pago?.status === 'paid') {
+
+            //!pago inicial
+            //actualizar estatus a 'cliente'
+            //actualizar corizacion a 'aprobada'
+            //actualizar evento a 'aprobado'
+            const etapaSiguiente = etapas.find((etapa) => etapa.posicion === 3)?.id;
+
+            //crear agenda
+            //enviar correo de confirmación
+            //enviar correo de bienvenida
+            console.log('Etapa siguiente:', etapaSiguiente);
+        } else {
+            console.log('pago ordinario, enviar correo de confirmación');
+        }
+    }
+
+    /****************************************
+     ********** SUSCRIPCIONES ***************
+     ****************************************/
+
+    //! ETAPA EVENTOS
+    const suscripionConteos = useCallback(() => {
+        const subscriptionConteo = supabase
+            .channel('realtime:Conteo')
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'Evento' },
                 async (payload) => {
-                    // console.log('Cambio detectado:', payload);
                     //! enviar sonido de notificación al insertar un nuevo evento
                     if (payload.eventType === 'INSERT') {
                         playNotificationSound();
                     }
-                    // Actualiza cuando cambian los datos
                     fetchCounts();
                 }
             ).on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'Agenda' },
                 async () => {
-                    // console.log('Cambio detectado:', payload);
                     fetchCounts();
                 }
-            )
-            .subscribe((status, err) => {
+            ).subscribe((status, err) => {
                 if (err) {
                     console.error('Error en la suscripción:', err);
                 } else {
-                    console.log('Estado de la suscripción en SIDEBAR:', status);
+                    console.log('Estado de la suscripción en conteo evento etapa:', status);
                 }
             });
         //! Obtener los conteos iniciales
         fetchCounts();
 
         return () => {
-            //! Eliminar la suscripción cuando el componente se desmonta
-            supabase.removeChannel(subscription);
+            supabase.removeChannel(subscriptionConteo);
         };
+    }, [fetchCounts]);
 
+    //! PAGOS
+    const suscripcionPagos = useCallback(() => {
+        const subscriptionPago = supabase
+            .channel('realtime:Pago')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'Pago' },
+                async (payload) => {
+
+                    //! enviar sonido de notificación al insertar un nuevo evento
+                    if (payload.eventType === 'INSERT') {
+                        console.log('Nuevo pago:', payload.new.id);
+                        revisarPago(payload.new.id);
+                    }
+                }
+            ).subscribe((status, err) => {
+                if (err) {
+                    console.error('Error en la suscripción Pago:', err);
+                } else {
+                    console.log('Estado de la suscripción en conteo:', status);
+                }
+            });
+        //! Obtener los conteos iniciales
+        fetchCounts();
+
+        return () => {
+            supabase.removeChannel(subscriptionPago);
+        };
+    }, [fetchCounts]);
+
+    //! Función para obtener los conteos de eventos en seguimiento y aprobados
+    useEffect(() => {
+        obtenerEventoEtapas().then((todasLasEtapas) => {
+            setEtapas(todasLasEtapas);
+        })
+        suscripionConteos();
     }, []);
+
+    useEffect(() => {
+        suscripcionPagos();
+    }, [suscripcionPagos]);
 
     return (
         <div className='h-screen flex pt-5'>

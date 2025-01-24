@@ -33,6 +33,9 @@ export default function FormEventoEditarV2({ eventoId }: Props) {
                 setNombreCliente(data.Cliente.nombre);
                 setTelefono(data.Cliente.telefono ?? '');
                 setNombreEtapa(data.EventoEtapa?.nombre ?? '');
+                if (data.userId) {
+                    setEventoAsignado(true)
+                }
             }
         });
     }, [eventoId])

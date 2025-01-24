@@ -249,6 +249,7 @@ export interface Cotizacion {
     createdAt?: Date
     expiresAt?: Date | null
     updatedAt?: Date
+    pagos?: Pago[]; // Add this line to include the pagos property   
 }
 
 export interface CotizacionServicio {

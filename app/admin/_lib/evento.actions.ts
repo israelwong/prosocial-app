@@ -404,8 +404,8 @@ export async function actualizarEtapa(eventoId: string, eventoEtapaId: string) {
 
 }
 
+//la usamos en el componente de cotizaciones
 export async function obtenerEventoDetalleCompartirInformacion(eventoId: string) {
-
     const evento = await prisma.evento.findUnique({
         where: {
             id: eventoId
@@ -425,14 +425,11 @@ export async function obtenerEventoDetalleCompartirInformacion(eventoId: string)
             }
         }
     });
-
-    return {
-        evento
-    };
+    return { evento };
 }
 
 export async function obtenerEventosPorEtapa(etapas: number[]) {
-    console.log('Etapas:', etapas);
+
     const eventos = await prisma.evento.findMany({
         where: {
             EventoEtapa: {
