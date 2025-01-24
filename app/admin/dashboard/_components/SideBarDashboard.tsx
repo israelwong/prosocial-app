@@ -69,25 +69,27 @@ function DashboardSideBar() {
         setAgendaCount(agendaCount || 0);
     }, [etapas]);
 
-    const revisarPago = async (id: string) => {
+    const revisarPago = useCallback(async (id: string) => {
         const transaccion = await obtenerDetallesPago(id);
 
-        if ((transaccion.evento?.eventoEtapaId === etapas[0].id || transaccion.evento?.eventoEtapaId === etapas[1].id) && transaccion.pago?.status === 'paid') {
+        console.log('Transacción:', transaccion);
+
+        if ((transaccion.evento?.eventoEtapaId === etapas[0].id || transaccion.evento?.eventoEtapaId === etapas[1].id)) {
 
             //!pago inicial
-            //actualizar estatus a 'cliente'
-            //actualizar corizacion a 'aprobada'
-            //actualizar evento a 'aprobado'
             const etapaSiguiente = etapas.find((etapa) => etapa.posicion === 3)?.id;
-
-            //crear agenda
-            //enviar correo de confirmación
-            //enviar correo de bienvenida
+            console.log('Actualizar estatus a "cliente"');
+            console.log('Actualizar cotización a "aprobada"');
+            console.log('Actualizar evento a "aprobado"');
+            console.log('Crear agenda');
+            console.log('Enviar correo de confirmación');
+            console.log('Enviar correo de bienvenida');
             console.log('Etapa siguiente:', etapaSiguiente);
         } else {
+            //!pago ordinario
             console.log('pago ordinario, enviar correo de confirmación');
         }
-    }
+    }, [etapas]);
 
     /****************************************
      ********** SUSCRIPCIONES ***************
@@ -145,9 +147,9 @@ function DashboardSideBar() {
                 }
             ).subscribe((status, err) => {
                 if (err) {
-                    console.error('Error en la suscripción Pago:', err);
+                    console.error('Error en la suscripción PAGO:', err);
                 } else {
-                    console.log('Estado de la suscripción en conteo:', status);
+                    console.log('Estado de la suscripción en PAGO:', status);
                 }
             });
         //! Obtener los conteos iniciales
@@ -156,7 +158,7 @@ function DashboardSideBar() {
         return () => {
             supabase.removeChannel(subscriptionPago);
         };
-    }, [fetchCounts]);
+    }, [fetchCounts, revisarPago]);
 
     //! Función para obtener los conteos de eventos en seguimiento y aprobados
     useEffect(() => {
@@ -164,7 +166,7 @@ function DashboardSideBar() {
             setEtapas(todasLasEtapas);
         })
         suscripionConteos();
-    }, []);
+    }, [suscripionConteos]);
 
     useEffect(() => {
         suscripcionPagos();
