@@ -210,6 +210,12 @@ export async function eliminarCotizacion(cotizacionId: string) {
             }
         })
 
+        await prisma.pago.deleteMany({
+            where: {
+                cotizacionId
+            }
+        })
+
         return { success: true }
     } catch {
         return { error: 'Error deleting cotizacion' }
