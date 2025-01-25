@@ -4,10 +4,12 @@ import { useRouter, usePathname } from 'next/navigation';
 import Cookies from 'js-cookie';
 import Link from 'next/link';
 import Image from 'next/image';
-
 import { User } from '@/app/admin/_lib/types';
-import { verifyToken } from '@/app/lib/auth';
-import { cerrarSesion } from '@/app/lib/auth';
+import { verifyToken, cerrarSesion } from '@/app/lib/auth';
+import { Bell } from 'lucide-react'
+// import { Notificacion } from '@/app/admin/_lib/types';
+
+// import { obtenerNotificaciones } from '../_lib/notificacion.actions';
 
 function Navbar() {
 
@@ -16,8 +18,16 @@ function Navbar() {
     const pathname = usePathname();
     const router = useRouter();
     const token = Cookies.get('token');
+    // const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
 
     useEffect(() => {
+
+        // obtenerNotificaciones().then(notificaciones => {
+        //     console.log('notificaciones:', notificaciones);
+        //     setNotificaciones(notificaciones)
+        // })
+
+
         async function validarToken(token: string | undefined) {
             if (token) {
                 try {
@@ -79,8 +89,14 @@ function Navbar() {
                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M4 6h16M4 12h16m-7 6h7'></path>
                     </svg>
                 </button>
+
+
             </div>
             <div className={`flex-col md:flex-row md:flex ${menuOpen ? 'flex' : 'hidden'} gap-5 justify-center items-center w-full md:w-auto md:py-0 py-5 md:items-center`}>
+                <div className='flex items-center gap-2'>
+                    <Bell size={16} /> Notificaciones
+                </div>
+
                 {user && user.role === 'admin' ? (
                     links.map((link) => (
                         <Link key={link.href} href={link.href}>

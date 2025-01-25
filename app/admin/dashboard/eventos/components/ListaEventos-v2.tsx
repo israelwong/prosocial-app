@@ -16,6 +16,7 @@ export default function ListaEventos() {
     const [loading, setLoading] = useState<boolean>(false)
     const [etapas, setEtapas] = useState<EventoEtapa[]>([])
     const [eventos, setEventos] = useState<EventosPorEtapa[]>([])
+    const [clickNuevoEvento, setClickNuevoEvento] = useState<boolean>(false)
 
     const fetchData = useCallback(async () => {
 
@@ -82,7 +83,7 @@ export default function ListaEventos() {
                 ]);
             }
         ).subscribe(status => {
-            console.log('Estado de la suscripción:', status)
+            console.log('Estado de la suscripción eventos:', status)
         });
 
         return () => {
@@ -100,7 +101,7 @@ export default function ListaEventos() {
         <div className='mx-auto max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg xl:max-w-screen-xl'>
             {loading ? (
                 <div className='flex items-center justify-center h-screen'>
-                    <p className='text-zinc-300 text-center'>
+                    <p className='text-zinc-500 text-center italic'>
                         Cargando promesas...
                     </p>
                 </div>
@@ -112,10 +113,14 @@ export default function ListaEventos() {
                             Promesas
                         </h1>
                         <button
-                            className='bg-zinc-800 border border-zinc-700 px-3 py-2 rounded-md text-zinc-300 text-sm'
-                            onClick={() => router.push('/admin/dashboard/eventos/nuevo')}
+                            className={`bg-zinc-800 border border-zinc-700 px-3 py-2 rounded-md text-sm ${clickNuevoEvento ? 'text-zinc-500' : 'text-zinc-300'}`}
+                            onClick={() => {
+                                setClickNuevoEvento(true);
+                                router.push('/admin/dashboard/eventos/nuevo');
+                            }}
+                            disabled={clickNuevoEvento}
                         >
-                            Crear nuevo evento
+                            {clickNuevoEvento ? 'Un momento por favor...' : 'Crear nuevo evento'}
                         </button>
                     </div>
 

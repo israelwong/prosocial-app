@@ -22,6 +22,7 @@ model User {
   Agenda    Agenda[]
   Pago      Pago[]
   Evento    Evento[]
+  // Notificacion Notificacion[]
 }
 
 model Sesion {
@@ -163,6 +164,7 @@ model Cotizacion {
   contratoId                         String?
   Pago                               Pago[]
   CotizacionVisita                   CotizacionVisita[]
+  // Notificacion                       Notificacion[]
 }
 
 model CotizacionServicio {
@@ -387,8 +389,8 @@ model AnuncioVisita {
 
 model Agenda {
   id            String    @id @default(cuid())
-  userId        String
-  User          User      @relation(fields: [userId], references: [id])
+  userId        String?
+  User          User?     @relation(fields: [userId], references: [id])
   eventoId      String
   Evento        Evento    @relation(fields: [eventoId], references: [id])
   concepto      String?
@@ -409,3 +411,16 @@ model AgendaTipo {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// model Notificacion {
+//   id           String      @id @default(cuid())
+//   userId       String?
+//   User         User?       @relation(fields: [userId], references: [id])
+//   titulo       String
+//   mensaje      String
+//   status       String      @default("active")
+//   cotizacionId String?
+//   Cotizacion   Cotizacion? @relation(fields: [cotizacionId], references: [id])
+//   createdAt    DateTime    @default(now())
+//   updatedAt    DateTime    @updatedAt
+// }

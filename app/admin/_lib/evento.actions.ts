@@ -111,6 +111,12 @@ export async function eliminarEvento(id: string) {
         await prisma.evento.delete({
             where: { id }
         });
+        await prisma.agenda.deleteMany({
+            where: { eventoId: id }
+        });
+        await prisma.eventoBitacora.deleteMany({
+            where: { eventoId: id }
+        });
         return { success: true };
     } catch {
         return { success: false, message: 'No se puede eliminar el evento, tiene cotizaciones asociadas' };

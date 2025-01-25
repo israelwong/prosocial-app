@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client";
 // import {sendSuccessfulPayment, sendWelcomeEmail, sendPedingPayment} from "./sendmail";
+import { PrismaClient } from "@prisma/client";
 export async function handlePaymentCompleted(session, res) {
     const prisma = new PrismaClient();
     try {

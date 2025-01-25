@@ -428,3 +428,13 @@ export interface LeadForm {
     nombreEvento?: string
 }
 
+export interface Notificacion {
+    id?: string
+    userId: string
+    titulo: string
+    mensaje: string
+    status: string
+    cotizacionId?: string
+    createdAt?: Date
+    updatedAt?: Date
+}

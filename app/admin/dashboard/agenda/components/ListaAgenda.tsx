@@ -37,7 +37,7 @@ export default function ListaAgenda() {
                 },
                 User: {
                     ...agenda.User,
-                    username: agenda.User.username || ''
+                    username: agenda.User?.username || ''
                 }
             })))
             setLoading(false)

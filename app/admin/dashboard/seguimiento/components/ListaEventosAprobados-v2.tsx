@@ -17,16 +17,18 @@ export default function ListaEventosAprobados() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const filroEtapa = [3, 4, 5, 6, 7, 8]
-            obtenerEtapasFiltradas(filroEtapa).then((etapas) => {
+            try {
+                const filroEtapa = [3, 4, 5, 6, 7, 8]
+                const etapas = await obtenerEtapasFiltradas(filroEtapa)
                 setEtapas(etapas)
-            })
 
-            obtenerEventosPorEtapa(filroEtapa).then((eventos) => {
+                const eventos = await obtenerEventosPorEtapa(filroEtapa)
                 setEventosAprobados(eventos)
+            } catch (error) {
+                console.error('Error fetching data:', error)
+            } finally {
                 setLoading(false)
-            })
-            setLoading(false)
+            }
         }
         fetchData()
     }, [])
@@ -63,12 +65,12 @@ export default function ListaEventosAprobados() {
                             {eventosAprobados
                                 .filter(evento => evento.EventoEtapa?.nombre === etapa.nombre).length === 0 ? (
                                 loading ? (
-                                    <p className='text-zinc-500 p-3 border border-zinc-800 rounded-md'>
+                                    <p className='text-zinc-500 p-3 border border-zinc-800 rounded-md italic'>
                                         Cargando eventos...
                                     </p>
                                 ) : (
-                                    <p className='text-zinc-500 p-3 '>
-                                        No hay eventos en esta etapa
+                                    <p className='text-zinc-700 italic text-sm'>
+                                        - No hay eventos en esta etapa
                                     </p>
                                 )
                             ) : (
@@ -98,7 +100,9 @@ export default function ListaEventosAprobados() {
 
                                                 <div className=''>
                                                     {(evento.Cotizacion[0].precio - Number(evento.total_pagado)) === 0 ? (
-                                                        ''
+                                                        <p className='flex items-center text-green-500'>
+                                                            <CircleDollarSign size={16} className='mr-1' /> Pagado
+                                                        </p>
                                                     ) : (
                                                         <>
                                                             <p className='flex items-center text-red-500'>

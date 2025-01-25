@@ -1,6 +1,9 @@
 'use server';
 import { Pago } from "@/app/admin/_lib/types";
 import prisma from './prismaClient';
+import { Agenda } from './types';
+import { crearAgendaEvento } from "./agenda.actions";
+// import { enviarCorreoBienvenida, enviarCorreoPagoExitoso } from "./correo.actions";
 
 export async function obtenerPagos() {
     const pagos = await prisma.pago.findMany();
@@ -159,12 +162,12 @@ export async function obtenerDetallesPago(pagoId: string) {
 
 export async function obtenerBalancePagosEvento(eventoId: string) {
 
-    // const evento = await prisma.evento.findUnique({
-    //     where: {
-    //         id: eventoId,
-    //         status: 'aprobado'
-    //     }
-    // })
+    const evento = await prisma.evento.findUnique({
+        where: {
+            id: eventoId,
+            status: 'aprobado'
+        }
+    })
 
     const cotizacion = await prisma.cotizacion.findFirst({
         where: {
@@ -187,11 +190,12 @@ export async function obtenerBalancePagosEvento(eventoId: string) {
 
     const balance = cotizacion && precio !== undefined ? precio - totalPagado : undefined;
 
-    return { precio, totalPagado, balance };
+    return { precio, evento, totalPagado, balance };
 
 }
 
 export async function ontenerDetallesPago(pagoId: string) {
+
     const pago = await prisma.pago.findUnique({
         where: {
             id: pagoId
@@ -215,12 +219,124 @@ export async function ontenerDetallesPago(pagoId: string) {
             id: cotizacion?.eventoId ?? undefined
         }
     });
+    const tipoEvento = await prisma.eventoTipo.findUnique({
+        where: {
+            id: evento?.eventoTipoId ?? undefined
+        },
+        select: {
+            nombre: true
+        }
+    });
+
+    const eventoConTipo = {
+        ...evento,
+        tipoEvento
+    }
 
     const detallesPago = {
         pago,
         cliente,
         cotizacion,
-        evento
+        eventoConTipo
     };
     return detallesPago;
+}
+
+export async function validarPagoStripe(pagoId: string) {
+
+    console.log('Procesando pago:', pagoId);
+
+    try {
+
+        const {
+            pago,
+            cliente,
+            cotizacion,
+            evento,
+        } = await obtenerDetallesPago(pagoId);
+
+        // console.log('Detalles del pago:', pago);
+        // console.log('Detalles del cliente:', cliente);
+        // console.log('Detalles del cotizacion:', cotizacion);
+        // console.log('Detalles del evento:', evento);
+
+        // const params = {
+        //     nombre_cliente: cliente?.nombre ?? '',
+        //     fecha_evento: evento?.fecha_evento?.toISOString() ?? '',
+        //     nombre_evento: evento?.nombre ?? '',
+        //     email: cliente?.email ?? '',
+        //     asunto: '¡Gracias por tu pago!',
+        //     monto: pago?.monto ?? 0,
+        // }
+
+        //pago cliente nuevo
+        if (pago?.status === 'paid' && evento?.eventoEtapaId == 'cm6498zw00001gu1a67s88y5h') {
+
+            // console.log('pago nuevo cliente');
+            try {
+                // console.log('Actualizando evento:', evento?.id);
+                await prisma.evento.update({
+                    where: { id: evento?.id },
+                    data: { eventoEtapaId: 'cm6499aqs0002gu1ae4k1a7ls' }
+                });
+                // console.log('Evento actualizado:', evento?.id);
+            } catch (error) {
+                console.error('Error actualizando evento:', error);
+            }
+
+            try {
+                // console.log('Actualizando cliente:', cliente?.id);
+                await prisma.cliente.update({
+                    where: { id: cliente?.id },
+                    data: { status: 'cliente' }
+                });
+                // console.log('Cliente actualizado:', cliente?.id);
+            } catch (error) {
+                console.error('Error actualizando cliente:', error);
+            }
+
+            try {
+                // console.log('Actualizando cotización:', cotizacion?.id);
+                await prisma.cotizacion.update({
+                    where: { id: cotizacion?.id },
+                    data: { status: 'aprobada' }
+                });
+                // console.log('Cotización actualizada:', cotizacion?.id);
+            } catch (error) {
+                console.error('Error actualizando cotización:', error);
+            }
+            try {
+                // console.log('Creando agenda para el evento:', evento?.id);
+                const agenda = {
+                    concepto: evento?.nombre,
+                    descripcion: '',
+                    googleMapsUrl: '',
+                    direccion: '',
+                    fecha: evento?.fecha_evento,
+                    hora: '',
+                    eventoId: evento?.id ?? '',
+                    userId: evento.userId,
+                    agendaTipo: 'evento',
+                }
+                await crearAgendaEvento(agenda as Agenda);
+                // console.log('Agenda creada para el evento:', evento?.id);
+            } catch (error) {
+                console.error('Error creando agenda:', error);
+            }
+
+            // try {
+            //     await enviarCorreoBienvenida(params);
+            //     await enviarCorreoPagoExitoso(params);
+            // } catch (error) {
+            //     console.error('Error enviando correo de confirmación:', error);
+            // }
+        } else {
+            //pago cliente existente
+            // await enviarCorreoPagoExitoso(params);
+            // console.log('pago cliente existente');
+        }
+    } catch (error) {
+        console.error('Error obteniendo detalles del pago:', error);
+    }
+
 }
