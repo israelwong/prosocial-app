@@ -57,7 +57,7 @@ export default function FichaAgenda({ eventoId }: Props) {
     useEffect(() => {
         fetchAgenda()
         fetchAgendaTipos()
-    }, [])
+    }, [fetchAgenda, fetchAgendaTipos])
 
     const handleDeleteAgenda = async (agendaId: string) => {
         if (confirm('¿Estás seguro de eliminar este evento de la agenda?')) {

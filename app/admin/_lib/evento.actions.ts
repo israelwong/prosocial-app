@@ -108,14 +108,14 @@ export async function actualizarEvento(evento: Evento) {
 
 export async function eliminarEvento(id: string) {
     try {
-        await prisma.evento.delete({
+        const evento = await prisma.evento.delete({
             where: { id }
         });
         await prisma.agenda.deleteMany({
-            where: { eventoId: id }
+            where: { eventoId: evento.id }
         });
         await prisma.eventoBitacora.deleteMany({
-            where: { eventoId: id }
+            where: { eventoId: evento.id }
         });
         return { success: true };
     } catch {
