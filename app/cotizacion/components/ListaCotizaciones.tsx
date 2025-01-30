@@ -87,7 +87,7 @@ export default function ListaCotizaciones({ eventoId }: Props) {
 
                             <button key={cotizacion.id} className='px-3 py-2 bg-purple-900 text-white rounded-md text-sm'
                                 onClick={() => cotizacion.id && handleOpenCotizacion(cotizacion.id)}>
-                                Ver cotización {preview ? 'en nueva ventana' : ''}
+                                Ver cotización
                             </button>
                         </div>
                     ))}
@@ -95,7 +95,7 @@ export default function ListaCotizaciones({ eventoId }: Props) {
 
                 <div className='md:p-0 p-5'>
                     <div className='w-full px-5 border border-yellow-500  p-5'>
-                        <h3 className='font-Bebas-Neue text-2xl text-yellow-600 mb-2 font-semibold'>Condiciones comerciales vigentes</h3>
+                        <h3 className='font-Bebas-Neue text-2xl text-yellow-600 mb-2 font-semibold'>Condiciones comerciales</h3>
                         <ul className='text-lg text-zinc-400'>
                             {condicionesComerciales && condicionesComerciales
                                 .filter(condicion =>
