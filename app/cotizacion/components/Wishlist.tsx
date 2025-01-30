@@ -32,7 +32,7 @@ const Wishlist: React.FC<Props> = ({ servicios, categorias }) => {
             return (
                 <div key={categoria.id} className="mb-5 ">
                     <p className='text-sm text-zinc-200 mb-1 items-center uppercase font-semibold'>
-                        {categoria.nombre.toLowerCase().includes('orgánica') && <Smartphone size={18} className='inline-block mr-1' />}
+                        {categoria.nombre.toLowerCase().includes('redes sociales') && <Smartphone size={18} className='inline-block mr-1' />}
                         {categoria.nombre.toLowerCase().includes('fotografía') && <Camera size={18} className='inline-block mr-1' />}
                         {categoria.nombre.toLowerCase().includes('cuadro') && <BookImage size={18} className='inline-block mr-1' />}
                         {categoria.nombre.toLowerCase().includes('otros servicios') && <Settings size={18} className='inline-block mr-1' />}
