@@ -71,7 +71,7 @@ export default function ListaCotizaciones({ eventoId }: Props) {
                         <span className='text-zinc-500'>Hola </span> {cliente?.nombre.split(' ')[0]}!
                     </h1>
                     <p className='text-lg text-zinc-400'>
-                        Te compartimos el listado de cotizaciones que hemos generado para el evento {evento?.tipoEvento} de {eventoTipo} de {evento?.nombre} que celebrarás el {evento?.fecha_evento ? new Date(evento.fecha_evento.getTime() + 86400000).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}
+                        Te compartimos las cotizaciones que hemos preparado para el <span className='font-bold text-white'>{evento?.nombre}</span> que celebrarás el <span className='underline'>{evento?.fecha_evento ? new Date(evento.fecha_evento.getTime() + 86400000).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}</span>
                     </p>
                 </div>
 
@@ -96,7 +96,7 @@ export default function ListaCotizaciones({ eventoId }: Props) {
                 <div className='md:p-0 p-5'>
                     <div className='w-full px-5 border border-yellow-500  p-5'>
                         <h3 className='font-Bebas-Neue text-2xl text-yellow-600 mb-2 font-semibold'>Condiciones comerciales</h3>
-                        <ul className='text-lg text-zinc-400'>
+                        <ul className='text-sm text-zinc-400'>
                             {condicionesComerciales && condicionesComerciales
                                 .filter(condicion =>
                                     (eventoTipo === 'Empresarial' && condicion.tipoEvento === 'Empresarial') ||
@@ -105,7 +105,7 @@ export default function ListaCotizaciones({ eventoId }: Props) {
                                 .map((condicion, index) => (
                                     <li key={index} className='mb-2'>
                                         <div className='flex items-start'>
-                                            <ArrowRight size={16} className='mr-2 mt-2' />
+                                            <ArrowRight size={12} className='mr-2 mt-1' />
                                             <p>
                                                 <span className='font-semibold'>{condicion.nombre}:</span> {condicion.descripcion}
                                             </p>

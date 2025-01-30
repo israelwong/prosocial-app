@@ -11,10 +11,13 @@ interface Props {
 const getServiceHours = (name: string, cantidad: number | undefined) => {
     const lowerCaseName = name.toLowerCase();
     if (['operador', 'fotógrafo', 'asistente', 'camarógrafo'].some(word => lowerCaseName.includes(word))) {
-        return `${cantidad ?? 1} hrs`;
+        return `(${cantidad ?? 1} hrs)`;
     }
     if (lowerCaseName.includes('revelado digital') || lowerCaseName.includes('diseño') || lowerCaseName.includes('edición') || lowerCaseName.includes('grabación') || lowerCaseName.includes('revelado ligero') || lowerCaseName.includes('grúa') || lowerCaseName.includes('sesión') || lowerCaseName.includes('shooting')) {
         return '';
+    }
+    if (lowerCaseName.includes('retoque')) {
+        return `(${cantidad ?? 1} fotos)`;
     }
     return cantidad ?? 1;
 };
@@ -46,7 +49,7 @@ const Wishlist: React.FC<Props> = ({ servicios, categorias }) => {
                                 <p><ChevronRight size={16} className='mt-1 text-zinc-500' /></p>
                                 <p className='text-zinc-400'>
 
-                                    {servicio.nombre} <span className='text-zinc-600'>
+                                    {servicio.nombre} <span className='text-yellow-600 italic text-sm'>
 
                                         {servicio.cantidad && servicio.cantidad > 1 ? getServiceHours(servicio.nombre, servicio.cantidad) : ''}
                                     </span>
