@@ -67,6 +67,7 @@ export async function actualizarCondicionComercial(condicionesComerciales: Condi
 
     console.log('condicionesComerciales', condicionesComerciales)
 
+
     await prisma.condicionesComerciales.update({
         where: {
             id: condicionesComerciales.id
@@ -76,7 +77,8 @@ export async function actualizarCondicionComercial(condicionesComerciales: Condi
             descripcion: condicionesComerciales.descripcion,
             descuento: condicionesComerciales.descuento,
             porcentaje_anticipo: condicionesComerciales.porcentaje_anticipo,
-            status: condicionesComerciales.status
+            status: condicionesComerciales.status,
+            tipoEvento: condicionesComerciales.tipoEvento,
         }
     })
 

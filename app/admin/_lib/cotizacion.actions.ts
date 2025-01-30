@@ -9,7 +9,7 @@ export async function obtenerCotizacionesPorEvento(eventoId: string) {
             eventoId,
         },
         orderBy: {
-            createdAt: 'desc'
+            createdAt: 'asc'
         }
     });
 
@@ -35,6 +35,15 @@ export async function obtenerCotizacion(cotizacionId: string) {
         }
     });
 
+    const eventoTipo = await prisma.eventoTipo.findUnique({
+        where: {
+            id: cotizacion?.eventoTipoId
+        },
+        select: {
+            nombre: true
+        }
+    });
+
     if (!cotizacion) {
         return null;
     }
@@ -47,6 +56,7 @@ export async function obtenerCotizacion(cotizacionId: string) {
 
     return {
         ...cotizacion,
+        eventoTipo,
         visitas
     };
 }
@@ -189,32 +199,57 @@ export async function actualizarCotizacion(data: Cotizacion) {
     }
 }
 
+export async function actualizarCotizacionStatus(cotizacionId: string, status: string) {
+    try {
+        await prisma.cotizacion.update({
+            where: {
+                id: cotizacionId
+            },
+            data: {
+                status
+            }
+        });
+        return { success: true };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error updating cotizacion status:', error.message);
+            return { error: 'Error updating cotizacion status ' + error.message };
+        }
+        console.error('Unknown error updating cotizacion status');
+        return { error: 'Error updating cotizacion status' };
+    }
+}
+
 export async function eliminarCotizacion(cotizacionId: string) {
 
     try {
+        console.log('Deleting cotizacionServicios for cotizacionId:', cotizacionId);
         await prisma.cotizacionServicio.deleteMany({
             where: {
                 cotizacionId
             }
-        })
+        });
 
+        console.log('Deleting cotizacionVisitas for cotizacionId:', cotizacionId);
         await prisma.cotizacionVisita.deleteMany({
             where: {
                 cotizacionId
             }
-        })
+        });
 
-        await prisma.cotizacion.delete({
-            where: {
-                id: cotizacionId
-            }
-        })
-
+        console.log('Deleting pagos for cotizacionId:', cotizacionId);
         await prisma.pago.deleteMany({
             where: {
                 cotizacionId
             }
-        })
+        });
+
+        console.log('Deleting cotizacion with id:', cotizacionId);
+        await prisma.cotizacion.delete({
+            where: {
+                id: cotizacionId
+            }
+        });
 
         return { success: true }
     } catch {
@@ -276,6 +311,7 @@ export async function cotizacionDetalle(id: string) {
     const evento = await prisma.evento.findUnique({
         where: { id: cotizacion?.eventoId },
         select: {
+            id: true,
             clienteId: true,
             eventoTipoId: true,
             nombre: true,
@@ -308,7 +344,11 @@ export async function cotizacionDetalle(id: string) {
         }
     });
 
-    const ServicioCategoria = await prisma.servicioCategoria.findMany();
+    const ServicioCategoria = await prisma.servicioCategoria.findMany({
+        orderBy: {
+            posicion: 'asc'
+        }
+    });
 
     const servicios = await prisma.servicio.findMany({
         select: {

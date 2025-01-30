@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Cookies from 'js-cookie';
 import Link from 'next/link';
@@ -7,9 +7,8 @@ import Image from 'next/image';
 import { User } from '@/app/admin/_lib/types';
 import { verifyToken, cerrarSesion } from '@/app/lib/auth';
 import { Bell } from 'lucide-react'
-// import { Notificacion } from '@/app/admin/_lib/types';
+import { supabase } from '../_lib/supabase';
 
-// import { obtenerNotificaciones } from '../_lib/notificacion.actions';
 
 function Navbar() {
 
@@ -20,13 +19,35 @@ function Navbar() {
     const token = Cookies.get('token');
     // const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
 
+    //! NOTIFICACIONES
+    const suscripcionNotificaciones = useCallback(async () => {
+        const subscriptionNotificaciones = supabase
+            .channel('realtime:notificaciones')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'Notificacion' },
+                async (payload) => {
+                    console.log('Evento en notificaciones:', payload);
+                    // obtenerNotificaciones().then(notificaciones => {
+                    //     console.log('notificaciones:', notificaciones);
+                    //     setNotificaciones(notificaciones)
+                    // })
+                }
+            ).subscribe((status, err) => {
+                if (err) {
+                    console.error('Error en la suscripción:', err);
+                } else {
+                    console.log('Estado de la suscripción en notificaciones:', status);
+                }
+            }
+            );
+        return () => {
+            supabase.removeChannel(subscriptionNotificaciones);
+        }
+    }, []);
+
     useEffect(() => {
-
-        // obtenerNotificaciones().then(notificaciones => {
-        //     console.log('notificaciones:', notificaciones);
-        //     setNotificaciones(notificaciones)
-        // })
-
+        suscripcionNotificaciones();
 
         async function validarToken(token: string | undefined) {
             if (token) {
@@ -49,7 +70,8 @@ function Navbar() {
             }
         }
         validarToken(token);
-    }, [token, router]);
+
+    }, [token, router, suscripcionNotificaciones]);
 
     async function handleCerrarSesion() {
         if (confirm('¿Estás seguro de cerrar sesión?')) {

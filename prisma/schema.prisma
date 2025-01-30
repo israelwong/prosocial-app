@@ -305,6 +305,7 @@ model CondicionesComerciales {
   porcentaje_anticipo              Float?                             @default(0) // 30
   status                           String                             @default("active")
   orden                            Int?                               @default(0)
+  tipoEvento                       String? //! social / empresarial
   createdAt                        DateTime                           @default(now())
   updatedAt                        DateTime                           @updatedAt
   CondicionesComercialesMetodoPago CondicionesComercialesMetodoPago[]
@@ -412,15 +413,45 @@ model AgendaTipo {
   updatedAt DateTime @updatedAt
 }
 
-// model Notificacion {
-//   id           String      @id @default(cuid())
-//   userId       String?
-//   User         User?       @relation(fields: [userId], references: [id])
-//   titulo       String
-//   mensaje      String
-//   status       String      @default("active")
-//   cotizacionId String?
-//   Cotizacion   Cotizacion? @relation(fields: [cotizacionId], references: [id])
-//   createdAt    DateTime    @default(now())
-//   updatedAt    DateTime    @updatedAt
-// }
+model Notificacion {
+  id           String   @id @default(cuid())
+  userId       String?
+  titulo       String
+  mensaje      String
+  status       String   @default("active")
+  cotizacionId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// List of models ordered by relation:
+/// - User
+/// - Sesion
+/// - Cliente
+/// - Evento
+/// - EventoBitacora
+/// - EventoTipo
+/// - EventoEtapa
+/// - Canal
+/// - Pago
+/// - Cotizacion
+/// - CotizacionServicio
+/// - CotizacionVisita
+/// - Servicio
+/// - ServicioGasto
+/// - ServicioCategoria
+/// - Paquete
+/// - PaqueteServicio
+/// - Configuracion
+/// - MetodoPago
+/// - CondicionesComerciales
+/// - CondicionesComercialesMetodoPago
+/// - Campania
+/// - AnuncioPlataforma
+/// - AnuncioTipo
+/// - AnuncioCategoria
+/// - Anuncio
+/// - AnuncioVisita
+/// - Agenda
+/// - AgendaTipo
+/// - Notificacion

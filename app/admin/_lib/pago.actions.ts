@@ -32,6 +32,7 @@ export async function obtenerPagosCotizacion(cotizacionId: string) {
 }
 
 export async function crearPago(data: Pago) {
+
     try {
         const pago = await prisma.pago.create({
             data: {
@@ -338,5 +339,9 @@ export async function validarPagoStripe(pagoId: string) {
     } catch (error) {
         console.error('Error obteniendo detalles del pago:', error);
     }
+
+}
+
+export async function promesPagoSPEI() {
 
 }

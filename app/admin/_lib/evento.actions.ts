@@ -108,15 +108,48 @@ export async function actualizarEvento(evento: Evento) {
 
 export async function eliminarEvento(id: string) {
     try {
-        const evento = await prisma.evento.delete({
+        console.log('Buscando evento con id:', id);
+        const evento = await prisma.evento.findUnique({
             where: { id }
         });
+
+        if (!evento) {
+            console.log('Evento no encontrado');
+            return { success: false, message: 'Evento no encontrado' };
+        }
+
+        const cotizaciones = await prisma.cotizacion.findMany({
+            where: { eventoId: evento.id }
+        });
+
+        for (const cotizacion of cotizaciones) {
+            console.log('Eliminando pagos asociados a la cotización:', cotizacion.id);
+            await prisma.pago.deleteMany({
+                where: { cotizacionId: cotizacion.id }
+            });
+
+            console.log('Eliminando cotización:', cotizacion.id);
+            await prisma.cotizacion.delete({
+                where: { id: cotizacion.id }
+            });
+        }
+        console.log('Eliminando agendas asociadas al evento:', evento.id);
+
         await prisma.agenda.deleteMany({
             where: { eventoId: evento.id }
         });
+
+        console.log('Eliminando bitácoras asociadas al evento:', evento.id);
         await prisma.eventoBitacora.deleteMany({
             where: { eventoId: evento.id }
         });
+
+        console.log('Eliminando evento con id:', id);
+        await prisma.evento.delete({
+            where: { id }
+        });
+
+        console.log('Evento eliminado exitosamente');
         return { success: true };
     } catch {
         return { success: false, message: 'No se puede eliminar el evento, tiene cotizaciones asociadas' };
@@ -407,7 +440,18 @@ export async function actualizarEtapa(eventoId: string, eventoEtapaId: string) {
         console.error(error);
         return { error: 'Error updating event stage' };
     }
+}
 
+export async function actualizarEventoEtapaStatus(eventoId: string, etapaId: string, status: string) {
+    await prisma.evento.update({
+        where: {
+            id: eventoId
+        },
+        data: {
+            eventoEtapaId: etapaId,
+            status
+        }
+    });
 }
 
 //la usamos en el componente de cotizaciones
@@ -463,7 +507,7 @@ export async function obtenerEventosPorEtapa(etapas: number[]) {
             },
             Cotizacion: {
                 where: {
-                    status: 'aprobada'
+                    status: 'aprobada',
                 },
                 select: {
                     id: true,

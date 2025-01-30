@@ -22,6 +22,7 @@ import { Trash, X } from 'lucide-react';
 
 import { Eye } from 'lucide-react'
 
+
 interface Props {
     cotizacionId: string
 }
@@ -66,10 +67,12 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
     const [clienteId, setClienteId] = useState('');
     const [clienteNombre, setClienteNombre] = useState('');
     const [clienteTelefono, setClienteTelefono] = useState('');
+    const [eventoTipo, setEventoTipo] = useState('');
 
     const [visitas, setVisitas] = useState<number>(0)
 
     useEffect(() => {
+
         async function fetchData() {
             setLoading(true);
 
@@ -84,11 +87,13 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
             ]);
 
             obtenerConteoCotizacionVisitas(cotizacionId).then((conteo) => {
-                console.log('Visitas:', conteo);
+                // console.log('Visitas:', conteo);
                 setVisitas(conteo);
             });
 
             if (cotizacion) {
+
+                // console.log('cotizacion:', cotizacion);
 
                 setNombreCotizacion(cotizacion.nombre || '');
                 setEventoId(cotizacion.eventoId);
@@ -96,6 +101,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 setCondicionComercialId(cotizacion.condicionesComercialesId ?? '');
                 setMetodoPagoId(cotizacion.condicionesComercialesMetodoPagoId ?? '');
                 setCotizacionEstatus(cotizacion.status);//!
+                setEventoTipo(cotizacion.eventoTipo?.nombre || '');
 
                 // Obtener los servicios de la cotización
                 const serviciosCotizacion = await obtenerCotizacionServicios(cotizacionId);
@@ -600,38 +606,42 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                     Condiciones comerciales disponibles
                                 </p>
 
-                                {condicionesComerciales.map((condicion, index) => (
-                                    <div key={index} className={`mb-3 px-5 py-3 bg-zinc-900 border ${condicionesComercialesId === condicion.id ? 'border-blue-800' : 'border-zinc-800'} rounded-md`}>
-                                        <p className='text-md text-zinc-300'>
-                                            {condicion.nombre}
-                                        </p>
-                                        {condicion.descripcion && (
-                                            <p className='text-[14px] mb-3 italic text-zinc-500'>
-                                                {condicion.descripcion}
+                                {condicionesComerciales
+                                    .filter(condicion =>
+                                        (eventoTipo === 'Empresarial' && condicion.tipoEvento === 'Empresarial') ||
+                                        (eventoTipo !== 'Empresarial' && condicion.tipoEvento === 'Social')
+                                    )
+                                    .map((condicion, index) => (
+                                        <div key={index} className={`mb-3 px-5 py-3 bg-zinc-900 border ${condicionesComercialesId === condicion.id ? 'border-blue-800' : 'border-zinc-800'} rounded-md`}>
+                                            <p className='text-md text-zinc-300'>
+                                                {condicion.nombre}
                                             </p>
-                                        )}
-                                        {/* //! Buscar metodo pago  */}
-                                        <div className='flex justify-start gap-5'>
-                                            {condicion.metodosPago && condicion.metodosPago.map((metodo, metodoIndex) => (
-                                                <div key={metodoIndex} className='text-sm text-zinc-500'>
-                                                    <input
-                                                        type="radio"
-                                                        id={`metodo-${condicion.id}-${metodoIndex}`}
-                                                        name={`metodo-${condicion.id}`}
-                                                        value={metodo.metodo_pago}
-                                                        checked={metodoPagoId === metodo.id}
-                                                        className='mr-2'
-                                                        onChange={() => handleSeleccionCondicionMetodoPago(condicion, metodo)}
-                                                    />
-                                                    <label htmlFor={`metodo-${condicion.id}-${metodoIndex}`}>
-                                                        {metodo.metodo_pago}
-                                                    </label>
-                                                </div>
-                                            ))}
+                                            {condicion.descripcion && (
+                                                <p className='text-[14px] mb-3 italic text-zinc-500'>
+                                                    {condicion.descripcion}
+                                                </p>
+                                            )}
+                                            {/* //! Buscar metodo pago  */}
+                                            <div className='flex justify-start gap-5'>
+                                                {condicion.metodosPago && condicion.metodosPago.map((metodo, metodoIndex) => (
+                                                    <div key={metodoIndex} className='text-sm text-zinc-500'>
+                                                        <input
+                                                            type="radio"
+                                                            id={`metodo-${condicion.id}-${metodoIndex}`}
+                                                            name={`metodo-${condicion.id}`}
+                                                            value={metodo.metodo_pago}
+                                                            checked={metodoPagoId === metodo.id}
+                                                            className='mr-2'
+                                                            onChange={() => handleSeleccionCondicionMetodoPago(condicion, metodo)}
+                                                        />
+                                                        <label htmlFor={`metodo-${condicion.id}-${metodoIndex}`}>
+                                                            {metodo.metodo_pago}
+                                                        </label>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
-
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
 
                             {/* //!CONFIRMAR MONTO A PAGAR */}

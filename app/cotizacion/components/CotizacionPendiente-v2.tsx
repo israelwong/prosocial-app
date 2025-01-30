@@ -11,7 +11,6 @@ import { registrarVisita } from '@/app/admin/_lib/cotizacionVisita.actions';
 import SkeletonPendiente from './skeletonPendiente';
 import Wishlist from './Wishlist';
 
-
 interface Props {
     cotizacionId: string
 }
@@ -38,6 +37,7 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
     const [tipoEvento, setTipoEvento] = useState('');
     const [fechaEvento, setFechaEvento] = useState<Date | null>(null);
     const [nombreEvento, setNombreEvento] = useState('');
+    const [eventoId, setEventoId] = useState('');
 
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -64,6 +64,10 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                 cotizacionServicio,
                 condicionesComerciales,
             } = await cotizacionDetalle(cotizacionId);
+
+            if (evento) {
+                setEventoId(evento.id || '');
+            }
 
             if (cotizacion) {
 
@@ -176,52 +180,75 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
 
     //! Procesar pago con tarjeta
     const checkout = async () => {
+
         let concepto = '';
         if (porcentajeAnticipo > 0 && porcentajeAnticipo < 100) {
-            concepto = `Pago del ${porcentajeAnticipo}% de anticipo del servicio`;
+            concepto = `Pago del ${porcentajeAnticipo}% de anticipo del total del servicio`;
         } else if (porcentajeAnticipo === 100) {
             concepto = `Pago total del servicio`;
         }
         const descripcion = `Fecha compromiso para el ${fechaEvento ? new Date(fechaEvento.getTime() + 86400000).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''} ${metodoPago?.num_msi ? '. ' + metodoPago?.num_msi + ' MSI' : ''}. ${condicionComercial?.nombre}. ${condicionComercial?.descripcion}`;
 
-        try {
-            const datosPagoTarjeta = {
-                monto: parseFloat(pagoAnticipo.toFixed(2)),
-                concepto,
-                descripcion,
-                paymentMethod: metodoPago?.payment_method || '',
-                num_msi: metodoPago?.num_msi?.toString() ?? '0',
-                cotizacionId,
-                condicionesComercialesId,
-                metodoPagoId,
-                clienteId,
-                nombreCliente,
-                emailCliente,
-                telefonoCliente,
-                precioFinal: parseFloat(precioFinal.toFixed(2)),
-            };
+        if (metodoPago?.payment_method == 'spei') {
+            const query = new URLSearchParams(
+                Object.entries({
+                    cotizacionId,
+                    clienteId,
+                    condicionesComercialesId: condicionesComercialesId || '',
+                    condicionesComercialesMetodoPagoId: metodoPagoId || '',
+                    montoanticipo: parseFloat(pagoAnticipo.toFixed(2)).toString(),
+                    concepto,
+                    descripcion,
+                    preciosistema: parseFloat(totalPrecioSistema.toFixed(2)).toString(),
+                    precioFinal: parseFloat(precioFinal.toFixed(2)).toString(),
+                    porcentajeAnticipo: porcentajeAnticipo.toString(),
+                    nombreCliente,
+                    eventoId: eventoId || '',
+                })
+            ).toString();
 
-            // console.log('datosPagoTarjeta', datosPagoTarjeta)
-            setIsProcessing(true);
-            const response = await fetch('/api/checkout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(datosPagoTarjeta),
-            });
+            router.push(`/cotizacion/spei/${cotizacionId}?${query}`);
 
-            const data = await response.json();
+        } else {
+            try {
+                const datosPagoTarjeta = {
+                    monto: parseFloat(pagoAnticipo.toFixed(2)),
+                    concepto,
+                    descripcion,
+                    paymentMethod: metodoPago?.payment_method || '',
+                    num_msi: metodoPago?.num_msi?.toString() ?? '0',
+                    cotizacionId,
+                    condicionesComercialesId,
+                    metodoPagoId,
+                    clienteId,
+                    nombreCliente,
+                    emailCliente,
+                    telefonoCliente,
+                    precioFinal: parseFloat(precioFinal.toFixed(2)),
+                };
 
-            if (response.ok) {
-                window.location.href = data.url;
-            } else {
-                console.error('Error:', data.error);
+                // console.log('datosPagoTarjeta', datosPagoTarjeta)
+                setIsProcessing(true);
+                const response = await fetch('/api/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(datosPagoTarjeta),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    window.location.href = data.url;
+                } else {
+                    console.error('Error:', data.error);
+                }
+
+            } catch (error) {
+                console.error('Error al procesar el pago:', error);
+                setIsProcessing(false);
             }
-
-        } catch (error) {
-            console.error('Error al procesar el pago:', error);
-            setIsProcessing(false);
         }
     }
 
@@ -298,46 +325,44 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                     Elige una condición comercial
                                 </p>
 
-                                {condicionesComerciales.map((condicion, index) => (
-
-                                    <div key={index} className={`mb-3 px-5 py-3 ${condicion.id === condicionesComercialesId && condicionesComercialesId && metodoPagoId ? 'border-blue-500 bg-zinc-700/50 ' : 'border-zinc-800'} ${!condicion.id ? 'border-zinc-800' : ''} bg-zinc-900 border rounded-md`}>
-                                        <p className='text-md text-zinc-300'>
-                                            {condicion.nombre}
-                                        </p>
-
-                                        {condicion.descripcion && (
-                                            <p className='text-[14px] mb-2 italic text-zinc-500'>
-                                                {condicion.descripcion}
+                                {condicionesComerciales
+                                    .filter(condicion =>
+                                        (tipoEvento === 'Empresarial' && condicion.tipoEvento === 'Empresarial') ||
+                                        (tipoEvento !== 'Empresarial' && condicion.tipoEvento === 'Social')
+                                    )
+                                    .map((condicion, index) => (
+                                        <div key={index} className={`mb-3 px-5 py-3 bg-zinc-900 border ${condicionesComercialesId === condicion.id ? 'border-blue-800' : 'border-zinc-800'} rounded-md`}>
+                                            <p className='text-md text-zinc-300'>
+                                                {condicion.nombre}
                                             </p>
-                                        )}
-                                        {/* //! Buscar metodo pago  */}
-                                        <div className='flex justify-start gap-5'>
-
-                                            {condicion.metodosPago && condicion.metodosPago.map((metodo, metodoIndex) => {
-                                                if (metodo.metodo_pago === 'Efectivo') {
-                                                    return null;
-                                                }
-                                                return (
-                                                    <div key={metodoIndex} className='text-sm text-zinc-500'>
-                                                        <input
-                                                            type="radio"
-                                                            id={`metodo-${condicion.id}-${metodoIndex}`}
-                                                            name={`metodo-${condicion.id}`}
-                                                            value={metodo.metodo_pago}
-                                                            checked={metodoPagoId === metodo.id}
-                                                            className='mr-2'
-                                                            onChange={() => handleSeleccionCondicionMetodoPago(condicion, metodo)}
-                                                        />
-                                                        <label htmlFor={`metodo-${condicion.id}-${metodoIndex}`}>
-                                                            {metodo.metodo_pago}
-                                                        </label>
-                                                    </div>
-                                                );
-                                            })}
-
+                                            {condicion.descripcion && (
+                                                <p className='text-[14px] mb-3 italic text-zinc-500'>
+                                                    {condicion.descripcion}
+                                                </p>
+                                            )}
+                                            {/* //! Buscar metodo pago  */}
+                                            <div className='flex justify-start gap-5'>
+                                                {condicion.metodosPago && condicion.metodosPago
+                                                    .filter(metodo => metodo.metodo_pago !== 'Efectivo')
+                                                    .map((metodo, metodoIndex) => (
+                                                        <div key={metodoIndex} className='text-sm text-zinc-500'>
+                                                            <input
+                                                                type="radio"
+                                                                id={`metodo-${condicion.id}-${metodoIndex}`}
+                                                                name={`metodo-${condicion.id}`}
+                                                                value={metodo.metodo_pago}
+                                                                checked={metodoPagoId === metodo.id}
+                                                                className='mr-2'
+                                                                onChange={() => handleSeleccionCondicionMetodoPago(condicion, metodo)}
+                                                            />
+                                                            <label htmlFor={`metodo-${condicion.id}-${metodoIndex}`}>
+                                                                {metodo.metodo_pago}
+                                                            </label>
+                                                        </div>
+                                                    ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
 
                             </div>
 
@@ -379,7 +404,15 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                     {metodoPagoId && porcentajeAnticipo < 100 && (
                                         <p className='text-zinc-300 text-sm mt-2'>
                                             <span className=''>
-                                                Total a diferir en comodos pagos a liquidar 2 días antes del evento: <b>{(precioFinal - pagoAnticipo).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</b>
+                                                {tipoEvento === 'Empresarial' ? (
+                                                    <>
+                                                        Total pendiente a liquidar en la entrega del servicio: <b>{(precioFinal - pagoAnticipo).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</b>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        Total a diferir en cómodos pagos a liquidar 2 días antes del evento: <b>{(precioFinal - pagoAnticipo).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</b>
+                                                    </>
+                                                )}
                                             </span>
                                         </p>
                                     )}
@@ -398,11 +431,6 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                         {isProcessing ? 'Un momento por favor...' : porcentajeAnticipo === 100 ? (msi > 0 ? `Pagarás el total a ${msi} MSI` : 'Pagarás en una sola exhibición') : `Pagarás el ${porcentajeAnticipo}% anticipo: ${pagoAnticipo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`}
                                     </button>
 
-                                    {/* {condicionComercial?.nombre && (
-                                        <div className=''>
-                                            <p className='pt-3 text-sm'>Condiciones comerciales:  <span className='text-zinc-600'> {condicionComercial?.nombre}. {condicionComercial?.descripcion}</span></p>
-                                        </div>
-                                    )} */}
 
                                     <p className='text-sm mt-3 text-zinc-600'>
                                         Al presionar el botón de &quot;Pagar&quot; serás redirigido a la plataforma de pagos segura para completar tu transacción.

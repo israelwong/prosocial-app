@@ -143,7 +143,7 @@ const ListaCotizaciones: React.FC<Props> = ({ eventoId, eventoTipoId, eventoAsig
 
                         <div className='flex space-x-2'>
                             <button
-                                onClick={() => window.open(`/cotizacion/evento/${eventoId}`, '_blank')}
+                                onClick={() => window.open(`/cotizacion/evento/${eventoId}?preview=true`, '_blank')}
                                 className='text-sm flex items-center px-3 py-2 leading-3 border border-yellow-800 rounded-md bg-zinc-900'
                             >
                                 <SquareArrowOutUpRight size={12} className='mr-1' /> Preview

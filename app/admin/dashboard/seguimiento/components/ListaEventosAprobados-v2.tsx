@@ -5,7 +5,7 @@ import { CircleDollarSign, Calendar, CircleUser } from 'lucide-react'
 import { obtenerEventosPorEtapa } from '@/app/admin/_lib/evento.actions'
 import { EventoEtapa, EventoConTotalPagado } from '@/app/admin/_lib/types'
 import { obtenerEtapasFiltradas } from '@/app/admin/_lib/EventoEtapa.actions'
-
+// import { supabase } from '@/app/admin/_lib/supabase'
 
 
 export default function ListaEventosAprobados() {
@@ -32,6 +32,7 @@ export default function ListaEventosAprobados() {
         }
         fetchData()
     }, [])
+
 
     if (loading) return (
         <div className='flex items-center justify-center h-screen'>

@@ -12,9 +12,11 @@ async function exportData() {
             { name: 'evento', data: await prisma.evento.findMany() },
             { name: 'eventoBitacora', data: await prisma.eventoBitacora.findMany() },
             { name: 'eventoTipo', data: await prisma.eventoTipo.findMany() },
+            { name: 'eventoEtapa', data: await prisma.eventoEtapa.findMany() },
             { name: 'canal', data: await prisma.canal.findMany() },
             { name: 'pago', data: await prisma.pago.findMany() },
             { name: 'cotizacion', data: await prisma.cotizacion.findMany() },
+            { name: 'cotizacionVisita', data: await prisma.cotizacionVisita.findMany() },
             { name: 'cotizacionServicio', data: await prisma.cotizacionServicio.findMany() },
             { name: 'servicio', data: await prisma.servicio.findMany() },
             { name: 'servicioGasto', data: await prisma.servicioGasto.findMany() },
@@ -24,7 +26,10 @@ async function exportData() {
             { name: 'metodoPago', data: await prisma.metodoPago.findMany() },
             { name: 'condicionesComerciales', data: await prisma.condicionesComerciales.findMany() },
             { name: 'servicioCategoria', data: await prisma.servicioCategoria.findMany() },
-            { name: 'condicionesComercialesMetodoPago', data: await prisma.condicionesComercialesMetodoPago.findMany() }
+            { name: 'condicionesComercialesMetodoPago', data: await prisma.condicionesComercialesMetodoPago.findMany() },
+            { name: 'agenda', data: await prisma.agenda.findMany() },
+            { name: 'agendaTipo', data: await prisma.agendaTipo.findMany() },
+            // { name: 'notificacion', data: await prisma.notificacion.findMany() }
         ];
 
         tables.forEach(table => {

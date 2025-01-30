@@ -105,6 +105,9 @@ export default function FichaDetalle({ eventoId }: Props) {
                         <span className='font-semibold mr-1'>
                             Seguimiento de evento
                         </span>
+                        <button className='bg-green-700 text-white px-3 py-2 rounded-md text-sm'>
+                            Si evento pendiente: fconfirmar y crear evento
+                        </button>
 
                     </h1>
                     <div className='flex items-center space-x-2'>

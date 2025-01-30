@@ -39,7 +39,9 @@ function ListaEventosCliente({ clienteId }: Props) {
     return (
         <div className=''>
             {loading ? (
-                <p className='text-zinc-500 text-center py-10'>Cargando eventos asociados...</p>
+                <p className='text-zinc-700 text-center py-10 italic'>
+                    Cargando eventos asociados...
+                </p>
             ) : (
                 <div className=''>
                     <div>
@@ -53,33 +55,39 @@ function ListaEventosCliente({ clienteId }: Props) {
                             </button>
                         </div>
 
-                        {eventos.map(evento => (
-                            <div key={evento.id} className='relative p-4 border border-zinc-700 rounded-md mb-5'
-                            >
-                                <h3 className='text-lg text-zinc-300 mt-2 items-center'>
-                                    <button
-                                        className='flex items-center mr-4'
-                                        onClick={() => router.push(`/admin/dashboard/eventos/${evento.id}`)}
-                                    >
-                                        <Edit size={15} className='mr-2' />
-                                        {evento.nombre || 'Sin personalizar'}
-                                        <span className='px-2 py-1 leading-3 text-[12px] bg-gray-700 rounded-md ml-2 uppercase' >
-                                            {evento.tipoEvento}
-                                        </span>
-                                    </button>
-                                </h3>
+                        {eventos.length === 0 ? (
+                            <p className='text-zinc-700 italic'>
+                                - No hay eventos asociados a este cliente
+                            </p>
+                        ) : (
+                            eventos.map(evento => (
+                                <div key={evento.id} className='relative p-4 border border-zinc-700 rounded-md mb-5'>
+                                    <h3 className='text-lg text-zinc-300 mt-2 items-center'>
+                                        <button
+                                            className='flex items-center mr-4'
+                                            onClick={() => router.push(`/admin/dashboard/eventos/${evento.id}`)}
+                                        >
+                                            <Edit size={15} className='mr-2' />
+                                            {evento.nombre || 'Sin personalizar'}
+                                            <span className='px-2 py-1 leading-3 text-[12px] bg-gray-700 rounded-md ml-2 uppercase'>
+                                                {evento.tipoEvento}
+                                            </span>
+                                        </button>
+                                    </h3>
 
-                                <p className='text-zinc-500 flex items-center text-sm'><Calendar size={15} className='mr-2' />
-                                    Evento {new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
-                                        timeZone: 'UTC',
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })}
-                                </p>
-                            </div>
-                        ))}
+                                    <p className='text-zinc-500 flex items-center text-sm'>
+                                        <Calendar size={15} className='mr-2' />
+                                        Evento {new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
+                                            timeZone: 'UTC',
+                                            weekday: 'long',
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </p>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             )}

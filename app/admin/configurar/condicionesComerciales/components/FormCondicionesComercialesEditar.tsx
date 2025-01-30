@@ -13,6 +13,7 @@ interface Props {
 
 export default function FormCondicionesComercialesEditar({ condicionesComercialesId }: Props) {
 
+
     const router = useRouter()
     const [nombre, setNombre] = useState('')
     const [descripcion, setDescripcion] = useState('')
@@ -24,6 +25,12 @@ export default function FormCondicionesComercialesEditar({ condicionesComerciale
     const [metodosPago, setMetodosPago] = useState([] as MetodoPago[])
     const [metodosPagoAceptados, setMetodosPagoAceptados] = useState([] as MetodoPago[])
     const [porcentajeAnticipo, setPorcentajeAnticipo] = useState<number | undefined>(0)
+    const [tipoEvento, setTipoEvento] = useState('Social')
+
+    // const tipoEventoListado =[
+    //     'Social',
+    //     'Empresarial',
+    // ]
 
     useEffect(() => {
         const fetchData = async () => {
@@ -44,6 +51,7 @@ export default function FormCondicionesComercialesEditar({ condicionesComerciale
                     setDescuento(condicionComercial.descuento ?? undefined)
                     setStatus(condicionComercial.status ?? '')
                     setPorcentajeAnticipo(condicionComercial.porcentaje_anticipo ?? 0)
+                    setTipoEvento(condicionComercial.tipoEvento ?? 'Social')
 
                     const metodosPagoAceptados = await obtenerCondicionesComercialesMetodosPago(condicionesComercialesId)
                     setMetodosPagoAceptados(metodosPagoAceptados.map(metodo => ({
@@ -81,17 +89,13 @@ export default function FormCondicionesComercialesEditar({ condicionesComerciale
             descuento,
             metodosPago: metodosPagoAceptados,
             porcentaje_anticipo: porcentajeAnticipo,
-            status: status
+            status: status,
+            tipoEvento
         }
 
         const response = await actualizarCondicionComercial(condicionComercialActualizadas)
         if (response) {
             router.push('/admin/configurar/condicionesComerciales')
-            // setServerResponse('Condición actualizada')
-            // setTimeout(() => {
-            //     setServerResponse('')
-            // }, 3000)
-
         }
     }
 
@@ -122,6 +126,20 @@ export default function FormCondicionesComercialesEditar({ condicionesComerciale
             <div className='xl:grid xl:grid-cols-2 xl:gap-5 md:w-1/2'>
                 <div className=''>
                     <div className='space-y-4 mb-5'>
+
+                        {/* //! tipo evento */}
+                        <div>
+                            <label className='block text-sm font-medium text-zinc-500'>Tipo de evento</label>
+                            <select
+                                value={tipoEvento}
+                                onChange={(e) => setTipoEvento(e.target.value)}
+                                className='mt-1 block w-full px-3 py-2 border border-zinc-800 bg-zinc-900 rounded-md shadow-sm focus:outline-none'
+                            >
+                                <option value='' disabled>Seleccionar tipo de evento</option>
+                                <option value='Social'>Social</option>
+                                <option value='Empresarial'>Empresarial</option>
+                            </select>
+                        </div>
 
                         {/* status */}
                         <div>

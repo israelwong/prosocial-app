@@ -97,17 +97,21 @@ export default function ListaCotizaciones({ eventoId }: Props) {
                     <div className='w-full px-5 border border-yellow-500  p-5'>
                         <h3 className='font-Bebas-Neue text-2xl text-yellow-600 mb-2 font-semibold'>Condiciones comerciales vigentes</h3>
                         <ul className='text-lg text-zinc-400'>
-                            {condicionesComerciales?.map(condicion => (
-                                <li key={condicion.id} className='mb-2'>
-                                    <div className='flex items-start'>
-                                        <ArrowRight size={16} className='mr-2 mt-2' />
-                                        <p>
-
-                                            <span className='font-semibold'>{condicion.nombre}:</span> {condicion.descripcion}
-                                        </p>
-                                    </div>
-                                </li>
-                            ))}
+                            {condicionesComerciales && condicionesComerciales
+                                .filter(condicion =>
+                                    (eventoTipo === 'Empresarial' && condicion.tipoEvento === 'Empresarial') ||
+                                    (eventoTipo !== 'Empresarial' && condicion.tipoEvento === 'Social')
+                                )
+                                .map((condicion, index) => (
+                                    <li key={index} className='mb-2'>
+                                        <div className='flex items-start'>
+                                            <ArrowRight size={16} className='mr-2 mt-2' />
+                                            <p>
+                                                <span className='font-semibold'>{condicion.nombre}:</span> {condicion.descripcion}
+                                            </p>
+                                        </div>
+                                    </li>
+                                ))}
                         </ul>
                     </div>
                 </div>

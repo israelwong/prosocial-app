@@ -52,12 +52,16 @@ export default function ListaCondicionesComerciales() {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-zinc-800">
                         <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo evento</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descuento</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Anticipo</th>
                             <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Estátus</th>
+
+
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+
                         </tr>
                     </thead>
                     <tbody className="bg-zinc-800 divide-y divide-gray-200 text-white">
@@ -69,6 +73,7 @@ export default function ListaCondicionesComerciales() {
                                 onDrop={() => handleDrop(index)}
 
                             >
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">{condicion.tipoEvento}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{condicion.nombre}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                                     {condicion.descripcion ? condicion.descripcion : 'N/A'}

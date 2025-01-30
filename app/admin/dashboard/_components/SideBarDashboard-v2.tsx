@@ -51,6 +51,7 @@ function DashboardSideBar() {
             .from('Evento')
             .select('id', { count: 'exact' })
             .in('eventoEtapaId', [
+                'cm6ecqcju0000gukqfzhu772l',//pendiente
                 'cm6499aqs0002gu1ae4k1a7ls',//aprobado
                 'cm64bp2ba0000guqkip3liohc',//En planeación
                 'cm64bpdlt0001guqkujuf5jfr',//En producción

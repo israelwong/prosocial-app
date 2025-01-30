@@ -301,6 +301,7 @@ export interface CondicionesComerciales {
     createdAt?: Date
     updatedAt?: Date
     metodosPago?: MetodoPago[] | null
+    tipoEvento?: string | null
 }
 
 export interface CondicionesComercialesMetodoPago {
