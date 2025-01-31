@@ -76,21 +76,23 @@ export default function ListaCotizaciones({ eventoId }: Props) {
                 </div>
 
                 <div className='w-full md:p-0 px-5 mb-5'>
-                    {cotizaciones.map(cotizacion => (
-                        <div className='bg-zinc-900 border border-zinc-800 rounded my-3 w-full text-left mb-3 justify-between items-center p-5' key={cotizacion.id}>
+                    {cotizaciones
+                        .filter(cotizacion => cotizacion.visible_cliente)
+                        .map(cotizacion => (
+                            <div className='bg-zinc-900 border border-zinc-800 rounded my-3 w-full text-left mb-3 justify-between items-center p-5' key={cotizacion.id}>
 
-                            <div className='mb-2'>
-                                <h4 className='text-lg md:text-xl md:pr-14'>
-                                    {cotizacion.nombre} <span className='text-md text-zinc-500'> por solo <strong>{cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</strong></span>
-                                </h4>
+                                <div className='mb-2'>
+                                    <h4 className='text-lg md:text-xl md:pr-14'>
+                                        {cotizacion.nombre} <span className='text-md text-zinc-500'> por solo <strong>{cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</strong></span>
+                                    </h4>
+                                </div>
+
+                                <button key={cotizacion.id} className='px-3 py-2 bg-purple-900 text-white rounded-md text-sm'
+                                    onClick={() => cotizacion.id && handleOpenCotizacion(cotizacion.id)}>
+                                    Ver cotización
+                                </button>
                             </div>
-
-                            <button key={cotizacion.id} className='px-3 py-2 bg-purple-900 text-white rounded-md text-sm'
-                                onClick={() => cotizacion.id && handleOpenCotizacion(cotizacion.id)}>
-                                Ver cotización
-                            </button>
-                        </div>
-                    ))}
+                        ))}
                 </div>
 
                 <div className='md:p-0 p-5'>

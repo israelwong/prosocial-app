@@ -157,11 +157,12 @@ model Cotizacion {
   condicionesComercialesMetodoPagoId String?
   CondicionesComercialesMetodoPago   CondicionesComercialesMetodoPago[]
   status                             String                             @default("pending") //pendiente, aprobado, rechazado
+  visible_cliente                    Boolean?                           @default(true)
   createdAt                          DateTime                           @default(now())
   updatedAt                          DateTime                           @updatedAt
   expiresAt                          DateTime?                          @default(dbgenerated("now() + interval '10 day'"))
   Servicio                           CotizacionServicio[]
-  contratoId                         String?
+  // contratoId                         String?
   Pago                               Pago[]
   CotizacionVisita                   CotizacionVisita[]
   // Notificacion                       Notificacion[]
