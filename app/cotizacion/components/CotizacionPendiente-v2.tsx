@@ -363,62 +363,107 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                             </div>
                                         </div>
                                     ))}
-
                             </div>
 
-                            <div className=''>
+                            {metodoPagoId && (
+                                <div className=''>
 
-                                {/* //! TOTAL A PAGAR */}
-                                <p className='text-xl text-zinc-500 mb-2'>
-                                    Total a pagar por el servicio
-                                </p>
+                                    {/* //! TOTAL A PAGAR */}
 
-                                <div className='border border-zinc-400 p-5 rounded-md'>
+                                    <p className='text-xl text-zinc-500 mb-2'>
+                                        Monto a pagar
+                                    </p>
 
-                                    {/* //!descuento */}
-                                    {descuento > 0 && (
-                                        <p className='text-zinc-900 mt-2 py-2 px-2 leading-3 bg-yellow-500 inline-block mb-3'>Descuento del {condicionComercial?.descuento}%
-                                            <span className='font-bold ml-1'>
-                                                {descuento.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                            </span>
-                                        </p>
-                                    )}
+                                    <div className='border border-zinc-400 p-5 rounded-md'>
 
-                                    <div className='flex'>
-                                        <p className={`text-3xl mr-5 ${descuento > 0 ? 'line-through text-zinc-500' : ''}`}>
-                                            {(isNaN(totalPrecioSistema) ? 0 : totalPrecioSistema).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                        </p>
-
+                                        {/* //!descuento */}
                                         {descuento > 0 && (
-                                            <p className='text-3xl'>
-                                                {precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                            <p className='text-zinc-900 mt-2 py-2 px-2 leading-3 bg-yellow-500 inline-block mb-3 text-sm'>Descuento del {condicionComercial?.descuento}%
+                                                <span className='font-bold ml-1'>
+                                                    {descuento.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                </span>
                                             </p>
                                         )}
+
+                                        <div className=''>
+
+                                            {porcentajeAnticipo == 100 ? (
+                                                <p className='text-xl'>
+
+                                                    {descuento > 0 ? (
+                                                        <>
+                                                            Precio:  <span className='line-through text-zinc-500'>
+                                                                {totalPrecioSistema.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                            </span> <span>
+                                                                {precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            Precio: <span>
+                                                                {precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                            </span>
+                                                        </>
+                                                    )}
+
+                                                </p>
+                                            ) :
+                                                (
+                                                    <div className='text-xl'>
+                                                        <p className='text-xl'>
+
+                                                            {descuento > 0 ? (
+                                                                <>
+                                                                    Precio:  <span className='line-through text-zinc-500'>
+                                                                        {totalPrecioSistema.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                                    </span> <span>
+                                                                        {precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                                    </span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    Precio: <span>
+                                                                        {precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                                    </span>
+                                                                </>
+                                                            )}
+
+                                                        </p>
+                                                        <p className='text-zinc-300 text-sm'>
+                                                            {porcentajeAnticipo < 100 ? `Anticipo del ${porcentajeAnticipo}%: ` : ''}
+                                                            {pagoAnticipo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                        </p>
+                                                    </div>
+                                                )
+                                            }
+                                        </div>
+
+
+                                        {msi > 0 && (
+                                            <p className='text-zinc-400'>{msi} pagos sin intereses de {pagoMensual.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</p>
+                                        )}
+
+                                        {metodoPagoId && porcentajeAnticipo < 100 && (
+                                            <p className='text-zinc-300 text-sm mt-1'>
+                                                <span className=''>
+                                                    {tipoEvento === 'Empresarial' ? (
+                                                        <>
+                                                            <span className='text-yellow-500'>
+                                                                Monto por liquidar a contra entrega: <b>{(precioFinal - pagoAnticipo).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</b>
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            Monto a diferir por liquidar 2 días antes del evento: <b>{(precioFinal - pagoAnticipo).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</b>
+                                                        </>
+                                                    )}
+                                                </span>
+                                            </p>
+                                        )}
+
                                     </div>
-
-
-                                    {msi > 0 && (
-                                        <p className='text-zinc-400'>{msi} pagos sin intereses de {pagoMensual.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</p>
-                                    )}
-
-                                    {metodoPagoId && porcentajeAnticipo < 100 && (
-                                        <p className='text-zinc-300 text-sm mt-2'>
-                                            <span className=''>
-                                                {tipoEvento === 'Empresarial' ? (
-                                                    <>
-                                                        Total pendiente a liquidar en la entrega del servicio: <b>{(precioFinal - pagoAnticipo).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</b>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        Total a diferir en cómodos pagos a liquidar 2 días antes del evento: <b>{(precioFinal - pagoAnticipo).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</b>
-                                                    </>
-                                                )}
-                                            </span>
-                                        </p>
-                                    )}
-
                                 </div>
-                            </div>
+                            )}
 
                             {metodoPagoId ? (
                                 <>
