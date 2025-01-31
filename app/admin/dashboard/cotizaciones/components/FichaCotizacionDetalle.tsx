@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import { Cotizacion } from '@/app/admin/_lib/types'
 import { eliminarCotizacion, clonarCotizacion } from '@/app/admin/_lib/cotizacion.actions'
 import { useRouter } from 'next/navigation'
+import { actualizarVisibilidadCotizacion } from '@/app/admin/_lib/cotizacion.actions'
 
-import { Copy, Pencil, Eye, Layers2, Check, ArrowUpRight, Trash2 } from 'lucide-react'
+import { Pencil, Eye, Layers2, ArrowUpRight, Trash2, Archive, ArchiveRestore } from 'lucide-react'
 
 interface Props {
     cotizacion: Cotizacion
@@ -15,7 +16,9 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
     const router = useRouter()
     const [eliminando, setEliminando] = useState<string | null>(null)
     const [clonando, setClonando] = useState<string | null>(null)
-    const [copiado, setCopiado] = useState<string | null>(null)
+
+    // const [copiado, setCopiado] = useState<string | null>(null)
+    const [visibleCliente, setVisibleCliente] = useState<boolean>(cotizacion?.visible_cliente ?? false)
 
     //! Eliminar cotización
     const handleEliminarCotizacion = async (cotizacionId: string) => {
@@ -42,10 +45,19 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
         }
     }
 
-    const handleCopiar = async (cotizacionId: string) => {
-        setCopiado(cotizacionId)
-        await navigator.clipboard.writeText(`https://www.prosocial.mx/cotizacion/${cotizacionId}`)
-        setTimeout(() => setCopiado(null), 2000)
+    // const handleCopiar = async (cotizacionId: string) => {
+    //     setCopiado(cotizacionId)
+    //     await navigator.clipboard.writeText(`https://www.prosocial.mx/cotizacion/${cotizacionId}`)
+    //     setTimeout(() => setCopiado(null), 2000)
+    // }
+
+    const handleVisibleCliente = async () => {
+        const nuevaVisibilidad = !visibleCliente
+        if (cotizacion.id) {
+            await actualizarVisibilidadCotizacion(cotizacion.id, nuevaVisibilidad)
+            setVisibleCliente(nuevaVisibilidad)
+        }
+        // console.log('nuevaVisibilidad', nuevaVisibilidad)
     }
 
     return (
@@ -89,6 +101,14 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                 </button>
 
                 <button
+                    onClick={() => handleVisibleCliente()}
+                    className={`text-sm flex items-center px-3 py-2 leading-3 border ${visibleCliente ? 'border-zinc-700 bg-zinc-900 text-zinc-300' : 'border-yellow-700 bg-yellow-900 text-yellow-300'} rounded-md`}
+                >
+                    {visibleCliente ? <Archive size={12} className='mr-1' /> : <ArchiveRestore size={12} className='mr-1' />}
+                    {visibleCliente ? 'Archivar' : 'Restaurar'}
+                </button>
+
+                {/* <button
                     onClick={() => cotizacion.id && handleCopiar(cotizacion.id)}
                     className='text-sm flex items-center px-3 py-2 leading-3 border border-zinc-800 rounded-md bg-zinc-900'
                 >
@@ -101,7 +121,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                             <Copy size={12} className='mr-1' /> Copiar link
                         </>
                     )}
-                </button>
+                </button> */}
 
                 <button
                     onClick={() => cotizacion.id && handleClonarCotizacion(cotizacion.id)}

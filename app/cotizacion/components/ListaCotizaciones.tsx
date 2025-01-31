@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Header from './Header'
 import Footer from './Footer'
 import { Evento, Cliente, Cotizacion, CondicionesComerciales } from '@/app/admin/_lib/types'
@@ -8,6 +8,7 @@ import { obtenerCondicionesComercialesActivas } from '@/app/admin/_lib/condicion
 import Skeleton from './skeleton'
 import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
+import { supabase } from '@/app/admin/_lib/supabase';
 
 interface Props {
     eventoId: string
@@ -24,28 +25,54 @@ export default function ListaCotizaciones({ eventoId }: Props) {
     const [condicionesComerciales, setCondicionesComerciales] = useState<CondicionesComerciales[] | null>(null)
     const [preview, setPreview] = useState(false)
 
-    useEffect(() => {
-        const fetchData = async () => {
-
-            const data = await obtenerEventoCotizaciones(eventoId)
-            const condicionesComercialesData = await obtenerCondicionesComercialesActivas()
-
-            setEvento(data.evento ?? null)
-            setCliente(data.cliente ?? null)
-            setCotizaciones(data.cotizaciones ?? [])
-            setEventoTipo(data.tipoEvento ?? null)
-            setCondicionesComerciales(condicionesComercialesData)
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const isPrev = urlParams.get('preview');
-            if (isPrev) {
-                setPreview(true);
+    const suscripcionCotizacion = useCallback(async () => {
+        const subscriptionNotificaciones = supabase
+            .channel('realtime:notificaciones')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'Cotizacion' },
+                async (payload) => {
+                    // console.log('Evento en cotizacion:', payload);
+                    if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                        const data = await obtenerEventoCotizaciones(eventoId)
+                        setCotizaciones(data.cotizaciones ?? [])
+                    }
+                }
+            ).subscribe((status, err) => {
+                if (err) {
+                    console.error('Error en la cotizacion:', err);
+                } else {
+                    console.log('Estado de la suscripción en cotizacion:', status);
+                }
             }
-
-            setLoading(false)
+            );
+        return () => {
+            supabase.removeChannel(subscriptionNotificaciones);
         }
-        fetchData()
-    }, [eventoId])
+    }, [eventoId]);
+
+    const fetchData = useCallback(async () => {
+        const data = await obtenerEventoCotizaciones(eventoId)
+        const condicionesComercialesData = await obtenerCondicionesComercialesActivas()
+
+        setCotizaciones(data.cotizaciones ?? [])
+        setEvento(data.evento ?? null)
+        setCliente(data.cliente ?? null)
+        setEventoTipo(data.tipoEvento ?? null)
+        setCondicionesComerciales(condicionesComercialesData)
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const isPrev = urlParams.get('preview');
+        if (isPrev) {
+            setPreview(true);
+        }
+        setLoading(false)
+    }, [eventoId]);
+
+    useEffect(() => {
+        suscripcionCotizacion();
+        fetchData();
+    }, [suscripcionCotizacion, fetchData]);
 
     const handleOpenCotizacion = (cotizacionId: string) => {
         if (preview) {
@@ -57,14 +84,14 @@ export default function ListaCotizaciones({ eventoId }: Props) {
     }
 
     if (loading) {
-        return <Skeleton footer='Cargando las cotizaciones disponibless...' />
+        return <Skeleton footer='Cargando las cotizaciones disponibles...' />
     }
 
     return (
         <div>
             <Header asunto='Cotizaciones' />
 
-            <div className='container mx-auto max-w-screen-sm pt-10 pb-5'>
+            <div className='container mx-auto max-w-screen-sm pt-5 pb-5'>
 
                 <div className='mb-0 md:mb-5 md:p-0 p-5'>
                     <h1 className='font-Bebas-Neue text-4xl mb-2'>
@@ -83,8 +110,12 @@ export default function ListaCotizaciones({ eventoId }: Props) {
 
                                 <div className='mb-2'>
                                     <h4 className='text-lg md:text-xl md:pr-14'>
-                                        {cotizacion.nombre} <span className='text-md text-zinc-500'> por solo <strong>{cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</strong></span>
+                                        {cotizacion.nombre}
                                     </h4>
+                                    <p>
+                                        <span className='text-md text-zinc-500'> Presupuesto <strong>{cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}</strong></span>
+
+                                    </p>
                                 </div>
 
                                 <button key={cotizacion.id} className='px-3 py-2 bg-purple-900 text-white rounded-md text-sm'

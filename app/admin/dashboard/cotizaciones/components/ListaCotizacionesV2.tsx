@@ -23,6 +23,7 @@ const ListaCotizaciones: React.FC<Props> = ({ eventoId, eventoTipoId, eventoAsig
     const [paquetes, setPaquetes] = useState<Paquete[]>([])
     const [paqueteId, setPaqueteId] = useState<string>('')
     const [generandoCotizacion, setGenerandoCotizacion] = useState(false)
+    const [copiado, setCopiado] = useState<string | null>(null)
 
     const suscripcionSupabase = useCallback(() => {
         const subscription = supabase
@@ -150,10 +151,14 @@ const ListaCotizaciones: React.FC<Props> = ({ eventoId, eventoTipoId, eventoAsig
                             </button>
 
                             <button
-                                onClick={() => navigator.clipboard.writeText(`https://www.prosocial.mx/cotizacion/evento/${eventoId}`)}
+                                onClick={() => {
+                                    navigator.clipboard.writeText(`https://www.prosocial.mx/cotizacion/evento/${eventoId}`);
+                                    setCopiado('Copiado');
+                                    setTimeout(() => setCopiado(null), 2000);
+                                }}
                                 className='text-sm flex items-center px-3 py-2 leading-3 border border-yellow-800 rounded-md bg-zinc-900'
                             >
-                                <Copy size={12} className='mr-1' /> Copiar link
+                                <Copy size={12} className='mr-1' /> {copiado === 'Copiado' ? 'Copiado' : 'Copiar link'}
                             </button>
                         </div>
                     </div>

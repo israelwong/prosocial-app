@@ -441,3 +441,22 @@ export async function clonarCotizacion(cotizacionId: string) {
         success: true, cotizacionId: newCotizacion.id
     };
 }
+
+export async function actualizarVisibilidadCotizacion(cotizacionId: string, visible: boolean) {
+    try {
+        await prisma.cotizacion.update({
+            where: {
+                id: cotizacionId
+            },
+            data: {
+                visible_cliente: visible
+            }
+        });
+        return { success: true }
+    } catch {
+        return { error: 'Error updating visibility' }
+    }
+}
+
+// export async function detallesListadoCotizacion(cotizacionId:string) {
+// }
