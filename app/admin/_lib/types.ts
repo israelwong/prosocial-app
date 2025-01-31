@@ -244,7 +244,7 @@ export interface Cotizacion {
     condicionesComercialesId?: string | null
     condicionesComercialesMetodoPagoId?: string | null
     status?: string
-    visible_cliente?: boolean
+    visible_cliente?: boolean | null
     servicios?: Servicio[];
     visitas?: number
     createdAt?: Date
