@@ -388,6 +388,9 @@ export async function obtenerEventoCotizaciones(eventoId: string) {
     const cotizaciones = await prisma.cotizacion.findMany({
         where: {
             eventoId
+        },
+        orderBy: {
+            createdAt: 'asc'
         }
     });
 
