@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from "react"
-import { actualizarEvento, obtenerEventoPorId, eliminarEvento, actualizarEtapa } from '@/app/admin/_lib/evento.actions'
+import { actualizarEvento, actualizarEventoStatus, obtenerEventoPorId, eliminarEvento, actualizarEtapa } from '@/app/admin/_lib/evento.actions'
 import { useRouter } from "next/navigation"
 import { Trash2 } from 'lucide-react'
 
@@ -31,6 +31,7 @@ export default function FichaEventoV2({ eventoId, onAsignacionEvento }: Props) {
     const [eventoTipo, setEventoTipo] = useState<string | null>(null)
     const [userId, setUserId] = useState<string | null>(null)
     const router = useRouter()
+    const [status, setStatus] = useState<string>('')
 
     //! etapas
     const [etapas, setEtapas] = useState<EventoEtapa[]>([])
@@ -51,6 +52,7 @@ export default function FichaEventoV2({ eventoId, onAsignacionEvento }: Props) {
                 setEtapaActualId(data.eventoEtapaId ?? undefined)
                 setUserId(data.userId ?? null)
                 setEventoTipo(data.EventoTipo?.nombre ?? '')
+                setStatus(data.status ?? '')
             }
         });
 
@@ -136,6 +138,14 @@ export default function FichaEventoV2({ eventoId, onAsignacionEvento }: Props) {
             const primeraEtapaId = etapas[0]?.id;
             setEtapaActualId(primeraEtapaId)
             setUserId(null)
+        }
+    }
+
+    const handleChangeStatus = async () => {
+        if (confirm('¿Estás seguro de archivar este evento?')) {
+            const newStatus = status === 'active' ? 'inactive' : 'active';
+            await actualizarEventoStatus(eventoId, newStatus);
+            setStatus(newStatus);
         }
     }
 
@@ -241,6 +251,11 @@ export default function FichaEventoV2({ eventoId, onAsignacionEvento }: Props) {
                                 {actualizandoEvento ? 'Actualizando información...' : 'Actualizar información'}
                             </button>
 
+                            <button className="bg-yellow-500 px-3 py-2 rounded-md w-full text-yellow-800 font-semibold border border-yellow-400"
+                                onClick={() => handleChangeStatus()}>
+                                {status === 'active' ? 'Archivar evento' : 'Desarchivar evento'}
+                            </button>
+
                             {eventoAsignado && (
                                 <p className="p-3 bg-green-600 text-green-200 text-center rounded-md">
                                     Evento asignado correctamente
@@ -249,7 +264,7 @@ export default function FichaEventoV2({ eventoId, onAsignacionEvento }: Props) {
 
                             {userId ? (
                                 <button
-                                    className="text-yellow-500 py-2 flex items-center justify-center w-full text-sm border border-yellow-500 rounded-md"
+                                    className="text-zinc-500 py-2 flex items-center justify-center w-full text-sm border border-zinc-500 rounded-md"
                                     onClick={() => handleLiberarEvento()}
                                 >
                                     Liberar evento para otro usuario

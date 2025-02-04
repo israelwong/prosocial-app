@@ -32,11 +32,11 @@ export default function Cotizacion({ cotizacionId }: Props) {
         return <Skeleton footer='Validando cotización' />
     }
 
-    if (!cotizacion) {
+    if (!cotizacion || !cotizacion.eventoStatus) {
         return <div>
             {/* HEADER */}
             <Header asunto='Cotización' />
-            <div className='max-w-screen-sm mx-auto px-5'>
+            <div className='max-w-screen-sm mx-auto md:px-0 px-5 '>
                 <CotizacionNoDisponible />
             </div>
             {/* FOOTER */}

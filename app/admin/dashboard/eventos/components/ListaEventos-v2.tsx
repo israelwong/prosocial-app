@@ -17,6 +17,7 @@ export default function ListaEventos() {
     const [etapas, setEtapas] = useState<EventoEtapa[]>([])
     const [eventos, setEventos] = useState<EventosPorEtapa[]>([])
     const [clickNuevoEvento, setClickNuevoEvento] = useState<boolean>(false)
+    const [mostrarTodos, setMostrarTodos] = useState<boolean>(false)
 
     const fetchData = useCallback(async () => {
 
@@ -42,45 +43,89 @@ export default function ListaEventos() {
 
         const subscriptionNuevo = supabase.channel('realtime:Evento:nuevo').on(
             'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'Evento' },
+            { event: '*', schema: 'public', table: 'Evento' },
 
             async (payload) => {
-                const newEvento = payload.new;
-                const nombreCliente = await obtenerCliente(newEvento.clienteId)
-                const nombreTipoEvento = await obtenerTipoEvento(newEvento.eventoTipoId)
 
-                setEventos(prevEventos => [
-                    ...prevEventos,
-                    {
-                        id: newEvento.id,
-                        nombre: newEvento.nombre || '',
-                        createdAt: newEvento.createdAt,
-                        updatedAt: newEvento.updatedAt,
-                        clienteId: newEvento.clienteId,
-                        eventoTipoId: newEvento.eventoTipoId,
-                        fecha_evento: newEvento.fecha_evento ? new Date(newEvento.fecha_evento) : new Date(),
-                        sede: newEvento.sede || '',
-                        direccion: newEvento.direccion || '',
-                        status: newEvento.status,
-                        userId: newEvento.userId,
-                        eventoEtapaId: newEvento.eventoEtapaId,
-                        total_pagado: 0,
-                        Cliente: {
-                            nombre: nombreCliente?.nombre || ''
-                        },
-                        EventoTipo: {
-                            nombre: nombreTipoEvento?.nombre || ''
-                        },
-                        EventoEtapa: {
-                            nombre: '',
-                            posicion: 0
-                        },
-                        User: {
-                            username: ''
-                        },
-                        Cotizacion: []
-                    }
-                ]);
+                if (payload.eventType === 'INSERT') {
+                    const newEvento = payload.new;
+
+                    const nombreCliente = await obtenerCliente(newEvento.clienteId)
+                    const nombreTipoEvento = await obtenerTipoEvento(newEvento.eventoTipoId)
+                    setEventos(prevEventos => [
+                        ...prevEventos,
+                        {
+                            id: newEvento.id,
+                            nombre: newEvento.nombre || '',
+                            createdAt: newEvento.createdAt,
+                            updatedAt: newEvento.updatedAt,
+                            clienteId: newEvento.clienteId,
+                            eventoTipoId: newEvento.eventoTipoId,
+                            fecha_evento: newEvento.fecha_evento ? new Date(newEvento.fecha_evento) : new Date(),
+                            sede: newEvento.sede || '',
+                            direccion: newEvento.direccion || '',
+                            status: newEvento.status,
+                            userId: newEvento.userId,
+                            eventoEtapaId: newEvento.eventoEtapaId,
+                            total_pagado: 0,
+                            Cliente: {
+                                nombre: nombreCliente?.nombre || ''
+                            },
+                            EventoTipo: {
+                                nombre: nombreTipoEvento?.nombre || ''
+                            },
+                            EventoEtapa: {
+                                nombre: '',
+                                posicion: 0
+                            },
+                            User: {
+                                username: ''
+                            },
+                            Cotizacion: []
+                        }
+                    ]);
+                } else if (payload.eventType === 'UPDATE') {
+                    const updatedEvento = payload.new;
+
+                    const nombreCliente = await obtenerCliente(updatedEvento.clienteId)
+                    const nombreTipoEvento = await obtenerTipoEvento(updatedEvento.eventoTipoId)
+                    setEventos(prevEventos => prevEventos.map(evento => {
+                        if (evento.id === updatedEvento.id) {
+                            return {
+                                ...evento,
+                                nombre: updatedEvento.nombre || '',
+                                createdAt: updatedEvento.createdAt,
+                                updatedAt: updatedEvento.updatedAt,
+                                clienteId: updatedEvento.clienteId,
+                                eventoTipoId: updatedEvento.eventoTipoId,
+                                fecha_evento: updatedEvento.fecha_evento ? new Date(updatedEvento.fecha_evento) : new Date(),
+                                sede: updatedEvento.sede || '',
+                                direccion: updatedEvento.direccion || '',
+                                status: updatedEvento.status,
+                                userId: updatedEvento.userId,
+                                eventoEtapaId: updatedEvento.eventoEtapaId,
+                                total_pagado: 0,
+                                Cliente: {
+                                    nombre: nombreCliente?.nombre || ''
+                                },
+                                EventoTipo: {
+                                    nombre: nombreTipoEvento?.nombre || ''
+                                },
+                                EventoEtapa: {
+                                    nombre: '',
+                                    posicion: 0
+                                },
+                                User: {
+                                    username: ''
+                                },
+                                Cotizacion: []
+                            }
+                        }
+                        return evento
+                    }));
+
+                }
+
             }
         ).subscribe(status => {
             console.log('Estado de la suscripción eventos:', status)
@@ -112,16 +157,29 @@ export default function ListaEventos() {
                         <h1 className='text-lg font-semibold mb-5 text-zinc-500'>
                             Promesas
                         </h1>
-                        <button
-                            className={`bg-zinc-800 border border-zinc-700 px-3 py-2 rounded-md text-sm ${clickNuevoEvento ? 'text-zinc-500' : 'text-zinc-300'}`}
-                            onClick={() => {
-                                setClickNuevoEvento(true);
-                                router.push('/admin/dashboard/eventos/nuevo');
-                            }}
-                            disabled={clickNuevoEvento}
-                        >
-                            {clickNuevoEvento ? 'Un momento por favor...' : 'Crear nuevo evento'}
-                        </button>
+
+                        <div className='space-x-4'>
+
+                            <button
+                                className='bg-zinc-800 border border-zinc-700 px-3 py-2 rounded-md text-sm text-zinc-500'
+                                onClick={() => {
+                                    setMostrarTodos(!mostrarTodos);
+                                }}
+                            >
+                                {mostrarTodos ? 'Mostrar solo eventos activos' : 'Mostrar todos los eventos'}
+                            </button>
+
+                            <button
+                                className={`bg-blue-800 border border-blue-700 px-3 py-2 rounded-md text-sm ${clickNuevoEvento ? 'text-zinc-500' : 'text-zinc-300'}`}
+                                onClick={() => {
+                                    setClickNuevoEvento(true);
+                                    router.push('/admin/dashboard/eventos/nuevo');
+                                }}
+                                disabled={clickNuevoEvento}
+                            >
+                                {clickNuevoEvento ? 'Un momento por favor...' : 'Crear nuevo evento'}
+                            </button>
+                        </div>
                     </div>
 
 
@@ -132,7 +190,7 @@ export default function ListaEventos() {
                                     {etapa.nombre}
                                 </h2>
                                 {eventos
-                                    .filter(evento => evento.eventoEtapaId === etapa.id)
+                                    .filter(evento => evento.eventoEtapaId === etapa.id && (mostrarTodos || evento.status === 'active'))
                                     .map(evento => (
                                         <FichaEvento
                                             key={evento.id}

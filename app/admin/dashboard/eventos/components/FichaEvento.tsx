@@ -15,7 +15,7 @@ export default function FichaEvento({ evento }: Props) {
     }
 
     return (
-        <div key={evento.id} className='relative px-4 py-2 bg-zinc-900 rounded-md mb-5 cursor-pointer'
+        <div key={evento.id} className={`relative px-4 py-2 ${evento.status === 'inactive' ? 'bg-red-950/30' : 'bg-zinc-900'} rounded-md mb-5 cursor-pointer`}
             onClick={() => handleOpen(evento.id)}>
 
             <h3 className='text-lg text-zinc-300 items-center'>

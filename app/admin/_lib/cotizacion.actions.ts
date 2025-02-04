@@ -35,6 +35,15 @@ export async function obtenerCotizacion(cotizacionId: string) {
         }
     });
 
+    const evento = await prisma.evento.findUnique({
+        where: {
+            id: cotizacion?.eventoId
+        },
+        select: {
+            status: true
+        }
+    });
+
     const eventoTipo = await prisma.eventoTipo.findUnique({
         where: {
             id: cotizacion?.eventoTipoId
@@ -57,6 +66,7 @@ export async function obtenerCotizacion(cotizacionId: string) {
     return {
         ...cotizacion,
         eventoTipo,
+        eventoStatus: evento?.status,
         visitas
     };
 }

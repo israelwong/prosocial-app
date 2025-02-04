@@ -45,20 +45,21 @@ function DashboardSideBar() {
             .in('eventoEtapaId', [
                 'cm6498oqp0000gu1ax8qnuuu8',//nuevo
                 'cm6498zw00001gu1a67s88y5h'//seguimiento
-            ]);
+            ]).eq('status', 'active');;
 
         const { count: aprobadosCount, error: aprobadosError } = await supabase
             .from('Evento')
             .select('id', { count: 'exact' })
             .in('eventoEtapaId', [
-                'cm6ecqcju0000gukqfzhu772l',//pendiente
-                'cm6499aqs0002gu1ae4k1a7ls',//aprobado
-                'cm64bp2ba0000guqkip3liohc',//En planeación
-                'cm64bpdlt0001guqkujuf5jfr',//En producción
-                'cm6499n9v0003gu1a9bj1neri',//En edición
-                'cm649aflf0004gu1agr90z9o3',//En revisión
-                'cm649d1380005gu1ar0xr7qev'//Generando entregables
-            ]);
+                'cm6ecqcju0000gukqfzhu772l', // pendiente
+                'cm6499aqs0002gu1ae4k1a7ls', // aprobado
+                'cm64bp2ba0000guqkip3liohc', // En planeación
+                'cm64bpdlt0001guqkujuf5jfr', // En producción
+                'cm6499n9v0003gu1a9bj1neri', // En edición
+                'cm649aflf0004gu1agr90z9o3', // En revisión
+                'cm649d1380005gu1ar0xr7qev'  // Generando entregables
+            ])
+            .eq('status', 'active');
 
         const { count: agendaCount, error: agendaError } = await supabase
             .from('Agenda')

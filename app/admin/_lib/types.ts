@@ -251,6 +251,7 @@ export interface Cotizacion {
     expiresAt?: Date | null
     updatedAt?: Date
     pagos?: Pago[]; // Add this line to include the pagos property   
+    eventoStatus?: string | null
 }
 
 export interface CotizacionServicio {

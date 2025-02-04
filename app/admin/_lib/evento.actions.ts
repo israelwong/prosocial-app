@@ -75,11 +75,12 @@ export async function crearEvento(data: Evento) {
                 eventoTipoId: data.eventoTipoId,
                 nombre: data.nombre,
                 fecha_evento: data.fecha_evento,
-                status: data.status,
+                status: 'active',
                 userId: data.userId || null,
                 eventoEtapaId: data.eventoEtapaId || null
             }
         });
+
         return { success: true, id: nuevoEvento.id };
     } catch (error) {
         console.error(error);
@@ -384,7 +385,6 @@ export async function obtenerEventoCotizaciones(eventoId: string) {
         }
     });
 
-
     const cotizaciones = await prisma.cotizacion.findMany({
         where: {
             eventoId
@@ -489,7 +489,8 @@ export async function obtenerEventosPorEtapa(etapas: number[]) {
                 posicion: {
                     in: etapas
                 }
-            }
+            },
+            // status: 'active'
         },
         include: {
             EventoTipo: {
@@ -549,4 +550,16 @@ export async function obtenerEventosPorEtapa(etapas: number[]) {
     });
 
     return eventosConTotalPagado;
+}
+
+export async function obtenerStatusEvento(eventoId: string) {
+    const evento = await prisma.evento.findUnique({
+        where: {
+            id: eventoId
+        },
+        select: {
+            status: true
+        }
+    });
+    return evento?.status;
 }
