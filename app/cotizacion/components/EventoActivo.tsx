@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
 import { supabase } from '@/app/admin/_lib/supabase';
 
+
 interface Props {
     eventoId: string
 }

@@ -10,20 +10,28 @@ interface Props {
 export default function Footer({ telefono, asunto }: Props) {
 
     const handleWhatsapp = () => {
-        const mensaje = `${asunto}`
-        const telefonoEntrante = telefono.trim().replace(/ /g, '')
-        const url = `https://wa.me/52${telefonoEntrante}?text=${encodeURIComponent(mensaje)}`
-        window.open(url, '_blank')
+        try {
+            const mensaje = `${asunto}`
+            const telefonoEntrante = telefono.trim().replace(/ /g, '')
+            const url = `https://wa.me/52${telefonoEntrante}?text=${encodeURIComponent(mensaje)}`
+            window.open(url, '_blank')
+        } catch (error) {
+            console.error('Error opening WhatsApp:', error)
+        }
     }
 
     const handleLlamada = () => {
-        const telefonoEntrante = telefono.trim().replace(/ /g, '')
-        const url = `tel:${telefonoEntrante}`
-        window.open(url, '_blank')
+        try {
+            const telefonoEntrante = telefono.trim().replace(/ /g, '')
+            const url = `tel:${telefonoEntrante}`
+            window.open(url, '_blank')
+        } catch (error) {
+            console.error('Error making call:', error)
+        }
     }
 
     return (
-        <section className=' mt-5 p-5 border-t border-t-zinc-800 text-zinc-400'>
+        <section className='mt-5 p-5 border-t border-t-zinc-800 text-zinc-400'>
 
             <div className='max-w-screen-sm mx-auto'>
 
@@ -34,18 +42,20 @@ export default function Footer({ telefono, asunto }: Props) {
                 <ul className='mb-4 space-y-2 text-sm'>
                     <li className='flex items-center cursor-pointer'
                         onClick={handleLlamada}
+                        aria-label={`Llama al ${telefono}`}
                     >
-                        <i className="fas fa-phone-alt mr-2"></i>
+                        <i className="fas fa-phone-alt mr-2" aria-hidden="true"></i>
                         Llama al {telefono}
                     </li>
                     <li className='flex items-center cursor-pointer'
                         onClick={handleWhatsapp}
+                        aria-label={`Envía un whatsapp al ${telefono}`}
                     >
-                        <i className="fab fa-whatsapp mr-2"></i>
+                        <i className="fab fa-whatsapp mr-2" aria-hidden="true"></i>
                         Envía un whatsapp al {telefono}
                     </li>
                     <li className='flex items-center'>
-                        <i className="far fa-clock mr-2"></i> Atención de lunes a viernes de 10:00 a 20:00
+                        <i className="far fa-clock mr-2" aria-hidden="true"></i> Atención de lunes a viernes de 10:00 a 20:00
                     </li>
                 </ul>
 
