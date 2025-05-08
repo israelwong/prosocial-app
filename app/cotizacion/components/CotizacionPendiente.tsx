@@ -331,6 +331,19 @@ export default function CotizacionPendiente({ cotizacionId }: Props) {
                                 </div>
                             </div>
 
+                            <div>
+                                <div className='mb-10'>
+                                    <p className='text-xl text-zinc-500 mb-2'>
+                                        Precio total del servicio
+                                    </p>
+                                    <div className='bg-zinc-900 border border-zinc-600 p-3 rounded-md'>
+                                        <p className='text-3xl text-zinc-200'>
+                                            {totalPrecioSistema.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
 
                             {/* //! CONDICIONES COMERCIALES */}
                             <div className='mb-10'>
