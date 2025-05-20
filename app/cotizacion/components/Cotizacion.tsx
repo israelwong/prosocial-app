@@ -50,7 +50,7 @@ export default function Cotizacion({ cotizacionId }: Props) {
             <Header asunto='Cotización' />
             {/* BODY */}
             <div className='max-w-screen-sm mx-auto'>
-                {cotizacion.status == 'aprobada' && <CotizacionAutorizada cotizacion={cotizacion} />}
+                {cotizacion.status == 'aprobada' && cotizacion.id && <CotizacionAutorizada cotizacionId={cotizacion.id} />}
                 {cotizacion.status == 'pendiente' && cotizacion.id && <CotizacionPendiente cotizacionId={cotizacion.id} />}
                 {cotizacion.status == 'expirada' && <CotizacionExpirada />}
 

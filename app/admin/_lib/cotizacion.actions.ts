@@ -35,23 +35,27 @@ export async function obtenerCotizacion(cotizacionId: string) {
         }
     });
 
-    const evento = await prisma.evento.findUnique({
-        where: {
-            id: cotizacion?.eventoId
-        },
-        select: {
-            status: true
-        }
-    });
+    const evento = cotizacion?.eventoId
+        ? await prisma.evento.findUnique({
+            where: {
+                id: cotizacion.eventoId
+            },
+            select: {
+                status: true
+            }
+        })
+        : null;
 
-    const eventoTipo = await prisma.eventoTipo.findUnique({
-        where: {
-            id: cotizacion?.eventoTipoId
-        },
-        select: {
-            nombre: true
-        }
-    });
+    const eventoTipo = cotizacion?.eventoTipoId
+        ? await prisma.eventoTipo.findUnique({
+            where: {
+                id: cotizacion.eventoTipoId
+            },
+            select: {
+                nombre: true
+            }
+        })
+        : null;
 
     if (!cotizacion) {
         return null;
