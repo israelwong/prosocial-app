@@ -98,7 +98,7 @@ export default function EventoActivo({ eventoId }: Props) {
                         <span className='text-zinc-500'>Hola </span> {cliente?.nombre.split(' ')[0]}!
                     </h1>
                     <p className='text-lg text-zinc-400'>
-                        Te compartimos las cotizaciones que hemos preparado para el <span className='font-bold text-white'>{evento?.nombre}</span> que celebrarás el <span className='underline'>{evento?.fecha_evento ? new Date(evento.fecha_evento.getTime() + 86400000).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}</span>
+                        Te compartimos las cotizaciones que hemos preparado para el evento de <span className='font-bold text-white'>{evento?.nombre}</span> que celebrarás el <span className='underline'>{evento?.fecha_evento ? new Date(evento.fecha_evento.getTime() + 86400000).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}</span>
                     </p>
                 </div>
 
