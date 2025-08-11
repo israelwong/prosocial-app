@@ -1,20 +1,28 @@
-import React from 'react'
-import { Metadata } from 'next'
-import FormEditarServicio from '../components/FormEditarServicio'
-import NavegdorServicios from '../../paquetes/components/NavegdorServicios'
+// Ruta: app/admin/configurar/servicios/[servicioId]/page.tsx
+
+import ServicioForm from '../components/ServicioForm';
+import { obtenerServicio } from '@/app/admin/_lib/actions/servicios/servicios.actions';
+import { obtenerCategorias } from '@/app/admin/_lib/actions/categorias/categorias.actions';
+import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
+import { notFound } from 'next/navigation';
+
+import { Metadata } from 'next';
 
 export const metadata: Metadata = {
     title: 'Editar Servicio',
-}
+    description: 'Página para editar un servicio existente',
+};
 
-async function page({ params }: { params: Promise<{ servicioId: string }> }) {
-    const { servicioId } = await params
-    return (
-        <div>
-            <NavegdorServicios servicioId={servicioId} />
-            <FormEditarServicio servicioId={servicioId} />
-        </div>
-    )
-}
+export default async function EditarServicioPage({ params }: { params: Promise<{ servicioId: string }> }) {
+    const { servicioId } = await params;
 
-export default page
+    const [servicio, categorias, configuracion] = await Promise.all([
+        obtenerServicio(servicioId),
+        obtenerCategorias(),
+        getGlobalConfiguracion()
+    ]);
+
+    if (!servicio) notFound();
+
+    return <ServicioForm servicio={servicio} categorias={categorias} configuracion={configuracion} />;
+}

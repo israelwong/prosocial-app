@@ -1,12 +1,8 @@
-import React from 'react'
-import { Metadata } from 'next'
-import FormMetodoPagoNuevo from '../components/FormMetodoPagoNuevo'
+// Ruta: app/admin/configurar/metodoPago/nuevo/page.tsx
 
-export const metadata: Metadata = {
-    title: 'Nuevo método de pago',
-    description: 'Agrega un nuevo método de pago',
-}
+import MetodoPagoForm from '../components/MetodoPagoForm';
 
-export default function MetodoPagoNuevo() {
-    return <FormMetodoPagoNuevo />
+export default function NuevoMetodoPagoPage() {
+    // Renderiza el formulario en modo "creación" (sin pasarle un método)
+    return <MetodoPagoForm />;
 }

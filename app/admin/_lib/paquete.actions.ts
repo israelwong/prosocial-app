@@ -44,12 +44,10 @@ export async function actualizarPaquete(paquete: Paquete) {
         where: { paqueteId: paquete.id }
     });
 
-    // console.log('verificarItemsPaqueteServicio', verificarItemsExistentesPaqueteServicio);
     if (verificarItemsExistentesPaqueteServicio.length > 0) {
         await prisma.paqueteServicio.deleteMany({
             where: { paqueteId: paquete.id }
         });
-        // console.log('resultDelete', resultDelete);
     }
 
     const createPromises = paquete.servicios?.map(async (servicio: PaqueteServicio) => {
@@ -62,8 +60,6 @@ export async function actualizarPaquete(paquete: Paquete) {
             throw new Error(`El servicio con ID ${servicio.servicioId} no existe.`);
         }
 
-        // console.log(servicio)
-        // Crear el registro en paqueteServicio
         return prisma.paqueteServicio.create({
             data: {
                 paqueteId: paquete.id!,

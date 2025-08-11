@@ -1,18 +1,19 @@
-import React from 'react'
+// Ruta: app/admin/configurar/tipoEvento/page.tsx
+
 import { Metadata } from 'next';
-import ListaTipoEvento from './component/ListaTipoEvento';
+import { obtenerTiposEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
+import TiposEventoCliente from './components/TiposEventoCliente';
 
 export const metadata: Metadata = {
-    title: 'Tipo evento',
-    description: 'Tipo de evento',
-}
+    title: 'Configurar Tipos de Evento',
+};
 
-function page() {
+export default async function TiposEventoPage() {
+    const initialItems = await obtenerTiposEvento();
+
     return (
-        <div className='p-5'>
-            <ListaTipoEvento />
+        <div className="container mx-auto p-4 md:p-6 lg:p-8">
+            <TiposEventoCliente initialItems={initialItems} />
         </div>
-    )
+    );
 }
-
-export default page

@@ -2,9 +2,10 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
 	content: [
-		"./pages/**/*.{js,ts,jsx,tsx,mdx}",
+		"./pages/**/*.{js,ts,jsx,tsx,mdx}", // Para el router 'pages' (si lo usas)
 		"./components/**/*.{js,ts,jsx,tsx,mdx}",
-		"./app/**/*.{js,ts,jsx,tsx,mdx}",
+		"./app/**/*.{js,ts,jsx,tsx,mdx}", // Para el App Router
+		"./ui/**/*.{js,ts,jsx,tsx,mdx}", // ¡Asegúrate de que esta línea exista!
 	],
 	theme: {
 		extend: {
@@ -33,6 +34,5 @@ const config: Config = {
 			},
 		},
 	},
-	plugins: [],
 };
 export default config;

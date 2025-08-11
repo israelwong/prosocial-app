@@ -1,14 +1,23 @@
-import React from 'react'
-import { Metadata } from 'next'
-import ListaConfiguracion from './components/ListaConfiguracion'
+// app/admin/configurar/parametros/page.tsx
 
+import { Metadata } from 'next';
+import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
+import ConfiguracionForm from './components/ConfiguracionForm';
 
 export const metadata: Metadata = {
-    title: 'Configurar Parámetros',
-}
+    title: 'Parámetros Base',
+};
 
-function page() {
-    return <ListaConfiguracion />
-}
+// Convertimos la página en un componente asíncrono para usar Server Components
+export default async function ParametrosPage() {
 
-export default page
+    // 1. Obtenemos la configuración en el servidor.
+    const configuracion = await getGlobalConfiguracion();
+
+    // 2. Pasamos los datos a nuestro nuevo formulario, que es un Client Component.
+    return (
+        <div className="container mx-auto p-4 md:p-6 lg:p-8">
+            <ConfiguracionForm config={configuracion} />
+        </div>
+    );
+}

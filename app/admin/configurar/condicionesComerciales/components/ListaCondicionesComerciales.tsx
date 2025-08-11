@@ -1,105 +1,55 @@
-'use client'
-import React, { useState, useEffect } from 'react'
-import { obtenerCondicionesComerciales, ordenar } from '@/app/admin/_lib/condicionesComerciales.actions'
-import { CondicionesComerciales } from '@/app/admin/_lib/types'
-import { useRouter } from 'next/navigation'
-import { useDragAndDrop } from '@/app/admin/_lib/dragAndDrop'
+// Ruta: app/admin/configurar/condicionesComerciales/components/ListaCondicionesComercialesCliente.tsx
 
-export default function ListaCondicionesComerciales() {
+'use client';
 
-    const router = useRouter()
-    const [condicionesComerciales, setCondicionesComerciales] = useState([] as CondicionesComerciales[])
+import { type CondicionesComerciales } from '@prisma/client';
+import { useRouter } from 'next/navigation';
 
-    useEffect(() => {
-        const fetchData = async () => {
-            const condicionesComercialesData = await obtenerCondicionesComerciales()
-            setCondicionesComerciales(condicionesComercialesData)
-        }
-        fetchData()
-    }, [])
+interface Props {
+    condiciones: CondicionesComerciales[];
+}
 
-
-    //! Drag and drop begin
-    const { items, handleDragStart, handleDrop, handleDragOver } = useDragAndDrop(condicionesComerciales);
-    useEffect(() => {
-        setCondicionesComerciales(items);
-    }, [items]);
-
-    useEffect(() => {
-        const newOrder = condicionesComerciales.map((condicion, index) => ({
-            ...condicion,
-            orden: index + 1
-        }));
-        ordenar(newOrder);
-    }, [condicionesComerciales]);
-    //! Drag and drop end
+export default function ListaCondicionesComercialesCliente({ condiciones }: Props) {
+    const router = useRouter();
 
     return (
-        <div>
-            <div className='mb-5 flex justify-between'>
-                <h1 className='text-2xl'>Condiciones Comerciales</h1>
-                <button
-                    className='bg-blue-600 text-white px-4 py-2 rounded-md'
-                    onClick={() => router.push('/admin/configurar/condicionesComerciales/nueva')}>
-                    Crear nueva condición comercial
-                </button>
-            </div>
-
-            {condicionesComerciales.length === 0 ? (
-                <p className='py-10 text-center text-zinc-500'>No hay condiciones comerciales disponibles.</p>
-            ) : (
-
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-zinc-800">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo evento</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descuento</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Anticipo</th>
-                            <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Estátus</th>
-
-
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-
+        <div className="border border-zinc-700 rounded-lg overflow-hidden">
+            <table className="min-w-full bg-zinc-800 text-sm">
+                <thead className="bg-zinc-900/50">
+                    <tr className="text-zinc-400">
+                        <th className="py-3 px-4 text-left font-medium">Nombre</th>
+                        <th className="py-3 px-4 text-center font-medium">Anticipo</th>
+                        <th className="py-3 px-4 text-center font-medium">Descuento</th>
+                        <th className="py-3 px-4 text-center font-medium">Estado</th>
+                        <th className="py-3 px-4 text-right font-medium">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-700">
+                    {condiciones.map((condicion) => (
+                        <tr key={condicion.id} className="hover:bg-zinc-700/50 text-zinc-300">
+                            <td className="py-3 px-4 font-medium">{condicion.nombre}</td>
+                            <td className="py-3 px-4 text-center">{condicion.porcentaje_anticipo ? `${condicion.porcentaje_anticipo}%` : 'N/A'}</td>
+                            <td className="py-3 px-4 text-center">{condicion.descuento ? `${condicion.descuento}%` : 'N/A'}</td>
+                            <td className="py-3 px-4 text-center">
+                                <span className={`h-2.5 w-2.5 rounded-full inline-block ${condicion.status === 'active' ? 'bg-green-500' : 'bg-zinc-500'}`}></span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                                <button
+                                    onClick={() => router.push(`/admin/configurar/condicionesComerciales/${condicion.id}`)}
+                                    className="px-3 py-1 rounded-md bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-xs font-medium"
+                                >
+                                    Editar
+                                </button>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody className="bg-zinc-800 divide-y divide-gray-200 text-white">
-                        {condicionesComerciales.map((condicion, index) => (
-                            <tr key={condicion.id}
-                                draggable
-                                onDragStart={() => handleDragStart(index)}
-                                onDragOver={handleDragOver}
-                                onDrop={() => handleDrop(index)}
-
-                            >
-                                <td className="px-6 py-4 whitespace-nowrap text-sm">{condicion.tipoEvento}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{condicion.nombre}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                    {condicion.descripcion ? condicion.descripcion : 'N/A'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                    {condicion.descuento ? `${condicion.descuento}%` : 'N/A'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                    {condicion.porcentaje_anticipo ? `${condicion.porcentaje_anticipo}%` : 'N/A'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                    <span className={`inline-block w-3 h-3 rounded-full ${condicion.status === 'active' ? 'bg-green-500' : 'bg-zinc-400'}`}></span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                    <button
-                                        className='bg-blue-600 text-white px-4 py-2 rounded-md'
-                                        onClick={() => router.push(`/admin/configurar/condicionesComerciales/${condicion.id}`)}>
-                                        Editar
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                    ))}
+                </tbody>
+            </table>
+            {condiciones.length === 0 && (
+                <p className="text-center text-zinc-500 py-10">
+                    No hay condiciones comerciales definidas.
+                </p>
             )}
-
         </div>
-    )
+    );
 }

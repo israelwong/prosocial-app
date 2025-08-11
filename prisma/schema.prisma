@@ -151,6 +151,7 @@ model Cotizacion {
   EventoTipo                         EventoTipo                         @relation(fields: [eventoTipoId], references: [id])
   eventoId                           String
   Evento                             Evento                             @relation(fields: [eventoId], references: [id])
+  
   nombre                             String
   precio                             Float
   condicionesComercialesId           String?
@@ -163,10 +164,8 @@ model Cotizacion {
   updatedAt                          DateTime                           @updatedAt
   expiresAt                          DateTime?                          @default(dbgenerated("now() + interval '10 day'"))
   Servicio                           CotizacionServicio[]
-  // contratoId                         String?
   Pago                               Pago[]
   CotizacionVisita                   CotizacionVisita[]
-  // Notificacion                       Notificacion[]
 }
 
 model CotizacionServicio {
@@ -177,14 +176,24 @@ model CotizacionServicio {
   Servicio            Servicio          @relation(fields: [servicioId], references: [id])
   servicioCategoriaId String
   ServicioCategoria   ServicioCategoria @relation(fields: [servicioCategoriaId], references: [id])
-  cantidad            Int               @default(1)
-  posicion            Int               @default(0)
 
   userId          String?
   fechaAsignacion DateTime?
   FechaEntrega    DateTime?
   status          String    @default("pendiente")
 
+// --- CAMPOS NUEVOS PARA CONGELAR DATOS ---
+  nombre              String?            @default("Servicio cotizado anteriormente") // Valor para filas antiguas
+  precioUnitario      Float             @default(0)
+  subtotal            Float             @default(0)
+
+  // --- ¡NUEVOS CAMPOS PARA COSTOS PERSONALIZADOS! ---
+  // Guardamos el costo base del servicio en el momento de la cotización.
+  costo               Float             @default(0)
+
+
+  cantidad            Int               @default(1)
+  posicion            Int               @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -216,6 +225,30 @@ model Servicio {
   PaqueteServicio     PaqueteServicio[]
 }
 
+model ServicioSeccion {
+  id          String   @id @default(cuid())
+  nombre      String   @unique
+  descripcion String?
+  posicion    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relación: Una Sección está enlazada a muchas entradas de SeccionCategoria
+  seccionCategorias SeccionCategoria[]
+}
+
+
+model SeccionCategoria {
+  id          String @id @default(cuid())
+  seccionId   String
+  categoriaId String @unique // ¡Clave! Esto asegura que una categoría solo puede estar en una sección.
+
+  // Relaciones
+  Seccion           ServicioSeccion   @relation(fields: [seccionId], references: [id], onDelete: Cascade)
+  ServicioCategoria ServicioCategoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+}
+
+
 model ServicioGasto {
   id         String   @id @default(cuid())
   servicioId String
@@ -232,6 +265,7 @@ model ServicioCategoria {
   posicion           Int                  @default(0)
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
+  seccionCategoria  SeccionCategoria? 
   Servicio           Servicio[]
   PaqueteServicio    PaqueteServicio[]
   CotizacionServicio CotizacionServicio[]
@@ -256,7 +290,7 @@ model Paquete {
 model PaqueteServicio {
   id                  String            @id @default(cuid())
   paqueteId           String
-  Paquete             Paquete           @relation(fields: [paqueteId], references: [id])
+  Paquete             Paquete           @relation(fields: [paqueteId], references: [id], onDelete: Cascade)
   servicioId          String
   Servicio            Servicio          @relation(fields: [servicioId], references: [id])
   servicioCategoriaId String
@@ -286,7 +320,7 @@ model Configuracion {
 model MetodoPago {
   id                               String                             @id @default(cuid())
   metodo_pago                      String //efectivo, tarjeta de crédito, tarjeta de debito, transferencia interbancaria, oxxo
-  comision_porcentaje_base         Float?                             @map("comsion_porcentaje_base") //3.6
+  comision_porcentaje_base         Float?                             @map("comision_porcentaje_base") //3.6
   comision_fija_monto              Float? //3
   num_msi                          Int? // 3, 6, 9, 12
   comision_msi_porcentaje          Float?
@@ -307,10 +341,10 @@ model CondicionesComerciales {
   porcentaje_anticipo              Float?                             @default(0) // 30
   status                           String                             @default("active")
   orden                            Int?                               @default(0)
-  tipoEvento                       String? //! social / empresarial
+  // tipoEvento                       String? //! social / empresarial
   createdAt                        DateTime                           @default(now())
   updatedAt                        DateTime                           @updatedAt
-  CondicionesComercialesMetodoPago CondicionesComercialesMetodoPago[]
+  CondicionesComercialesMetodoPago CondicionesComercialesMetodoPago[] 
   Cotizacion                       Cotizacion[]
   Pago                             Pago[]
 }
@@ -318,7 +352,7 @@ model CondicionesComerciales {
 model CondicionesComercialesMetodoPago {
   id                       String                 @id @default(cuid())
   condicionesComercialesId String
-  CondicionesComerciales   CondicionesComerciales @relation(fields: [condicionesComercialesId], references: [id])
+  CondicionesComerciales   CondicionesComerciales @relation(fields: [condicionesComercialesId], references: [id], onDelete: Cascade) 
   metodoPagoId             String
   MetodoPago               MetodoPago             @relation(fields: [metodoPagoId], references: [id])
   orden                    Int?                   @default(0)
@@ -426,34 +460,3 @@ model Notificacion {
   updatedAt    DateTime @updatedAt
 }
 
-/// List of models ordered by relation:
-/// - User
-/// - Sesion
-/// - Cliente
-/// - Evento
-/// - EventoBitacora
-/// - EventoTipo
-/// - EventoEtapa
-/// - Canal
-/// - Pago
-/// - Cotizacion
-/// - CotizacionServicio
-/// - CotizacionVisita
-/// - Servicio
-/// - ServicioGasto
-/// - ServicioCategoria
-/// - Paquete
-/// - PaqueteServicio
-/// - Configuracion
-/// - MetodoPago
-/// - CondicionesComerciales
-/// - CondicionesComercialesMetodoPago
-/// - Campania
-/// - AnuncioPlataforma
-/// - AnuncioTipo
-/// - AnuncioCategoria
-/// - Anuncio
-/// - AnuncioVisita
-/// - Agenda
-/// - AgendaTipo
-/// - Notificacion

@@ -1,11 +1,7 @@
-import React from 'react'
-import { Metadata } from 'next'
-import FormUsuarioNuevo from '../components/FormUsuarioNuevo'
+// Ruta: app/admin/configurar/usuarios/nuevo/page.tsx
 
-export const metadata: Metadata = {
-    title: 'Nuevo usuario',
-}
+import UsuarioForm from '../components/UsuarioForm';
 
-export default function page() {
-    return <FormUsuarioNuevo />
+export default function NuevoUsuarioPage() {
+    return <UsuarioForm />;
 }

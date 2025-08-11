@@ -1,17 +1,19 @@
-import React from 'react'
-import { Metadata } from 'next'
-import ListaCategorias from './components/ListaCategorias'
+// Ruta: app/admin/configurar/categorias/page.tsx
+
+import { Metadata } from 'next';
+import { obtenerCategorias } from '@/app/admin/_lib/actions/categorias/categorias.actions';
+import CategoriasCliente from './components/CategoriasCliente';
 
 export const metadata: Metadata = {
-    title: 'Categorias'
-}
+    title: 'Configurar Categorías de Servicio',
+};
 
-function CategoriasPage() {
+export default async function CategoriasPage() {
+    const initialCategories = await obtenerCategorias();
+
     return (
-        <div className='p-5'>
-            <ListaCategorias />
+        <div className="container mx-auto p-4 md:p-6 lg:p-8">
+            <CategoriasCliente initialCategories={initialCategories} />
         </div>
-    )
+    );
 }
-
-export default CategoriasPage

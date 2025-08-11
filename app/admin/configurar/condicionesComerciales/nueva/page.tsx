@@ -1,12 +1,9 @@
-import React from 'react'
-import { Metadata } from 'next'
-import FormCondicionComercialNueva from '../components/FormCondicionComercialNueva'
+// Ruta: app/admin/configurar/condicionesComerciales/nueva/page.tsx
 
-export const metadata: Metadata = {
-    title: 'Nueva Condición Comercial',
-    description: 'Crear una nueva condición comercial',
-}
+import CondicionComercialForm from '../components/CondicionComercialForm';
+import { obtenerMetodosPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions';
 
-export default function page() {
-    return <FormCondicionComercialNueva />
+export default async function NuevaCondicionComercialPage() {
+    const metodosPagoDisponibles = await obtenerMetodosPago();
+    return <CondicionComercialForm metodosPagoDisponibles={metodosPagoDisponibles} />;
 }

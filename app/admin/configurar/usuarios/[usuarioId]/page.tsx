@@ -1,12 +1,16 @@
-import React from 'react'
-import { Metadata } from 'next'
-import FormUsuarioEditar from '../components/FormUsuarioEditar'
+// Ruta: app/admin/configurar/usuarios/[usuarioId]/page.tsx
 
-export const metadata: Metadata = {
-    title: 'Detalles de usuario',
-}
+import { obtenerUsuario } from '@/app/admin/_lib/actions/usuarios/usuarios.actions';
+import UsuarioForm from '../components/UsuarioForm';
+import { notFound } from 'next/navigation';
 
-export default async function page({ params }: { params: Promise<{ usuarioId: string }> }) {
+export default async function EditarUsuarioPage({ params }: { params: Promise<{ usuarioId: string }> }) {
     const { usuarioId } = await params;
-    return <FormUsuarioEditar usuarioId={usuarioId} />
+    const usuario = await obtenerUsuario(usuarioId);
+
+    if (!usuario) {
+        notFound();
+    }
+
+    return <UsuarioForm usuario={usuario} />;
 }

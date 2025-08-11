@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* test-input.css */
+@import "tailwindcss";
 
 :root {
   --background: #ffffff;
@@ -27,26 +26,25 @@ body {
 }
 
 @font-face {
-  font-family: 'smooch';
-  src: url('./fonts/smooch/smooch-latin-400-normal.woff') format('woff');
+  font-family: "smooch";
+  src: url("./fonts/smooch/smooch-latin-400-normal.woff") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'roboto';
-  src: url('./fonts/roboto/roboto-cyrillic-300-normal.woff') format('woff');
+  font-family: "roboto";
+  src: url("./fonts/roboto/roboto-cyrillic-300-normal.woff") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Bebas Neu';
-  src: url('./fonts/BebasNeue-Regular.ttf') format('truetype');
+  font-family: "Bebas Neu";
+  src: url("./fonts/BebasNeue-Regular.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
-
