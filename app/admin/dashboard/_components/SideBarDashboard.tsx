@@ -18,7 +18,7 @@ import { validarPagoStripe } from '../../_lib/pago.actions'
 
 const links = [
     { href: '/admin/dashboard', label: 'Inicio', icon: Home, alt: 'Inicio' },
-    { href: '/admin/dashboard/eventos', label: 'Cotizaciones', icon: Inbox, count: 0, alt: 'Cotizaciones' },
+    { href: '/admin/dashboard/eventos', label: 'Eventos', icon: Inbox, count: 0, alt: 'Eventos' },
     { href: '/admin/dashboard/gestion', label: 'Kanban', icon: Columns, count: 0, alt: 'Kanban' },
     // { href: '/admin/dashboard/seguimiento', label: 'Seguimiento', icon: Settings, count: 0, alt: 'Seguimiento' },
     { href: '/admin/dashboard/agenda', label: 'Agenda', icon: Calendar, alt: 'Agenda' },

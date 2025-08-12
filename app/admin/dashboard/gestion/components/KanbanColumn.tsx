@@ -16,7 +16,11 @@ interface KanbanColumnProps {
 
 export default function KanbanColumn({ etapa, eventos, onArchiveEvent }: KanbanColumnProps) {
     const { setNodeRef, isOver } = useDroppable({
-        id: etapa.id || `etapa-${etapa.posicion}`,
+        id: etapa.id!,
+        data: {
+            type: 'column',
+            etapaId: etapa.id
+        }
     });
 
     // Calcular estadísticas de la columna
@@ -45,10 +49,10 @@ export default function KanbanColumn({ etapa, eventos, onArchiveEvent }: KanbanC
                 `}
             >
                 <SortableContext items={eventos.map(e => e.id)} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-3">
+                    <div className="space-y-3 min-h-32 flex flex-col flex-1">
                         {eventos.length === 0 ? (
-                            <div className="flex items-center justify-center h-32 text-zinc-500 text-sm italic">
-                                No hay eventos en esta etapa
+                            <div className="flex-1 flex items-center justify-center min-h-32 h-full cursor-pointer text-zinc-500 text-sm italic select-none">
+                                Suelta aquí para mover un evento
                             </div>
                         ) : (
                             eventos.map((evento) => (

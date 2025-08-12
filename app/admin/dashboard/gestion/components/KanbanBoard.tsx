@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Settings } from 'lucide-react';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCorners } from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCorners, pointerWithin, getFirstCollision, CollisionDetection } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { obtenerEventosKanban, obtenerEtapasGestion, actualizarEtapaEvento, archivarEvento } from '@/app/admin/_lib/actions/gestion/gestion.actions';
 import { EventoKanbanType } from '@/app/admin/_lib/actions/gestion/gestion.schemas';
 import { EventoEtapa } from '@/app/admin/_lib/types';
@@ -30,6 +30,20 @@ export default function KanbanBoard() {
             },
         })
     );
+
+    // Estrategia de colisiones personalizada para soportar columnas vacías
+    const collisionDetection: CollisionDetection = (args) => {
+        const pointerIntersections = pointerWithin(args);
+
+        if (pointerIntersections.length > 0) {
+            const overId = getFirstCollision(pointerIntersections, 'id');
+            if (overId != null) {
+                return [{ id: overId }];
+            }
+        }
+        // Fallback a closestCorners (más estable que closestCenter para layouts irregulares)
+        return closestCorners(args);
+    };
 
     useEffect(() => {
         fetchData();
@@ -122,8 +136,8 @@ export default function KanbanBoard() {
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
         setActiveEvent(null);
+        const { active, over } = event;
 
         if (!over) return;
 
@@ -132,76 +146,125 @@ export default function KanbanBoard() {
 
         if (activeId === overId) return;
 
-        const previousEvents = eventos; // Guardar estado previo para posible reversión
+        const findContainer = (id: string) => {
+            // Primero verificar si el ID es directamente una etapa/columna
+            if (id in eventos) {
+                return id;
+            }
 
-        // Calcular el siguiente estado
-        const activeEvent = findEvent(activeId, previousEvents);
-        const overEvent = findEvent(overId, previousEvents);
+            // Verificar si el ID es una etapa válida (aunque no tenga eventos)
+            const etapaExiste = etapas.some(etapa => etapa.id === id);
+            if (etapaExiste) {
+                return id;
+            }
 
-        const activeColumnId = activeEvent?.etapaId;
-        let overColumnId = overEvent?.etapaId;
-
-        if (!overColumnId) {
-            const isColumn = etapas.some(etapa => etapa.id === overId);
-            if (isColumn) overColumnId = overId;
-        }
-
-        if (!activeEvent || !activeColumnId || !overColumnId) return;
-
-        // Actualizar el estado de forma optimista
-        setEventos(currentEvents => {
-            const newEvents = { ...currentEvents };
-
-            if (activeColumnId === overColumnId) {
-                // Reordenar en la misma columna
-                const items = newEvents[activeColumnId] ? [...newEvents[activeColumnId]] : [];
-                const oldIndex = items.findIndex(item => item.id === activeId);
-                const newIndex = items.findIndex(item => item.id === overId);
-
-                if (oldIndex !== -1 && newIndex !== -1) {
-                    const [removed] = items.splice(oldIndex, 1);
-                    items.splice(newIndex, 0, removed);
-                    newEvents[activeColumnId] = items;
-                    newEvents[activeColumnId].sort((a, b) => new Date(a.fecha_evento).getTime() - new Date(b.fecha_evento).getTime());
-                }
-            } else {
-                // Mover a una columna diferente
-                const sourceItems = newEvents[activeColumnId] ? [...newEvents[activeColumnId]] : [];
-                const destItems = newEvents[overColumnId] ? [...newEvents[overColumnId]] : [];
-
-                const activeIndex = sourceItems.findIndex(item => item.id === activeId);
-                if (activeIndex !== -1) {
-                    const [movedItem] = sourceItems.splice(activeIndex, 1);
-                    movedItem.etapaId = overColumnId;
-
-                    let newIndex = destItems.findIndex(item => item.id === overId);
-                    if (newIndex === -1) newIndex = destItems.length;
-
-                    destItems.splice(newIndex, 0, movedItem);
-
-                    newEvents[activeColumnId] = sourceItems;
-                    newEvents[overColumnId] = destItems;
-
-                    // Re-ordenar ambas columnas
-                    newEvents[activeColumnId].sort((a, b) => new Date(a.fecha_evento).getTime() - new Date(b.fecha_evento).getTime());
-                    newEvents[overColumnId].sort((a, b) => new Date(a.fecha_evento).getTime() - new Date(b.fecha_evento).getTime());
+            // Finalmente, buscar en qué etapa está el evento
+            for (const etapaId in eventos) {
+                if (eventos[etapaId].some(evento => evento.id === id)) {
+                    return etapaId;
                 }
             }
-            return newEvents;
-        });        // Llamar a la base de datos después de la actualización de estado
-        if (activeColumnId !== overColumnId) {
-            actualizarEtapaEvento({ eventoId: activeId, nuevaEtapaId: overColumnId })
+            return null;
+        };
+
+        const activeContainer = findContainer(activeId);
+        let overContainer: string | null = null;
+
+        // Determinar el contenedor de destino usando la información de data si está disponible
+        if (over.data?.current?.type === 'column') {
+            overContainer = over.data.current.etapaId;
+            console.log('Debug - Detectada columna directamente:', overContainer);
+        } else {
+            overContainer = findContainer(overId);
+            console.log('Debug - Usando findContainer:', overContainer);
+        }
+
+        // Si no se encontró contenedor, verificar si overId es directamente una etapa
+        if (!overContainer) {
+            const esEtapaValida = etapas.some(etapa => etapa.id === overId);
+            if (esEtapaValida) {
+                overContainer = overId;
+                console.log('Debug - Etapa válida encontrada:', overContainer);
+                // Asegurar que la etapa esté inicializada en eventos
+                if (!eventos[overId]) {
+                    setEventos(prev => ({
+                        ...prev,
+                        [overId]: []
+                    }));
+                }
+            }
+        }
+
+        if (!activeContainer || !overContainer) {
+            console.log('Debug - activeContainer:', activeContainer, 'overContainer:', overContainer);
+            console.log('Debug - activeId:', activeId, 'overId:', overId);
+            return;
+        }
+
+        const previousEvents = JSON.parse(JSON.stringify(eventos));
+
+        if (activeContainer === overContainer) {
+            // Reordenar en la misma columna
+            setEventos(prev => {
+                const newEvents = { ...prev };
+                const items = newEvents[activeContainer];
+                const oldIndex = items.findIndex(e => e.id === activeId);
+                const newIndex = items.findIndex(e => e.id === overId);
+
+                if (oldIndex !== -1 && newIndex !== -1) {
+                    newEvents[activeContainer] = arrayMove(items, oldIndex, newIndex);
+                }
+                return newEvents;
+            });
+        } else {
+            // Mover a una columna diferente
+            setEventos(prev => {
+                const newEvents = { ...prev };
+
+                // Asegurar que ambos contenedores existan
+                if (!newEvents[activeContainer]) newEvents[activeContainer] = [];
+                if (!newEvents[overContainer]) newEvents[overContainer] = [];
+
+                const sourceItems = [...newEvents[activeContainer]];
+                const destItems = [...newEvents[overContainer]];
+
+                const activeIndex = sourceItems.findIndex(e => e.id === activeId);
+                if (activeIndex === -1) return prev;
+
+                const [movedItem] = sourceItems.splice(activeIndex, 1);
+                movedItem.etapaId = overContainer;
+
+                // Si se suelta sobre otra ficha, insertar en esa posición
+                const overIndex = destItems.findIndex(e => e.id === overId);
+                if (overIndex !== -1) {
+                    destItems.splice(overIndex, 0, movedItem);
+                } else {
+                    // Si se suelta en área vacía, añadir al final
+                    destItems.push(movedItem);
+                }
+
+                newEvents[activeContainer] = sourceItems;
+                newEvents[overContainer] = destItems;
+
+                return newEvents;
+            });
+
+            // Llamada a la base de datos
+            actualizarEtapaEvento({ eventoId: activeId, nuevaEtapaId: overContainer })
                 .then(result => {
                     if (result.success) {
                         toast.success('Evento movido correctamente');
+                        // Opcional: re-sincronizar con la DB para asegurar consistencia
+                        // fetchData(); 
                     } else {
-                        toast.error('Error al mover el evento, revirtiendo...');
-                        setEventos(previousEvents); // Revertir en caso de error
+                        toast.error(result.error || 'Error al mover el evento, revirtiendo...');
+                        setEventos(previousEvents);
                     }
                 })
-                .catch(() => {
-                    toast.error('Error de red, revirtiendo...');
-                    setEventos(previousEvents); // Revertir en caso de error
+                .catch((err) => {
+                    console.error("Error en la llamada a la API:", err);
+                    toast.error('Error de red al mover el evento, revirtiendo...');
+                    setEventos(previousEvents);
                 });
         }
     };
@@ -310,23 +373,21 @@ export default function KanbanBoard() {
 
             <DndContext
                 sensors={sensors}
-                collisionDetection={closestCorners}
+                collisionDetection={collisionDetection}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
             >
                 <div className="flex gap-4 overflow-x-auto pb-4">
-                    <SortableContext items={etapas.map(e => e.id).filter((id): id is string => id !== undefined)} strategy={horizontalListSortingStrategy}>
-                        {etapas
-                            .filter(etapa => etapa.id !== undefined)
-                            .map(etapa => (
-                                <KanbanColumn
-                                    key={etapa.id}
-                                    etapa={etapa}
-                                    eventos={eventos[etapa.id as string] || []}
-                                    onArchiveEvent={handleArchiveEvent}
-                                />
-                            ))}
-                    </SortableContext>
+                    {etapas
+                        .filter(etapa => etapa.id !== undefined)
+                        .map(etapa => (
+                            <KanbanColumn
+                                key={etapa.id}
+                                etapa={etapa}
+                                eventos={eventos[etapa.id as string] || []}
+                                onArchiveEvent={handleArchiveEvent}
+                            />
+                        ))}
                 </div>
 
                 <DragOverlay>

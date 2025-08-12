@@ -441,3 +441,5 @@ export interface Notificacion {
     createdAt?: Date
     updatedAt?: Date
 }
+
+export type EventoConDetalles = EventosPorEtapa;
