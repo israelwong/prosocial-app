@@ -32,6 +32,11 @@ export async function obtenerCatalogoCompleto() {
     });
 }
 
+// --- Lectura individual de Categoría ---
+export async function obtenerCategoria(id: string) {
+    return await prisma.servicioCategoria.findUnique({ where: { id } });
+}
+
 // --- Acciones para Secciones ---
 export async function crearSeccion(data: { nombre: string, descripcion?: string }) {
     const count = await prisma.servicioSeccion.count();

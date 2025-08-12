@@ -1,11 +1,12 @@
 import React from 'react'
 import { Metadata } from 'next'
-import FormContactoNuevo from '../components/FormContactoNuevo'
+import FormContactoNuevoV2 from '../components/FormContactoNuevoV2'
 
 export const metadata: Metadata = {
-    title: 'Nuevo contacto',
+    title: 'Nuevo Contacto - ProSocial',
+    description: 'Registrar nuevo prospecto o cliente'
 }
 
-export default function page() {
-    return <FormContactoNuevo />
+export default function NuevoContactoPage() {
+    return <FormContactoNuevoV2 />
 }

@@ -57,8 +57,64 @@ export async function actualizarTipoEvento(data: unknown) {
     }
 }
 
+export async function verificarSiPuedeEliminarTipoEvento(id: string) {
+    try {
+        // Verificar si el tipo de evento tiene paquetes asociados
+        const paquetesAsociados = await prisma.paquete.count({
+            where: { eventoTipoId: id }
+        });
+
+        // Verificar si tiene eventos asociados
+        const eventosAsociados = await prisma.evento.count({
+            where: { eventoTipoId: id }
+        });
+
+        const totalAsociados = paquetesAsociados + eventosAsociados;
+
+        return {
+            puedeEliminar: totalAsociados === 0,
+            paquetesAsociados,
+            eventosAsociados,
+            razon: totalAsociados > 0 ?
+                `Tiene ${paquetesAsociados} paquete${paquetesAsociados !== 1 ? 's' : ''} y ${eventosAsociados} evento${eventosAsociados !== 1 ? 's' : ''} asociado${totalAsociados !== 1 ? 's' : ''}` :
+                null
+        };
+    } catch (error) {
+        return {
+            puedeEliminar: false,
+            paquetesAsociados: 0,
+            eventosAsociados: 0,
+            razon: "Error al verificar dependencias"
+        };
+    }
+}
+
 export async function eliminarTipoEvento(id: string) {
     try {
+        // Verificar si el tipo de evento tiene paquetes asociados
+        const paquetesAsociados = await prisma.paquete.count({
+            where: { eventoTipoId: id }
+        });
+
+        if (paquetesAsociados > 0) {
+            return {
+                success: false,
+                message: `No se puede eliminar. Este tipo de evento tiene ${paquetesAsociados} paquete${paquetesAsociados > 1 ? 's' : ''} asociado${paquetesAsociados > 1 ? 's' : ''}.`
+            };
+        }
+
+        // Verificar si tiene eventos asociados
+        const eventosAsociados = await prisma.evento.count({
+            where: { eventoTipoId: id }
+        });
+
+        if (eventosAsociados > 0) {
+            return {
+                success: false,
+                message: `No se puede eliminar. Este tipo de evento tiene ${eventosAsociados} evento${eventosAsociados > 1 ? 's' : ''} asociado${eventosAsociados > 1 ? 's' : ''}.`
+            };
+        }
+
         await prisma.eventoTipo.delete({ where: { id } });
         revalidatePath(basePath);
         return { success: true };

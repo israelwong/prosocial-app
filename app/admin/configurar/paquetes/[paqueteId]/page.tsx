@@ -3,8 +3,11 @@
 import PaqueteForm from '../components/PaqueteForm';
 import { obtenerPaquete } from '@/app/admin/_lib/actions/paquetes/paquetes.actions';
 import { obtenerTiposEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
-import { obtenerServiciosPorCategoria } from '@/app/admin/_lib/actions/servicios/servicios.actions';
+import { obtenerServiciosPorCategoria } from '@/app/admin/_lib/actions/servicios/servicios.actions'; // fallback
+import { obtenerCatalogoCompleto } from '@/app/admin/_lib/actions/catalogo/catalogo.actions';
 import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
+import { obtenerMetodosPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions';
+import prisma from '@/app/admin/_lib/prismaClient';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
@@ -17,11 +20,18 @@ export default async function EditarPaquetePage({ params }: { params: Promise<{ 
     const { paqueteId } = await params;
 
     // Obtenemos todos los datos, incluyendo la configuración
-    const [paquete, tiposEvento, serviciosDisponibles, configuracion] = await Promise.all([
+    const [paquete, tiposEvento, serviciosDisponibles, catalogo, configuracion, condiciones, metodosPago] = await Promise.all([
         obtenerPaquete(paqueteId),
         obtenerTiposEvento(),
-        obtenerServiciosPorCategoria(),
-        getGlobalConfiguracion()
+        obtenerServiciosPorCategoria(), // legacy
+        obtenerCatalogoCompleto(),
+        getGlobalConfiguracion(),
+        prisma.condicionesComerciales.findMany({
+            where: { status: 'active' },
+            orderBy: { orden: 'asc' },
+            include: { CondicionesComercialesMetodoPago: { select: { metodoPagoId: true } } }
+        }),
+        obtenerMetodosPago()
     ]);
 
     if (!paquete) {
@@ -34,7 +44,10 @@ export default async function EditarPaquetePage({ params }: { params: Promise<{ 
             paquete={paquete}
             tiposEvento={tiposEvento}
             serviciosDisponibles={serviciosDisponibles}
+            catalogo={catalogo as any}
             configuracion={configuracion}
+            condiciones={condiciones as any}
+            metodosPago={metodosPago as any}
         />
     );
 }

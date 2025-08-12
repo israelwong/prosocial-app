@@ -15,6 +15,20 @@ export async function obtenerPaquetesAgrupados() {
         include: {
             Paquete: {
                 orderBy: { posicion: 'asc' },
+                include: {
+                    PaqueteServicio: {
+                        include: {
+                            Servicio: {
+                                select: {
+                                    costo: true,
+                                    gasto: true,
+                                    utilidad: true,
+                                    precio_publico: true
+                                }
+                            }
+                        }
+                    }
+                }
             },
         },
         orderBy: { posicion: 'asc' },

@@ -161,7 +161,12 @@ export default function FichaAgenda({ eventoId }: Props) {
                                                     <span>
                                                         <Calendar size={16} className='mr-2 mt-1' />
                                                     </span>
-                                                    {new Date(new Date(agenda.fecha).getTime() + new Date().getTimezoneOffset() * 60000).toLocaleString('es-ES', { dateStyle: 'full' })}
+                                                    {new Date(new Date(agenda.fecha).getTime() + new Date().getTimezoneOffset() * 60000).toLocaleString('es-ES', {
+                                                        weekday: 'long',
+                                                        day: 'numeric',
+                                                        month: 'long',
+                                                        year: 'numeric'
+                                                    })}
                                                 </li>
                                             )}
                                             {agenda.hora && (

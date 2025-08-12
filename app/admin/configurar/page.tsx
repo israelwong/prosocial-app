@@ -1,4 +1,4 @@
-import React from 'react'
+import { redirect } from 'next/navigation';
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -6,12 +6,6 @@ export const metadata: Metadata = {
     description: 'Configurar usuarios',
 }
 
-function Usuarios() {
-    return (
-        <div>
-            Configurar
-        </div>
-    )
+export default function ConfigurarIndexRedirect() {
+    redirect('/admin/configurar/paquetes');
 }
-
-export default Usuarios

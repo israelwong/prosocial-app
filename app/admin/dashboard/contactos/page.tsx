@@ -1,14 +1,14 @@
 import React from 'react'
 import { Metadata } from 'next'
-import ListaContactos from './components/ListaContactos'
+import ListaContactosV2 from './components/ListaContactosV2'
 
 export const metadata: Metadata = {
-    title: 'Prospectos',
-    description: 'Prospectos'
+    title: 'Contactos - ProSocial',
+    description: 'Gestión de prospectos y clientes'
 }
 
-function Prospectos() {
-    return <ListaContactos />
+function ContactosPage() {
+    return <ListaContactosV2 />
 }
 
-export default Prospectos
+export default ContactosPage

@@ -20,7 +20,7 @@ export default async function PaquetesPage() {
 
     return (
         <div className="container mx-auto p-4 md:p-6 lg:p-8">
-            <PaquetesDashboard initialGrupos={grupos} tiposEvento={tiposEvento} />
+            <PaquetesDashboard initialGrupos={grupos} tiposEvento={tiposEvento} configuracion={configuracion} />
         </div>
     );
 }

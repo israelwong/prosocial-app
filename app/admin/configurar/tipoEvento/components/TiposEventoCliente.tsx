@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { EventoTipoCreateSchema, type EventoTipoForm } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.schemas';
-import { crearTipoEvento, actualizarTipoEvento, eliminarTipoEvento, actualizarPosicionTipoEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
+import { crearTipoEvento, actualizarTipoEvento, eliminarTipoEvento, actualizarPosicionTipoEvento, verificarSiPuedeEliminarTipoEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
 import { type EventoTipo } from '@prisma/client';
 import toast from 'react-hot-toast';
 import { GripVertical, Trash2, Loader2 } from 'lucide-react';
@@ -19,6 +19,18 @@ import { useRouter } from 'next/navigation'; // Importamos useRouter
 function SortableItem({ item, onUpdate, onDelete }: { item: EventoTipo, onUpdate: (id: string, newName: string) => void, onDelete: (id: string) => void }) {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
     const [name, setName] = useState(item.nombre);
+    const [canDelete, setCanDelete] = useState(true);
+    const [deleteReason, setDeleteReason] = useState<string | null>(null);
+
+    // Verificar si se puede eliminar al cargar el componente
+    useEffect(() => {
+        const checkCanDelete = async () => {
+            const result = await verificarSiPuedeEliminarTipoEvento(item.id);
+            setCanDelete(result.puedeEliminar);
+            setDeleteReason(result.razon);
+        };
+        checkCanDelete();
+    }, [item.id]);
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -31,6 +43,14 @@ function SortableItem({ item, onUpdate, onDelete }: { item: EventoTipo, onUpdate
         } else {
             setName(item.nombre);
         }
+    };
+
+    const handleDeleteClick = () => {
+        if (!canDelete) {
+            toast.error(deleteReason || 'No se puede eliminar este tipo de evento');
+            return;
+        }
+        onDelete(item.id);
     };
 
     return (
@@ -46,7 +66,15 @@ function SortableItem({ item, onUpdate, onDelete }: { item: EventoTipo, onUpdate
                 onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
                 className="flex-grow h-9 bg-zinc-900 border border-zinc-700 rounded-md px-3 text-sm text-zinc-200"
             />
-            <button onClick={() => onDelete(item.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-md">
+            <button
+                onClick={handleDeleteClick}
+                disabled={!canDelete}
+                title={!canDelete ? deleteReason || 'No se puede eliminar' : 'Eliminar tipo de evento'}
+                className={`p-2 rounded-md transition-colors ${canDelete
+                        ? 'text-red-500 hover:bg-red-500/10'
+                        : 'text-zinc-500 cursor-not-allowed opacity-50'
+                    }`}
+            >
                 <Trash2 size={16} />
             </button>
         </li>

@@ -57,7 +57,14 @@ export default function FichaDetalle({ eventoId }: Props) {
 
                 setServicioCategoria(data.categorias ?? null)
                 setUsers(data.usuarios ?? null)
-                setCotizacionServicio(data.cotizacionServicio ?? null)
+                setCotizacionServicio(
+                    data.cotizacionServicio
+                        ? data.cotizacionServicio.map(servicio => ({
+                            ...servicio,
+                            nombre: servicio.nombre === null ? undefined : servicio.nombre
+                        }))
+                        : null
+                )
 
                 if (data.cotizacion?.condicionesComercialesId) {
                     const condicionComercial = await obtenerCondicionComercial(data.cotizacion?.condicionesComercialesId)

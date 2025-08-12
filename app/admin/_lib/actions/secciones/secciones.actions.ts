@@ -31,6 +31,13 @@ export async function obtenerCategoriasHuerfanas() {
     });
 }
 
+// --- Obtener una sola sección ---
+export async function obtenerSeccion(id: string) {
+    return await prisma.servicioSeccion.findUnique({
+        where: { id },
+    });
+}
+
 // --- Funciones de Escritura ---
 export async function crearSeccion(data: unknown) {
     const validationResult = SeccionSchema.safeParse(data);

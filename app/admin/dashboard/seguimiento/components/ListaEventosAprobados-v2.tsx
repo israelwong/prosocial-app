@@ -100,16 +100,22 @@ export default function ListaEventosAprobados() {
                                                 </p>
 
                                                 <div className=''>
-                                                    {(evento.Cotizacion[0].precio - Number(evento.total_pagado)) === 0 ? (
-                                                        <p className='flex items-center text-green-500'>
-                                                            <CircleDollarSign size={16} className='mr-1' /> Pagado
-                                                        </p>
-                                                    ) : (
-                                                        <>
-                                                            <p className='flex items-center text-red-500'>
-                                                                <CircleDollarSign size={16} className='mr-1' /> {(evento.Cotizacion[0].precio - Number(evento.total_pagado)).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                    {evento.Cotizacion && evento.Cotizacion[0] && typeof evento.Cotizacion[0].precio === 'number' ? (
+                                                        (evento.Cotizacion[0].precio - Number(evento.total_pagado)) === 0 ? (
+                                                            <p className='flex items-center text-green-500'>
+                                                                <CircleDollarSign size={16} className='mr-1' /> Pagado
                                                             </p>
-                                                        </>
+                                                        ) : (
+                                                            <>
+                                                                <p className='flex items-center text-red-500'>
+                                                                    <CircleDollarSign size={16} className='mr-1' /> {(evento.Cotizacion[0].precio - Number(evento.total_pagado)).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                                </p>
+                                                            </>
+                                                        )
+                                                    ) : (
+                                                        <p className='flex items-center text-zinc-500 italic'>
+                                                            Cotización no disponible
+                                                        </p>
                                                     )}
                                                 </div>
                                             </div>
