@@ -6,10 +6,12 @@ import { ServicioCategoria } from '@/app/admin/_lib/types'
 import { Servicio } from '@/app/admin/_lib/types'
 
 interface Props {
+    eventoTipoId?: string
+    serviciosExcluidos?: string[]
     onAgregarServicio: (servicio: Servicio) => void
 }
 
-const ListaServicios: React.FC<Props> = ({ onAgregarServicio }) => {
+const ListaServicios: React.FC<Props> = ({ eventoTipoId, serviciosExcluidos = [], onAgregarServicio }) => {
 
     const [categorias, setCategorias] = useState<ServicioCategoria[]>([])
     const [servicios, setServicios] = useState<{ [key: string]: Servicio[] }>({})
@@ -57,21 +59,23 @@ const ListaServicios: React.FC<Props> = ({ onAgregarServicio }) => {
                 {categoriaAbierta === categoria.id && (
                     <ul className='space-y-2 pt-3'>
                         {servicios[categoria.id] ? (
-                            servicios[categoria.id].map(servicio => (
-                                <li key={servicio.id}
-                                    className="p-3 rounded-md border-dashed border border-zinc-800 bg-zinc-900 cursor-pointer hover:bg-zinc-800/80"
-                                    onClick={() => handleAgregarServicio(servicio)}
-                                >
-                                    <div className='flex justify-between'>
-                                        <p className='pr-5'>
-                                            {servicio.nombre}
-                                        </p>
-                                        <label>
-                                            {servicio.precio_publico?.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                        </label>
-                                    </div>
-                                </li>
-                            ))
+                            servicios[categoria.id]
+                                .filter(servicio => servicio.id && !serviciosExcluidos.includes(servicio.id))
+                                .map(servicio => (
+                                    <li key={servicio.id}
+                                        className="p-3 rounded-md border-dashed border border-zinc-800 bg-zinc-900 cursor-pointer hover:bg-zinc-800/80"
+                                        onClick={() => handleAgregarServicio(servicio)}
+                                    >
+                                        <div className='flex justify-between'>
+                                            <p className='pr-5'>
+                                                {servicio.nombre}
+                                            </p>
+                                            <label>
+                                                {servicio.precio_publico?.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                            </label>
+                                        </div>
+                                    </li>
+                                ))
                         ) : (
                             <li className="p-3 rounded-md border-dashed border border-zinc-800 bg-zinc-900 text-zinc-500 italic">
                                 Cargando servicios...

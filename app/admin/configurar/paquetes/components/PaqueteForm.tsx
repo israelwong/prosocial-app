@@ -495,7 +495,7 @@ export default function PaqueteForm({ paquete, tiposEvento, serviciosDisponibles
 
                 {/* --- Columna 3: Servicios Disponibles --- */}
                 <div className="lg:col-span-2 space-y-4">
-                    <h2 className="text-lg font-medium text-zinc-300 sticky top-0 bg-zinc-950 py-2">Servicios Disponibles</h2>
+                    <h2 className="text-lg font-medium text-zinc-300 sticky top-0">Servicios Disponibles</h2>
                     <div className="max-h-[70vh] overflow-y-auto space-y-4">
                         {secciones.map(sec => (
                             <div key={sec.id} className="border border-zinc-700/60 rounded-lg p-4 bg-zinc-900/30 space-y-4 shadow-sm">

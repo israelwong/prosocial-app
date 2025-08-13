@@ -302,3 +302,25 @@ export async function obtenerServiciosAdyacentes(servicioId: string): Promise<{ 
 
     return { servicioAnterior, servicioSiguiente };
 }
+
+export async function obtenerServiciosConRelaciones() {
+    return await prisma.servicio.findMany({
+        where: {
+            status: 'active'
+        },
+        include: {
+            ServicioCategoria: {
+                include: {
+                    seccionCategoria: {
+                        include: {
+                            Seccion: true
+                        }
+                    }
+                }
+            }
+        },
+        orderBy: {
+            posicion: 'asc'
+        }
+    });
+}

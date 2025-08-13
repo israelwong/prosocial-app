@@ -104,13 +104,13 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
 
     const handleNuevaCotizacion = async (paqueteIdSeleccionado: string) => {
         if (!paqueteIdSeleccionado) {
-            // Cotización personalizada
-            router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/nueva`)
+            // Cotización personalizada con nueva funcionalidad congelada
+            router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/nueva-congelada?eventoTipoId=${eventoTipoId}`)
             return
         }
 
-        // Cotización con paquete
-        router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/nueva?paqueteid=${paqueteIdSeleccionado}`)
+        // Cotización con paquete usando nueva funcionalidad congelada
+        router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/nueva-congelada?eventoTipoId=${eventoTipoId}&paqueteId=${paqueteIdSeleccionado}`)
     }
 
     const handleEliminarCotizacion = async (cotizacionId: string) => {
