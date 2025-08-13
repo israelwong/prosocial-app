@@ -105,7 +105,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
 
             {/* Footer con botones de acción */}
             <div className='border-t border-zinc-700 pt-3 mt-4'>
-                <div className='grid grid-cols-2 md:grid-cols-3  gap-2'>
+                <div className='grid grid-cols-2 md:grid-cols-3 gap-2'>
 
                     {/* //! Eliminar */}
                     <button

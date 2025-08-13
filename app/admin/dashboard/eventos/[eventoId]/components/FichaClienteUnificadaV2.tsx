@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { toast } from 'sonner'
-import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
-import { actualizarCliente, obtenerCanales } from '@/app/admin/_lib/actions/evento/cliente.actions'
+import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
+import { actualizarCliente, obtenerCanales } from '@/app/admin/_lib/actions/evento/cliente/cliente.actions'
 import {
     User,
     Phone,

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Toaster } from "sonner";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -17,6 +18,13 @@ export default function AdminLayout({
     return (
         <div className="antialiased h-screen">
             {children}
+            <Toaster
+                position="top-right"
+                theme="dark"
+                richColors
+                closeButton
+                duration={4000}
+            />
         </div>
     );
 }

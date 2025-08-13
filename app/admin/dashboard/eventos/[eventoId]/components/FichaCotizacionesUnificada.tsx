@@ -2,12 +2,12 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Copy, SquareArrowOutUpRight, Plus } from 'lucide-react'
-import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
+import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
 import { obtenerCotizacionesPorEvento } from '@/app/admin/_lib/cotizacion.actions'
 import { obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/paquete.actions'
 import { Cotizacion, Paquete } from '@/app/admin/_lib/types'
 import { supabase } from '@/app/admin/_lib/supabase'
-import FichaCotizacionDetalle from '../cotizaciones/components/FichaCotizacionDetalle'
+import FichaCotizacionDetalle from '../cotizacion/components/FichaCotizacionDetalle'
 
 interface Props {
     eventoCompleto: EventoCompleto
@@ -24,7 +24,6 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
     const [cotizacionesSimples, setCotizacionesSimples] = useState<CotizacionSimple[]>([])
     const [paquetes, setPaquetes] = useState<Paquete[]>([])
     const [paqueteId, setPaqueteId] = useState<string>('')
-    const [generandoCotizacion, setGenerandoCotizacion] = useState(false)
     const [copiado, setCopiado] = useState<string | null>(null)
 
     const eventoId = eventoCompleto.id
@@ -105,31 +104,13 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
 
     const handleNuevaCotizacion = async (paqueteIdSeleccionado: string) => {
         if (!paqueteIdSeleccionado) {
-            router.push(`/admin/dashboard/eventos/${eventoId}/cotizaciones/nueva`)
+            // Cotización personalizada
+            router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/nueva`)
             return
         }
 
-        setGenerandoCotizacion(true)
-        try {
-            const response = await fetch('/api/cotizacion/nueva', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    eventoId,
-                    paqueteId: paqueteIdSeleccionado
-                })
-            })
-
-            if (response.ok) {
-                const nuevaCotizacion = await response.json()
-                router.push(`/admin/dashboard/cotizaciones/${nuevaCotizacion.id}`)
-            }
-        } catch (error) {
-            console.error('Error al crear cotización:', error)
-        } finally {
-            setGenerandoCotizacion(false)
-            setPaqueteId('')
-        }
+        // Cotización con paquete
+        router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/nueva?paqueteid=${paqueteIdSeleccionado}`)
     }
 
     const handleEliminarCotizacion = async (cotizacionId: string) => {
@@ -177,28 +158,22 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                 <div className="space-y-3">
                     {/* Selector de nuevo paquete */}
                     {eventoAsignado ? (
-                        !generandoCotizacion ? (
-                            <select
-                                className="w-full bg-zinc-800 border border-zinc-700 rounded py-2 px-3 text-zinc-200 text-sm"
-                                value={paqueteId}
-                                onChange={(e) => {
-                                    setPaqueteId(e.target.value);
-                                    handleNuevaCotizacion(e.target.value);
-                                }}
-                            >
-                                <option value=''>Seleccionar paquete</option>
-                                {paquetes.map(paquete => (
-                                    <option key={paquete.id} value={paquete.id}>
-                                        {paquete.nombre}
-                                    </option>
-                                ))}
-                                <option value=''>Crear paquete personalizado</option>
-                            </select>
-                        ) : (
-                            <p className="text-yellow-500 text-sm py-2 px-3 bg-yellow-500/10 rounded-md">
-                                Generando cotización...
-                            </p>
-                        )
+                        <select
+                            className="w-full bg-zinc-800 border border-zinc-700 rounded py-2 px-3 text-zinc-200 text-sm"
+                            value={paqueteId}
+                            onChange={(e) => {
+                                setPaqueteId(e.target.value);
+                                handleNuevaCotizacion(e.target.value);
+                            }}
+                        >
+                            <option value=''>Seleccionar paquete</option>
+                            {paquetes.map(paquete => (
+                                <option key={paquete.id} value={paquete.id}>
+                                    {paquete.nombre}
+                                </option>
+                            ))}
+                            <option value=''>Crear paquete personalizado</option>
+                        </select>
                     ) : (
                         <select
                             className="w-full bg-zinc-800 border border-zinc-700 rounded py-2 px-3 text-zinc-400 text-sm"

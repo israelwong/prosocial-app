@@ -1,10 +1,10 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
+import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
 
 // Componentes existentes (mantenemos la funcionalidad)
-import ListaCotizaciones from '../cotizaciones/components/ListaCotizacionesV2'
+import ListaCotizaciones from '../cotizacion/components/ListaCotizacionesV2'
 
 // Nuevos componentes unificados
 import EventoHeader from './EventoHeader'

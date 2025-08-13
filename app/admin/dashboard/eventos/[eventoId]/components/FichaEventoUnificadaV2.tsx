@@ -5,15 +5,15 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { toast } from 'sonner'
 import Cookies from 'js-cookie'
-import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
-import type { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo.schemas'
+import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
+import type { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.schemas'
 import {
     actualizarEventoBasico,
     asignarUsuarioEvento,
     liberarUsuarioEvento,
     cambiarEtapaEvento,
     obtenerEtapasEvento
-} from '@/app/admin/_lib/actions/evento/eventoManejo.actions'
+} from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.actions'
 import {
     Calendar,
     MapPin,
@@ -130,20 +130,20 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
         }
     }
 
-    const handleLiberarEvento = async () => {
-        setAsignandoEvento(true)
-        try {
-            await liberarUsuarioEvento(evento.id)
-            toast.success('Evento liberado correctamente')
-            onAsignacionEvento?.(false)
-            router.refresh()
-        } catch (error) {
-            console.error('Error liberando evento:', error)
-            toast.error('Error al liberar evento')
-        } finally {
-            setAsignandoEvento(false)
-        }
-    }
+    // const handleLiberarEvento = async () => {
+    //     setAsignandoEvento(true)
+    //     try {
+    //         await liberarUsuarioEvento(evento.id)
+    //         toast.success('Evento liberado correctamente')
+    //         onAsignacionEvento?.(false)
+    //         router.refresh()
+    //     } catch (error) {
+    //         console.error('Error liberando evento:', error)
+    //         toast.error('Error al liberar evento')
+    //     } finally {
+    //         setAsignandoEvento(false)
+    //     }
+    // }
 
     const handleCambiarEtapa = async (etapaId: string) => {
         try {
@@ -308,7 +308,7 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
                     )}
 
                     {/* Botón de seguimiento (asignación) */}
-                    {!eventoAsignado ? (
+                    {/* {!eventoAsignado ? (
                         <button
                             onClick={handleAsignarEvento}
                             disabled={asignandoEvento}
@@ -326,7 +326,7 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
                             <UserMinus className="w-4 h-4" />
                             {asignandoEvento ? 'Liberando...' : 'Liberar seguimiento'}
                         </button>
-                    )}
+                    )} */}
                 </div>
             </div>
         </div>

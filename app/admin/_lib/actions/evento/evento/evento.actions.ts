@@ -1,6 +1,6 @@
 'use server'
 
-import prisma from '../../prismaClient'
+import prisma from '../../../prismaClient'
 import { CrearEventoSchema, ActualizarEventoSchema, EventoCompletoSchema } from './evento.schemas'
 import type { CrearEvento, ActualizarEvento, EventoCompleto } from './evento.schemas'
 

@@ -1,6 +1,6 @@
 'use server'
 
-import prisma from '../../prismaClient'
+import prisma from '../../../prismaClient'
 import {
     ActualizarClienteSchema,
     type ActualizarCliente,

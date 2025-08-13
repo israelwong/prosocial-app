@@ -1,7 +1,7 @@
 import React from 'react'
 import { Metadata } from 'next';
 import EventoDetailView from './components/EventoDetailView';
-import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento.actions';
+import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.actions';
 
 export const metadata: Metadata = {
     title: 'Detalles del evento',
