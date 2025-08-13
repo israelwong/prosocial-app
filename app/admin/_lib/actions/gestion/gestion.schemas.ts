@@ -22,6 +22,7 @@ export const EventoKanbanSchema = z.object({
     eventoTipo: z.string().nullable(),
     etapaNombre: z.string().nullable(),
     etapaId: z.string().nullable(),
+    status: z.string(), // 'active' | 'aprobado' | otros
     totalPendiente: z.number(),
     cotizacionPrecio: z.number().nullable(),
     totalPagado: z.number(),

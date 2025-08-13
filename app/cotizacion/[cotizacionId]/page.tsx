@@ -6,7 +6,9 @@ export const metadata: Metadata = {
     title: 'Cotización personalizada'
 }
 
-export default async function page({ params }: { params: Promise<{ cotizacionId: string }> }) {
+interface PageProps { params: Promise<{ cotizacionId: string }> }
+
+export default async function page({ params }: PageProps) {
     const { cotizacionId } = await params
     return <Cotizacion cotizacionId={cotizacionId} />
 }

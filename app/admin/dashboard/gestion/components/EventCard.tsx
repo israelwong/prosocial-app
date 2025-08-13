@@ -119,6 +119,8 @@ export default function EventCard({ evento, isDragging = false, onArchive }: Eve
 
     const paymentStatus = getPaymentStatus();
     const dateInfo = formatDate(evento.fecha_evento);
+    const normalizedStatus = (evento.status || '').toLowerCase();
+    const isAprobado = ['aprobado', 'aprobada', 'autorizado', 'autorizada', 'autor', 'authorized', 'approved'].some(s => normalizedStatus.startsWith(s));
 
     return (
         <div
@@ -210,15 +212,43 @@ export default function EventCard({ evento, isDragging = false, onArchive }: Eve
                     </div>
                 )}
 
-                {/* Payment Status */}
-                <div className={`
-                    flex items-center gap-2 p-2 rounded-md ${paymentStatus.bgColor}
-                `}>
-                    <DollarSign className="w-3 h-3" />
-                    <span className={`font-medium ${paymentStatus.color}`}>
-                        {paymentStatus.text}
-                    </span>
-                </div>
+                {/* Estado Financiero / Cotización */}
+                {isAprobado ? (
+                    <div className="flex flex-col gap-1">
+                        <div className={`flex items-center justify-between p-2 rounded-md ${paymentStatus.bgColor}`}>
+                            <div className="flex items-center gap-2">
+                                <DollarSign className="w-3 h-3" />
+                                <span className="text-xs uppercase tracking-wide font-medium text-zinc-300">Pendiente</span>
+                            </div>
+                            <span className={`font-semibold ${paymentStatus.color} text-sm`}>
+                                {evento.totalPendiente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 })}
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1 text-[10px] text-zinc-400">
+                            <div className="flex flex-col bg-zinc-700/40 rounded p-1">
+                                <span className="uppercase tracking-wide text-[9px] text-zinc-500">Total</span>
+                                <span className="font-medium text-zinc-200">{(evento.cotizacionPrecio || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 })}</span>
+                            </div>
+                            <div className="flex flex-col bg-zinc-700/40 rounded p-1">
+                                <span className="uppercase tracking-wide text-[9px] text-zinc-500">Pagado</span>
+                                <span className="font-medium text-green-400">{(evento.totalPagado || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 })}</span>
+                            </div>
+                            <div className="flex flex-col bg-zinc-700/40 rounded p-1">
+                                <span className="uppercase tracking-wide text-[9px] text-zinc-500">Pendiente</span>
+                                <span className="font-medium text-red-400">{(evento.totalPendiente || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 })}</span>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-between p-2 rounded-md bg-zinc-700/40 border border-zinc-600">
+                        <span className="text-xs font-medium text-blue-300 uppercase tracking-wide">En cotización</span>
+                        <span className="text-xs text-zinc-300">
+                            {evento.cotizacionPrecio ?
+                                (evento.cotizacionPrecio).toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }) :
+                                'Sin cotización aprobada'}
+                        </span>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -7,7 +7,9 @@ export const metadata: Metadata = {
     title: 'Contacto',
 }
 
-export default async function Page({ params }: { params: Promise<{ contactoId: string }> }) {
-    const { contactoId } = await params;
+interface PageProps { params: { contactoId: string } }
+
+export default async function Page({ params }: PageProps) {
+    const { contactoId } = params;
     return <DashbaordContactos contactoId={contactoId} />
 }

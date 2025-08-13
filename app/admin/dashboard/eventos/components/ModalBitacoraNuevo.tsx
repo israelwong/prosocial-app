@@ -1,5 +1,5 @@
 import React from 'react'
-import { crearBitacoraEvento } from '@/app/admin/_lib/EventoBitacora.actions'
+import { crearBitacora } from '@/app/admin/_lib/actions/evento/bitacora.actions'
 
 interface Props {
     eventoId: string
@@ -19,10 +19,10 @@ export default function ModalBitacoraNuevo({ eventoId, onClose, onSubmit }: Prop
             return
         }
         setGuardando(true)
-        await crearBitacoraEvento(
+        await crearBitacora({
             eventoId,
-            anotacion.charAt(0).toUpperCase() + anotacion.slice(1)
-        )
+            comentario: anotacion.charAt(0).toUpperCase() + anotacion.slice(1)
+        })
         onSubmit()
     }
 

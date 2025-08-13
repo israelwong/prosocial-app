@@ -12,7 +12,9 @@ export const metadata: Metadata = {
   title: 'Editar Condición Comercial',
 };
 
-export default async function EditarCondicionComercialPage({ params }: { params: Promise<{ condicionesComercialesId: string }> }) {
+interface PageProps { params: Promise<{ condicionesComercialesId: string }> }
+
+export default async function EditarCondicionComercialPage({ params }: PageProps) {
   const { condicionesComercialesId } = await params;
 
   // Obtenemos tanto la condición a editar como la lista total de métodos de pago

@@ -92,6 +92,7 @@ export async function obtenerEventosKanban(data?: ObtenerEventosPorEtapasType) {
                 eventoTipo: evento.EventoTipo?.nombre || null,
                 etapaNombre: evento.EventoEtapa?.nombre || null,
                 etapaId: evento.EventoEtapa?.id || null,
+                status: evento.status,
                 totalPendiente: totalPendiente,
                 cotizacionPrecio: cotizacionPrecio,
                 totalPagado: totalPagado

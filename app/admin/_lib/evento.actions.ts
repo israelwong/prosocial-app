@@ -98,7 +98,6 @@ export async function actualizarEvento(evento: Evento) {
             data: {
                 nombre: evento.nombre,
                 fecha_evento: evento.fecha_evento,
-                // status: evento.status
             }
         });
         return { success: true };
@@ -490,7 +489,8 @@ export async function obtenerEventosPorEtapa(etapas: number[]) {
                     in: etapas
                 }
             },
-            // status: 'active'
+            // Para etapa 2 (seguimiento), solo mostrar eventos pendientes (no archivados)
+            status: etapas.includes(2) ? 'active' : undefined
         },
         include: {
             EventoTipo: {

@@ -6,9 +6,9 @@ export const metadata: Metadata = {
   title: 'Contrato',
 }
 
-export default async function Page({ params }: { params: Promise<{ eventoId: string }> }) {
+interface PageProps { params: Promise<{ eventoId: string }> }
 
+export default async function Page({ params }: PageProps) {
   const { eventoId } = await params;
   return <Contrato eventoId={eventoId} />
-
 }

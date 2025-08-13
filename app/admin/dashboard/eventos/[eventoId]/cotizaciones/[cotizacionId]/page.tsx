@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 interface PageProps { params: Promise<{ cotizacionId: string }> }
 
-export default async function page({ params }: PageProps) {
+export default async function page({ params }: { params: Promise<{ cotizacionId: string }> }) {
     const { cotizacionId } = await params
     return <FormCotizaacionEditar cotizacionId={cotizacionId} />
 }

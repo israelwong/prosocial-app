@@ -7,7 +7,9 @@ export const metadata: Metadata = {
   description: 'Comprobante de pago',
 };
 
-export default async function page({ params }: { params: Promise<{ pagoId: string }> }) {
-  const { pagoId } = await params;
+interface PageProps { params: { pagoId: string } }
+
+export default async function page({ params }: PageProps) {
+  const { pagoId } = params;
   return <Comprobante pagoId={pagoId} />;
 }

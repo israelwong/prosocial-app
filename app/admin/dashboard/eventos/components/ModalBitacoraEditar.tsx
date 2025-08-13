@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { actualizarBitacoraEvento, obtenerBitacora } from '@/app/admin/_lib/EventoBitacora.actions'
+import { actualizarBitacora, obtenerBitacoraPorId } from '@/app/admin/_lib/actions/evento/bitacora.actions'
 
 interface Props {
     bitacoraId: string
@@ -17,7 +17,7 @@ export default function ModalBitacoraEditar({ bitacoraId, onClose, onSubmit }: P
         const fetchData = async () => {
             setLoading(true)
             try {
-                const bitacoraData = await obtenerBitacora(bitacoraId)
+                const bitacoraData = await obtenerBitacoraPorId(bitacoraId)
                 if (bitacoraData) {
                     setAnotacion(bitacoraData.comentario)
                     setLoading(false)
@@ -37,10 +37,10 @@ export default function ModalBitacoraEditar({ bitacoraId, onClose, onSubmit }: P
 
         setLoading(true)
         try {
-            await actualizarBitacoraEvento(
-                bitacoraId,
-                anotacion.charAt(0).toUpperCase() + anotacion.slice(1)
-            )
+            await actualizarBitacora({
+                id: bitacoraId,
+                comentario: anotacion.charAt(0).toUpperCase() + anotacion.slice(1)
+            })
             onSubmit()
         } catch (error) {
             setError(`Error al actualizar la bitácora ${error}}`)

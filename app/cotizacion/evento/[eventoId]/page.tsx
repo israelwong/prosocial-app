@@ -6,7 +6,9 @@ export const metadata: Metadata = {
     title: 'Lista de cotizaciones'
 }
 
-export default async function page({ params }: { params: Promise<{ eventoId: string }> }) {
+interface PageProps { params: Promise<{ eventoId: string }> }
+
+export default async function page({ params }: PageProps) {
     const { eventoId } = await params
     return <ListaCotizaciones eventoId={eventoId} />
 }
