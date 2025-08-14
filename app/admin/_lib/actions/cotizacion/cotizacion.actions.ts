@@ -203,8 +203,12 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
  */
 export async function crearCotizacionNueva(data: CotizacionNueva) {
     try {
+        console.log('=== DATOS RECIBIDOS EN SERVER ACTION ===');
+        console.log('Data raw:', JSON.stringify(data, null, 2));
+        
         // Validar datos con schema
         const validatedData = CotizacionNuevaSchema.parse(data);
+        console.log('Data validada:', JSON.stringify(validatedData, null, 2));
 
         const nuevaCotizacion = await prisma.cotizacion.create({
             data: {
@@ -214,46 +218,63 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
                 precio: validatedData.precio,
                 condicionesComercialesId: validatedData.condicionesComercialesId,
                 status: 'pending',
-                visible_cliente: true,
-                Servicio: {
-                    create: validatedData.servicios.map(servicio => ({
-                        servicioId: servicio.servicioId,
-                        servicioCategoriaId: servicio.servicioCategoriaId,
-                        cantidad: servicio.cantidad,
-                        precioUnitario: servicio.precioUnitario,
-                        subtotal: servicio.precioUnitario * servicio.cantidad,
-                        posicion: servicio.posicion,
-                        status: 'pendiente',
-                        // Campos snapshot para trazabilidad
-                        nombre_snapshot: servicio.nombre_snapshot,
-                        descripcion_snapshot: servicio.descripcion_snapshot,
-                        precio_unitario_snapshot: servicio.precio_unitario_snapshot,
-                        costo_snapshot: servicio.costo_snapshot,
-                        gasto_snapshot: servicio.gasto_snapshot,
-                        utilidad_snapshot: servicio.utilidad_snapshot,
-                        precio_publico_snapshot: servicio.precio_publico_snapshot,
-                        tipo_utilidad_snapshot: servicio.tipo_utilidad_snapshot,
-                        categoria_nombre_snapshot: servicio.categoria_nombre_snapshot,
-                        seccion_nombre_snapshot: servicio.seccion_nombre_snapshot
-                    }))
-                },
-                Costos: {
-                    create: validatedData.costos.map((costo, index) => ({
-                        nombre: costo.nombre,
-                        descripcion: costo.descripcion,
-                        costo: costo.costo,
-                        tipo: costo.tipo,
-                        posicion: costo.posicion || index + 1
-                    }))
-                }
-            },
+                visible_cliente: true
+            }
+        });
+
+        // Crear servicios por separado para evitar problemas de tipos
+        if (validatedData.servicios.length > 0) {
+            await prisma.cotizacionServicio.createMany({
+                data: validatedData.servicios.map(servicio => ({
+                    cotizacionId: nuevaCotizacion.id,
+                    servicioId: servicio.servicioId,
+                    servicioCategoriaId: servicio.servicioCategoriaId,
+                    cantidad: servicio.cantidad,
+                    precioUnitario: servicio.precioUnitario,
+                    subtotal: servicio.precioUnitario * servicio.cantidad,
+                    posicion: servicio.posicion,
+                    status: 'pendiente',
+                    // Campos snapshot para trazabilidad
+                    nombre_snapshot: servicio.nombre_snapshot,
+                    descripcion_snapshot: servicio.descripcion_snapshot,
+                    precio_unitario_snapshot: servicio.precio_unitario_snapshot,
+                    costo_snapshot: servicio.costo_snapshot,
+                    gasto_snapshot: servicio.gasto_snapshot,
+                    utilidad_snapshot: servicio.utilidad_snapshot,
+                    precio_publico_snapshot: servicio.precio_publico_snapshot,
+                    tipo_utilidad_snapshot: servicio.tipo_utilidad_snapshot,
+                    categoria_nombre_snapshot: servicio.categoria_nombre_snapshot,
+                    seccion_nombre_snapshot: servicio.seccion_nombre_snapshot,
+                    es_personalizado: servicio.es_personalizado,
+                    servicio_original_id: servicio.servicio_original_id
+                })) as any
+            });
+        }
+
+        // Crear costos por separado
+        if (validatedData.costos.length > 0) {
+            await prisma.cotizacionCosto.createMany({
+                data: validatedData.costos.map((costo, index) => ({
+                    cotizacionId: nuevaCotizacion.id,
+                    nombre: costo.nombre,
+                    descripcion: costo.descripcion,
+                    costo: costo.costo,
+                    tipo: costo.tipo,
+                    posicion: costo.posicion || index + 1
+                }))
+            });
+        }
+
+        // Retornar cotización completa con relaciones
+        const cotizacionCompleta = await prisma.cotizacion.findUnique({
+            where: { id: nuevaCotizacion.id },
             include: {
                 Servicio: true,
                 Costos: true
             }
         });
 
-        return nuevaCotizacion;
+        return cotizacionCompleta;
 
     } catch (error: any) {
         console.error('Error al crear cotización:', error);
@@ -298,8 +319,10 @@ export async function editarCotizacion(data: CotizacionEditar) {
                         precio_publico_snapshot: servicio.precio_publico_snapshot,
                         tipo_utilidad_snapshot: servicio.tipo_utilidad_snapshot,
                         categoria_nombre_snapshot: servicio.categoria_nombre_snapshot,
-                        seccion_nombre_snapshot: servicio.seccion_nombre_snapshot
-                    }))
+                        seccion_nombre_snapshot: servicio.seccion_nombre_snapshot,
+                        es_personalizado: servicio.es_personalizado,
+                        servicio_original_id: servicio.servicio_original_id
+                    })) as any
                 },
                 // Actualizar costos
                 Costos: {

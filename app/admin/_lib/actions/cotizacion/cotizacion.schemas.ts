@@ -3,8 +3,8 @@ import { z } from 'zod';
 // Schema para validar servicios en cotización con snapshot completo
 // Estructura de trazabilidad: Sección → Categoría → Servicio → Precio → Cantidad
 export const CotizacionServicioSchema = z.object({
-    servicioId: z.string().min(1, 'ID de servicio requerido'),
-    servicioCategoriaId: z.string().min(1, 'ID de categoría requerido'),
+    servicioId: z.string().nullable(), // Permitir null para servicios personalizados
+    servicioCategoriaId: z.string().nullable(), // Permitir null para servicios personalizados
     cantidad: z.number().min(1, 'Cantidad debe ser mayor a 0'),
 
     // Campos snapshot para trazabilidad (estructura jerárquica)

@@ -173,10 +173,10 @@ model CotizacionServicio {
   id                  String            @id @default(cuid())
   cotizacionId        String
   Cotizacion          Cotizacion        @relation(fields: [cotizacionId], references: [id])
-  servicioId          String
-  Servicio            Servicio          @relation(fields: [servicioId], references: [id])
-  servicioCategoriaId String
-  ServicioCategoria   ServicioCategoria @relation(fields: [servicioCategoriaId], references: [id])
+  servicioId          String?           // Opcional para servicios personalizados
+  Servicio            Servicio?         @relation(fields: [servicioId], references: [id])
+  servicioCategoriaId String?           // Opcional para servicios personalizados
+  ServicioCategoria   ServicioCategoria? @relation(fields: [servicioCategoriaId], references: [id])
 
   // --- CAMPOS OPERACIONALES ---
   cantidad            Int               @default(1)

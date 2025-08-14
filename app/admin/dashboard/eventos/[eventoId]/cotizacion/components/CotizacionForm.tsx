@@ -440,6 +440,14 @@ export default function CotizacionForm({
     // Submit del formulario
     const onSubmit = async (data: CotizacionForm) => {
         try {
+            console.log('Datos del formulario recibidos:', data);
+            
+            // Validación básica: debe tener al menos un servicio
+            if (!data.servicios || data.servicios.length === 0) {
+                toast.error('Debe agregar al menos un servicio antes de guardar');
+                return;
+            }
+            
             // Preparar servicios para la cotización
             const serviciosCotizacion = data.servicios.map((s, index) => {
                 // Verificar si es un servicio personalizado
@@ -525,11 +533,12 @@ export default function CotizacionForm({
                 };
             });
 
-            await crearCotizacionNueva({
+            const payload = {
                 eventoId: evento.id,
                 eventoTipoId: data.eventoTipoId,
                 nombre: data.nombre,
                 precio: precioFinal, // Usar precio final incluyendo costos
+                condicionesComercialesId: data.condicionesComercialesId || undefined,
                 servicios: serviciosCotizacion,
                 costos: data.costos?.map((costo, index) => ({
                     nombre: costo.nombre,
@@ -538,7 +547,11 @@ export default function CotizacionForm({
                     tipo: costo.tipo,
                     posicion: index + 1
                 })) || []
-            });
+            };
+
+            console.log('Payload a enviar:', payload);
+
+            await crearCotizacionNueva(payload);
 
             toast.success('Cotización creada exitosamente');
             router.push(`/admin/dashboard/eventos/${evento.id}`);
