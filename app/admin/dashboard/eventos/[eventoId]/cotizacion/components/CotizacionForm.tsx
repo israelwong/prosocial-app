@@ -3,10 +3,10 @@
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CotizacionFormSchema, type CotizacionForm } from '@/app/admin/_lib/actions/cotizacion/cotizacion.schemas';
-import { crearCotizacionNueva } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
+import { manejarSubmitCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
 import { useRouter } from 'next/navigation';
 import { Loader2, MinusCircle, Plus, Minus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { calcularPaquete, calcularServicioDesdeBase, type ServicioCantidad } from '@/app/admin/_lib/pricing/calculos';
 import toast from 'react-hot-toast';
 
@@ -35,6 +35,9 @@ interface Props {
         tieneEventoTipoEspecifico: boolean;
         totalServicios: number;
     };
+    // Props para modo edición
+    cotizacionExistente?: any;
+    modo?: 'crear' | 'editar';
 }
 
 export default function CotizacionForm({
@@ -47,9 +50,22 @@ export default function CotizacionForm({
     paqueteBase,
     serviciosBase = [],
     eventoTipoSeleccionado,
-    metadata
+    metadata,
+    cotizacionExistente,
+    modo = 'crear'
 }: Props) {
     const router = useRouter();
+
+    // Debug del eventoTipoSeleccionado
+    console.log('🔍 eventoTipoSeleccionado completo:', eventoTipoSeleccionado);
+    console.log('🔍 eventoTipoSeleccionado.id:', eventoTipoSeleccionado?.id);
+    console.log('🔍 tipo de eventoTipoSeleccionado.id:', typeof eventoTipoSeleccionado?.id);
+    console.log('🔍 Keys de eventoTipoSeleccionado:', Object.keys(eventoTipoSeleccionado || {}));
+    console.log('🔍 tiposEvento disponibles:', tiposEvento);
+
+    // Fallback para eventoTipoId - usar el primero disponible si no hay uno seleccionado
+    const eventoTipoIdFinal = eventoTipoSeleccionado?.id || tiposEvento?.[0]?.id || '';
+    console.log('🔍 eventoTipoIdFinal que se usará:', eventoTipoIdFinal);
 
     // Estado para modal de servicio personalizado
     const [mostrarModalServicioPersonalizado, setMostrarModalServicioPersonalizado] = useState(false);
@@ -66,27 +82,129 @@ export default function CotizacionForm({
         nombre: string;
         precio: number;
         categoria: string;
-    }>>({});
+    }>>(() => {
+        // Cargar servicios personalizados existentes si estamos en modo edición
+        if (modo === 'editar' && cotizacionExistente?.Servicio) {
+            const personalizados: Record<string, any> = {};
+            cotizacionExistente.Servicio.forEach((servicio: any) => {
+                if (servicio.es_personalizado) {
+                    const id = `personalizado_${servicio.id}`;
+                    personalizados[id] = {
+                        id,
+                        nombre: servicio.nombre_snapshot,
+                        precio: servicio.precioUnitario,
+                        categoria: servicio.categoria_nombre_snapshot || 'Sin categoría'
+                    };
+                }
+            });
+            return personalizados;
+        }
+        return {};
+    });
 
     // Estado para controlar edición en línea
     const [editandoServicio, setEditandoServicio] = useState<string | null>(null);
+    const [editandoPrecio, setEditandoPrecio] = useState<string | null>(null);
+    // Estado para controlar qué servicios tienen precio personalizado activo
+    const [preciosPersonalizados, setPreciosPersonalizados] = useState<Record<string, boolean>>({});
+    const [preciosPersonalizadosValores, setPreciosPersonalizadosValores] = useState<Record<string, number>>({});
+
+    // Estado para controlar precio total personalizado
+    const [editandoPrecioTotal, setEditandoPrecioTotal] = useState<boolean>(false);
+    const [precioTotalPersonalizado, setPrecioTotalPersonalizado] = useState<number | null>(null);
+
+    // Inicializar precios personalizados para cotizaciones existentes
+    useEffect(() => {
+        if (modo === 'editar' && cotizacionExistente?.Servicio) {
+            const preciosPersonalizadosInit: Record<string, boolean> = {};
+            const preciosPersonalizadosValoresInit: Record<string, number> = {};
+
+            cotizacionExistente.Servicio.forEach((servicio: any, index: number) => {
+                const fieldId = `servicio-${index}`;
+
+                // Si tiene un precio unitario diferente al precio calculado del servicio, es personalizado
+                if (servicio.servicioId) {
+                    // Buscar el servicio original para comparar precios
+                    let servicioOriginal = null;
+                    for (const seccion of catalogo || []) {
+                        for (const categoria of seccion.seccionCategorias) {
+                            servicioOriginal = categoria.ServicioCategoria.Servicio?.find((srv: any) => srv.id === servicio.servicioId);
+                            if (servicioOriginal) break;
+                        }
+                        if (servicioOriginal) break;
+                    }
+
+                    if (servicioOriginal && configuracion) {
+                        const precioCalculado = calcularServicioDesdeBase({
+                            costo: servicioOriginal.costo || 0,
+                            gastos: servicioOriginal.gasto || 0,
+                            tipo_utilidad: (servicioOriginal.tipo_utilidad === 'producto' ? 'producto' : 'servicio'),
+                            configuracion
+                        }).precioSistema;
+
+                        // Si el precio guardado es diferente al calculado, es personalizado
+                        if (Math.abs(servicio.precioUnitario - precioCalculado) > 0.01) {
+                            preciosPersonalizadosInit[fieldId] = true;
+                            preciosPersonalizadosValoresInit[fieldId] = servicio.precioUnitario;
+                        }
+                    }
+                } else {
+                    // Servicio personalizado (sin servicioId)
+                    preciosPersonalizadosInit[fieldId] = true;
+                    preciosPersonalizadosValoresInit[fieldId] = servicio.precioUnitario;
+                }
+            });
+
+            setPreciosPersonalizados(preciosPersonalizadosInit);
+            setPreciosPersonalizadosValores(preciosPersonalizadosValoresInit);
+
+            // Inicializar precio total personalizado si existe
+            if (cotizacionExistente.precio) {
+                // Aquí podrías comparar con el precio calculado para detectar si es personalizado
+                // Por ahora solo lo guardamos como referencia
+                setPrecioTotalPersonalizado(cotizacionExistente.precio);
+            }
+        }
+    }, [modo, cotizacionExistente, catalogo, configuracion]);
+
+    // Preparar servicios base dependiendo del modo
+    const serviciosParaFormulario = modo === 'editar' && cotizacionExistente?.Servicio
+        ? cotizacionExistente.Servicio.map((servicio: any) => ({
+            servicioId: servicio.servicioId || `personalizado_${servicio.id}`,
+            cantidad: servicio.cantidad.toString(),
+            precioPersonalizado: servicio.precioUnitario?.toString() || ""
+        }))
+        : serviciosBase.map(s => ({
+            servicioId: s.id,
+            cantidad: s.cantidad?.toString() || '1',
+            precioPersonalizado: ""
+        }));
+
+    // Preparar costos base dependiendo del modo
+    const costosParaFormulario = modo === 'editar' && cotizacionExistente?.Costos
+        ? cotizacionExistente.Costos.map((costo: any) => ({
+            nombre: costo.nombre,
+            costo: costo.costo.toString(),
+            tipo: costo.tipo
+        }))
+        : [];
 
     const {
         register,
         handleSubmit,
         control,
         setValue,
-        formState: { errors, isSubmitting }
+        formState: { errors, isSubmitting, isValid }
     } = useForm<CotizacionForm>({
         resolver: zodResolver(CotizacionFormSchema) as any,
+        mode: 'onChange', // Validar en tiempo real
         defaultValues: {
-            nombre: paqueteBase ? `Paquete ${paqueteBase.nombre}` : 'Nueva Cotización',
-            eventoTipoId: eventoTipoSeleccionado.id,
-            servicios: serviciosBase.map(s => ({
-                servicioId: s.id,
-                cantidad: s.cantidad?.toString() || '1'
-            })),
-            costos: []
+            nombre: modo === 'editar' && cotizacionExistente
+                ? cotizacionExistente.nombre
+                : paqueteBase ? `Paquete ${paqueteBase.nombre}` : 'Nueva Cotización',
+            eventoTipoId: eventoTipoIdFinal,
+            servicios: serviciosParaFormulario,
+            costos: costosParaFormulario
         },
     });
 
@@ -151,7 +269,7 @@ export default function CotizacionForm({
         if (!configuracion || watchedServicios.length === 0) return null;
 
         // Obtener servicios completos para cálculos
-        const serviciosCantidad: ServicioCantidad[] = watchedServicios.map(s => {
+        const serviciosCantidad: ServicioCantidad[] = watchedServicios.map((s, index) => {
             // Verificar si es un servicio personalizado
             const servicioPersonalizadoData = serviciosPersonalizados[s.servicioId];
             if (servicioPersonalizadoData) {
@@ -175,11 +293,15 @@ export default function CotizacionForm({
                 if (servicio) break;
             }
 
+            // Usar precio personalizado si está definido
+            const precioPersonalizado = parseFloat(s.precioPersonalizado || '0');
+            const precioFinal = precioPersonalizado > 0 ? precioPersonalizado : (servicio ? calcularPrecioCorrectoServicio(servicio) : 0);
+
             return {
                 costo: servicio?.costo || 0,
                 gasto: servicio?.gasto || 0,
                 utilidad: servicio?.utilidad || 0,
-                precio_publico: servicio ? calcularPrecioCorrectoServicio(servicio) : 0,
+                precio_publico: precioFinal,
                 cantidad: parseInt(s.cantidad || '1', 10),
                 tipo_utilidad: servicio?.tipo_utilidad || 'servicio'
             };
@@ -235,6 +357,52 @@ export default function CotizacionForm({
         setValue(`servicios.${index}.cantidad`, nuevaCantidad.toString());
     };
 
+    // Funciones para manejar precio personalizado
+    const handleActivarPrecioPersonalizado = (fieldId: string, precioActual: number) => {
+        setPreciosPersonalizados(prev => ({ ...prev, [fieldId]: true }));
+        setPreciosPersonalizadosValores(prev => ({ ...prev, [fieldId]: precioActual }));
+        setEditandoPrecio(fieldId);
+    };
+
+    const handleCambiarPrecioPersonalizado = (fieldId: string, nuevoPrecio: number) => {
+        setPreciosPersonalizadosValores(prev => ({ ...prev, [fieldId]: nuevoPrecio }));
+    };
+
+    const handleGuardarPrecioPersonalizado = (fieldId: string) => {
+        setEditandoPrecio(null);
+        toast.success('Precio personalizado aplicado');
+    };
+
+    const handleCancelarPrecioPersonalizado = (fieldId: string) => {
+        setPreciosPersonalizados(prev => ({ ...prev, [fieldId]: false }));
+        setPreciosPersonalizadosValores(prev => {
+            const newValues = { ...prev };
+            delete newValues[fieldId];
+            return newValues;
+        });
+        setEditandoPrecio(null);
+    };
+
+    // Funciones para manejar precio total personalizado
+    const handleActivarPrecioTotal = (precioActual: number) => {
+        setEditandoPrecioTotal(true);
+        setPrecioTotalPersonalizado(precioActual);
+    };
+
+    const handleCambiarPrecioTotal = (nuevoPrecio: number) => {
+        setPrecioTotalPersonalizado(nuevoPrecio);
+    };
+
+    const handleGuardarPrecioTotal = () => {
+        setEditandoPrecioTotal(false);
+        toast.success('Precio total personalizado aplicado');
+    };
+
+    const handleCancelarPrecioTotal = () => {
+        setEditandoPrecioTotal(false);
+        setPrecioTotalPersonalizado(null);
+    };
+
     // Funciones para manejar costos adicionales
     const handleEliminarCosto = (index: number) => {
         removeCosto(index);
@@ -278,7 +446,8 @@ export default function CotizacionForm({
 
         append({
             servicioId,
-            cantidad: '1'
+            cantidad: '1',
+            precioPersonalizado: precio.toString() // Para servicios personalizados, usar el precio como personalizado
         });
 
         // Limpiar el formulario y cerrar modal
@@ -314,7 +483,9 @@ export default function CotizacionForm({
     }, [watchedCostos]);
 
     // Precio final incluyendo costos adicionales
-    const precioFinal = precioSistema + totalCostosAdicionales;
+    const precioFinal = precioTotalPersonalizado !== null
+        ? precioTotalPersonalizado
+        : precioSistema + totalCostosAdicionales;
 
     // Agrupar servicios seleccionados por sección y categoría
     const serviciosAgrupadosSeleccionados = useMemo(() => {
@@ -398,7 +569,11 @@ export default function CotizacionForm({
                 }
 
                 const cantidad = parseInt(watchedServicios[index]?.cantidad || '1', 10);
-                const precio = calcularPrecioCorrectoServicio(servicioCompleto);
+
+                // Usar precio personalizado si está definido, sino calcular precio normal
+                const fieldId = field.id || `${field.servicioId}-${index}`;
+                const precioPersonalizadoValor = preciosPersonalizadosValores[fieldId];
+                const precio = precioPersonalizadoValor > 0 ? precioPersonalizadoValor : calcularPrecioCorrectoServicio(servicioCompleto);
 
                 agrupados[seccionNombre].categorias[categoriaNombre].servicios.push({
                     ...servicioCompleto,
@@ -439,15 +614,18 @@ export default function CotizacionForm({
 
     // Submit del formulario
     const onSubmit = async (data: CotizacionForm) => {
+        console.log('🟢 onSubmit EJECUTADO!');
+        console.log('🟢 Data recibida en onSubmit:', data);
+
         try {
             console.log('Datos del formulario recibidos:', data);
-            
+
             // Validación básica: debe tener al menos un servicio
             if (!data.servicios || data.servicios.length === 0) {
                 toast.error('Debe agregar al menos un servicio antes de guardar');
                 return;
             }
-            
+
             // Preparar servicios para la cotización
             const serviciosCotizacion = data.servicios.map((s, index) => {
                 // Verificar si es un servicio personalizado
@@ -504,7 +682,10 @@ export default function CotizacionForm({
                     throw new Error(`Servicio con ID ${s.servicioId} no encontrado`);
                 }
 
-                const precioUnitario = calcularPrecioCorrectoServicio(servicio);
+                // Verificar si hay precio personalizado para este campo
+                const fieldId = `servicio-${index}`;
+                const precioPersonalizado = preciosPersonalizadosValores[fieldId];
+                const precioUnitario = precioPersonalizado || calcularPrecioCorrectoServicio(servicio);
                 const cantidad = parseInt(s.cantidad, 10);
                 const utilidad = precioUnitario - (servicio.costo || 0) - (servicio.gasto || 0);
 
@@ -535,7 +716,7 @@ export default function CotizacionForm({
 
             const payload = {
                 eventoId: evento.id,
-                eventoTipoId: data.eventoTipoId,
+                eventoTipoId: eventoTipoIdFinal, // Usar el ID final validado
                 nombre: data.nombre,
                 precio: precioFinal, // Usar precio final incluyendo costos
                 condicionesComercialesId: data.condicionesComercialesId || undefined,
@@ -551,10 +732,69 @@ export default function CotizacionForm({
 
             console.log('Payload a enviar:', payload);
 
-            await crearCotizacionNueva(payload);
+            // Validación extra del payload antes de enviar
+            console.log('🔍 Validando payload antes de envío...');
+            console.log('- eventoId:', payload.eventoId);
+            console.log('- eventoTipoId:', payload.eventoTipoId);
+            console.log('- nombre:', payload.nombre);
+            console.log('- precio:', payload.precio);
+            console.log('- servicios cantidad:', payload.servicios.length);
+            console.log('- costos cantidad:', payload.costos.length);
 
-            toast.success('Cotización creada exitosamente');
-            router.push(`/admin/dashboard/eventos/${evento.id}`);
+            payload.servicios.forEach((servicio, index) => {
+                console.log(`Servicio ${index + 1}:`, {
+                    servicioId: servicio.servicioId,
+                    servicioCategoriaId: servicio.servicioCategoriaId,
+                    cantidad: servicio.cantidad,
+                    precioUnitario: servicio.precioUnitario,
+                    es_personalizado: servicio.es_personalizado,
+                    nombre_snapshot: servicio.nombre_snapshot
+                });
+            });
+
+            console.log('🚀 Iniciando creación/edición de cotización...');
+
+            if (modo === 'editar' && cotizacionExistente) {
+                // Modo edición
+                const payloadEdicion = {
+                    id: cotizacionExistente.id,
+                    nombre: data.nombre,
+                    precio: precioFinal,
+                    condicionesComercialesId: data.condicionesComercialesId || undefined,
+                    status: cotizacionExistente.status || 'pending',
+                    visible_cliente: cotizacionExistente.visible_cliente || true,
+                    servicios: serviciosCotizacion,
+                    costos: data.costos?.map((costo, index) => ({
+                        nombre: costo.nombre,
+                        descripcion: undefined,
+                        costo: parseFloat(costo.costo) || 0,
+                        tipo: costo.tipo,
+                        posicion: index + 1
+                    })) || []
+                };
+
+                console.log('Payload edición:', payloadEdicion);
+                const cotizacionActualizada = await manejarSubmitCotizacion(payloadEdicion);
+
+                if (cotizacionActualizada?.id) {
+                    console.log('✅ Cotización actualizada con ID:', cotizacionActualizada.id);
+                    toast.success('Cotización actualizada exitosamente');
+                    router.push(`/admin/dashboard/eventos/${evento.id}`);
+                } else {
+                    throw new Error('No se pudo actualizar la cotización');
+                }
+            } else {
+                // Modo creación
+                const cotizacionCreada = await manejarSubmitCotizacion(payload);
+
+                if (cotizacionCreada?.id) {
+                    console.log('✅ Cotización creada con ID:', cotizacionCreada.id);
+                    toast.success('Cotización creada exitosamente');
+                    router.push(`/admin/dashboard/eventos/${evento.id}`);
+                } else {
+                    throw new Error('No se pudo obtener el ID de la cotización creada');
+                }
+            }
 
         } catch (error: any) {
             console.error('Error al crear cotización:', error);
@@ -564,7 +804,13 @@ export default function CotizacionForm({
 
     return (
         <>
-            <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
+            <form
+                onSubmit={(e) => {
+                    console.log('🟡 Form onSubmit triggered!', e);
+                    handleSubmit(onSubmit as any)(e);
+                }}
+                className="space-y-6"
+            >
                 {/* Layout Responsive */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
@@ -729,8 +975,8 @@ export default function CotizacionForm({
                                                                                     title="Doble click para editar"
                                                                                 >
                                                                                     <span>{servicio.nombre}</span>
-                                                                                    <span className="ml-2 text-zinc-500 font-normal">
-                                                                                        {servicio.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} c/u
+                                                                                    <span className="font-normal text-zinc-500 text-xs ml-2">
+                                                                                        - {servicio.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} c/u
                                                                                     </span>
                                                                                 </div>
                                                                             )}
@@ -955,6 +1201,18 @@ export default function CotizacionForm({
                                     )}
                                 </div>
 
+                                {/* Hidden field para eventoTipoId */}
+                                <input
+                                    type="hidden"
+                                    {...register('eventoTipoId')}
+                                    value={eventoTipoIdFinal}
+                                />
+                                {errors.eventoTipoId && (
+                                    <div className="text-red-400 text-xs mt-1">
+                                        Error en tipo de evento: {errors.eventoTipoId.message}
+                                    </div>
+                                )}
+
                                 {/* Precio sistema */}
                                 {/* Desglose de precios */}
                                 {precioSistema > 0 && (
@@ -979,12 +1237,56 @@ export default function CotizacionForm({
 
                                         {/* Precio final */}
                                         <div className="p-4 rounded-lg border border-blue-500/60 bg-blue-900/20">
-                                            <div className="text-xs text-blue-200 mb-1">Total de Cotización</div>
-                                            <div className="text-xl font-bold text-blue-300">
-                                                {precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                            <div className="text-xs text-blue-200 mb-1">
+                                                Total de Cotización
+                                                {precioTotalPersonalizado !== null && (
+                                                    <span className="ml-1 text-xs">⚡</span>
+                                                )}
                                             </div>
+                                            {editandoPrecioTotal ? (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-blue-300 text-lg">$</span>
+                                                    <input
+                                                        type="number"
+                                                        defaultValue={precioTotalPersonalizado || precioFinal}
+                                                        step="0.01"
+                                                        min="0"
+                                                        className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-600 rounded text-blue-300 text-xl font-bold focus:border-blue-400 focus:outline-none"
+                                                        onBlur={(e) => {
+                                                            const nuevoPrecio = parseFloat(e.target.value) || (precioSistema + totalCostosAdicionales);
+                                                            handleCambiarPrecioTotal(nuevoPrecio);
+                                                            handleGuardarPrecioTotal();
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                const nuevoPrecio = parseFloat((e.target as HTMLInputElement).value) || (precioSistema + totalCostosAdicionales);
+                                                                handleCambiarPrecioTotal(nuevoPrecio);
+                                                                handleGuardarPrecioTotal();
+                                                            }
+                                                            if (e.key === 'Escape') {
+                                                                handleCancelarPrecioTotal();
+                                                            }
+                                                        }}
+                                                        autoFocus
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    className={`text-xl font-bold cursor-pointer hover:text-blue-200 transition ${precioTotalPersonalizado !== null
+                                                        ? 'text-blue-300 border-b border-dotted border-blue-400'
+                                                        : 'text-blue-300'
+                                                        }`}
+                                                    onDoubleClick={() => handleActivarPrecioTotal(precioFinal)}
+                                                    title="Doble click para personalizar precio total"
+                                                >
+                                                    {precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                </div>
+                                            )}
                                             <div className="text-xs text-blue-400 mt-1">
-                                                {totalCostosAdicionales !== 0 ? 'Incluye costos adicionales' : 'Solo servicios'}
+                                                {precioTotalPersonalizado !== null
+                                                    ? 'Precio personalizado'
+                                                    : (totalCostosAdicionales !== 0 ? 'Incluye costos adicionales' : 'Solo servicios')
+                                                }
                                             </div>
                                         </div>
                                     </div>
@@ -996,10 +1298,17 @@ export default function CotizacionForm({
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
+                                    onClick={(e) => {
+                                        console.log('🔵 Botón clicked!', e);
+                                        console.log('🔵 isSubmitting:', isSubmitting);
+                                        console.log('🔵 isValid:', isValid);
+                                        console.log('🔵 Form errors:', errors);
+                                        console.log('🔵 Servicios length:', fields.length);
+                                    }}
                                     className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isSubmitting && <Loader2 size={16} className="animate-spin mr-2" />}
-                                    Guardar Cotización
+                                    {modo === 'editar' ? 'Actualizar Cotización' : 'Guardar Cotización'}
                                 </button>
                                 <button
                                     type="button"

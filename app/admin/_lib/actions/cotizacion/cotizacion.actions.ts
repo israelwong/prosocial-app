@@ -71,6 +71,9 @@ export async function obtenerDatosCotizacion(
             if (!tipoEventoSeleccionado) {
                 throw new Error(`Tipo de evento con ID ${tipoEventoId} no encontrado`);
             }
+            console.log('🔧 obtenerDatosCotizacion: tipoEventoSeleccionado encontrado:', tipoEventoSeleccionado);
+        } else {
+            console.log('🔧 obtenerDatosCotizacion: No se proporcionó tipoEventoId');
         }
 
         // Preparar servicios base si hay un paquete
@@ -101,6 +104,10 @@ export async function obtenerDatosCotizacion(
                 }));
             }
         }
+
+        console.log('🔧 obtenerDatosCotizacion: Antes de return - tipoEventoSeleccionado:', tipoEventoSeleccionado);
+        console.log('🔧 obtenerDatosCotizacion: evento.EventoTipo:', evento.EventoTipo);
+        console.log('🔧 obtenerDatosCotizacion: tiposEvento[0]:', tiposEvento[0]);
 
         return {
             evento,
@@ -203,13 +210,16 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
  */
 export async function crearCotizacionNueva(data: CotizacionNueva) {
     try {
-        console.log('=== DATOS RECIBIDOS EN SERVER ACTION ===');
-        console.log('Data raw:', JSON.stringify(data, null, 2));
-        
+        console.log('=== INICIO crearCotizacionNueva ===');
+        console.log('Data raw recibida:', JSON.stringify(data, null, 2));
+
         // Validar datos con schema
+        console.log('🔍 Validando datos con schema...');
         const validatedData = CotizacionNuevaSchema.parse(data);
+        console.log('✅ Datos validados exitosamente');
         console.log('Data validada:', JSON.stringify(validatedData, null, 2));
 
+        console.log('🗃️ Creando cotización principal...');
         const nuevaCotizacion = await prisma.cotizacion.create({
             data: {
                 eventoId: validatedData.eventoId,
@@ -221,9 +231,13 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
                 visible_cliente: true
             }
         });
+        console.log('✅ Cotización principal creada:', { id: nuevaCotizacion.id, nombre: nuevaCotizacion.nombre });
 
         // Crear servicios por separado para evitar problemas de tipos
         if (validatedData.servicios.length > 0) {
+            console.log('🔧 Creando servicios de cotización...');
+            console.log('Cantidad de servicios a crear:', validatedData.servicios.length);
+
             await prisma.cotizacionServicio.createMany({
                 data: validatedData.servicios.map(servicio => ({
                     cotizacionId: nuevaCotizacion.id,
@@ -249,10 +263,14 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
                     servicio_original_id: servicio.servicio_original_id
                 })) as any
             });
+            console.log('✅ Servicios creados exitosamente');
         }
 
         // Crear costos por separado
         if (validatedData.costos.length > 0) {
+            console.log('💰 Creando costos adicionales...');
+            console.log('Cantidad de costos a crear:', validatedData.costos.length);
+
             await prisma.cotizacionCosto.createMany({
                 data: validatedData.costos.map((costo, index) => ({
                     cotizacionId: nuevaCotizacion.id,
@@ -263,9 +281,11 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
                     posicion: costo.posicion || index + 1
                 }))
             });
+            console.log('✅ Costos creados exitosamente');
         }
 
         // Retornar cotización completa con relaciones
+        console.log('📋 Obteniendo cotización completa...');
         const cotizacionCompleta = await prisma.cotizacion.findUnique({
             where: { id: nuevaCotizacion.id },
             include: {
@@ -274,10 +294,24 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
             }
         });
 
+        console.log('✅ Cotización completa obtenida');
+        console.log('🎉 PROCESO COMPLETADO EXITOSAMENTE');
+        console.log('Cotización final:', { id: nuevaCotizacion.id, nombre: nuevaCotizacion.nombre });
         return cotizacionCompleta;
 
     } catch (error: any) {
-        console.error('Error al crear cotización:', error);
+        console.error('💥 ERROR CRÍTICO en crearCotizacionNueva:');
+        console.error('Error completo:', error);
+        console.error('Stack trace:', error.stack);
+        console.error('Tipo de error:', typeof error);
+        console.error('Mensaje:', error?.message);
+
+        // Si es un error de Prisma, mostrar detalles adicionales
+        if (error.code) {
+            console.error('Código de error Prisma:', error.code);
+            console.error('Meta:', error.meta);
+        }
+
         throw new Error(`Error al crear cotización: ${error?.message || 'Error desconocido'}`);
     }
 }
@@ -287,8 +321,12 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
  */
 export async function editarCotizacion(data: CotizacionEditar) {
     try {
+        console.log('🔥 editarCotizacion - Datos recibidos:', JSON.stringify(data, null, 2));
+
         // Validar datos con schema
+        console.log('🔥 editarCotizacion - Validando con schema...');
         const validatedData = CotizacionEditarSchema.parse(data);
+        console.log('🔥 editarCotizacion - Validación exitosa:', JSON.stringify(validatedData, null, 2));
 
         const cotizacionActualizada = await prisma.cotizacion.update({
             where: { id: validatedData.id },
@@ -467,5 +505,28 @@ export async function actualizarCostosCotizacion(
     } catch (error: any) {
         console.error('Error al actualizar costos:', error);
         throw new Error(`Error al actualizar costos: ${error?.message || 'Error desconocido'}`);
+    }
+}
+
+/**
+ * Server action unificado para manejar submit de formulario de cotización
+ * Maneja tanto creación como edición dependiendo si recibe un ID
+ */
+export async function manejarSubmitCotizacion(data: any) {
+    console.log('🚀 manejarSubmitCotizacion - Datos recibidos:', JSON.stringify(data, null, 2));
+
+    try {
+        if (data.id) {
+            // Modo edición
+            console.log('🔄 Modo edición detectado, llamando editarCotizacion...');
+            return await editarCotizacion(data);
+        } else {
+            // Modo creación
+            console.log('🆕 Modo creación detectado, llamando crearCotizacionNueva...');
+            return await crearCotizacionNueva(data);
+        }
+    } catch (error: any) {
+        console.error('❌ Error en manejarSubmitCotizacion:', error);
+        throw error;
     }
 }

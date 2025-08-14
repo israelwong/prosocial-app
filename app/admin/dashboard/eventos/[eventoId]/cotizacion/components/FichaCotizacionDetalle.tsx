@@ -9,9 +9,10 @@ import { Pencil, Eye, Layers2, ArrowUpRight, Trash2, Archive, ArchiveRestore, Co
 interface Props {
     cotizacion: Cotizacion
     onEliminarCotizacion: (cotizacionId: string) => void | Promise<void>
+    eventoId: string
 }
 
-export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacion }: Props) {
+export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacion, eventoId }: Props) {
 
     const router = useRouter()
     const [eliminando, setEliminando] = useState<string | null>(null)
@@ -41,7 +42,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
             setClonando(cotizacionId)
             const response = await clonarCotizacion(cotizacionId)
             if (response.cotizacionId) {
-                router.push(`/admin/dashboard/cotizaciones/${response.cotizacionId}`)
+                router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/${response.cotizacionId}`)
             }
         }
     }
@@ -79,7 +80,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
             <div className='mb-4'>
                 <div className='flex items-center justify-between'>
                     <button
-                        onClick={() => router.push(`/admin/dashboard/cotizaciones/${cotizacion.id}`)}
+                        onClick={() => router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/${cotizacion.id}`)}
                         className='flex items-center text-zinc-400 hover:text-zinc-100 mb-1 break-words text-start'
                     >
                         <Pencil size={12} className='md:mr-1 mr-3' />

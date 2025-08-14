@@ -30,9 +30,15 @@ export default async function CotizacionPage({ params, searchParams }: PageProps
         }
 
         // Determinar el tipo de evento a usar
+        console.log('📄 Page: datos.tipoEventoSeleccionado:', datos.tipoEventoSeleccionado);
+        console.log('📄 Page: datos.evento.EventoTipo:', datos.evento.EventoTipo);
+        console.log('📄 Page: datos.tiposEvento[0]:', datos.tiposEvento[0]);
+
         const eventoTipoFinal = datos.tipoEventoSeleccionado ||
             datos.evento.EventoTipo ||
             datos.tiposEvento[0];
+
+        console.log('📄 Page: eventoTipoFinal resultante:', eventoTipoFinal);
 
         if (!eventoTipoFinal) {
             throw new Error('No se pudo determinar el tipo de evento');

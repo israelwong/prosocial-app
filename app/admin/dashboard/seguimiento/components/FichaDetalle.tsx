@@ -269,7 +269,7 @@ export default function FichaDetalle({ eventoId }: Props) {
                             <h3 className='text-xl font-semibold text-zinc-500'>Servicios asociados</h3>
                             <button
                                 className={`border border-zinc-800 bg-zinc-900 text-white px-4 py-2 rounded-md md:block hidden ${!cotizacion?.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                onClick={() => cotizacion?.id && router.push(`/admin/dashboard/cotizaciones/${cotizacion.id}`)}
+                                onClick={() => cotizacion?.id && router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/${cotizacion.id}`)}
                                 disabled={!cotizacion?.id}
                             >
                                 {cotizacion?.id ? 'Editar' : '...'}

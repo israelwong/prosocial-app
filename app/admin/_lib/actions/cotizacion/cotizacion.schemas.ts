@@ -78,7 +78,8 @@ export const CotizacionFormSchema = z.object({
     condicionesComercialesId: z.string().optional(),
     servicios: z.array(z.object({
         servicioId: z.string(),
-        cantidad: z.string()
+        cantidad: z.string(),
+        precioPersonalizado: z.string().optional() // Campo para precio personalizado
     })),
     costos: z.array(z.object({
         nombre: z.string(),

@@ -104,13 +104,13 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
 
     const handleNuevaCotizacion = async (paqueteIdSeleccionado: string) => {
         if (!paqueteIdSeleccionado) {
-            // Cotización personalizada con nueva funcionalidad congelada
-            router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/nueva-congelada?eventoTipoId=${eventoTipoId}`)
+            // Cotización personalizada con nueva funcionalidad
+            router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/nueva?eventoTipoId=${eventoTipoId}`)
             return
         }
 
-        // Cotización con paquete usando nueva funcionalidad congelada
-        router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/nueva-congelada?eventoTipoId=${eventoTipoId}&paqueteId=${paqueteIdSeleccionado}`)
+        // Cotización con paquete usando nueva funcionalidad
+        router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/nueva?eventoTipoId=${eventoTipoId}&paqueteId=${paqueteIdSeleccionado}`)
     }
 
     const handleEliminarCotizacion = async (cotizacionId: string) => {
@@ -221,6 +221,7 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                                 <FichaCotizacionDetalle
                                     cotizacion={cotizacion}
                                     onEliminarCotizacion={handleEliminarCotizacion}
+                                    eventoId={eventoId}
                                 />
                             </li>
                         ))}
@@ -248,7 +249,7 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                                         </p>
                                     </div>
                                     <button
-                                        onClick={() => router.push(`/admin/dashboard/cotizaciones/${cotizacion.id}`)}
+                                        onClick={() => router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/${cotizacion.id}`)}
                                         className="text-xs text-zinc-400 hover:text-zinc-200 px-2 py-1 hover:bg-zinc-800 rounded transition-colors"
                                     >
                                         Ver detalles
