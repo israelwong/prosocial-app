@@ -3,6 +3,7 @@ import { Cotizacion } from '@/app/admin/_lib/types'
 import { eliminarCotizacion, clonarCotizacion } from '@/app/admin/_lib/cotizacion.actions'
 import { useRouter } from 'next/navigation'
 import { actualizarVisibilidadCotizacion } from '@/app/admin/_lib/cotizacion.actions'
+import BotonAutorizarCotizacion from './BotonAutorizarCotizacion'
 
 import { Pencil, Eye, Layers2, ArrowUpRight, Trash2, Archive, ArchiveRestore, Copy, Check, MessageCircle } from 'lucide-react'
 
@@ -106,6 +107,33 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
 
             {/* Footer con botones de acción */}
             <div className='border-t border-zinc-700 pt-3 mt-4'>
+                {/* Botón de Autorización - Destacado si no está autorizado */}
+                {cotizacion.status !== 'autorizado' && cotizacion.id && (
+                    <div className="mb-3">
+                        <BotonAutorizarCotizacion
+                            cotizacionId={cotizacion.id}
+                            eventoId={eventoId}
+                            estadoInicial={cotizacion.status}
+                            className="w-full"
+                            mostrarTexto={true}
+                            onAutorizado={() => {
+                                // Callback opcional para refrescar la vista
+                                window.location.reload();
+                            }}
+                        />
+                    </div>
+                )}
+
+                {/* Status de autorización si ya está autorizado */}
+                {cotizacion.status === 'autorizado' && (
+                    <div className="mb-3 p-2 bg-green-900/30 border border-green-700 rounded-lg">
+                        <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
+                            <Check size={16} />
+                            Cotización Autorizada
+                        </div>
+                    </div>
+                )}
+
                 <div className='grid grid-cols-2 md:grid-cols-3 gap-2'>
 
                     {/* //! Eliminar */}

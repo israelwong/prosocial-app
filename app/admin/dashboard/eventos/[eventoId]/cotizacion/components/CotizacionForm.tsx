@@ -9,6 +9,7 @@ import { Loader2, MinusCircle, Plus, Minus } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { calcularPaquete, calcularServicioDesdeBase, type ServicioCantidad } from '@/app/admin/_lib/pricing/calculos';
 import toast from 'react-hot-toast';
+import BotonAutorizarCotizacion from './BotonAutorizarCotizacion';
 
 // Tipos de datos basados en las estructuras existentes
 interface CatalogoSeccion {
@@ -1310,6 +1311,21 @@ export default function CotizacionForm({
                                     {isSubmitting && <Loader2 size={16} className="animate-spin mr-2" />}
                                     {modo === 'editar' ? 'Actualizar Cotización' : 'Guardar Cotización'}
                                 </button>
+
+                                {/* Botón de Autorización - Solo en modo editar y si hay una cotización existente */}
+                                {modo === 'editar' && cotizacionExistente && (
+                                    <BotonAutorizarCotizacion
+                                        cotizacionId={cotizacionExistente.id}
+                                        eventoId={evento.id}
+                                        estadoInicial={cotizacionExistente.status}
+                                        className="w-full"
+                                        mostrarTexto={true}
+                                        onAutorizado={() => {
+                                            toast.success('Evento autorizado y movido a seguimiento');
+                                        }}
+                                    />
+                                )}
+
                                 <button
                                     type="button"
                                     onClick={() => router.push(`/admin/dashboard/eventos/${evento.id}`)}
