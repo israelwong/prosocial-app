@@ -164,6 +164,7 @@ model Cotizacion {
   updatedAt                          DateTime                           @updatedAt
   expiresAt                          DateTime?                          @default(dbgenerated("now() + interval '10 day'"))
   Servicio                           CotizacionServicio[]
+  Costos                             CotizacionCosto[]
   Pago                               Pago[]
   CotizacionVisita                   CotizacionVisita[]
 }
@@ -177,25 +178,67 @@ model CotizacionServicio {
   servicioCategoriaId String
   ServicioCategoria   ServicioCategoria @relation(fields: [servicioCategoriaId], references: [id])
 
-  userId          String?
-  fechaAsignacion DateTime?
-  FechaEntrega    DateTime?
-  status          String    @default("pendiente")
-
-// --- CAMPOS NUEVOS PARA CONGELAR DATOS ---
-  nombre              String?            @default("Servicio cotizado anteriormente") // Valor para filas antiguas
-  precioUnitario      Float             @default(0)
-  subtotal            Float             @default(0)
-
-  // --- ¡NUEVOS CAMPOS PARA COSTOS PERSONALIZADOS! ---
-  // Guardamos el costo base del servicio en el momento de la cotización.
-  costo               Float             @default(0)
-
-
+  // --- CAMPOS OPERACIONALES ---
   cantidad            Int               @default(1)
   posicion            Int               @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId              String?
+  fechaAsignacion     DateTime?
+  FechaEntrega        DateTime?
+  status              String            @default("pendiente")
+  
+  // --- CAMPOS SNAPSHOT PARA TRAZABILIDAD ---
+  // Jerarquía: Sección → Categoría → Servicio
+  seccion_nombre_snapshot    String?           // Nombre de sección al momento de cotizar
+  categoria_nombre_snapshot  String?           // Nombre de categoría al momento de cotizar
+  nombre_snapshot            String            @default("Servicio migrado") // Nombre del servicio al momento de cotizar
+  descripcion_snapshot       String?           // Descripción completa del servicio
+  
+  // Precios y costos snapshot
+  precio_unitario_snapshot   Float             @default(0)
+  costo_snapshot             Float             @default(0)
+  gasto_snapshot             Float             @default(0)
+  utilidad_snapshot          Float             @default(0)
+  precio_publico_snapshot    Float             @default(0)
+  tipo_utilidad_snapshot     String            @default("servicio") // servicio, producto
+  
+  // Campos calculados (actuales, no snapshot)
+  precioUnitario      Float             @default(0)  // Precio actual para cálculos
+  subtotal            Float             @default(0)  // cantidad * precioUnitario
+  
+  // --- CAMPOS LEGACY TEMPORALES (migrar y eliminar después) ---
+  // MANTENER TEMPORALMENTE para migración segura de datos
+  nombre              String?           // LEGACY: migrar a nombre_snapshot
+  descripcion         String?           // LEGACY: migrar a descripcion_snapshot  
+  costo               Float?            @default(0) // LEGACY: migrar a costo_snapshot
+  gasto               Float?            @default(0) // LEGACY: migrar a gasto_snapshot
+  utilidad            Float?            @default(0) // LEGACY: migrar a utilidad_snapshot
+  precio_publico      Float?            @default(0) // LEGACY: migrar a precio_publico_snapshot
+  tipo_utilidad       String?           @default("servicio") // LEGACY: migrar a tipo_utilidad_snapshot
+  categoria_nombre    String?           // LEGACY: migrar a categoria_nombre_snapshot
+  seccion_nombre      String?           // LEGACY: migrar a seccion_nombre_snapshot
+  
+  // --- CAMPOS PERSONALIZACIÓN ---
+  es_personalizado    Boolean           @default(false)     // true si es un servicio agregado al vuelo
+  servicio_original_id String?          // ID del servicio original si es personalizado
+
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+}
+
+// Nueva tabla para costos adicionales
+model CotizacionCosto {
+  id            String     @id @default(cuid())
+  cotizacionId  String
+  Cotizacion    Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
+  
+  nombre        String     // Nombre del costo adicional
+  descripcion   String?    // Descripción opcional
+  costo         Float      @default(0)
+  tipo          String     @default("adicional") // adicional, descuento, impuesto, comision
+  posicion      Int        @default(0)
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 }
 
 model CotizacionVisita {
@@ -209,17 +252,29 @@ model Servicio {
   id                  String               @id @default(cuid())
   servicioCategoriaId String
   ServicioCategoria   ServicioCategoria    @relation(fields: [servicioCategoriaId], references: [id])
+  
+  // --- CAMPOS PRINCIPALES ---
   nombre              String
+  
+  // --- CAMPOS FINANCIEROS ---
   costo               Float                @default(0)
   gasto               Float                @default(0)
   utilidad            Float                @default(0)
   precio_publico      Float                @default(0)
-  posicion            Int                  @default(0)
-  visible_cliente     Boolean              @default(true)
   tipo_utilidad       String               @default("servicio") //servicio, producto
+  
+  // --- CAMPOS OPERACIONALES ---
+  posicion            Int                  @default(0)
   status              String               @default("active")
+  
+  // --- CAMPOS LEGACY (mantener por compatibilidad) ---
+  visible_cliente     Boolean              @default(true)  // LEGACY: No se usa, mantener por compatibilidad
+  
+  // --- METADATOS ---
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
+  
+  // --- RELACIONES ---
   ServicioGasto       ServicioGasto[]
   CotizacionServicio  CotizacionServicio[]
   PaqueteServicio     PaqueteServicio[]

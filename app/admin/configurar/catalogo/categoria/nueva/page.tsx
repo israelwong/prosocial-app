@@ -1,8 +1,13 @@
 import CategoriaForm from '../components/CategoriaForm';
 import { notFound } from 'next/navigation';
 
-export default function NuevaCategoriaPage({ searchParams }: { searchParams: { seccionId?: string } }) {
-    const seccionId = searchParams?.seccionId;
+interface Props {
+    searchParams: Promise<{ seccionId?: string }>
+}
+
+export default async function NuevaCategoriaPage({ searchParams }: Props) {
+    const params = await searchParams;
+    const seccionId = params?.seccionId;
     if (!seccionId) return notFound();
     return <CategoriaForm seccionId={seccionId} />;
 }

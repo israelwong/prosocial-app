@@ -52,10 +52,12 @@ export default async function CotizacionPage({ params, searchParams }: PageProps
                                     {datos.evento.Cliente.nombre} • {datos.evento.nombre || 'Evento sin nombre'}
                                 </p>
                             </div>
-                            <div className="text-right text-sm text-zinc-500">
-                                <div>Evento: {eventoTipoFinal.nombre}</div>
+                            <div className="text-right text-sm">
+                                <div className="text-lg font-semibold text-amber-400 mb-1">
+                                    {eventoTipoFinal.nombre}
+                                </div>
                                 {datos.paqueteBase && (
-                                    <div className="text-blue-400">
+                                    <div className="text-blue-400 text-sm">
                                         Basado en: {datos.paqueteBase.nombre}
                                     </div>
                                 )}

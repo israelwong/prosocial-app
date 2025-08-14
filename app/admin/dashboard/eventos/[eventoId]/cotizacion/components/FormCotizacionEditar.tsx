@@ -14,8 +14,8 @@ import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
 import { crearPago } from '@/app/admin/_lib/pago.actions';
 import { obtenerConteoCotizacionVisitas } from '@/app/admin/_lib/cotizacionVisita.actions'
 
-import ListaServicios from './ListaServicios'
-import Wishlist from './Wishlist'
+// import ListaServicios from './ListaServicios' // Componente eliminado en refactoring
+// import Wishlist from './Wishlist' // Componente eliminado en refactoring
 
 import { useRouter } from 'next/navigation'
 import { Trash, X } from 'lucide-react';
@@ -748,7 +748,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                         </div>
 
                         {/* WISHLIST */}
-                        <div>
+                        {/* <div>
                             <div className='flex justify-between items-center mb-5'>
                                 <p className='text-xl text-zinc-500'>
                                     Wishlist
@@ -759,17 +759,17 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                 onActualizarServicio={handleUpdateWhishlist}
                                 servicios={servicios}
                             />
-                        </div>
+                        </div> */}
 
                         {/* LISTA DE SERVICIOS */}
-                        <div className='h-full rounded-md'>
+                        {/* <div className='h-full rounded-md'>
                             <p className='text-xl text-zinc-500 mb-5'>
                                 Servicios disponibles
                             </p>
                             <ListaServicios
                                 onAgregarServicio={handleAgregarServicio}
                             />
-                        </div>
+                        </div> */}
 
                     </div>
                 </div>

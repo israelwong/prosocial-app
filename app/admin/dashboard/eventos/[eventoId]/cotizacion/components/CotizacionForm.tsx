@@ -6,7 +6,7 @@ import { CotizacionFormSchema, type CotizacionForm } from '@/app/admin/_lib/acti
 import { crearCotizacionNueva } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
 import { useRouter } from 'next/navigation';
 import { Loader2, MinusCircle, Plus, Minus } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { calcularPaquete, calcularServicioDesdeBase, type ServicioCantidad } from '@/app/admin/_lib/pricing/calculos';
 import toast from 'react-hot-toast';
 
@@ -51,6 +51,26 @@ export default function CotizacionForm({
 }: Props) {
     const router = useRouter();
 
+    // Estado para modal de servicio personalizado
+    const [mostrarModalServicioPersonalizado, setMostrarModalServicioPersonalizado] = useState(false);
+    const [servicioPersonalizado, setServicioPersonalizado] = useState({
+        nombre: '',
+        precio: '',
+        categoria: '',
+        guardarEnCatalogo: false
+    });
+
+    // Estado para servicios personalizados agregados
+    const [serviciosPersonalizados, setServiciosPersonalizados] = useState<Record<string, {
+        id: string;
+        nombre: string;
+        precio: number;
+        categoria: string;
+    }>>({});
+
+    // Estado para controlar edición en línea
+    const [editandoServicio, setEditandoServicio] = useState<string | null>(null);
+
     const {
         register,
         handleSubmit,
@@ -58,14 +78,15 @@ export default function CotizacionForm({
         setValue,
         formState: { errors, isSubmitting }
     } = useForm<CotizacionForm>({
-        resolver: zodResolver(CotizacionFormSchema),
+        resolver: zodResolver(CotizacionFormSchema) as any,
         defaultValues: {
-            nombre: paqueteBase ? `Cotización ${paqueteBase.nombre}` : 'Nueva Cotización',
+            nombre: paqueteBase ? `Paquete ${paqueteBase.nombre}` : 'Nueva Cotización',
             eventoTipoId: eventoTipoSeleccionado.id,
             servicios: serviciosBase.map(s => ({
                 servicioId: s.id,
                 cantidad: s.cantidad?.toString() || '1'
-            }))
+            })),
+            costos: []
         },
     });
 
@@ -88,7 +109,18 @@ export default function CotizacionForm({
         name: "servicios",
     });
 
+    // Field array para costos adicionales
+    const {
+        fields: costosFields,
+        append: appendCosto,
+        remove: removeCosto
+    } = useFieldArray({
+        control,
+        name: "costos",
+    });
+
     const watchedServicios = useWatch({ control, name: 'servicios' });
+    const watchedCostos = useWatch({ control, name: 'costos' });
 
     // Servicios disponibles por sección (normalizar estructura como en PaqueteForm)
     const secciones = useMemo(() => {
@@ -120,7 +152,20 @@ export default function CotizacionForm({
 
         // Obtener servicios completos para cálculos
         const serviciosCantidad: ServicioCantidad[] = watchedServicios.map(s => {
-            // Buscar el servicio en todas las secciones
+            // Verificar si es un servicio personalizado
+            const servicioPersonalizadoData = serviciosPersonalizados[s.servicioId];
+            if (servicioPersonalizadoData) {
+                return {
+                    costo: 0,
+                    gasto: 0,
+                    utilidad: servicioPersonalizadoData.precio,
+                    precio_publico: servicioPersonalizadoData.precio,
+                    cantidad: parseInt(s.cantidad || '1', 10),
+                    tipo_utilidad: 'servicio'
+                };
+            }
+
+            // Buscar el servicio en todas las secciones (lógica original)
             let servicio = null;
             for (const seccion of secciones) {
                 for (const categoria of seccion.seccionCategorias) {
@@ -150,7 +195,7 @@ export default function CotizacionForm({
             usarSumaPreciosServicio: true
         });
 
-    }, [watchedServicios, configuracion, secciones]);
+    }, [watchedServicios, configuracion, secciones, serviciosPersonalizados]);
 
     // Precio sistema sugerido
     const precioSistema = calculosEnTiempoReal?.precioSistemaPaquete || 0;
@@ -190,12 +235,131 @@ export default function CotizacionForm({
         setValue(`servicios.${index}.cantidad`, nuevaCantidad.toString());
     };
 
+    // Funciones para manejar costos adicionales
+    const handleEliminarCosto = (index: number) => {
+        removeCosto(index);
+        toast.success('Costo eliminado');
+    };
+
+    // Funciones para servicio personalizado
+    const handleCambioServicioPersonalizado = (campo: string, valor: string | boolean) => {
+        setServicioPersonalizado(prev => ({
+            ...prev,
+            [campo]: valor
+        }));
+    };
+
+    const handleAgregarServicioPersonalizado = () => {
+        if (!servicioPersonalizado.nombre.trim() || !servicioPersonalizado.precio) {
+            toast.error('Por favor completa el nombre y precio del servicio');
+            return;
+        }
+
+        // Verificar que el precio sea válido
+        const precio = parseFloat(servicioPersonalizado.precio);
+        if (isNaN(precio) || precio <= 0) {
+            toast.error('Por favor ingresa un precio válido');
+            return;
+        }
+
+        // Agregar como servicio con ID especial para servicios personalizados
+        const servicioId = `personalizado_${Date.now()}`;
+
+        // Guardar en el estado de servicios personalizados
+        setServiciosPersonalizados(prev => ({
+            ...prev,
+            [servicioId]: {
+                id: servicioId,
+                nombre: servicioPersonalizado.nombre.trim(),
+                precio,
+                categoria: servicioPersonalizado.categoria
+            }
+        }));
+
+        append({
+            servicioId,
+            cantidad: '1'
+        });
+
+        // Limpiar el formulario y cerrar modal
+        setServicioPersonalizado({
+            nombre: '',
+            precio: '',
+            categoria: '',
+            guardarEnCatalogo: false
+        });
+        setMostrarModalServicioPersonalizado(false);
+        toast.success('Servicio personalizado agregado');
+
+        // TODO: Si guardarEnCatalogo es true, enviar al servidor para guardarlo permanentemente
+        if (servicioPersonalizado.guardarEnCatalogo) {
+            console.log('Guardar en catálogo:', {
+                nombre: servicioPersonalizado.nombre.trim(),
+                precio,
+                categoria: servicioPersonalizado.categoria
+            });
+        }
+    };
+
+    // Calcular total de costos adicionales
+    const totalCostosAdicionales = useMemo(() => {
+        if (!watchedCostos) return 0;
+        return watchedCostos.reduce((total, costo) => {
+            const valor = parseFloat(costo?.costo || '0');
+            const tipo = costo?.tipo || 'adicional';
+
+            // Los descuentos se restan, los demás se suman
+            return tipo === 'descuento' ? total - valor : total + valor;
+        }, 0);
+    }, [watchedCostos]);
+
+    // Precio final incluyendo costos adicionales
+    const precioFinal = precioSistema + totalCostosAdicionales;
+
     // Agrupar servicios seleccionados por sección y categoría
     const serviciosAgrupadosSeleccionados = useMemo(() => {
         const agrupados: any = {};
 
         fields.forEach((field, index) => {
-            // Buscar el servicio completo y su jerarquía
+            // Verificar si es un servicio personalizado
+            const servicioPersonalizadoData = serviciosPersonalizados[field.servicioId];
+
+            if (servicioPersonalizadoData) {
+                // Manejar servicio personalizado
+                const seccionNombre = 'Servicios Personalizados';
+                const categoriaNombre = servicioPersonalizadoData.categoria || 'Sin categoría';
+
+                if (!agrupados[seccionNombre]) {
+                    agrupados[seccionNombre] = {
+                        posicion: 999, // Al final
+                        categorias: {}
+                    };
+                }
+                if (!agrupados[seccionNombre].categorias[categoriaNombre]) {
+                    agrupados[seccionNombre].categorias[categoriaNombre] = {
+                        posicion: 999,
+                        servicios: []
+                    };
+                }
+
+                const cantidad = parseInt(watchedServicios[index]?.cantidad || '1', 10);
+                const precio = servicioPersonalizadoData.precio;
+
+                agrupados[seccionNombre].categorias[categoriaNombre].servicios.push({
+                    id: servicioPersonalizadoData.id,
+                    nombre: servicioPersonalizadoData.nombre,
+                    fieldIndex: index,
+                    fieldId: field.id,
+                    cantidad,
+                    precio,
+                    subtotal: precio * cantidad,
+                    posicion: 999,
+                    esPersonalizado: true
+                });
+                return;
+            }
+
+            // Buscar el servicio completo y su jerarquía (lógica original)
             let servicioCompleto = null;
             let seccionNombre = '';
             let categoriaNombre = '';
@@ -271,19 +435,59 @@ export default function CotizacionForm({
             }, {} as any);
 
         return seccionesOrdenadas;
-    }, [fields, watchedServicios, secciones]);
+    }, [fields, watchedServicios, secciones, serviciosPersonalizados]);
 
     // Submit del formulario
     const onSubmit = async (data: CotizacionForm) => {
         try {
             // Preparar servicios para la cotización
             const serviciosCotizacion = data.servicios.map((s, index) => {
-                // Buscar el servicio completo
+                // Verificar si es un servicio personalizado
+                const servicioPersonalizadoData = serviciosPersonalizados[s.servicioId];
+
+                if (servicioPersonalizadoData) {
+                    // Manejar servicio personalizado
+                    const cantidad = parseInt(s.cantidad, 10);
+                    const precioUnitario = servicioPersonalizadoData.precio;
+
+                    return {
+                        servicioId: null, // No tiene ID de servicio real
+                        servicioCategoriaId: null,
+                        cantidad,
+                        precioUnitario,
+                        posicion: 999,
+
+                        // Campos snapshot para trazabilidad
+                        seccion_nombre_snapshot: 'Servicios Personalizados',
+                        categoria_nombre_snapshot: servicioPersonalizadoData.categoria || 'Sin categoría',
+                        nombre_snapshot: servicioPersonalizadoData.nombre,
+                        descripcion_snapshot: undefined,
+                        precio_unitario_snapshot: precioUnitario,
+                        costo_snapshot: 0,
+                        gasto_snapshot: 0,
+                        utilidad_snapshot: precioUnitario,
+                        precio_publico_snapshot: precioUnitario,
+                        tipo_utilidad_snapshot: 'servicio',
+
+                        // Campos personalización
+                        es_personalizado: true,
+                        servicio_original_id: undefined
+                    };
+                }
+
+                // Buscar el servicio completo (lógica original)
                 let servicio = null;
-                for (const seccion of secciones) {
-                    for (const categoria of seccion.seccionCategorias) {
-                        servicio = categoria.ServicioCategoria.Servicio?.find((srv: any) => srv.id === s.servicioId);
-                        if (servicio) break;
+                let categoria = null;
+                let seccion = null;
+
+                for (const sec of secciones) {
+                    for (const cat of sec.seccionCategorias) {
+                        servicio = cat.ServicioCategoria.Servicio?.find((srv: any) => srv.id === s.servicioId);
+                        if (servicio) {
+                            categoria = cat.ServicioCategoria;
+                            seccion = sec;
+                            break;
+                        }
                     }
                     if (servicio) break;
                 }
@@ -293,15 +497,31 @@ export default function CotizacionForm({
                 }
 
                 const precioUnitario = calcularPrecioCorrectoServicio(servicio);
+                const cantidad = parseInt(s.cantidad, 10);
+                const utilidad = precioUnitario - (servicio.costo || 0) - (servicio.gasto || 0);
 
                 return {
                     servicioId: servicio.id,
                     servicioCategoriaId: servicio.servicioCategoriaId,
-                    cantidad: parseInt(s.cantidad, 10),
+                    cantidad,
                     precioUnitario,
-                    costo: servicio.costo || 0,
-                    nombre: servicio.nombre,
-                    posicion: servicio.posicion || index
+                    posicion: servicio.posicion || index,
+
+                    // Campos snapshot para trazabilidad (Sección → Categoría → Servicio)
+                    seccion_nombre_snapshot: seccion?.nombre || undefined,
+                    categoria_nombre_snapshot: categoria?.nombre || undefined,
+                    nombre_snapshot: servicio.nombre,
+                    descripcion_snapshot: undefined,
+                    precio_unitario_snapshot: precioUnitario,
+                    costo_snapshot: servicio.costo || 0,
+                    gasto_snapshot: servicio.gasto || 0,
+                    utilidad_snapshot: utilidad,
+                    precio_publico_snapshot: servicio.precio_publico || precioUnitario,
+                    tipo_utilidad_snapshot: servicio.tipo_utilidad || 'servicio',
+
+                    // Campos personalización
+                    es_personalizado: false,
+                    servicio_original_id: undefined
                 };
             });
 
@@ -309,8 +529,15 @@ export default function CotizacionForm({
                 eventoId: evento.id,
                 eventoTipoId: data.eventoTipoId,
                 nombre: data.nombre,
-                precio: precioSistema, // Usar precio sistema automáticamente
-                servicios: serviciosCotizacion
+                precio: precioFinal, // Usar precio final incluyendo costos
+                servicios: serviciosCotizacion,
+                costos: data.costos?.map((costo, index) => ({
+                    nombre: costo.nombre,
+                    descripcion: undefined,
+                    costo: parseFloat(costo.costo) || 0,
+                    tipo: costo.tipo,
+                    posicion: index + 1
+                })) || []
             });
 
             toast.success('Cotización creada exitosamente');
@@ -323,153 +550,92 @@ export default function CotizacionForm({
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Layout Responsive */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <>
+            <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
+                {/* Layout Responsive */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-                {/* Columnas 1-2: Catálogo de Servicios */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-800">
-                        <h3 className="text-lg font-semibold text-zinc-100 mb-4">
-                            Catálogo de Servicios
-                        </h3>
-
-                        <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                            {secciones.map(seccion => (
-                                <div key={seccion.id} className="border border-zinc-700/60 rounded-lg p-4 bg-zinc-900/30 space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h4 className="text-base font-semibold text-zinc-300">{seccion.nombre}</h4>
-                                        <span className="text-xs text-zinc-500">
-                                            {seccion.seccionCategorias.reduce((acc, sc) => acc + (sc.ServicioCategoria.Servicio?.length || 0), 0)} servicios
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        {seccion.seccionCategorias.map(sc => (
-                                            <div key={sc.ServicioCategoria.id} className="space-y-2 border border-zinc-700/40 rounded-md p-3 bg-zinc-800/40">
-                                                <h5 className="text-sm font-medium text-zinc-400">
-                                                    {sc.ServicioCategoria.nombre}
-                                                </h5>
-                                                <div className="space-y-1.5">
-                                                    {sc.ServicioCategoria.Servicio?.map((servicio: any) => {
-                                                        const estaSeleccionado = servicioEstaSeleccionado(servicio.id);
-                                                        return (
-                                                            <div
-                                                                key={servicio.id}
-                                                                onClick={() => handleAddServicio(servicio)}
-                                                                className={`p-2.5 rounded-md border flex justify-between items-center transition group ${estaSeleccionado
-                                                                    ? 'border-zinc-800/50 bg-zinc-900/40 opacity-50 cursor-default'
-                                                                    : 'border-zinc-800 bg-zinc-900/80 cursor-pointer hover:border-blue-500 hover:bg-zinc-800/80'
-                                                                    }`}
-                                                            >
-                                                                <span className={`text-sm truncate pr-2 ${estaSeleccionado
-                                                                    ? 'text-zinc-500'
-                                                                    : 'text-zinc-200 group-hover:text-white'
-                                                                    }`}>
-                                                                    {servicio.nombre}
-                                                                    {estaSeleccionado && <span className="ml-2 text-xs">(Agregado)</span>}
-                                                                </span>
-                                                                <span className={`text-xs ${estaSeleccionado
-                                                                    ? 'text-zinc-600'
-                                                                    : 'text-zinc-400 group-hover:text-zinc-300'
-                                                                    }`}>
-                                                                    {calcularPrecioCorrectoServicio(servicio).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                                                </span>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                    {/* Columnas 1-2: Catálogo de Servicios */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-800">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-zinc-100">
+                                    Catálogo de Servicios
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => window.open('/admin/configurar/catalogo', '_blank')}
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-sm"
+                                        title="Gestionar catálogo de servicios"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Gestionar
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            toast.success('Catálogo actualizado');
+                                            // Como los datos vienen de props, mostramos feedback visual sin recargar
+                                        }}
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition text-sm"
+                                        title="Los datos del catálogo se actualizan desde el servidor"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        Actualizar
+                                    </button>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Columnas 3-4: Servicios Seleccionados */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-800">
-                        <h3 className="text-lg font-semibold text-zinc-100 mb-4">
-                            Servicios Seleccionados ({fields.length})
-                        </h3>
-
-                        {fields.length === 0 ? (
-                            <div className="text-center py-12 text-zinc-400">
-                                <p className="text-lg mb-2">No hay servicios seleccionados</p>
-                                <p className="text-sm">Agrega servicios desde el catálogo</p>
                             </div>
-                        ) : (
-                            <div className="space-y-6">
-                                {Object.entries(serviciosAgrupadosSeleccionados).map(([seccion, categorias]) => (
-                                    <div key={seccion} className="border border-zinc-700/50 rounded-lg p-4 bg-zinc-800/30">
-                                        <h4 className="text-sm font-semibold text-zinc-300 mb-3 uppercase tracking-wide">
-                                            {seccion}
-                                        </h4>
+
+                            <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                                {secciones.map(seccion => (
+                                    <div key={seccion.id} className="border border-zinc-700/60 rounded-lg p-4 bg-zinc-900/30 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="text-base font-semibold text-zinc-300">{seccion.nombre}</h4>
+                                            <span className="text-xs text-zinc-500">
+                                                {seccion.seccionCategorias.reduce((acc, sc) => acc + (sc.ServicioCategoria.Servicio?.length || 0), 0)} servicios
+                                            </span>
+                                        </div>
 
                                         <div className="space-y-4">
-                                            {Object.entries(categorias as any).map(([categoria, servicios]) => (
-                                                <div key={categoria} className="space-y-2">
-                                                    <h5 className="text-sm font-semibold text-blue-400 px-2 py-1 bg-blue-900/20 rounded border-l-2 border-blue-500">
-                                                        {categoria}
+                                            {seccion.seccionCategorias.map(sc => (
+                                                <div key={sc.ServicioCategoria.id} className="space-y-2 border border-zinc-700/40 rounded-md p-3 bg-zinc-800/40">
+                                                    <h5 className="text-sm font-medium text-zinc-400">
+                                                        {sc.ServicioCategoria.nombre}
                                                     </h5>
-
-                                                    <div className="space-y-2">
-                                                        {(servicios as any[]).map((servicio) => (
-                                                            <div key={servicio.fieldId} className="bg-zinc-900/50 rounded-md p-3 border border-zinc-700/40">
-                                                                <div className="flex items-center justify-between">
-                                                                    {/* Descripción completa */}
-                                                                    <div className="flex-1 min-w-0 pr-4">
-                                                                        <div className="font-medium text-zinc-100 text-sm">
-                                                                            {servicio.nombre}
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Subtotal */}
-                                                                    <div className="text-right mr-4">
-                                                                        <div className="font-semibold text-zinc-100">
-                                                                            {servicio.subtotal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                                                        </div>
-                                                                        <div className="text-xs text-zinc-400">
-                                                                            {servicio.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} c/u
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Controles de cantidad */}
-                                                                    <div className="flex items-center gap-2">
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => handleModificarCantidad(servicio.fieldIndex, 'decrementar')}
-                                                                            disabled={servicio.cantidad <= 1}
-                                                                            className="p-1 rounded bg-zinc-700 text-zinc-300 hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                        >
-                                                                            <Minus size={14} />
-                                                                        </button>
-
-                                                                        <span className="w-8 text-center text-sm font-medium text-zinc-100">
-                                                                            {servicio.cantidad}
-                                                                        </span>
-
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => handleModificarCantidad(servicio.fieldIndex, 'incrementar')}
-                                                                            className="p-1 rounded bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
-                                                                        >
-                                                                            <Plus size={14} />
-                                                                        </button>
-
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => remove(servicio.fieldIndex)}
-                                                                            className="p-1 ml-2 text-red-400 hover:text-red-300"
-                                                                        >
-                                                                            <MinusCircle size={16} />
-                                                                        </button>
-                                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        {sc.ServicioCategoria.Servicio?.map((servicio: any) => {
+                                                            const estaSeleccionado = servicioEstaSeleccionado(servicio.id);
+                                                            return (
+                                                                <div
+                                                                    key={servicio.id}
+                                                                    onClick={() => handleAddServicio(servicio)}
+                                                                    className={`p-2.5 rounded-md border flex justify-between items-center transition group ${estaSeleccionado
+                                                                        ? 'border-zinc-800/50 bg-zinc-900/40 opacity-50 cursor-default'
+                                                                        : 'border-zinc-800 bg-zinc-900/80 cursor-pointer hover:border-blue-500 hover:bg-zinc-800/80'
+                                                                        }`}
+                                                                >
+                                                                    <span className={`text-sm truncate pr-2 ${estaSeleccionado
+                                                                        ? 'text-zinc-500'
+                                                                        : 'text-zinc-200 group-hover:text-white'
+                                                                        }`}>
+                                                                        {servicio.nombre}
+                                                                        {estaSeleccionado && <span className="ml-2 text-xs">(Agregado)</span>}
+                                                                    </span>
+                                                                    <span className={`text-xs ${estaSeleccionado
+                                                                        ? 'text-zinc-600'
+                                                                        : 'text-zinc-400 group-hover:text-zinc-300'
+                                                                        }`}>
+                                                                        {calcularPrecioCorrectoServicio(servicio).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                                    </span>
                                                                 </div>
-                                                            </div>
-                                                        ))}
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                             ))}
@@ -477,77 +643,448 @@ export default function CotizacionForm({
                                     </div>
                                 ))}
                             </div>
-                        )}
+                        </div>
                     </div>
-                </div>
 
-                {/* Columna 5: Detalles de la Cotización */}
-                <div className="lg:col-span-1 space-y-6">
-                    <div className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-800">
-                        <h3 className="text-lg font-semibold text-zinc-100 mb-4">Detalles de Cotización</h3>
-
-                        <div className="space-y-4">
-                            {/* Nombre de cotización */}
-                            <div>
-                                <label htmlFor="nombre" className="block text-sm font-medium text-zinc-300 mb-1.5">
-                                    Nombre de Cotización
-                                </label>
-                                <input
-                                    id="nombre"
-                                    {...register('nombre')}
-                                    className="flex h-10 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 focus:border-blue-500 focus:outline-none"
-                                    placeholder="Nombre descriptivo"
-                                />
-                                {errors.nombre && (
-                                    <p className="text-red-400 text-xs mt-1">{errors.nombre.message}</p>
-                                )}
+                    {/* Columnas 3-4: Servicios Seleccionados */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-800">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-zinc-100">
+                                    Servicios Seleccionados ({fields.length})
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={() => setMostrarModalServicioPersonalizado(true)}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition text-sm"
+                                >
+                                    <Plus size={16} />
+                                    Agregar Al Vuelo
+                                </button>
                             </div>
 
-                            {/* Tipo de evento - Solo lectura */}
-                            <div>
-                                <label className="block text-sm font-medium text-zinc-300 mb-1.5">
-                                    Tipo de Evento
-                                </label>
-                                <div className="flex h-10 w-full items-center rounded-md border border-zinc-700 bg-zinc-800 px-3 text-sm text-zinc-400">
-                                    {eventoTipoSeleccionado.nombre}
+                            {fields.length === 0 ? (
+                                <div className="text-center py-12 text-zinc-400">
+                                    <p className="text-lg mb-2">No hay servicios seleccionados</p>
+                                    <p className="text-sm">Agrega servicios desde el catálogo</p>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    {Object.entries(serviciosAgrupadosSeleccionados).map(([seccion, categorias]) => (
+                                        <div key={seccion} className="border border-zinc-700/50 rounded-lg p-4 bg-zinc-800/30">
+                                            <h4 className="text-sm font-semibold text-zinc-300 mb-3 uppercase tracking-wide">
+                                                {seccion}
+                                            </h4>
 
-                            {/* Precio sistema */}
-                            {precioSistema > 0 && (
-                                <div className="p-3 rounded-lg border border-blue-500/60 bg-blue-900/20">
-                                    <div className="text-xs text-blue-200 mb-1">Precio de Cotización</div>
-                                    <div className="text-lg font-semibold text-blue-300">
-                                        {precioSistema.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                    </div>
-                                    <div className="text-xs text-blue-400 mt-1">
-                                        Calculado automáticamente
-                                    </div>
+                                            <div className="space-y-4">
+                                                {Object.entries(categorias as any).map(([categoria, servicios]) => (
+                                                    <div key={categoria} className="space-y-2">
+                                                        <h5 className="text-sm font-semibold text-blue-400 px-2 py-1 bg-blue-900/20 rounded border-l-2 border-blue-500">
+                                                            {categoria}
+                                                        </h5>
+
+                                                        <div className="space-y-2">
+                                                            {(servicios as any[]).map((servicio) => (
+                                                                <div key={servicio.fieldId} className="bg-zinc-900/50 rounded-md p-3 border border-zinc-700/40">
+                                                                    <div className="grid grid-cols-12 gap-3 items-center">
+                                                                        {/* Descripción editable con precio unitario incluido */}
+                                                                        <div className="col-span-6 min-w-0">
+                                                                            {editandoServicio === servicio.fieldId ? (
+                                                                                <input
+                                                                                    type="text"
+                                                                                    defaultValue={servicio.nombre}
+                                                                                    placeholder="Descripción del servicio"
+                                                                                    className="w-full px-2 py-1 bg-zinc-800 border border-zinc-600 rounded text-zinc-100 text-sm focus:border-blue-500 focus:outline-none"
+                                                                                    onBlur={(e) => {
+                                                                                        setEditandoServicio(null);
+                                                                                        // TODO: Actualizar el nombre si es necesario
+                                                                                    }}
+                                                                                    onKeyDown={(e) => {
+                                                                                        if (e.key === 'Enter') {
+                                                                                            setEditandoServicio(null);
+                                                                                        }
+                                                                                        if (e.key === 'Escape') {
+                                                                                            setEditandoServicio(null);
+                                                                                        }
+                                                                                    }}
+                                                                                    autoFocus
+                                                                                />
+                                                                            ) : (
+                                                                                <div
+                                                                                    className="font-medium text-zinc-100 text-sm cursor-pointer hover:text-blue-300 transition"
+                                                                                    onDoubleClick={() => setEditandoServicio(servicio.fieldId)}
+                                                                                    title="Doble click para editar"
+                                                                                >
+                                                                                    <span>{servicio.nombre}</span>
+                                                                                    <span className="ml-2 text-zinc-500 font-normal">
+                                                                                        {servicio.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} c/u
+                                                                                    </span>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+
+                                                                        {/* Controles de cantidad */}
+                                                                        <div className="col-span-3 flex items-center justify-center gap-2">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleModificarCantidad(servicio.fieldIndex, 'decrementar')}
+                                                                                disabled={servicio.cantidad <= 1}
+                                                                                className="p-1 rounded bg-zinc-700 text-zinc-300 hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                            >
+                                                                                <Minus size={12} />
+                                                                            </button>
+
+                                                                            <span className="w-8 text-center text-sm font-medium text-zinc-100">
+                                                                                {servicio.cantidad}
+                                                                            </span>
+
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleModificarCantidad(servicio.fieldIndex, 'incrementar')}
+                                                                                className="p-1 rounded bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
+                                                                            >
+                                                                                <Plus size={12} />
+                                                                            </button>
+                                                                        </div>
+
+                                                                        {/* Subtotal */}
+                                                                        <div className="col-span-2 text-right pr-2">
+                                                                            <div className="font-semibold text-zinc-100 text-sm">
+                                                                                {servicio.subtotal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Botón eliminar */}
+                                                                        <div className="col-span-1 text-center">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => remove(servicio.fieldIndex)}
+                                                                                className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded"
+                                                                                title="Eliminar servicio"
+                                                                            >
+                                                                                <MinusCircle size={16} />
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
 
-                        {/* Botones de acción */}
-                        <div className="mt-6 space-y-3">
+                        {/* Sección de Costos Adicionales */}
+                        <div className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-800">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-zinc-100">
+                                    Costos Adicionales ({costosFields.length})
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={() => appendCosto({
+                                        nombre: "",
+                                        costo: "",
+                                        tipo: "sesion"
+                                    })}
+                                    className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500 transition"
+                                    title="Agregar costo personalizado"
+                                >
+                                    +
+                                </button>
+                            </div>
+
+                            {costosFields.length === 0 ? (
+                                <div className="text-center py-8 text-zinc-400">
+                                    <p className="text-sm">No hay costos adicionales</p>
+                                    <p className="text-xs text-zinc-500 mt-1">
+                                        Usa el botón "+" para agregar costos personalizados
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {/* Agrupar costos por tipo */}
+                                    {['sesion', 'evento', 'descuento'].map(tipoGrupo => {
+                                        const costosDelTipo = costosFields.filter((_, index) =>
+                                            watchedCostos?.[index]?.tipo === tipoGrupo
+                                        );
+
+                                        if (costosDelTipo.length === 0) return null;
+
+                                        const tipoLabels = {
+                                            sesion: 'Costos de Sesión',
+                                            evento: 'Costos de Evento',
+                                            descuento: 'Descuentos'
+                                        };
+
+                                        const tipoColors = {
+                                            sesion: 'border-amber-500 bg-amber-900/20',
+                                            evento: 'border-purple-500 bg-purple-900/20',
+                                            descuento: 'border-green-500 bg-green-900/20'
+                                        };
+
+                                        return (
+                                            <div key={tipoGrupo} className={`border rounded-lg p-3 ${tipoColors[tipoGrupo as keyof typeof tipoColors]}`}>
+                                                <h4 className="text-sm font-semibold text-zinc-300 mb-3">
+                                                    {tipoLabels[tipoGrupo as keyof typeof tipoLabels]}
+                                                </h4>
+                                                <div className="space-y-2">
+                                                    {costosFields.map((field, index) => {
+                                                        const costoTipo = watchedCostos?.[index]?.tipo;
+                                                        if (costoTipo !== tipoGrupo) return null;
+
+                                                        return (
+                                                            <div key={field.id} className="bg-zinc-900/50 rounded-md p-3 border border-zinc-700/40">
+                                                                <div className="grid grid-cols-12 gap-3 items-center">
+                                                                    {/* Selector de tipo (oculto visualmente pero mantiene funcionalidad) */}
+                                                                    <input
+                                                                        {...register(`costos.${index}.tipo`)}
+                                                                        type="hidden"
+                                                                    />
+
+                                                                    {/* Nombre del costo */}
+                                                                    <div className="col-span-6">
+                                                                        <input
+                                                                            {...register(`costos.${index}.nombre`)}
+                                                                            placeholder="Nombre del costo"
+                                                                            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-zinc-100 text-sm focus:border-blue-500 focus:outline-none"
+                                                                        />
+                                                                    </div>
+
+                                                                    {/* Monto */}
+                                                                    <div className="col-span-4">
+                                                                        <div className="flex">
+                                                                            <span className="flex items-center px-3 text-zinc-400 bg-zinc-700 border border-r-0 border-zinc-700 rounded-l-md text-sm">
+                                                                                $
+                                                                            </span>
+                                                                            <input
+                                                                                {...register(`costos.${index}.costo`)}
+                                                                                type="number"
+                                                                                step="0.01"
+                                                                                placeholder="0.00"
+                                                                                className="flex-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-r-md text-zinc-100 text-sm focus:border-blue-500 focus:outline-none"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Cambiar tipo */}
+                                                                    <div className="col-span-1">
+                                                                        <select
+                                                                            {...register(`costos.${index}.tipo`)}
+                                                                            className="w-full px-2 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-zinc-100 text-xs focus:border-blue-500 focus:outline-none"
+                                                                            title="Tipo de costo"
+                                                                        >
+                                                                            <option value="sesion">Sesión</option>
+                                                                            <option value="evento">Evento</option>
+                                                                            <option value="descuento">Descuento</option>
+                                                                        </select>
+                                                                    </div>
+
+                                                                    {/* Botón eliminar */}
+                                                                    <div className="col-span-1 flex justify-center">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleEliminarCosto(index)}
+                                                                            className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1 rounded"
+                                                                            title="Eliminar costo"
+                                                                        >
+                                                                            <MinusCircle size={16} />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {/* Resumen de costos */}
+                            {costosFields.length > 0 && (
+                                <div className="mt-4 pt-3 border-t border-zinc-700/50">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-zinc-400">Total Costos Adicionales:</span>
+                                        <span className={`font-semibold ${totalCostosAdicionales >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
+                                            {totalCostosAdicionales.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Columna 5: Detalles de la Cotización */}
+                    <div className="lg:col-span-1 space-y-6">
+                        <div className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-800">
+                            <h3 className="text-lg font-semibold text-zinc-100 mb-4">Detalles de Cotización</h3>
+
+                            <div className="space-y-4">
+                                {/* Nombre de cotización */}
+                                <div>
+                                    <label htmlFor="nombre" className="block text-sm font-medium text-zinc-300 mb-1.5">
+                                        Nombre de Cotización
+                                    </label>
+                                    <input
+                                        id="nombre"
+                                        {...register('nombre')}
+                                        className="flex h-10 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 focus:border-blue-500 focus:outline-none"
+                                        placeholder="Nombre descriptivo"
+                                    />
+                                    {errors.nombre && (
+                                        <p className="text-red-400 text-xs mt-1">{errors.nombre.message}</p>
+                                    )}
+                                </div>
+
+                                {/* Precio sistema */}
+                                {/* Desglose de precios */}
+                                {precioSistema > 0 && (
+                                    <div className="space-y-3">
+                                        {/* Precio base de servicios */}
+                                        <div className="p-3 rounded-lg border border-zinc-700/60 bg-zinc-800/40">
+                                            <div className="text-xs text-zinc-400 mb-1">Subtotal Servicios</div>
+                                            <div className="text-base font-semibold text-zinc-200">
+                                                {precioSistema.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                            </div>
+                                        </div>
+
+                                        {/* Costos adicionales (si existen) */}
+                                        {totalCostosAdicionales !== 0 && (
+                                            <div className="p-3 rounded-lg border border-zinc-700/60 bg-zinc-800/40">
+                                                <div className="text-xs text-zinc-400 mb-1">Costos Adicionales</div>
+                                                <div className={`text-base font-semibold ${totalCostosAdicionales >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
+                                                    {totalCostosAdicionales >= 0 ? '+' : ''}{totalCostosAdicionales.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Precio final */}
+                                        <div className="p-4 rounded-lg border border-blue-500/60 bg-blue-900/20">
+                                            <div className="text-xs text-blue-200 mb-1">Total de Cotización</div>
+                                            <div className="text-xl font-bold text-blue-300">
+                                                {precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                            </div>
+                                            <div className="text-xs text-blue-400 mt-1">
+                                                {totalCostosAdicionales !== 0 ? 'Incluye costos adicionales' : 'Solo servicios'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Botones de acción */}
+                            <div className="mt-6 space-y-3">
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isSubmitting && <Loader2 size={16} className="animate-spin mr-2" />}
+                                    Guardar Cotización
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => router.push(`/admin/dashboard/eventos/${evento.id}`)}
+                                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-zinc-700 text-zinc-100 hover:bg-zinc-600"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            {/* Modal para Servicio Personalizado */}
+            {mostrarModalServicioPersonalizado && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-zinc-900 rounded-lg p-6 w-full max-w-md border border-zinc-700">
+                        <h3 className="text-lg font-semibold text-zinc-100 mb-2">
+                            Agregar Servicio Al Vuelo
+                        </h3>
+                        <p className="text-sm text-zinc-400 mb-4">
+                            Este servicio solo se agregará a esta cotización
+                        </p>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                                    Nombre del Servicio
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Ej: Servicio especial"
+                                    value={servicioPersonalizado.nombre}
+                                    onChange={(e) => handleCambioServicioPersonalizado('nombre', e.target.value)}
+                                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-zinc-100 focus:border-blue-500 focus:outline-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                                    Precio Unitario
+                                </label>
+                                <div className="flex">
+                                    <span className="flex items-center px-3 text-zinc-400 bg-zinc-700 border border-r-0 border-zinc-700 rounded-l-md">
+                                        $
+                                    </span>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="0.00"
+                                        value={servicioPersonalizado.precio}
+                                        onChange={(e) => handleCambioServicioPersonalizado('precio', e.target.value)}
+                                        className="flex-1 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-r-md text-zinc-100 focus:border-blue-500 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                                    Categoría
+                                </label>
+                                <select
+                                    value={servicioPersonalizado.categoria}
+                                    onChange={(e) => handleCambioServicioPersonalizado('categoria', e.target.value)}
+                                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-zinc-100 focus:border-blue-500 focus:outline-none"
+                                >
+                                    <option value="">Seleccionar categoría...</option>
+                                    {secciones.map(seccion =>
+                                        seccion.seccionCategorias.map(sc => (
+                                            <option key={sc.ServicioCategoria.id} value={sc.ServicioCategoria.nombre}>
+                                                {seccion.nombre} → {sc.ServicioCategoria.nombre}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-6">
                             <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                type="button"
+                                onClick={() => setMostrarModalServicioPersonalizado(false)}
+                                className="flex-1 px-4 py-2 bg-zinc-700 text-zinc-100 rounded-md hover:bg-zinc-600"
                             >
-                                {isSubmitting && <Loader2 size={16} className="animate-spin mr-2" />}
-                                Guardar Cotización
+                                Cancelar
                             </button>
                             <button
                                 type="button"
-                                onClick={() => router.push(`/admin/dashboard/eventos/${evento.id}`)}
-                                className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-zinc-700 text-zinc-100 hover:bg-zinc-600"
+                                onClick={handleAgregarServicioPersonalizado}
+                                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                             >
-                                Cancelar
+                                Agregar a Cotización
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </form>
+            )}
+        </>
     );
 }

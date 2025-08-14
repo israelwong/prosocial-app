@@ -7,6 +7,15 @@ import { obtenerCatalogoCompleto } from '@/app/admin/_lib/actions/catalogo/catal
 import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
 import { obtenerMetodosPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions';
 import { obtenerPaquete } from '@/app/admin/_lib/actions/paquetes/paquetes.actions';
+import {
+    CotizacionNuevaSchema,
+    CotizacionEditarSchema,
+    CotizacionParamsSchema,
+    ServicioPersonalizadoSchema,
+    type CotizacionNueva,
+    type CotizacionEditar,
+    type ServicioPersonalizado
+} from './cotizacion.schemas';
 
 /**
  * Obtiene todos los datos necesarios para crear/editar una cotización
@@ -135,6 +144,9 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
                 },
                 EventoTipo: true,
                 CondicionesComerciales: true,
+                Costos: {
+                    orderBy: { posicion: 'asc' }
+                },
                 Servicio: {
                     include: {
                         Servicio: {
@@ -187,49 +199,57 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
 
 /**
  * Crea una nueva cotización basada en los datos proporcionados
+ * Usa los nuevos schemas con funcionalidad de snapshot
  */
-export async function crearCotizacionNueva(data: {
-    eventoId: string;
-    eventoTipoId: string;
-    nombre: string;
-    precio: number;
-    servicios: Array<{
-        servicioId: string;
-        servicioCategoriaId: string;
-        cantidad: number;
-        precioUnitario: number;
-        costo: number;
-        nombre: string;
-        posicion: number;
-    }>;
-    condicionesComercialesId?: string;
-}) {
+export async function crearCotizacionNueva(data: CotizacionNueva) {
     try {
+        // Validar datos con schema
+        const validatedData = CotizacionNuevaSchema.parse(data);
+
         const nuevaCotizacion = await prisma.cotizacion.create({
             data: {
-                eventoId: data.eventoId,
-                eventoTipoId: data.eventoTipoId,
-                nombre: data.nombre,
-                precio: data.precio,
-                condicionesComercialesId: data.condicionesComercialesId,
+                eventoId: validatedData.eventoId,
+                eventoTipoId: validatedData.eventoTipoId,
+                nombre: validatedData.nombre,
+                precio: validatedData.precio,
+                condicionesComercialesId: validatedData.condicionesComercialesId,
                 status: 'pending',
                 visible_cliente: true,
                 Servicio: {
-                    create: data.servicios.map(servicio => ({
+                    create: validatedData.servicios.map(servicio => ({
                         servicioId: servicio.servicioId,
                         servicioCategoriaId: servicio.servicioCategoriaId,
                         cantidad: servicio.cantidad,
                         precioUnitario: servicio.precioUnitario,
                         subtotal: servicio.precioUnitario * servicio.cantidad,
-                        costo: servicio.costo,
-                        nombre: servicio.nombre,
                         posicion: servicio.posicion,
-                        status: 'pendiente'
+                        status: 'pendiente',
+                        // Campos snapshot para trazabilidad
+                        nombre_snapshot: servicio.nombre_snapshot,
+                        descripcion_snapshot: servicio.descripcion_snapshot,
+                        precio_unitario_snapshot: servicio.precio_unitario_snapshot,
+                        costo_snapshot: servicio.costo_snapshot,
+                        gasto_snapshot: servicio.gasto_snapshot,
+                        utilidad_snapshot: servicio.utilidad_snapshot,
+                        precio_publico_snapshot: servicio.precio_publico_snapshot,
+                        tipo_utilidad_snapshot: servicio.tipo_utilidad_snapshot,
+                        categoria_nombre_snapshot: servicio.categoria_nombre_snapshot,
+                        seccion_nombre_snapshot: servicio.seccion_nombre_snapshot
+                    }))
+                },
+                Costos: {
+                    create: validatedData.costos.map((costo, index) => ({
+                        nombre: costo.nombre,
+                        descripcion: costo.descripcion,
+                        costo: costo.costo,
+                        tipo: costo.tipo,
+                        posicion: costo.posicion || index + 1
                     }))
                 }
             },
             include: {
-                Servicio: true
+                Servicio: true,
+                Costos: true
             }
         });
 
@@ -238,5 +258,191 @@ export async function crearCotizacionNueva(data: {
     } catch (error: any) {
         console.error('Error al crear cotización:', error);
         throw new Error(`Error al crear cotización: ${error?.message || 'Error desconocido'}`);
+    }
+}
+
+/**
+ * Edita una cotización existente usando los nuevos schemas
+ */
+export async function editarCotizacion(data: CotizacionEditar) {
+    try {
+        // Validar datos con schema
+        const validatedData = CotizacionEditarSchema.parse(data);
+
+        const cotizacionActualizada = await prisma.cotizacion.update({
+            where: { id: validatedData.id },
+            data: {
+                nombre: validatedData.nombre,
+                precio: validatedData.precio,
+                condicionesComercialesId: validatedData.condicionesComercialesId,
+                status: validatedData.status,
+                visible_cliente: validatedData.visible_cliente,
+                // Eliminar servicios existentes y crear nuevos
+                Servicio: {
+                    deleteMany: {},
+                    create: validatedData.servicios.map(servicio => ({
+                        servicioId: servicio.servicioId,
+                        servicioCategoriaId: servicio.servicioCategoriaId,
+                        cantidad: servicio.cantidad,
+                        precioUnitario: servicio.precioUnitario,
+                        subtotal: servicio.precioUnitario * servicio.cantidad,
+                        posicion: servicio.posicion,
+                        status: 'pendiente',
+                        // Campos snapshot para trazabilidad
+                        nombre_snapshot: servicio.nombre_snapshot,
+                        descripcion_snapshot: servicio.descripcion_snapshot,
+                        precio_unitario_snapshot: servicio.precio_unitario_snapshot,
+                        costo_snapshot: servicio.costo_snapshot,
+                        gasto_snapshot: servicio.gasto_snapshot,
+                        utilidad_snapshot: servicio.utilidad_snapshot,
+                        precio_publico_snapshot: servicio.precio_publico_snapshot,
+                        tipo_utilidad_snapshot: servicio.tipo_utilidad_snapshot,
+                        categoria_nombre_snapshot: servicio.categoria_nombre_snapshot,
+                        seccion_nombre_snapshot: servicio.seccion_nombre_snapshot
+                    }))
+                },
+                // Actualizar costos
+                Costos: {
+                    deleteMany: {},
+                    create: validatedData.costos.map((costo, index) => ({
+                        nombre: costo.nombre,
+                        descripcion: costo.descripcion,
+                        costo: costo.costo,
+                        tipo: costo.tipo,
+                        posicion: costo.posicion || index + 1
+                    }))
+                }
+            },
+            include: {
+                Servicio: true,
+                Costos: true
+            }
+        });
+
+        return cotizacionActualizada;
+
+    } catch (error: any) {
+        console.error('Error al editar cotización:', error);
+        throw new Error(`Error al editar cotización: ${error?.message || 'Error desconocido'}`);
+    }
+}
+
+/**
+ * Agrega un servicio personalizado al vuelo (opcional: guardarlo en catálogo)
+ */
+export async function agregarServicioPersonalizado(data: ServicioPersonalizado) {
+    try {
+        // Validar datos con schema
+        const validatedData = ServicioPersonalizadoSchema.parse(data);
+
+        let servicioId: string;
+        let servicioCategoriaId: string;
+
+        if (validatedData.guardar_en_catalogo) {
+            // Buscar o crear categoría
+            let categoria = await prisma.servicioCategoria.findFirst({
+                where: { nombre: validatedData.categoria_nombre }
+            });
+
+            if (!categoria) {
+                categoria = await prisma.servicioCategoria.create({
+                    data: {
+                        nombre: validatedData.categoria_nombre,
+                        posicion: 999
+                    }
+                });
+            }
+
+            // Crear servicio en catálogo
+            const nuevoServicio = await prisma.servicio.create({
+                data: {
+                    servicioCategoriaId: categoria.id,
+                    nombre: validatedData.nombre,
+                    costo: validatedData.costo,
+                    gasto: validatedData.gasto,
+                    utilidad: validatedData.precioUnitario - validatedData.costo - validatedData.gasto,
+                    precio_publico: validatedData.precioUnitario,
+                    tipo_utilidad: validatedData.tipo_utilidad,
+                    posicion: 999
+                }
+            });
+
+            servicioId = nuevoServicio.id;
+            servicioCategoriaId = categoria.id;
+        } else {
+            // Crear IDs temporales para servicios no guardados
+            servicioId = `temp_${Date.now()}`;
+            servicioCategoriaId = `temp_cat_${Date.now()}`;
+        }
+
+        // Retornar objeto con formato compatible para cotización
+        return {
+            servicioId,
+            servicioCategoriaId,
+            cantidad: validatedData.cantidad,
+
+            // Campos snapshot para trazabilidad
+            nombre_snapshot: validatedData.nombre,
+            descripcion_snapshot: validatedData.descripcion,
+            precio_unitario_snapshot: validatedData.precioUnitario,
+            costo_snapshot: validatedData.costo,
+            gasto_snapshot: validatedData.gasto,
+            utilidad_snapshot: validatedData.precioUnitario - validatedData.costo - validatedData.gasto,
+            precio_publico_snapshot: validatedData.precioUnitario,
+            tipo_utilidad_snapshot: validatedData.tipo_utilidad,
+            categoria_nombre_snapshot: validatedData.categoria_nombre,
+            seccion_nombre_snapshot: validatedData.seccion_nombre,
+
+            // Campos operacionales
+            precioUnitario: validatedData.precioUnitario,
+            es_personalizado: true,
+            servicio_original_id: validatedData.guardar_en_catalogo ? servicioId : undefined,
+            posicion: 999
+        };
+
+    } catch (error: any) {
+        console.error('Error al agregar servicio personalizado:', error);
+        throw new Error(`Error al agregar servicio personalizado: ${error?.message || 'Error desconocido'}`);
+    }
+}
+
+/**
+ * Agrega o actualiza un costo en una cotización existente
+ */
+export async function actualizarCostosCotizacion(
+    cotizacionId: string,
+    costos: Array<{
+        id?: string;
+        nombre: string;
+        descripcion?: string;
+        costo: number;
+        tipo: 'adicional' | 'descuento' | 'impuesto' | 'comision';
+        posicion: number;
+    }>
+) {
+    try {
+        // Eliminar costos existentes y crear nuevos
+        await prisma.cotizacion.update({
+            where: { id: cotizacionId },
+            data: {
+                Costos: {
+                    deleteMany: {},
+                    create: costos.map((costo, index) => ({
+                        nombre: costo.nombre,
+                        descripcion: costo.descripcion,
+                        costo: costo.costo,
+                        tipo: costo.tipo,
+                        posicion: costo.posicion || index + 1
+                    }))
+                }
+            }
+        });
+
+        // Retornar cotización actualizada
+        return await obtenerCotizacionCompleta(cotizacionId);
+
+    } catch (error: any) {
+        console.error('Error al actualizar costos:', error);
+        throw new Error(`Error al actualizar costos: ${error?.message || 'Error desconocido'}`);
     }
 }

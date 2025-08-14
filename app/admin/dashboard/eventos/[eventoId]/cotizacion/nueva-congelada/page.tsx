@@ -1,6 +1,6 @@
 import React from 'react'
 import { redirect } from 'next/navigation'
-import FormCotizacionCongelada from '../components/FormCotizacionCongelada'
+// import FormCotizacionCongelada from '../components/FormCotizacionCongelada' // Componente eliminado en refactoring
 
 interface Props {
     params: Promise<{ eventoId: string }>
@@ -17,10 +17,14 @@ export default async function NuevaCotizacionPage({ params, searchParams }: Prop
     }
 
     return (
-        <FormCotizacionCongelada
-            eventoId={eventoId}
-            eventoTipoId={eventoTipoId}
-            paqueteId={paqueteId}
-        />
+        <div className="p-6">
+            <h1 className="text-xl text-zinc-300 mb-4">Cotización Congelada</h1>
+            <p className="text-zinc-500">Esta funcionalidad está siendo refactorizada.</p>
+            {/* <FormCotizacionCongelada
+                eventoId={eventoId}
+                eventoTipoId={eventoTipoId}
+                paqueteId={paqueteId}
+            /> */}
+        </div>
     )
 }

@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import FormClienteEditar from './FormClienteEditar';
-import ListaEventosCliente from '../../eventos/components/ListaEventosCliente';
+// import ListaEventosCliente from '../../eventos/components/ListaEventosCliente'; // Componente eliminado en refactoring
 import { useRouter } from 'next/navigation';
 
 interface Props {
@@ -28,13 +28,13 @@ export default function DashbardProspecto({ contactoId }: Props) {
                     </div>
                 </div>
 
-                <div className='grid grid-cols-2 gap-4'>
+                <div className='grid grid-cols-1 gap-4'>
                     <div>
                         <FormClienteEditar clienteId={contactoId} />
                     </div>
-                    <div>
+                    {/* <div>
                         <ListaEventosCliente clienteId={contactoId} />
-                    </div>
+                    </div> */}
                 </div>
 
             </div>

@@ -78,7 +78,7 @@ export async function actualizarCondicionComercial(condicionesComerciales: Condi
             descuento: condicionesComerciales.descuento,
             porcentaje_anticipo: condicionesComerciales.porcentaje_anticipo,
             status: condicionesComerciales.status,
-            tipoEvento: condicionesComerciales.tipoEvento,
+            // tipoEvento: condicionesComerciales.tipoEvento, // Campo comentado en schema
         }
     })
 

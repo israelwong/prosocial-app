@@ -14,8 +14,8 @@ import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
 import { crearCotizacion, crearCotizacionAutorizada } from '@/app/admin/_lib/cotizacion.actions';
 import { crearPago } from '@/app/admin/_lib/pago.actions';
 
-import Wishlist from './Wishlist'
-import ListaServicios from './ListaServicios'
+// import Wishlist from './Wishlist'
+// import ListaServicios from './ListaServicios'
 import { X } from 'lucide-react';
 
 export default function FormCotizacionNueva() {
@@ -654,10 +654,15 @@ export default function FormCotizacionNueva() {
                                 </div>
                             </div>
 
-                            <Wishlist
+                            {/* <Wishlist
                                 onActualizarServicio={handleUpdateWhishlist}
                                 servicios={servicios}
-                            />
+                            /> */}
+                            <div className="p-4 bg-amber-600/10 border border-amber-600/20 rounded-lg">
+                                <p className="text-amber-400 text-sm">
+                                    Componente Wishlist deshabilitado durante refactoring
+                                </p>
+                            </div>
                         </div>
 
                         {/* LISTA DE SERVICIOS */}
@@ -665,9 +670,14 @@ export default function FormCotizacionNueva() {
                             <p className='text-xl text-zinc-500 mb-5'>
                                 Servicios disponibles
                             </p>
-                            <ListaServicios
+                            {/* <ListaServicios
                                 onAgregarServicio={handleAgregarServicio}
-                            />
+                            /> */}
+                            <div className="p-4 bg-amber-600/10 border border-amber-600/20 rounded-lg">
+                                <p className="text-amber-400 text-sm">
+                                    Componente ListaServicios deshabilitado durante refactoring
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

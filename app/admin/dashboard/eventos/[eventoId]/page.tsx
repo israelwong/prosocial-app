@@ -7,9 +7,9 @@ export const metadata: Metadata = {
     title: 'Detalles del evento',
 }
 
-interface PageProps { params: { eventoId: string } }
+interface PageProps { params: Promise<{ eventoId: string }> }
 
-export default async function Page({ params }: { params: Promise<{ eventoId: string }> }) {
+export default async function Page({ params }: PageProps) {
     const { eventoId } = await params;
 
     // Cargar datos iniciales del evento completo

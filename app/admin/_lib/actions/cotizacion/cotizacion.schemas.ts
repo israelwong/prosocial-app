@@ -1,13 +1,42 @@
 import { z } from 'zod';
 
-// Schema para validar servicios en cotización
+// Schema para validar servicios en cotización con snapshot completo
+// Estructura de trazabilidad: Sección → Categoría → Servicio → Precio → Cantidad
 export const CotizacionServicioSchema = z.object({
     servicioId: z.string().min(1, 'ID de servicio requerido'),
     servicioCategoriaId: z.string().min(1, 'ID de categoría requerido'),
     cantidad: z.number().min(1, 'Cantidad debe ser mayor a 0'),
+
+    // Campos snapshot para trazabilidad (estructura jerárquica)
+    seccion_nombre_snapshot: z.string().optional(),
+    categoria_nombre_snapshot: z.string().optional(),
+    nombre_snapshot: z.string().min(1, 'Nombre del servicio requerido'),
+    descripcion_snapshot: z.string().optional(),
+
+    // Precios y costos snapshot
+    precio_unitario_snapshot: z.number().min(0, 'Precio unitario debe ser mayor o igual a 0'),
+    costo_snapshot: z.number().min(0, 'Costo debe ser mayor o igual a 0'),
+    gasto_snapshot: z.number().min(0, 'Gasto debe ser mayor o igual a 0'),
+    utilidad_snapshot: z.number().min(0, 'Utilidad debe ser mayor o igual a 0'),
+    precio_publico_snapshot: z.number().min(0, 'Precio público debe ser mayor o igual a 0'),
+    tipo_utilidad_snapshot: z.enum(['servicio', 'producto']).default('servicio'),
+
+    // Campos operacionales actuales
     precioUnitario: z.number().min(0, 'Precio unitario debe ser mayor o igual a 0'),
+
+    // Campos personalización
+    es_personalizado: z.boolean().default(false),
+    servicio_original_id: z.string().optional(),
+
+    posicion: z.number().default(0)
+});
+
+// Schema para costos adicionales
+export const CotizacionCostoSchema = z.object({
+    nombre: z.string().min(1, 'Nombre del costo requerido'),
+    descripcion: z.string().optional(),
     costo: z.number().min(0, 'Costo debe ser mayor o igual a 0'),
-    nombre: z.string().min(1, 'Nombre del servicio requerido'),
+    tipo: z.enum(['sesion', 'evento', 'descuento']).default('sesion'),
     posicion: z.number().default(0)
 });
 
@@ -18,7 +47,8 @@ export const CotizacionNuevaSchema = z.object({
     nombre: z.string().min(1, 'Nombre de cotización requerido'),
     precio: z.number().min(0, 'Precio debe ser mayor o igual a 0'),
     condicionesComercialesId: z.string().optional(),
-    servicios: z.array(CotizacionServicioSchema).min(1, 'Debe incluir al menos un servicio')
+    servicios: z.array(CotizacionServicioSchema).min(1, 'Debe incluir al menos un servicio'),
+    costos: z.array(CotizacionCostoSchema).optional().default([])
 });
 
 // Schema para editar cotización existente
@@ -29,7 +59,8 @@ export const CotizacionEditarSchema = z.object({
     condicionesComercialesId: z.string().optional(),
     status: z.enum(['pending', 'aprobado', 'rechazado']).default('pending'),
     visible_cliente: z.boolean().default(true),
-    servicios: z.array(CotizacionServicioSchema)
+    servicios: z.array(CotizacionServicioSchema),
+    costos: z.array(CotizacionCostoSchema).optional().default([])
 });
 
 // Schema para parámetros de URL
@@ -40,12 +71,6 @@ export const CotizacionParamsSchema = z.object({
     cotizacionId: z.string().optional()
 });
 
-// Tipos derivados de los schemas
-export type CotizacionServicio = z.infer<typeof CotizacionServicioSchema>;
-export type CotizacionNueva = z.infer<typeof CotizacionNuevaSchema>;
-export type CotizacionEditar = z.infer<typeof CotizacionEditarSchema>;
-export type CotizacionParams = z.infer<typeof CotizacionParamsSchema>;
-
 // Schema para formulario cliente (react-hook-form)
 export const CotizacionFormSchema = z.object({
     nombre: z.string().min(1, 'Nombre de cotización requerido'),
@@ -54,7 +79,33 @@ export const CotizacionFormSchema = z.object({
     servicios: z.array(z.object({
         servicioId: z.string(),
         cantidad: z.string()
-    }))
+    })),
+    costos: z.array(z.object({
+        nombre: z.string(),
+        costo: z.string(),
+        tipo: z.enum(['sesion', 'evento', 'descuento']).default('sesion')
+    })).optional().default([])
 });
 
+// Schema para agregar servicio personalizado al vuelo
+export const ServicioPersonalizadoSchema = z.object({
+    nombre: z.string().min(1, 'Nombre requerido'),
+    descripcion: z.string().optional(),
+    precioUnitario: z.number().min(0, 'Precio debe ser mayor o igual a 0'),
+    costo: z.number().min(0, 'Costo debe ser mayor o igual a 0'),
+    gasto: z.number().min(0, 'Gasto debe ser mayor o igual a 0'),
+    tipo_utilidad: z.enum(['servicio', 'producto']).default('servicio'),
+    categoria_nombre: z.string().min(1, 'Categoría requerida'),
+    seccion_nombre: z.string().optional(),
+    cantidad: z.number().min(1, 'Cantidad debe ser mayor a 0').default(1),
+    guardar_en_catalogo: z.boolean().default(false)
+});
+
+// Tipos derivados de los schemas
+export type CotizacionServicio = z.infer<typeof CotizacionServicioSchema>;
+export type CotizacionCosto = z.infer<typeof CotizacionCostoSchema>;
+export type CotizacionNueva = z.infer<typeof CotizacionNuevaSchema>;
+export type CotizacionEditar = z.infer<typeof CotizacionEditarSchema>;
+export type CotizacionParams = z.infer<typeof CotizacionParamsSchema>;
 export type CotizacionForm = z.infer<typeof CotizacionFormSchema>;
+export type ServicioPersonalizado = z.infer<typeof ServicioPersonalizadoSchema>;
