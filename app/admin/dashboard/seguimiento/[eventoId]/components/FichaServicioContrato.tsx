@@ -22,14 +22,18 @@ export default function FichaServicioContrato({ cotizacionServicioId }: Props) {
                 const cotizacionServicio = await obtenerCotizacionServicio(cotizacionServicioId)
                 if (!cotizacionServicio) return
 
+                if (!cotizacionServicio.servicioId) return;
                 const servicioData = await obtenerServicio(cotizacionServicio.servicioId);
 
-                if (servicioData) {
+                if (servicioData && cotizacionServicio.servicioId) {
                     setServicio({
                         ...cotizacionServicio,
+                        servicioId: cotizacionServicio.servicioId as string,
                         nombre: servicioData.nombre,
                         cantidad: cotizacionServicio.cantidad,
-                        precio: servicioData.precio_publico
+                        precio: servicioData.precio_publico,
+                        costo: cotizacionServicio.costo === null ? undefined : cotizacionServicio.costo,
+                        servicioCategoriaId: cotizacionServicio.servicioCategoriaId === null ? undefined : cotizacionServicio.servicioCategoriaId
                     });
                 }
 

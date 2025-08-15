@@ -67,10 +67,15 @@ export async function updateGlobalConfiguracion(data: unknown) {
             const utilidadPorcentaje = servicio.tipo_utilidad === 'servicio'
                 ? dataToSave.utilidad_servicio
                 : dataToSave.utilidad_producto;
+
+            // CÁLCULO CORREGIDO - usando la misma lógica que calcularServicioDesdeBase
             const utilidadBase = servicio.costo * utilidadPorcentaje;
-            const denominador = 1 - (dataToSave.comision_venta + dataToSave.sobreprecio);
+            const subtotal = servicio.costo + totalGastos + utilidadBase;
+            const sobreprecioMonto = subtotal * dataToSave.sobreprecio;
+            const montoTrasSobreprecio = subtotal + sobreprecioMonto;
+            const denominador = 1 - dataToSave.comision_venta; // Solo comisión, no sobreprecio
             const nuevoPrecioSistema = denominador > 0
-                ? (servicio.costo + totalGastos + utilidadBase) / denominador
+                ? (montoTrasSobreprecio / denominador)
                 : 0;
 
             return prisma.servicio.update({
@@ -89,6 +94,7 @@ export async function updateGlobalConfiguracion(data: unknown) {
         // 5. Revalidamos las rutas para que los cambios se reflejen en la UI.
         revalidatePath("/admin/configurar/parametros");
         revalidatePath("/admin/configurar/servicios");
+        revalidatePath("/admin/configurar/catalogo");
 
         return { success: true };
 

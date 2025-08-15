@@ -33,13 +33,15 @@ export default function FichaServicio({ usuarios, cotizacionServicioId }: Props)
                 if (!cotizacionServicio) return
 
                 const [servicioData, usuarioData] = await Promise.all([
-                    obtenerServicio(cotizacionServicio.servicioId),
+                    cotizacionServicio.servicioId ? obtenerServicio(cotizacionServicio.servicioId) : Promise.resolve(null),
                     cotizacionServicio.userId ? obtenerUsuario(cotizacionServicio.userId) : Promise.resolve(null)
                 ])
 
-                if (servicioData && servicioData.nombre) {
+                if (servicioData && servicioData.nombre && cotizacionServicio.servicioId) {
                     setServicio({
                         ...cotizacionServicio,
+                        servicioCategoriaId: cotizacionServicio.servicioCategoriaId ?? undefined,
+                        servicioId: cotizacionServicio.servicioId ?? '', // Ensure it's a string
                         nombre: servicioData.nombre,
                         costo: servicioData.costo,
                         cantidad: cotizacionServicio.cantidad

@@ -5,12 +5,12 @@
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PaqueteSchema, type PaqueteForm } from '@/app/admin/_lib/actions/paquetes/paquetes.schemas';
-import { actualizarPaquete, eliminarPaquete, obtenerPaquetesAgrupados } from '@/app/admin/_lib/actions/paquetes/paquetes.actions';
+import { actualizarPaquete, eliminarPaquete } from '@/app/admin/_lib/actions/paquetes/paquetes.actions';
 import { type Paquete, type EventoTipo, type Servicio, type ServicioCategoria, type Configuracion, type CondicionesComerciales, type MetodoPago } from '@prisma/client';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Trash2, Loader2, PlusCircle, MinusCircle } from 'lucide-react';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { calcularPaquete, calcularServicioDesdeBase, type ServicioCantidad } from '@/app/admin/_lib/pricing/calculos';
 
 // Estructuras de datos existentes
@@ -30,7 +30,6 @@ type CondicionExtendida = CondicionesComerciales & { CondicionesComercialesMetod
 interface Props {
     paquete: (Paquete & { PaqueteServicio: { servicioId: string, cantidad: number }[] });
     tiposEvento: EventoTipo[];
-    tipoEventoNombre?: string; // Nombre del tipo de evento para mostrar en cabecera
     serviciosDisponibles?: CategoriaConServicios[]; // legacy (categoría plana)
     catalogo?: CatalogoSeccion[]; // nuevo (sección -> categoría -> servicios)
     configuracion: Configuracion | null;
@@ -38,17 +37,15 @@ interface Props {
     metodosPago?: MetodoPago[]; // métodos de pago activos
 }
 
-export default function PaqueteForm({ paquete, tiposEvento, tipoEventoNombre, serviciosDisponibles, catalogo, configuracion, condiciones = [], metodosPago = [] }: Props) {
+export default function PaqueteForm({ paquete, tiposEvento, serviciosDisponibles, catalogo, configuracion, condiciones = [], metodosPago = [] }: Props) {
     const router = useRouter();
     const isEditMode = !!paquete;
     const basePath = '/admin/configurar/paquetes';
-    const [nombreError, setNombreError] = useState<string>('');
 
     const {
         register,
         handleSubmit,
         control,
-        watch,
         formState: { errors, isSubmitting }
     } = useForm<PaqueteForm>({
         resolver: zodResolver(PaqueteSchema),
@@ -61,42 +58,6 @@ export default function PaqueteForm({ paquete, tiposEvento, tipoEventoNombre, se
             servicios: paquete.PaqueteServicio.map(s => ({ ...s, cantidad: String(s.cantidad) })) ?? [],
         },
     });
-
-    // Watch del nombre para validación en tiempo real
-    const nombreActual = watch('nombre');
-
-    // Validación de nombre único en tiempo real
-    useEffect(() => {
-        const validarNombreUnico = async () => {
-            if (!nombreActual || nombreActual.length < 3) {
-                setNombreError('');
-                return;
-            }
-
-            try {
-                const grupos = await obtenerPaquetesAgrupados();
-                const tipoEvento = grupos.find(g => g.id === paquete.eventoTipoId);
-                const paquetesDelMismoTipo = tipoEvento?.Paquete || [];
-
-                // Verificar si existe otro paquete con el mismo nombre (excluyendo el actual)
-                const nombreDuplicado = paquetesDelMismoTipo.some(p =>
-                    p.nombre.toLowerCase() === nombreActual.toLowerCase() && p.id !== paquete.id
-                );
-
-                if (nombreDuplicado) {
-                    setNombreError(`Ya existe un paquete con el nombre "${nombreActual}" en ${tipoEventoNombre}`);
-                } else {
-                    setNombreError('');
-                }
-            } catch (error) {
-                console.error('Error validando nombre único:', error);
-            }
-        };
-
-        // Debounce la validación
-        const timeoutId = setTimeout(validarNombreUnico, 500);
-        return () => clearTimeout(timeoutId);
-    }, [nombreActual, paquete.eventoTipoId, paquete.id, tipoEventoNombre]);
 
     // Helper para calcular precio correcto de un servicio
     const calcularPrecioCorrectoServicio = (servicio: Servicio): number => {
@@ -295,12 +256,6 @@ export default function PaqueteForm({ paquete, tiposEvento, tipoEventoNombre, se
     }, [serviciosEnPaquete]);
 
     const onSubmit = async (data: PaqueteForm) => {
-        // Validar nombre único antes de enviar
-        if (nombreError) {
-            toast.error("Por favor corrige los errores antes de continuar.");
-            return;
-        }
-
         toast.loading("Actualizando paquete...");
         await actualizarPaquete(data);
         toast.dismiss();
@@ -339,22 +294,13 @@ export default function PaqueteForm({ paquete, tiposEvento, tipoEventoNombre, se
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="max-w-full mx-auto">
             <div className='flex items-center gap-4 mb-6 pb-4 border-b border-zinc-700'>
-                <div className="flex-1">
-                    {tipoEventoNombre && (
-                        <div className="text-sm text-zinc-500 mb-2">
-                            Paquete para: <span className="text-yellow-400 font-medium">{tipoEventoNombre}</span>
-                        </div>
-                    )}
-                    <input {...register('nombre')} className="w-full text-2xl font-semibold text-zinc-100 bg-transparent border-none focus:ring-0 p-0" />
-                    {errors.nombre && <p className="text-red-400 text-sm mt-1">{errors.nombre.message}</p>}
-                    {nombreError && <p className="text-red-400 text-sm mt-1">{nombreError}</p>}
-                </div>
+                <input {...register('nombre')} className="flex-1 text-2xl font-semibold text-zinc-100 bg-transparent border-none focus:ring-0 p-0" />
                 <div className="flex items-center gap-3">
                     <button type="button" onClick={() => router.push(basePath)}
                         className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 bg-zinc-700 text-zinc-100 hover:bg-zinc-600">
                         Cancelar
                     </button>
-                    <button type="submit" disabled={isSubmitting || !!nombreError}
+                    <button type="submit" disabled={isSubmitting}
                         className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">
                         {isSubmitting && <Loader2 size={16} className="animate-spin mr-2" />}
                         Actualizar
@@ -365,6 +311,20 @@ export default function PaqueteForm({ paquete, tiposEvento, tipoEventoNombre, se
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                 {/* --- Columna 1: Detalles --- */}
                 <div className="lg:col-span-1 space-y-6">
+                    <div>
+                        <label htmlFor="eventoTipoId" className="block text-sm font-medium text-zinc-300 mb-1.5">Tipo de Evento</label>
+                        <select id="eventoTipoId" {...register('eventoTipoId')} className="flex h-10 w-full items-center rounded-md border border-zinc-700 bg-zinc-900 px-3 text-sm">
+                            {tiposEvento.map(tipo => <option key={tipo.id} value={tipo.id}>{tipo.nombre}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label htmlFor="status" className="block text-sm font-medium text-zinc-300 mb-1.5">Estatus</label>
+                        <select id="status" {...register('status')} className="flex h-10 w-full items-center rounded-md border border-zinc-700 bg-zinc-900 px-3 text-sm">
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
+                    </div>
+
                     <div className="p-3 rounded-lg border border-zinc-600/70 bg-zinc-800/40 space-y-2 text-[11px] text-zinc-400">
                         <h4 className="text-sm font-semibold text-zinc-100 mb-2">Precio Sistema</h4>
                         <div className="flex justify-between text-sm border border-yellow-500/60 bg-yellow-900/20 rounded-md px-2 py-1.5">
@@ -490,7 +450,7 @@ export default function PaqueteForm({ paquete, tiposEvento, tipoEventoNombre, se
                 </div>
                 <div className="flex items-center gap-4">
                     <button type="button" onClick={() => router.push(basePath)} className="inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-zinc-700 text-zinc-100 hover:bg-zinc-600">Cancelar</button>
-                    <button type="submit" disabled={isSubmitting || !!nombreError}
+                    <button type="submit" disabled={isSubmitting}
                         className="inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">
                         {isSubmitting && <Loader2 size={16} className="animate-spin mr-2" />}
                         Actualizar Paquete

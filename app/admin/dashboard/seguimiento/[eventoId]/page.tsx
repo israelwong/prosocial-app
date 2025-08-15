@@ -1,6 +1,6 @@
 import React from 'react'
 import { Metadata } from 'next'
-import FichaDetalle from '../components/FichaDetalle'
+import FichaDetalle from './components/FichaDetalle'
 
 export const metadata: Metadata = {
     title: 'Detalle del evento',

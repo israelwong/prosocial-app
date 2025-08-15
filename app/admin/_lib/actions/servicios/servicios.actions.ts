@@ -45,14 +45,17 @@ async function upsertServicio(data: unknown) {
         const configuracion = await getGlobalConfiguracion();
         if (!configuracion) throw new Error("La configuración base no existe.");
 
-        // CÁLCULO EN EL BACKEND
-        const utilidadPorcentaje = (validatedData.tipo_utilidad === 'servicio' ? configuracion.utilidad_servicio : configuracion.utilidad_producto) / 100;
-        const comisionPorcentaje = configuracion.comision_venta / 100;
-        const sobreprecioPorcentaje = configuracion.sobreprecio / 100;
+        // CÁLCULO EN EL BACKEND - CORREGIDO
+        const utilidadPorcentaje = (validatedData.tipo_utilidad === 'servicio' ? configuracion.utilidad_servicio : configuracion.utilidad_producto);
+        const comisionPorcentaje = configuracion.comision_venta;
+        const sobreprecioPorcentaje = configuracion.sobreprecio;
 
         const utilidadBase = costo * utilidadPorcentaje;
-        const denominador = 1 - (comisionPorcentaje + sobreprecioPorcentaje);
-        const precioSistema = denominador > 0 ? (costo + totalGastos + utilidadBase) / denominador : 0;
+        const subtotal = costo + totalGastos + utilidadBase;
+        const sobreprecioMonto = subtotal * sobreprecioPorcentaje;
+        const montoTrasSobreprecio = subtotal + sobreprecioMonto;
+        const denominador = 1 - comisionPorcentaje; // Solo comisión, no sobreprecio
+        const precioSistema = denominador > 0 ? (montoTrasSobreprecio / denominador) : 0;
 
         const dataToSave = {
             ...validatedData,

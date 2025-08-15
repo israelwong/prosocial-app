@@ -1,36 +1,28 @@
 'use client'
 import React, { useEffect, useState, useMemo } from 'react'
-import { Evento } from '@/app/admin/_lib/types'
 import { useRouter } from 'next/navigation'
 import { CircleDollarSign, Calendar, CircleUserRound } from 'lucide-react'
-import { obtenerEventosAprobadosV2 } from '@/app/admin/_lib/evento.actions'
-
-interface EventoExtendido extends Evento {
-    clienteNombre: string
-    tipoEvento: string
-    precio: number
-    totalPagado: number
-    balance: number
-}
+import { obtenerEventosAprobados } from '@/app/admin/_lib/actions/evento/evento.actions'
+import { type EventoExtendido } from '@/app/admin/_lib/actions/evento/evento.schemas'
 
 export default function ListaEventosAprobados() {
     const router = useRouter()
     const [filtro, setFiltro] = useState('')
     const [filtroBalance, setFiltroBalance] = useState<'todos' | 'pagados' | 'pendientes'>('todos')
     const [loading, setLoading] = useState(true)
-    const [eventosAprobadosV2, setEventosAprobadosV2] = useState<EventoExtendido[]>([])
+    const [eventosAprobados, setEventosAprobados] = useState<EventoExtendido[]>([])
 
     useEffect(() => {
         const fetchData = async () => {
-            const eventosAprobadosV2 = await obtenerEventosAprobadosV2()
-            setEventosAprobadosV2(eventosAprobadosV2)
+            const eventos = await obtenerEventosAprobados()
+            setEventosAprobados(eventos)
             setLoading(false)
         }
         fetchData()
     }, [])
 
     const eventosFiltrados = useMemo(() => {
-        return eventosAprobadosV2.filter(evento =>
+        return eventosAprobados.filter(evento =>
             (evento.nombre?.toLowerCase().includes(filtro.toLowerCase()) ?? false) ||
             evento.clienteNombre.toLowerCase().includes(filtro.toLowerCase()) ||
             new Date(evento.fecha_evento).toLocaleString('es-ES', { dateStyle: 'full' }).includes(filtro) ||
@@ -40,7 +32,7 @@ export default function ListaEventosAprobados() {
             if (filtroBalance === 'pendientes') return evento.balance > 0
             return true
         })
-    }, [eventosAprobadosV2, filtro, filtroBalance])
+    }, [eventosAprobados, filtro, filtroBalance])
 
     if (loading) return (
         <div className='flex items-center justify-center h-screen'>

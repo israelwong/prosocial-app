@@ -6,6 +6,8 @@ import prisma from '@/app/admin/_lib/prismaClient';
 import { revalidatePath } from 'next/cache';
 import { UpdatePosicionSchema } from './catalogo.schemas';
 import { SeccionSchema, CategoriaSchema } from './catalogo.schemas';
+import { calcularServicioDesdeBase } from '@/app/admin/_lib/pricing/calculos';
+import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
 import z from 'zod';
 
 
@@ -13,7 +15,7 @@ const basePath = '/admin/configurar/catalogo'; // Nueva ruta
 
 // --- Función de Lectura Principal ---
 export async function obtenerCatalogoCompleto() {
-    return await prisma.servicioSeccion.findMany({
+    const catalogo = await prisma.servicioSeccion.findMany({
         orderBy: { posicion: 'asc' },
         include: {
             seccionCategorias: {
@@ -23,6 +25,9 @@ export async function obtenerCatalogoCompleto() {
                         include: {
                             Servicio: {
                                 orderBy: { posicion: 'asc' },
+                                include: {
+                                    ServicioGasto: true,
+                                },
                             },
                         },
                     },
@@ -30,6 +35,47 @@ export async function obtenerCatalogoCompleto() {
             },
         },
     });
+
+    // Obtener configuración global para cálculos
+    const configuracion = await getGlobalConfiguracion();
+
+    // Recalcular precios dinámicamente para cada servicio
+    const catalogoConPreciosActualizados = await Promise.all(
+        catalogo.map(async (seccion) => ({
+            ...seccion,
+            seccionCategorias: await Promise.all(
+                seccion.seccionCategorias.map(async (seccionCategoria) => ({
+                    ...seccionCategoria,
+                    ServicioCategoria: {
+                        ...seccionCategoria.ServicioCategoria,
+                        Servicio: seccionCategoria.ServicioCategoria.Servicio.map((servicio) => {
+                            if (!configuracion) {
+                                return { ...servicio, precio_publico: servicio.precio_publico };
+                            }
+
+                            // Calcular gastos totales
+                            const totalGastos = servicio.ServicioGasto?.reduce((acc, gasto) => acc + gasto.costo, 0) || 0;
+
+                            // Calcular precio usando la función de pricing
+                            const resultado = calcularServicioDesdeBase({
+                                costo: servicio.costo,
+                                gastos: totalGastos,
+                                tipo_utilidad: servicio.tipo_utilidad as 'servicio' | 'producto',
+                                configuracion,
+                            });
+
+                            return {
+                                ...servicio,
+                                precio_publico: resultado.precioSistema,
+                            };
+                        }),
+                    },
+                }))
+            ),
+        }))
+    );
+
+    return catalogoConPreciosActualizados;
 }
 
 // --- Lectura individual de Categoría ---

@@ -6,7 +6,7 @@ import { Cliente, Cotizacion, CotizacionServicio, CondicionesComerciales, Servic
 import { obtenerEventoContrato } from '@/app/admin/_lib/evento.actions'
 import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
 import { obtenerCategories } from '@/app/admin/_lib/categorias.actions'
-import FichaServicioContrato from '../../seguimiento/components/FichaServicioContrato'
+import FichaServicioContrato from '../../seguimiento/[eventoId]/components/FichaServicioContrato'
 
 interface Props {
     eventoId: string
@@ -44,7 +44,15 @@ export default function Contrato({ eventoId }: Props) {
 
                 if (cotizacion?.id) {
                     obtenerCotizacionServicios(cotizacion.id).then(cotizacionServiciosData => {
-                        setServicios(cotizacionServiciosData)
+                        setServicios(
+                            cotizacionServiciosData.map(servicio => ({
+                                ...servicio,
+                                nombre: servicio.nombre === null ? undefined : servicio.nombre,
+                                costo: servicio.costo === null ? undefined : servicio.costo,
+                                servicioId: servicio.servicioId === null ? '' : servicio.servicioId,
+                                servicioCategoriaId: servicio.servicioCategoriaId === null ? undefined : servicio.servicioCategoriaId
+                            }))
+                        )
                     })
                 }
 

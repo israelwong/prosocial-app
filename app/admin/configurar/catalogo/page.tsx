@@ -9,7 +9,10 @@ export const metadata: Metadata = {
 };
 
 // --- TIPOS PARA LOS DATOS CRUDOS DEL SERVIDOR ---
-type RawServicio = Servicio;
+type RawServicio = Servicio & {
+    ServicioGasto?: { id: string; nombre: string; costo: number; servicioId: string }[];
+    precio_publico: number; // Ahora calculado dinámicamente
+};
 type RawCategoria = ServicioCategoria & { Servicio: RawServicio[] };
 type RawSeccionCategoria = { ServicioCategoria: RawCategoria };
 type RawSeccion = ServicioSeccion & { seccionCategorias: RawSeccionCategoria[] };

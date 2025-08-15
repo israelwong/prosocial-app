@@ -124,8 +124,8 @@ export async function obtenerDatosCotizacion(
                 tienePaqueteBase: !!paqueteBase,
                 tieneEventoTipoEspecifico: !!tipoEventoSeleccionado,
                 totalServicios: catalogo ? catalogo.reduce((acc, seccion) =>
-                    acc + seccion.seccionCategorias.reduce((secAcc, cat) =>
-                        secAcc + cat.ServicioCategoria.Servicio.length, 0), 0) : 0
+                    acc + (seccion.seccionCategorias?.reduce((secAcc, cat) =>
+                        secAcc + (cat.Servicios?.length || 0), 0) || 0), 0) : 0
             }
         };
 

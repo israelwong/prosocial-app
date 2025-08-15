@@ -172,8 +172,9 @@ export async function crearAgenda(data: AgendaCreateForm) {
                 concepto: validatedData.concepto || null,
                 agendaTipo: validatedData.agendaTipo,
                 eventoId: validatedData.eventoId,
-                userId: validatedData.userId,
+                ...(validatedData.userId ? { userId: validatedData.userId } : {}),
                 status: validatedData.status,
+                // id and updatedAt are omitted so Prisma will auto-generate them
             },
             include: {
                 Evento: {

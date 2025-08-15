@@ -47,3 +47,6 @@ next-env.d.ts
 /prisma/seed.js
 /prisma/create_trigger.sql
 /app/rev.js
+
+# documentación
+documentacion/

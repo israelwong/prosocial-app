@@ -38,11 +38,15 @@ export default async function EditarPaquetePage({ params }: { params: Promise<{ 
         notFound();
     }
 
+    // Obtener el nombre del tipo de evento para mostrar en la cabecera
+    const tipoEventoNombre = tiposEvento.find(tipo => tipo.id === paquete.eventoTipoId)?.nombre;
+
     // Pasamos la configuración como prop al formulario
     return (
         <PaqueteForm
             paquete={paquete}
             tiposEvento={tiposEvento}
+            tipoEventoNombre={tipoEventoNombre}
             serviciosDisponibles={serviciosDisponibles}
             catalogo={catalogo as any}
             configuracion={configuracion}
