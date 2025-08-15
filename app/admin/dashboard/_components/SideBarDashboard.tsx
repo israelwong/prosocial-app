@@ -17,9 +17,9 @@ import { usePathname } from 'next/navigation'
 import { validarPagoStripe } from '../../_lib/pago.actions'
 
 const links = [
-    { href: '/admin/dashboard', label: 'Inicio', icon: Home, alt: 'Inicio' },
-    { href: '/admin/dashboard/eventos', label: 'Eventos', icon: Calendar, alt: 'Eventos' },
+    // { href: '/admin/dashboard', label: 'Inicio', icon: Home, alt: 'Inicio' },
     { href: '/admin/dashboard/gestion', label: 'Kanban', icon: Columns, alt: 'Kanban' },
+    { href: '/admin/dashboard/eventos', label: 'Eventos', icon: Calendar, alt: 'Eventos' },
     { href: '/admin/dashboard/seguimiento', label: 'Seguimiento', icon: Inbox, alt: 'Seguimiento' },
     { href: '/admin/dashboard/agenda', label: 'Agenda', icon: Calendar, alt: 'Agenda' },
     { href: '/admin/dashboard/contactos', label: 'Contactos', icon: Users, alt: 'Contactos' },

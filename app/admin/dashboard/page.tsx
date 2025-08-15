@@ -1,17 +1,11 @@
-import React from 'react'
-import { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Dashboard',
   description: 'Dashboard page',
 }
 
-function Dashboard() {
-  return (
-    <div>
-      Dashboard
-    </div>
-  )
+export default function Dashboard() {
+  redirect('/gestion')
+  return null
 }
-
-export default Dashboard
