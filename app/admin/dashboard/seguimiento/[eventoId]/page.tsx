@@ -6,7 +6,7 @@ import { HeaderSimple } from '@/app/admin/_components/seguimiento-detalle-v3/Hea
 import { DetallesCliente } from '@/app/admin/_components/seguimiento-detalle-v3/DetallesCliente'
 import { DetallesEvento } from '@/app/admin/_components/seguimiento-detalle-v3/DetallesEvento'
 import { BitacoraSimple } from '@/app/admin/_components/seguimiento-detalle-v3/BitacoraSimple'
-import { BalanceFinancieroPlaceholder } from '@/app/admin/_components/seguimiento-detalle-v3/BalanceFinancieroPlaceholder'
+import { BalanceFinancieroAvanzado } from '@/app/admin/_components/seguimiento-detalle-v3/BalanceFinancieroAvanzado'
 import { ServiciosAsociadosPlaceholder } from '@/app/admin/_components/seguimiento-detalle-v3/ServiciosAsociadosPlaceholder'
 
 export const metadata: Metadata = {
@@ -71,11 +71,19 @@ export default async function Page({ params }: PageProps) {
 
                 {/* Grid de información financiera y servicios */}
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    {/* Balance Financiero (Placeholder) */}
-                    <BalanceFinancieroPlaceholder
-                        cotizacion={datos.cotizacion}
-                        totalPagos={datos.pagos?.reduce((sum, pago) => sum + (pago.monto || 0), 0) || 0}
-                        numeroPagos={datos.pagos?.length || 0}
+                    {/* Balance Financiero Avanzado */}
+                    <BalanceFinancieroAvanzado
+                        cotizacion={datos.cotizacion ? {
+                            ...datos.cotizacion,
+                            evento: {
+                                id: eventoId,
+                                cotizaciones: [{
+                                    id: datos.cotizacion.id || '',
+                                    nombre: datos.cotizacion.nombre || `Cotización ${datos.cotizacion.id?.slice(-4) || 'N/A'}`
+                                }]
+                            }
+                        } as any : null}
+                        pagos={datos.pagos as any}
                     />
 
                     {/* Servicios Asociados (Placeholder) */}

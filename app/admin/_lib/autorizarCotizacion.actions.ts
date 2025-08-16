@@ -29,7 +29,7 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
             return { error: 'Cotización no encontrada' };
         }
 
-        if (cotizacion.status === 'autorizado') {
+        if (cotizacion.status === 'aprobada') {
             return { error: 'La cotización ya está autorizada' };
         }
 
@@ -59,7 +59,7 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
             await tx.cotizacion.update({
                 where: { id: cotizacionId },
                 data: {
-                    status: 'autorizado',
+                    status: 'aprobada',
                     updatedAt: new Date()
                 }
             });
@@ -86,8 +86,8 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
                     data: {
                         eventoId: evento.id,
                         fecha: evento.fecha_evento,
-                        descripcion: `${evento.EventoTipo?.nombre || 'Evento'} - ${evento.Cliente.nombre}`,
-                        status: 'programado',
+                        concepto: `${evento.EventoTipo?.nombre || 'Evento'} - ${evento.Cliente.nombre}`,
+                        status: 'pendiente',
                         createdAt: new Date(),
                         updatedAt: new Date()
                     }
@@ -101,7 +101,7 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
             await tx.eventoBitacora.create({
                 data: {
                     eventoId: evento.id,
-                    comentario: `Cotización "${cotizacion.nombre}" autorizada. Evento movido a etapa: ${etapaAutorizado.nombre}`,
+                    comentario: `Cotización "${cotizacion.nombre}" aprobada. Evento movido a etapa: ${etapaAutorizado.nombre}`,
                     importancia: '2',
                     status: 'active',
                     createdAt: new Date(),

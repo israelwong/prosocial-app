@@ -108,7 +108,11 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
 
                 // Obtener los servicios
                 const serviciosData = await Promise.all(serviciosCotizacion.map(async (servicio) => {
-                    const servicioData = await obtenerServicio(servicio.servicioId);
+                    if (!servicio.servicioId) {
+                        // Opcional: manejar el caso donde servicioId es null o undefined
+                        return null;
+                    }
+                    const servicioData = await obtenerServicio(servicio.servicioId as string);
                     return {
                         ...servicioData,
                         cantidad: servicio.cantidad,
@@ -118,9 +122,16 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                         userId: servicio.userId,
                     };
                 }));
-
-
-                setServicios(serviciosData);
+                setServicios(
+                    serviciosData
+                        .filter((s): s is NonNullable<typeof s> => s !== null)
+                        .map(s => ({
+                            ...s,
+                            cantidad: s.cantidad ?? 1, // Asegura que cantidad nunca sea undefined
+                            servicioCategoriaId: s.servicioCategoriaId === null ? undefined : s.servicioCategoriaId,
+                            userId: s.userId === null ? undefined : s.userId,
+                        }))
+                );
 
                 //obtener evento por id
                 const evento = await obtenerEventoPorId(cotizacion.eventoId);

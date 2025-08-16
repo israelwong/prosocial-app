@@ -24,6 +24,16 @@ const STATUS_COLORS = {
 
 export function ServiciosAsociadosPlaceholder({ servicios }: ServiciosAsociadosPlaceholderProps) {
 
+    // Función de formateo consistente
+    const formatearMoneda = (cantidad: number) => {
+        return new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'MXN',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(cantidad).replace('MX$', '$')
+    }
+
     const getStatusColor = (status?: string) => {
         if (!status) return STATUS_COLORS.default
         return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || STATUS_COLORS.default
@@ -64,7 +74,7 @@ export function ServiciosAsociadosPlaceholder({ servicios }: ServiciosAsociadosP
                         <div className="text-center p-3 bg-green-50 rounded-lg">
                             <p className="text-sm font-medium text-green-800">Valor total</p>
                             <p className="text-lg font-bold text-green-900">
-                                ${totalPrecio.toLocaleString()}
+                                {formatearMoneda(totalPrecio)}
                             </p>
                         </div>
 
@@ -100,7 +110,7 @@ export function ServiciosAsociadosPlaceholder({ servicios }: ServiciosAsociadosP
                                         </div>
                                         <div className="text-right ml-2">
                                             <p className="text-sm font-semibold">
-                                                ${(servicio.precio || 0).toLocaleString()}
+                                                {formatearMoneda(servicio.precio || 0)}
                                             </p>
                                             {servicio.status && (
                                                 <Badge className={`text-xs ${getStatusColor(servicio.status)}`}>
