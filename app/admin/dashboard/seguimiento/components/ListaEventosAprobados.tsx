@@ -100,11 +100,11 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
         const totalEventos = todosLosEventos.length
         const eventosPagados = todosLosEventos.filter(e => e.balance === 0).length
         const eventosPendientes = totalEventos - eventosPagados
-        
+
         const montoTotal = todosLosEventos.reduce((sum, e) => sum + e.precio, 0)
         const montoPagado = todosLosEventos.reduce((sum, e) => sum + e.totalPagado, 0)
         const montoPendiente = montoTotal - montoPagado
-        
+
         return {
             totalEventos,
             eventosPagados,
@@ -134,7 +134,7 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                     <CircleDollarSign className="text-blue-400" size={20} />
                     Resumen General
                 </h2>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                     {/* Total Eventos */}
                     <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
@@ -180,7 +180,7 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                         <span className="text-sm font-medium text-white">{metricas.porcentajePagado.toFixed(1)}%</span>
                     </div>
                     <div className="w-full bg-zinc-700 rounded-full h-2">
-                        <div 
+                        <div
                             className="bg-gradient-to-r from-green-600 to-green-400 h-2 rounded-full transition-all duration-300"
                             style={{ width: `${Math.min(metricas.porcentajePagado, 100)}%` }}
                         ></div>
@@ -207,31 +207,28 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                     <div className="flex gap-2">
                         <button
                             onClick={() => setFiltroBalance('todos')}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                                filtroBalance === 'todos'
+                            className={`px-4 py-2 rounded-lg font-medium transition-all ${filtroBalance === 'todos'
                                     ? 'bg-blue-500 text-white'
                                     : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
-                            }`}
+                                }`}
                         >
                             Todos ({metricas.totalEventos})
                         </button>
                         <button
                             onClick={() => setFiltroBalance('pagados')}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                                filtroBalance === 'pagados'
+                            className={`px-4 py-2 rounded-lg font-medium transition-all ${filtroBalance === 'pagados'
                                     ? 'bg-green-500 text-white'
                                     : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
-                            }`}
+                                }`}
                         >
                             Pagados ({metricas.eventosPagados})
                         </button>
                         <button
                             onClick={() => setFiltroBalance('pendientes')}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                                filtroBalance === 'pendientes'
+                            className={`px-4 py-2 rounded-lg font-medium transition-all ${filtroBalance === 'pendientes'
                                     ? 'bg-red-500 text-white'
                                     : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
-                            }`}
+                                }`}
                         >
                             Pendientes ({metricas.eventosPendientes})
                         </button>
@@ -296,8 +293,8 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                                             <div className="text-sm">
                                                 <span>{formatearFecha(evento.fecha_evento)}</span>
                                                 <span className={`ml-2 text-xs ${evento.diasRestantes < 0 ? 'text-red-400' :
-                                                        evento.diasRestantes <= 7 ? 'text-yellow-400' :
-                                                            'text-zinc-400'
+                                                    evento.diasRestantes <= 7 ? 'text-yellow-400' :
+                                                        'text-zinc-400'
                                                     }`}>
                                                     ({obtenerDiasTexto(evento.diasRestantes)})
                                                 </span>
