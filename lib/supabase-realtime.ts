@@ -20,13 +20,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export const suscribirCotizacion = (cotizacionId: string, callback: (payload: any) => void) => {
     const channel = supabase
         .channel(`cotizacion:${cotizacionId}`)
-        .on('postgres_changes', 
-            { 
-                event: '*', 
-                schema: 'public', 
+        .on('postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
                 table: 'Cotizacion',
                 filter: `id=eq.${cotizacionId}`
-            }, 
+            },
             (payload) => {
                 console.log('Cotización actualizada:', payload)
                 callback({ ...payload, table: 'Cotizacion' })
@@ -35,7 +35,7 @@ export const suscribirCotizacion = (cotizacionId: string, callback: (payload: an
         .on('postgres_changes',
             {
                 event: '*',
-                schema: 'public', 
+                schema: 'public',
                 table: 'CotizacionServicio',
                 filter: `cotizacionId=eq.${cotizacionId}`
             },
@@ -48,7 +48,7 @@ export const suscribirCotizacion = (cotizacionId: string, callback: (payload: an
             {
                 event: '*',
                 schema: 'public',
-                table: 'CotizacionCosto', 
+                table: 'CotizacionCosto',
                 filter: `cotizacionId=eq.${cotizacionId}`
             },
             (payload) => {
@@ -74,7 +74,7 @@ export const verificarConexionRealtime = () => {
 // Estados de cotización
 export const ESTADOS_COTIZACION = {
     PENDIENTE: 'pendiente',
-    APROBADA: 'aprobada', 
+    APROBADA: 'aprobada',
     RECHAZADA: 'rechazada',
     EXPIRADA: 'expirada',
     EN_SESION: 'en_sesion' // Nuevo estado para sesiones en vivo

@@ -9,15 +9,15 @@ export const metadata: Metadata = {
     title: 'Detalle de Cotización'
 }
 
-interface PageProps { 
+interface PageProps {
     params: Promise<{ eventoId: string, cotizacionId: string }>
-    searchParams: Promise<{ realtime?: string, admin?: string }>
+    searchParams: Promise<{ realtime?: string, admin?: string, legacy?: string }>
 }
 
 export default async function CotizacionDetallePage({ params, searchParams }: PageProps) {
     const { eventoId, cotizacionId } = await params
-    const { realtime, admin } = await searchParams
-    
+    const { realtime, admin, legacy } = await searchParams
+
     try {
         // Obtener información del evento y cotización
         const [evento, cotizacion] = await Promise.all([
@@ -48,11 +48,12 @@ export default async function CotizacionDetallePage({ params, searchParams }: Pa
         const fechaOcupada = evento.status === 'contratado'
 
         return (
-            <CotizacionDetalle 
+            <CotizacionDetalle
                 cotizacion={cotizacion}
                 evento={evento}
                 esRealtime={realtime === 'true'}
                 esAdmin={admin === 'true'}
+                esLegacy={legacy === 'true'}
                 estaExpirada={estaExpirada}
                 fechaOcupada={fechaOcupada}
             />

@@ -7,6 +7,7 @@
 ## 🎯 **Concepto Central**
 
 ### Flujo de Negocio Propuesto
+
 1. **Sesión Virtual** (40 min) - Negocio + Prospecto
 2. **Creación en Tiempo Real** - Negocio crea, prospecto observa
 3. **Link Personalizado** - Acceso posterior para procesar pago
@@ -50,13 +51,14 @@ app/
 
 ## 🔄 **Lógica de Validación y Redirección**
 
-### 1. **Acceso por Evento** 
+### 1. **Acceso por Evento**
+
 `/evento/cotizacion/[eventoId]`
 
 ```typescript
 // Lógica de validación
-if (evento.status === 'contratado') {
-  redirect('/cliente/login')
+if (evento.status === "contratado") {
+  redirect("/cliente/login");
 }
 
 if (cotizaciones.length === 0) {
@@ -64,7 +66,7 @@ if (cotizaciones.length === 0) {
 }
 
 if (cotizaciones.length === 1) {
-  redirect(`/evento/cotizacion/${eventoId}/cotizacion/${cotizaciones[0].id}`)
+  redirect(`/evento/cotizacion/${eventoId}/cotizacion/${cotizaciones[0].id}`);
 }
 
 if (cotizaciones.length > 1) {
@@ -73,19 +75,20 @@ if (cotizaciones.length > 1) {
 ```
 
 ### 2. **Acceso por Cotización Específica**
+
 `/evento/cotizacion/[eventoId]/cotizacion/[cotizacionId]`
 
 ```typescript
 // Validaciones
-if (evento.status === 'contratado') {
-  redirect('/cliente/login')
+if (evento.status === "contratado") {
+  redirect("/cliente/login");
 }
 
 if (cotizacion.fechaOcupada) {
   // Mostrar "Fecha no disponible"
 }
 
-if (cotizacion.status === 'expirada') {
+if (cotizacion.status === "expirada") {
   // Mostrar "Cotización expirada"
 }
 ```
@@ -96,7 +99,7 @@ if (cotizacion.status === 'expirada') {
 
 ```typescript
 // lib/supabase-realtime.ts
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -104,70 +107,75 @@ const supabase = createClient(
   {
     realtime: {
       params: {
-        eventsPerSecond: 10
-      }
-    }
+        eventsPerSecond: 10,
+      },
+    },
   }
-)
+);
 
-export const suscribirCotizacion = (cotizacionId: string, callback: Function) => {
+export const suscribirCotizacion = (
+  cotizacionId: string,
+  callback: Function
+) => {
   return supabase
     .channel(`cotizacion:${cotizacionId}`)
-    .on('postgres_changes', 
-      { 
-        event: '*', 
-        schema: 'public', 
-        table: 'Cotizacion',
-        filter: `id=eq.${cotizacionId}`
-      }, 
-      callback
-    )
-    .on('postgres_changes',
+    .on(
+      "postgres_changes",
       {
-        event: '*',
-        schema: 'public', 
-        table: 'CotizacionServicio',
-        filter: `cotizacionId=eq.${cotizacionId}`
+        event: "*",
+        schema: "public",
+        table: "Cotizacion",
+        filter: `id=eq.${cotizacionId}`,
       },
       callback
     )
-    .subscribe()
-}
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "CotizacionServicio",
+        filter: `cotizacionId=eq.${cotizacionId}`,
+      },
+      callback
+    )
+    .subscribe();
+};
 ```
 
 ### Componente de Sesión en Tiempo Real
 
 ```tsx
 // _components/SesionTiempoReal.tsx
-'use client'
-import { useEffect, useState } from 'react'
-import { suscribirCotizacion } from '@/lib/supabase-realtime'
+"use client";
+import { useEffect, useState } from "react";
+import { suscribirCotizacion } from "@/lib/supabase-realtime";
 
 interface Props {
-  cotizacionId: string
-  esAdmin: boolean
+  cotizacionId: string;
+  esAdmin: boolean;
 }
 
 export default function SesionTiempoReal({ cotizacionId, esAdmin }: Props) {
-  const [cotizacion, setCotizacion] = useState(null)
-  const [serviciosEnVivo, setServiciosEnVivo] = useState([])
-  
+  const [cotizacion, setCotizacion] = useState(null);
+  const [serviciosEnVivo, setServiciosEnVivo] = useState([]);
+
   useEffect(() => {
     const subscription = suscribirCotizacion(cotizacionId, (payload) => {
       // Actualizar estado en tiempo real
-      if (payload.table === 'Cotizacion') {
-        setCotizacion(payload.new)
+      if (payload.table === "Cotizacion") {
+        setCotizacion(payload.new);
       }
-      if (payload.table === 'CotizacionServicio') {
+      if (payload.table === "CotizacionServicio") {
         // Recargar servicios
-        obtenerServicios(cotizacionId).then(setServiciosEnVivo)
+        obtenerServicios(cotizacionId).then(setServiciosEnVivo);
       }
-    })
+    });
 
     return () => {
-      subscription.unsubscribe()
-    }
-  }, [cotizacionId])
+      subscription.unsubscribe();
+    };
+  }, [cotizacionId]);
 
   return (
     <div className="min-h-screen bg-zinc-900">
@@ -176,17 +184,20 @@ export default function SesionTiempoReal({ cotizacionId, esAdmin }: Props) {
         <div className="max-w-2xl mx-auto p-6">
           <div className="bg-zinc-800 rounded-lg p-6 mb-6">
             <h1 className="text-2xl font-bold text-white mb-2">
-              {cotizacion?.nombre || 'Preparando cotización...'}
+              {cotizacion?.nombre || "Preparando cotización..."}
             </h1>
             <div className="text-zinc-400">
-              Total: ${cotizacion?.precio?.toLocaleString() || '---'}
+              Total: ${cotizacion?.precio?.toLocaleString() || "---"}
             </div>
           </div>
 
           {/* Lista de servicios en tiempo real */}
           <div className="space-y-4">
             {serviciosEnVivo.map((servicio) => (
-              <div key={servicio.id} className="bg-zinc-800 p-4 rounded-lg animate-pulse">
+              <div
+                key={servicio.id}
+                className="bg-zinc-800 p-4 rounded-lg animate-pulse"
+              >
                 <div className="flex justify-between">
                   <span className="text-white">{servicio.nombre}</span>
                   <span className="text-green-400">${servicio.precio}</span>
@@ -215,7 +226,7 @@ export default function SesionTiempoReal({ cotizacionId, esAdmin }: Props) {
         </div>
       )}
     </div>
-  )
+  );
 }
 ```
 
@@ -226,23 +237,23 @@ export default function SesionTiempoReal({ cotizacionId, esAdmin }: Props) {
 ```typescript
 // lib/stripe-checkout.ts
 export const crearSesionPago = async (cotizacionId: string) => {
-  const response = await fetch('/api/checkout/create-session', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
+  const response = await fetch("/api/checkout/create-session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
       cotizacionId,
-      mode: 'payment',
+      mode: "payment",
       success_url: `${window.location.origin}/evento/cotizacion/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${window.location.origin}/evento/cotizacion/${cotizacionId}`
-    })
-  })
-  
-  const session = await response.json()
-  
+      cancel_url: `${window.location.origin}/evento/cotizacion/${cotizacionId}`,
+    }),
+  });
+
+  const session = await response.json();
+
   if (session.url) {
-    window.location.href = session.url
+    window.location.href = session.url;
   }
-}
+};
 ```
 
 ## 🔐 **Sección Cliente**
@@ -258,33 +269,33 @@ export default function ClienteLogin() {
         <h1 className="text-2xl font-bold text-white mb-6 text-center">
           Acceso Clientes
         </h1>
-        
+
         <form className="space-y-4">
           <div>
             <label className="block text-zinc-400 mb-2">Email</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               className="w-full bg-zinc-700 text-white p-3 rounded-lg"
               placeholder="tu@email.com"
             />
           </div>
-          
+
           <div>
             <label className="block text-zinc-400 mb-2">Código de evento</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               className="w-full bg-zinc-700 text-white p-3 rounded-lg"
               placeholder="Código proporcionado"
             />
           </div>
-          
+
           <button className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700">
             Acceder a mis eventos
           </button>
         </form>
       </div>
     </div>
-  )
+  );
 }
 ```
 
@@ -300,15 +311,15 @@ const ResponsiveSesionView = () => {
       {/* Header fijo */}
       <div className="fixed top-0 left-0 right-0 bg-zinc-800 p-4 z-10">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold text-white truncate">Cotización XV Años</h1>
+          <h1 className="text-lg font-bold text-white truncate">
+            Cotización XV Años
+          </h1>
           <div className="text-green-400 text-sm">● En vivo</div>
         </div>
       </div>
 
       {/* Contenido con scroll */}
-      <div className="pt-20 pb-24 px-4">
-        {/* Lista de servicios */}
-      </div>
+      <div className="pt-20 pb-24 px-4">{/* Lista de servicios */}</div>
 
       {/* Footer fijo con total */}
       <div className="fixed bottom-0 left-0 right-0 bg-zinc-800 p-4">
@@ -318,54 +329,64 @@ const ResponsiveSesionView = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 ```
 
 ## 🎯 **Preguntas de Decisión**
 
 ### 1. **¿Cliente puede editar cotización?**
+
 **Recomendación:** NO
+
 - Cliente solo visualiza
 - Cambios solo a través del negocio
 - Mantiene control de precios mínimos
 - Evita confusiones en tiempo real
 
 ### 2. **¿Tiempo real vs Link estático?**
+
 **Recomendación:** HÍBRIDO
+
 - Tiempo real durante sesión de 40 min
 - Link estático para revisión posterior
 - Best of both worlds
 
 ### 3. **¿Manejo de fechas ocupadas?**
+
 **Recomendación:** Validación al intentar pago
+
 ```typescript
 if (evento.fechaOcupada) {
   return {
     error: "La fecha seleccionada ya ha sido reservada por otro cliente",
-    alternatives: fechasAlternativas
-  }
+    alternatives: fechasAlternativas,
+  };
 }
 ```
 
 ## 📋 **Plan de Implementación**
 
 ### Fase 1: Estructura Base (1-2 días)
+
 - [ ] Crear nueva estructura de carpetas
 - [ ] Migrar componentes existentes
 - [ ] Configurar Supabase Realtime
 
-### Fase 2: Lógica de Negocio (2-3 días)  
+### Fase 2: Lógica de Negocio (2-3 días)
+
 - [ ] Validaciones de rutas
 - [ ] Estados de cotización
 - [ ] Integración Stripe
 
 ### Fase 3: Tiempo Real (2-3 días)
+
 - [ ] Componente sesión en vivo
 - [ ] Suscripciones Supabase
 - [ ] Optimización móvil
 
 ### Fase 4: Cliente Dashboard (1-2 días)
+
 - [ ] Login de clientes
 - [ ] Panel de eventos contratados
 - [ ] Testing completo

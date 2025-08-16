@@ -24,7 +24,7 @@ export default function EstadoDisponibilidad({ evento }: Props) {
             return {
                 estado: 'ocupado',
                 mensaje: 'Fecha ya ocupada',
-                descripcion: 'Esta fecha ya ha sido reservada por otro cliente.',
+                descripcion: 'Esta fecha ya ha sido reservada.',
                 color: 'red',
                 icon: '🚫'
             }
@@ -34,7 +34,7 @@ export default function EstadoDisponibilidad({ evento }: Props) {
             return {
                 estado: 'pasado',
                 mensaje: 'Fecha pasada',
-                descripcion: 'La fecha del evento ya ha pasado.',
+                descripcion: 'La fecha del evento ya pasó.',
                 color: 'gray',
                 icon: '📅'
             }
@@ -44,7 +44,7 @@ export default function EstadoDisponibilidad({ evento }: Props) {
             return {
                 estado: 'urgente',
                 mensaje: 'Fecha próxima',
-                descripcion: `¡Solo quedan ${diasRestantes} días! Confirma pronto tu reservación.`,
+                descripcion: `¡Solo ${diasRestantes} días! Confirma pronto.`,
                 color: 'orange',
                 icon: '⚡'
             }
@@ -53,7 +53,7 @@ export default function EstadoDisponibilidad({ evento }: Props) {
         return {
             estado: 'disponible',
             mensaje: 'Fecha disponible',
-            descripcion: `Tienes ${diasRestantes} días para confirmar tu reservación.`,
+            descripcion: `${diasRestantes} días para confirmar.`,
             color: 'green',
             icon: '✅'
         }
@@ -69,25 +69,29 @@ export default function EstadoDisponibilidad({ evento }: Props) {
     }
 
     return (
-        <div className={`p-4 rounded-lg border mb-6 ${colorClasses[estado.color as keyof typeof colorClasses]}`}>
+        <div className={`p-4 rounded-lg border ${colorClasses[estado.color as keyof typeof colorClasses]}`}>
             <div className="flex items-start space-x-3">
-                <div className="text-2xl">{estado.icon}</div>
-                <div className="flex-1">
+                <div className="text-xl">{estado.icon}</div>
+                <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-white">{estado.mensaje}</h3>
-                        <span className="text-sm font-medium">
+                        <h3 className="font-semibold text-white text-sm">
+                            {estado.mensaje}
+                        </h3>
+                        <span className="text-xs font-medium">
                             {fechaEvento.toLocaleDateString('es-MX', {
-                                weekday: 'long',
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
                             })}
                         </span>
                     </div>
-                    <p className="text-sm opacity-90">{estado.descripcion}</p>
+                    <p className="text-xs opacity-90 mb-2">
+                        {estado.descripcion}
+                    </p>
                     {evento.sede && (
-                        <p className="text-xs mt-2 opacity-75">
-                            📍 {evento.sede}
+                        <p className="text-xs opacity-75 flex items-center">
+                            <span className="mr-1">📍</span>
+                            <span className="truncate">{evento.sede}</span>
                         </p>
                     )}
                 </div>

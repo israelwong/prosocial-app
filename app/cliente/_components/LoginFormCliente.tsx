@@ -9,7 +9,7 @@ export default function LoginFormCliente() {
     })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
-    
+
     const router = useRouter()
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,7 +56,7 @@ export default function LoginFormCliente() {
             }
 
             const data = await response.json()
-            
+
             // Si el login es exitoso, redirigir al dashboard del cliente
             router.push(`/cliente/dashboard?eventosId=${data.eventosId}`)
 
