@@ -1,32 +1,26 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
-import { Badge } from "@/app/components/ui/badge"
-import { Calendar, User, FileText } from "lucide-react"
+import { Card, CardContent } from "@/app/components/ui/card"
+import { Button } from "@/app/components/ui/button"
+import { Calendar, User, FileText, Edit, MapPin } from "lucide-react"
+import { WhatsAppIcon } from "@/app/components/ui/WhatsAppIcon"
+import Link from "next/link"
 
 interface HeaderSimpleProps {
     eventoNombre: string
     eventoId: string
     clienteNombre?: string
     tipoEvento?: string
-    status?: string
+    etapa?: string
     fechaEvento?: Date | string
 }
-
-const STATUS_COLORS = {
-    'programado': 'bg-blue-100 text-blue-800',
-    'confirmado': 'bg-green-100 text-green-800',
-    'cancelado': 'bg-red-100 text-red-800',
-    'completado': 'bg-gray-100 text-gray-800',
-    'default': 'bg-gray-100 text-gray-600'
-} as const
 
 export function HeaderSimple({
     eventoNombre,
     eventoId,
     clienteNombre,
     tipoEvento,
-    status,
+    etapa,
     fechaEvento
 }: HeaderSimpleProps) {
 
@@ -46,66 +40,119 @@ export function HeaderSimple({
         }
     }
 
-    const getStatusColor = (status?: string) => {
-        if (!status) return STATUS_COLORS.default
-        return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || STATUS_COLORS.default
+    const formatearFechaCorta = (fecha?: Date | string) => {
+        if (!fecha) return 'Sin fecha'
+
+        try {
+            const fechaObj = typeof fecha === 'string' ? new Date(fecha) : fecha
+            return fechaObj.toLocaleDateString('es-MX', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            })
+        } catch {
+            return 'Fecha no válida'
+        }
+    }
+
+    const abrirWhatsApp = () => {
+        const mensaje = encodeURIComponent(`Hola ${clienteNombre || 'estimado cliente'}`)
+        const url = `https://wa.me/?text=${mensaje}`
+        window.open(url, '_blank')
     }
 
     return (
-        <Card className="mb-6">
-            <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <CardTitle className="text-2xl font-bold">
+        <Card className="bg-zinc-900 border-zinc-800 mb-6">
+            <CardContent className="p-6">
+                {/* Header Principal */}
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6">
+                    <div className="flex-1">
+                        <h1 className="text-3xl font-bold text-zinc-100 mb-2">
                             {eventoNombre || 'Evento sin nombre'}
-                        </CardTitle>
-                        <p className="text-sm text-gray-500 mt-1">
+                        </h1>
+                        <p className="text-sm text-zinc-400">
                             ID: {eventoId}
                         </p>
                     </div>
 
-                    {status && (
-                        <Badge className={getStatusColor(status)}>
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                        </Badge>
-                    )}
+                    {/* Botones de acción */}
+                    <div className="flex items-center gap-3">
+                        <Link href={`/admin/dashboard/eventos/${eventoId}`}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                            >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Editar
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
-            </CardHeader>
 
-            <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Cliente */}
-                    <div className="flex items-center space-x-2">
-                        <User className="h-4 w-4 text-gray-500" />
-                        <div>
-                            <p className="text-sm font-medium">Cliente</p>
-                            <p className="text-sm text-gray-600">
-                                {clienteNombre || 'No asignado'}
-                            </p>
+                {/* Información Principal - Diseño más visual */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {/* Cliente con botón WhatsApp */}
+                    <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <User className="h-5 w-5 text-blue-400" />
+                                <span className="text-sm font-medium text-zinc-300">Cliente</span>
+                            </div>
+                            {clienteNombre && (
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={abrirWhatsApp}
+                                    className="h-10 w-10 p-0 text-green-500 hover:text-green-400 hover:bg-green-500/10 rounded-full"
+                                    title="Contactar por WhatsApp"
+                                >
+                                    <WhatsAppIcon size={20} />
+                                </Button>
+                            )}
                         </div>
+                        <p className="text-lg font-semibold text-zinc-100">
+                            {clienteNombre || 'No asignado'}
+                        </p>
                     </div>
 
-                    {/* Fecha */}
-                    <div className="flex items-center space-x-2">
-                        <Calendar className="h-4 w-4 text-gray-500" />
-                        <div>
-                            <p className="text-sm font-medium">Fecha del evento</p>
-                            <p className="text-sm text-gray-600">
-                                {formatearFecha(fechaEvento)}
-                            </p>
+                    {/* Fecha del evento */}
+                    <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Calendar className="h-5 w-5 text-yellow-400" />
+                            <span className="text-sm font-medium text-zinc-300">Fecha</span>
                         </div>
+                        <p className="text-lg font-semibold text-zinc-100">
+                            {formatearFechaCorta(fechaEvento)}
+                        </p>
+                        <p className="text-xs text-zinc-400 mt-1">
+                            {formatearFecha(fechaEvento)}
+                        </p>
                     </div>
 
                     {/* Tipo de evento */}
-                    <div className="flex items-center space-x-2">
-                        <FileText className="h-4 w-4 text-gray-500" />
-                        <div>
-                            <p className="text-sm font-medium">Tipo de evento</p>
-                            <p className="text-sm text-gray-600">
-                                {tipoEvento || 'No definido'}
+                    <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
+                        <div className="flex items-center gap-2 mb-2">
+                            <FileText className="h-5 w-5 text-purple-400" />
+                            <span className="text-sm font-medium text-zinc-300">Tipo</span>
+                        </div>
+                        <p className="text-lg font-semibold text-zinc-100">
+                            {tipoEvento || 'No definido'}
+                        </p>
+                    </div>
+
+                    {/* Etapa del evento - Solo si existe */}
+                    {etapa && (
+                        <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
+                            <div className="flex items-center gap-2 mb-2">
+                                <MapPin className="h-5 w-5 text-orange-400" />
+                                <span className="text-sm font-medium text-zinc-300">Etapa</span>
+                            </div>
+                            <p className="text-lg font-semibold text-orange-400">
+                                {etapa}
                             </p>
                         </div>
-                    </div>
+                    )}
                 </div>
             </CardContent>
         </Card>
