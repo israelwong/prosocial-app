@@ -135,7 +135,7 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
     }
 
     const handlePreview = () => {
-        window.open(`/cotizacion/evento/${eventoId}?preview=true`, '_blank')
+        window.open(`/evento/${eventoId}/cotizacion/${cotizaciones}?preview=true`, '_blank')
     }
 
     if (loading) {
