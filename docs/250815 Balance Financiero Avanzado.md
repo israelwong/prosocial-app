@@ -165,10 +165,12 @@ import {
 ## 📝 Actualizaciones Posteriores
 
 ### 🔄 Refactorización HeaderSimple - 15 de agosto 2025
+
 **Commit:** d09a729  
 **Hora:** 21:45
 
 #### Cambios Implementados:
+
 - **🟢 Componente WhatsApp Global**: Creado `WhatsAppIcon.tsx` reutilizable con SVG auténtico
 - **📱 Botón WhatsApp Mejorado**: Tamaño 20px, estilo redondeado, tooltip "Contactar por WhatsApp"
 - **🏷️ Status → Etapa**: Reemplazado status por etapa actual del evento con icono MapPin
@@ -176,6 +178,7 @@ import {
 - **📱 Layout Simplificado**: Eliminados DetallesCliente y DetallesEvento components
 
 #### Archivos Modificados:
+
 ```
 app/components/ui/WhatsAppIcon.tsx               (nuevo)
 app/admin/_components/seguimiento-detalle-v3/HeaderSimple.tsx
@@ -183,6 +186,7 @@ app/admin/dashboard/seguimiento/[eventoId]/page.tsx
 ```
 
 #### Estructura Visual Final:
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  [Evento Nombre]                          [Editar]      │
@@ -194,10 +198,12 @@ app/admin/dashboard/seguimiento/[eventoId]/page.tsx
 ```
 
 #### Beneficios:
+
 - ✅ UX mejorada con WhatsApp más visible
 - ✅ Información de etapa más relevante que status
 - ✅ Componente WhatsApp reutilizable globalmente
 - ✅ Header más funcional y visual
 
 #### Punto de Retorno:
+
 Si necesitas revertir esta refactorización: `git checkout d09a729^`
