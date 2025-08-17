@@ -2,10 +2,10 @@ import React from 'react'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { obtenerEventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.actions'
-import { HeaderSimple } from '@/app/admin/_components/seguimiento-detalle-v3/HeaderSimple'
-import { BitacoraSimple } from '@/app/admin/_components/seguimiento-detalle-v3/BitacoraSimple'
-import { BalanceFinancieroAvanzado } from '@/app/admin/_components/seguimiento-detalle-v3/BalanceFinancieroAvanzado'
-import { ServiciosAsociadosPlaceholder } from '@/app/admin/_components/seguimiento-detalle-v3/ServiciosAsociadosPlaceholder'
+import { HeaderSimple } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/HeaderSimple'
+import { BitacoraSimple } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/BitacoraSimple'
+import { BalanceFinancieroAvanzado } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/BalanceFinancieroAvanzado'
+import { ServiciosAsociadosPlaceholder } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/ServiciosAsociadosPlaceholder'
 
 export const metadata: Metadata = {
     title: 'Detalle del evento',

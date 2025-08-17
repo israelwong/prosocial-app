@@ -1,5 +1,5 @@
 // Página de prueba para verificar el componente de Balance Financiero Avanzado
-import { BalanceFinancieroAvanzado } from '../_components/seguimiento-detalle-v3/BalanceFinancieroAvanzado'
+import { BalanceFinancieroAvanzado } from '../dashboard/seguimiento/[eventoId]/components/BalanceFinancieroAvanzado'
 
 // Datos de prueba
 const datosEjemplo = {

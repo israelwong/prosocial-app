@@ -1,5 +1,5 @@
 import { obtenerEventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.actions'
-import { SeguimientoDetalleV3 } from '@/app/admin/_components/seguimiento-detalle-v3'
+import { SeguimientoDetalleV3 } from '@/app/admin/dashboard/seguimiento/[eventoId]/components'
 
 interface TestSeguimientoDetalleV3Props {
     searchParams: {
