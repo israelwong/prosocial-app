@@ -26,6 +26,7 @@ export const EventoKanbanSchema = z.object({
     totalPendiente: z.number(),
     cotizacionPrecio: z.number().nullable(),
     totalPagado: z.number(),
+    tieneCotizacionAprobada: z.boolean(),
 });
 
 // Schema para las estadísticas por columna

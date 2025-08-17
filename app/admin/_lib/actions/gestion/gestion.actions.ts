@@ -55,10 +55,8 @@ export async function obtenerEventosKanban(data?: ObtenerEventosPorEtapasType) {
                     }
                 },
                 Cotizacion: {
-                    where: {
-                        status: 'aprobada'
-                    },
                     select: {
+                        status: true,
                         precio: true,
                         Pago: {
                             where: {
@@ -78,9 +76,9 @@ export async function obtenerEventosKanban(data?: ObtenerEventosPorEtapasType) {
 
         // Transformar datos para el kanban
         const eventosKanban: EventoKanbanType[] = eventos.map(evento => {
-            const cotizacion = evento.Cotizacion[0];
-            const totalPagado = cotizacion?.Pago.reduce((sum, pago) => sum + pago.monto, 0) || 0;
-            const cotizacionPrecio = cotizacion?.precio || 0;
+            const cotizacionAprobada = evento.Cotizacion.find(c => c.status === 'aprobada');
+            const totalPagado = cotizacionAprobada?.Pago.reduce((sum, pago) => sum + pago.monto, 0) || 0;
+            const cotizacionPrecio = cotizacionAprobada?.precio || 0;
             const totalPendiente = cotizacionPrecio - totalPagado;
 
             return {
@@ -95,7 +93,8 @@ export async function obtenerEventosKanban(data?: ObtenerEventosPorEtapasType) {
                 status: evento.status,
                 totalPendiente: totalPendiente,
                 cotizacionPrecio: cotizacionPrecio,
-                totalPagado: totalPagado
+                totalPagado: totalPagado,
+                tieneCotizacionAprobada: !!cotizacionAprobada,
             };
         });
 

@@ -34,10 +34,29 @@ export default function EventCard({ evento, isDragging = false, onArchive }: Eve
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
-    }; const handleClick = (e: React.MouseEvent) => {
+    };
+
+    const normalizedStatus = (evento.status || '').toLowerCase();
+    const isAprobado = ['aprobado', 'aprobada', 'autorizado', 'autorizada', 'autor', 'authorized', 'approved'].some(s => normalizedStatus.startsWith(s));
+
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault(); // Previene el enrutamiento para depuración
+        e.stopPropagation();
+
         if (!isDragging && !isSortableDragging) {
-            e.stopPropagation();
-            router.push(`/admin/dashboard/seguimiento/${evento.id}`);
+            const targetUrl = isAprobado
+                ? `/admin/dashboard/seguimiento/${evento.id}`
+                : `/admin/dashboard/eventos/${evento.id}`;
+
+            console.log('--- DEBUG DE ENRUTAMIENTO ---');
+            console.log('ID del Evento:', evento.id);
+            console.log('Estado del Evento:', evento.status);
+            console.log('¿Está Aprobado?:', isAprobado);
+            console.log('URL de Destino:', targetUrl);
+            console.log('---------------------------');
+
+            // Para reactivar el enrutamiento, elimina la línea e.preventDefault() de arriba.
+            router.push(targetUrl);
         }
     };
 
@@ -119,8 +138,6 @@ export default function EventCard({ evento, isDragging = false, onArchive }: Eve
 
     const paymentStatus = getPaymentStatus();
     const dateInfo = formatDate(evento.fecha_evento);
-    const normalizedStatus = (evento.status || '').toLowerCase();
-    const isAprobado = ['aprobado', 'aprobada', 'autorizado', 'autorizada', 'autor', 'authorized', 'approved'].some(s => normalizedStatus.startsWith(s));
 
     return (
         <div
