@@ -24,6 +24,11 @@ model User {
   Pago      Pago[]
   Evento    Evento[]
   CotizacionServicio CotizacionServicio[]
+  
+  // === RELACIONES NOMINA ===
+  Nomina              Nomina[]              @relation("NominaUsuario")
+  NominaAutorizada    Nomina[]              @relation("AutorizadoPor")
+  NominaPagada        Nomina[]              @relation("PagadoPor")
   // Notificacion Notificacion[]
 }
 
@@ -76,6 +81,7 @@ model Evento {
   EventoBitacora EventoBitacora[]
   Cotizacion     Cotizacion[]
   Agenda         Agenda[]
+  Nomina         Nomina[]
 }
 
 model EventoBitacora {
@@ -223,6 +229,9 @@ model CotizacionServicio {
   // --- CAMPOS PERSONALIZACIÓN ---
   es_personalizado    Boolean           @default(false)     // true si es un servicio agregado al vuelo
   servicio_original_id String?          // ID del servicio original si es personalizado
+
+  // === RELACIÓN CON NÓMINA ===
+  NominaServicio      NominaServicio[]
 
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
@@ -516,5 +525,77 @@ model Notificacion {
   cotizacionId String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// ========================================
+// MODELOS PARA SISTEMA DE NOMINA
+// ========================================
+
+model Nomina {
+  id                    String                @id @default(cuid())
+  
+  // === RELACIONES PRINCIPALES ===
+  userId                String
+  User                  User                  @relation("NominaUsuario", fields: [userId], references: [id])
+  eventoId              String?               // Para reportes por evento
+  Evento                Evento?               @relation(fields: [eventoId], references: [id])
+  
+  // === INFORMACIÓN DEL PAGO ===
+  concepto              String                // Ej: "Fotografía Boda María", "Servicio múltiple Evento X"
+  descripcion           String?               // Detalle adicional
+  monto_bruto           Float                 // Monto antes de deducciones
+  deducciones           Float                 @default(0) // ISR, retenciones, etc.
+  monto_neto            Float                 // Monto final a pagar
+  
+  // === AGRUPACIÓN DE SERVICIOS ===
+  tipo_pago             String                @default("individual") // "individual", "agrupado", "comision"
+  servicios_incluidos   Int                   @default(1) // Cantidad de servicios
+  
+  // === CONTROL DE FECHAS ===
+  fecha_asignacion      DateTime              @default(now())
+  fecha_autorizacion    DateTime?             // Cuando se autoriza el pago
+  fecha_pago            DateTime?             // Cuando se efectúa el pago
+  periodo_inicio        DateTime?             // Para pagos por periodo
+  periodo_fin           DateTime?
+  
+  // === STATUS Y CONTROL ===
+  status                String                @default("pendiente") // pendiente, autorizado, pagado, cancelado
+  autorizado_por        String?               // userId de quien autoriza
+  AutorizadoPor         User?                 @relation("AutorizadoPor", fields: [autorizado_por], references: [id])
+  pagado_por            String?               // userId de quien ejecuta el pago
+  PagadoPor             User?                 @relation("PagadoPor", fields: [pagado_por], references: [id])
+  metodo_pago           String?               @default("transferencia") // transferencia, efectivo, cheque
+  
+  // === TRAZABILIDAD FINANCIERA ===
+  // Snapshots para reportes y auditoría
+  costo_total_snapshot  Float                 @default(0) // Suma de costos de servicios
+  gasto_total_snapshot  Float                 @default(0) // Suma de gastos de servicios
+  comision_porcentaje   Float?                // Si es pago por comisión
+  
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  
+  // === RELACIONES CON SERVICIOS ===
+  NominaServicio        NominaServicio[]
+}
+
+// Tabla intermedia para relacionar nómina con servicios específicos
+model NominaServicio {
+  id                    String                @id @default(cuid())
+  nominaId              String
+  Nomina                Nomina                @relation(fields: [nominaId], references: [id], onDelete: Cascade)
+  cotizacionServicioId  String
+  CotizacionServicio    CotizacionServicio    @relation(fields: [cotizacionServicioId], references: [id])
+  
+  // === SNAPSHOT DEL SERVICIO AL MOMENTO DEL PAGO ===
+  servicio_nombre       String                // Snapshot del nombre
+  seccion_nombre        String?               // Snapshot de la sección
+  categoria_nombre      String?               // Snapshot de la categoría
+  costo_asignado        Float                 // Costo específico para este pago
+  cantidad_asignada     Int                   @default(1)
+  
+  createdAt             DateTime              @default(now())
+  
+  @@unique([nominaId, cotizacionServicioId]) // Un servicio solo puede estar en una nómina
 }
 

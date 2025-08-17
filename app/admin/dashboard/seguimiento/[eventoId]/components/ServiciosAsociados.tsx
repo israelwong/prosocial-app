@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { User, UserPlus, XCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { User, UserPlus, XCircle, CheckCircle, Eye, EyeOff, DollarSign, FileText } from 'lucide-react';
 import AsignarUsuarioModal from './AsignarUsuarioModal';
+import CrearNominaModal from './CrearNominaModal';
 import { asignarUsuarioAServicio, removerUsuarioDeServicio } from '@/app/admin/_lib/actions/seguimiento/servicios.actions';
+import { crearNominaIndividual, cancelarPago } from '@/app/admin/_lib/actions/seguimiento/nomina.actions';
 
 // Tipos para los datos
 interface UserData {
@@ -22,6 +24,15 @@ interface ServicioData {
     categoria_nombre_snapshot: string | null;
     nombre_snapshot: string;
     costo_snapshot: number;
+    NominaServicio?: Array<{
+        Nomina: {
+            id: string;
+            status: string;
+            monto_neto: number;
+            fecha_pago: string | null;
+            fecha_autorizacion: string | null;
+        };
+    }>;
 }
 
 interface CotizacionData {
@@ -53,6 +64,7 @@ interface ServiciosAgrupados {
 
 export default function ServiciosAsociados({ evento, usuarios }: Props) {
     const [modalAbierto, setModalAbierto] = useState(false);
+    const [modalNominaAbierto, setModalNominaAbierto] = useState(false);
     const [servicioSeleccionado, setServicioSeleccionado] = useState<any | null>(null);
     const [mostrarInformacionFinanciera, setMostrarInformacionFinanciera] = useState(false);
 
@@ -119,15 +131,137 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
     };
 
     const handleRemover = async (servicio: any) => {
-        try {
-            await removerUsuarioDeServicio(servicio.id, evento.id);
-        } catch (error) {
-            console.error('Error al remover usuario:', error);
+        const infoNomina = obtenerInfoNomina(servicio);
+
+        // Si hay una nómina pendiente, preguntar si quiere cancelar el pago también
+        if (infoNomina && infoNomina.status === 'pendiente') {
+            const confirmar = confirm(
+                'Este usuario tiene un pago pendiente programado.\n\n' +
+                '¿Deseas cancelar el pago y remover al usuario del servicio?'
+            );
+
+            if (confirmar) {
+                try {
+                    // Primero cancelar el pago
+                    await cancelarPago(infoNomina.id, evento.id);
+                    // Luego remover al usuario
+                    await removerUsuarioDeServicio(servicio.id, evento.id);
+                    alert('Pago cancelado y usuario removido exitosamente');
+                } catch (error) {
+                    console.error('Error al cancelar pago y remover usuario:', error);
+                    alert('Error: ' + (error as Error).message);
+                }
+            }
+        } else {
+            // Si no hay nómina o está cancelada, solo remover usuario
+            const confirmar = confirm('¿Estás seguro de que deseas remover a este usuario del servicio?');
+
+            if (confirmar) {
+                try {
+                    await removerUsuarioDeServicio(servicio.id, evento.id);
+                    alert('Usuario removido exitosamente');
+                } catch (error) {
+                    console.error('Error al remover usuario:', error);
+                    alert('Error al remover usuario: ' + (error as Error).message);
+                }
+            }
         }
     };
 
-    const handleAutorizarPago = () => {
-        alert('Función de autorización de pago pendiente por implementar');
+    const handleAutorizarPago = (servicio: any) => {
+        setServicioSeleccionado(servicio);
+        setModalNominaAbierto(true);
+    };
+
+    const handleConfirmarNomina = async (datosNomina: {
+        concepto: string;
+        descripcion?: string;
+        monto_bruto: number;
+        deducciones: number;
+        monto_neto: number;
+        metodo_pago: string;
+    }) => {
+        if (!servicioSeleccionado) return;
+
+        try {
+            await crearNominaIndividual(servicioSeleccionado.id, evento.id, datosNomina);
+            alert('Nómina creada exitosamente');
+        } catch (error) {
+            console.error('Error al crear nómina:', error);
+            alert('Error al crear nómina: ' + (error as Error).message);
+        }
+    };
+
+    const handleCancelarPago = async (servicio: any) => {
+        const infoNomina = obtenerInfoNomina(servicio);
+        if (!infoNomina) return;
+
+        if (confirm('¿Estás seguro de que deseas cancelar este pago?')) {
+            try {
+                await cancelarPago(infoNomina.id, evento.id);
+                alert('Pago cancelado exitosamente');
+            } catch (error) {
+                console.error('Error al cancelar pago:', error);
+                alert('Error al cancelar pago: ' + (error as Error).message);
+            }
+        }
+    };
+
+    // Función para obtener información de la nómina de un servicio
+    const obtenerInfoNomina = (servicio: any) => {
+        const nominaServicio = servicio.NominaServicio?.[0];
+        if (!nominaServicio) return null;
+
+        const nomina = nominaServicio.Nomina;
+        return {
+            id: nomina.id,
+            status: nomina.status,
+            monto_neto: nomina.monto_neto,
+            fecha_pago: nomina.fecha_pago,
+            fecha_autorizacion: nomina.fecha_autorizacion
+        };
+    };
+
+    // Función para obtener el badge de estado de la nómina
+    const obtenerBadgeNomina = (infoNomina: any) => {
+        if (!infoNomina) return null;
+
+        const statusConfig = {
+            pendiente: {
+                bg: 'bg-yellow-900/30',
+                border: 'border-yellow-700',
+                text: 'text-yellow-300',
+                label: 'Pendiente'
+            },
+            autorizado: {
+                bg: 'bg-blue-900/30',
+                border: 'border-blue-700',
+                text: 'text-blue-300',
+                label: 'Autorizado'
+            },
+            pagado: {
+                bg: 'bg-green-900/30',
+                border: 'border-green-700',
+                text: 'text-green-300',
+                label: 'Pagado'
+            },
+            cancelado: {
+                bg: 'bg-red-900/30',
+                border: 'border-red-700',
+                text: 'text-red-300',
+                label: 'Cancelado'
+            }
+        };
+
+        const config = statusConfig[infoNomina.status as keyof typeof statusConfig] || statusConfig.pendiente;
+
+        return (
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${config.bg} ${config.border} border`}>
+                <span className={`text-xs font-medium ${config.text}`}>
+                    {config.label}
+                </span>
+            </div>
+        );
     };
 
     const handleConfirmarAsignacion = async (usuarioId: string) => {
@@ -277,22 +411,40 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                                                         <div className="flex items-center gap-2">
                                                             {servicio.User ? (
                                                                 <>
-                                                                    <button
-                                                                        onClick={() => handleRemover(servicio)}
-                                                                        className="flex items-center gap-1 px-3 py-1 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
-                                                                        title="Remover asignación"
-                                                                    >
-                                                                        <XCircle className="w-3 h-3" />
-                                                                        Remover
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={handleAutorizarPago}
-                                                                        className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600/80 hover:bg-green-600 text-white rounded transition-colors"
-                                                                        title="Autorizar pago"
-                                                                    >
-                                                                        <CheckCircle className="w-3 h-3" />
-                                                                        Pagar
-                                                                    </button>
+                                                                    {/* Solo mostrar botón remover si no existe nómina o si la nómina está cancelada */}
+                                                                    {(() => {
+                                                                        const infoNomina = obtenerInfoNomina(servicio);
+                                                                        // Solo mostrar botón remover si no hay nómina o está cancelada
+                                                                        const puedeRemover = !infoNomina || infoNomina.status === 'cancelado';
+
+                                                                        if (puedeRemover) {
+                                                                            return (
+                                                                                <button
+                                                                                    onClick={() => handleRemover(servicio)}
+                                                                                    className="flex items-center gap-1 px-3 py-1 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
+                                                                                    title="Remover asignación"
+                                                                                >
+                                                                                    <XCircle className="w-3 h-3" />
+                                                                                    Remover
+                                                                                </button>
+                                                                            );
+                                                                        }
+                                                                        return null;
+                                                                    })()}
+
+                                                                    {/* Mostrar solo badge de estado si existe nómina, sin botones */}
+                                                                    {(() => {
+                                                                        const infoNomina = obtenerInfoNomina(servicio);
+
+                                                                        if (infoNomina) {
+                                                                            return (
+                                                                                <div className="flex items-center gap-2">
+                                                                                    {obtenerBadgeNomina(infoNomina)}
+                                                                                </div>
+                                                                            );
+                                                                        }
+                                                                        return null;
+                                                                    })()}
                                                                 </>
                                                             ) : (
                                                                 <button
@@ -306,7 +458,7 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                                                         </div>
                                                     </div>
 
-                                                    {/* Línea 3: Costo, cantidad, total + botón pagar (condicional) */}
+                                                    {/* Línea 3: Costo, cantidad, total + estado nómina (condicional) */}
                                                     {mostrarInformacionFinanciera && (
                                                         <div className="flex items-center justify-between pt-2 border-t border-zinc-700">
                                                             <div className="flex items-center gap-4 text-sm text-zinc-300">
@@ -314,21 +466,48 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                                                                     <strong className="text-zinc-200">Costo:</strong> ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                                 </span>
                                                                 <span>
-                                                                    <strong className="text-zinc-200">Cantidad:</strong> {cantidad}
+                                                                    <strong className="text-zinc-200">Cant.:</strong> {cantidad}
                                                                 </span>
                                                                 <span className="font-medium text-green-400">
                                                                     <strong>Total:</strong> ${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                                 </span>
                                                             </div>
-                                                            <button
-                                                                onClick={handleAutorizarPago}
-                                                                className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600/80 hover:bg-green-600 text-white rounded transition-colors"
-                                                                title="Autorizar pago"
-                                                                disabled={!servicio.User}
-                                                            >
-                                                                <CheckCircle className="w-3 h-3" />
-                                                                Pagar
-                                                            </button>
+
+                                                            {/* Mostrar estado de nómina o botón crear nómina */}
+                                                            {(() => {
+                                                                if (!servicio.User) return null;
+
+                                                                const infoNomina = obtenerInfoNomina(servicio);
+
+                                                                if (infoNomina) {
+                                                                    // Si existe nómina, mostrar solo botón ver (sin monto duplicado)
+                                                                    return (
+                                                                        <div className="flex items-center gap-2">
+                                                                            {/* Botón Ver para todos los estados */}
+                                                                            <button
+                                                                                onClick={() => {/* TODO: Implementar ver nómina */ }}
+                                                                                className="flex items-center gap-1 px-3 py-1 text-xs bg-zinc-600 hover:bg-zinc-500 text-white rounded transition-colors"
+                                                                                title="Ver nómina"
+                                                                            >
+                                                                                <FileText className="w-3 h-3" />
+                                                                                Ver
+                                                                            </button>
+                                                                        </div>
+                                                                    );
+                                                                } else {
+                                                                    // Si no existe nómina, mostrar botón crear
+                                                                    return (
+                                                                        <button
+                                                                            onClick={() => handleAutorizarPago(servicio)}
+                                                                            className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600/80 hover:bg-green-600 text-white rounded transition-colors"
+                                                                            title="Crear nómina de pago"
+                                                                        >
+                                                                            <DollarSign className="w-3 h-3" />
+                                                                            Pagar
+                                                                        </button>
+                                                                    );
+                                                                }
+                                                            })()}
                                                         </div>
                                                     )}
                                                 </div>
@@ -352,6 +531,17 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                 usuarios={usuarios}
                 onConfirmar={handleConfirmarAsignacion}
                 servicio={servicioSeleccionado}
+            />
+
+            {/* Modal de Crear Nómina */}
+            <CrearNominaModal
+                isOpen={modalNominaAbierto}
+                onClose={() => {
+                    setModalNominaAbierto(false);
+                    setServicioSeleccionado(null);
+                }}
+                servicio={servicioSeleccionado}
+                onConfirmar={handleConfirmarNomina}
             />
         </div>
     );

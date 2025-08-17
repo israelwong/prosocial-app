@@ -65,6 +65,20 @@ export async function obtenerEventoDetalleCompleto(
                             include: {
                                 // @ts-ignore - Temporal hasta resolver tipos de Prisma
                                 User: true, // ✅ Incluir usuario asignado
+                                // @ts-ignore - Incluir nóminas relacionadas
+                                NominaServicio: {
+                                    include: {
+                                        Nomina: {
+                                            select: {
+                                                id: true,
+                                                status: true,
+                                                monto_neto: true,
+                                                fecha_pago: true,
+                                                fecha_autorizacion: true
+                                            }
+                                        }
+                                    }
+                                },
                                 Servicio: {
                                     include: {
                                         ServicioCategoria: {
