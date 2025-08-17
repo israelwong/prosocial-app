@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { User, UserPlus, XCircle, CheckCircle } from 'lucide-react';
+import { User, UserPlus, XCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import AsignarUsuarioModal from './AsignarUsuarioModal';
 import { asignarUsuarioAServicio, removerUsuarioDeServicio } from '@/app/admin/_lib/actions/seguimiento/servicios.actions';
 
@@ -54,17 +54,28 @@ interface ServiciosAgrupados {
 export default function ServiciosAsociados({ evento, usuarios }: Props) {
     const [modalAbierto, setModalAbierto] = useState(false);
     const [servicioSeleccionado, setServicioSeleccionado] = useState<any | null>(null);
+    const [mostrarInformacionFinanciera, setMostrarInformacionFinanciera] = useState(false);
 
     // Obtener la cotización aprobada y sus servicios
     const cotizacionAprobada = evento?.Cotizacion?.[0];
     const servicios = cotizacionAprobada?.Servicio || [];
 
-    // Calcular total a pagar
-    const totalAPagar = servicios.reduce((total: number, servicio: any) => {
+    // Calcular totales financieros
+    const totales = servicios.reduce((acc: any, servicio: any) => {
         const costo = servicio.costo_snapshot || servicio.costo || 0;
+        const gasto = servicio.gasto_snapshot || servicio.gasto || 0;
+        const utilidad = servicio.utilidad_snapshot || servicio.utilidad || 0;
         const cantidad = servicio.cantidad || 1;
-        return total + (costo * cantidad);
-    }, 0);
+
+        acc.costoTotal += costo * cantidad;
+        acc.gastoTotal += gasto * cantidad;
+        acc.utilidadTotal += utilidad * cantidad;
+
+        return acc;
+    }, { costoTotal: 0, gastoTotal: 0, utilidadTotal: 0 });
+
+    // Calcular total a pagar (para retrocompatibilidad)
+    const totalAPagar = totales.costoTotal;
 
     // Agrupar servicios por sección y categoría con ordenamiento
     const serviciosAgrupados: ServiciosAgrupados = servicios.reduce((acc: ServiciosAgrupados, servicio: any) => {
@@ -146,20 +157,54 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
 
     return (
         <div className="space-y-6">
-            {/* Cabecera con Total a Pagar */}
+            {/* Cabecera con Información Financiera */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-                <div className="flex justify-between items-center">
+                {/* Línea 1: Título | Botón toggle */}
+                <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold text-zinc-200">Servicios Asociados</h2>
-                    <div className="text-right">
-                        <span className="text-sm text-zinc-400 block">Total a Pagar</span>
-                        <span className="text-2xl font-bold text-green-400">
-                            ${totalAPagar.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                    </div>
+                    <button
+                        onClick={() => setMostrarInformacionFinanciera(!mostrarInformacionFinanciera)}
+                        className="flex items-center gap-2 px-3 py-1 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded transition-colors"
+                        title={mostrarInformacionFinanciera ? "Ocultar información financiera" : "Mostrar información financiera"}
+                    >
+                        {mostrarInformacionFinanciera ? (
+                            <>
+                                <EyeOff className="w-4 h-4" />
+                                Ocultar
+                            </>
+                        ) : (
+                            <>
+                                <Eye className="w-4 h-4" />
+                                Mostrar
+                            </>
+                        )}
+                    </button>
                 </div>
-            </div>
 
-            {/* Servicios Agrupados */}
+                {/* Línea 2: Gastos, costos, utilidad */}
+                {mostrarInformacionFinanciera && (
+                    <div className="grid grid-cols-3 gap-6">
+                        <div className="text-center">
+                            <span className="text-sm text-zinc-400 block">Gastos</span>
+                            <span className="text-lg font-bold text-red-400">
+                                ${totales.gastoTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                        </div>
+                        <div className="text-center">
+                            <span className="text-sm text-zinc-400 block">Costos</span>
+                            <span className="text-lg font-bold text-blue-400">
+                                ${totales.costoTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                        </div>
+                        <div className="text-center">
+                            <span className="text-sm text-zinc-400 block">Utilidad</span>
+                            <span className="text-lg font-bold text-green-400">
+                                ${totales.utilidadTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                        </div>
+                    </div>
+                )}
+            </div>            {/* Servicios Agrupados */}
             {seccionesOrdenadas.map(([seccion, seccionData]) => {
                 // Ordenar categorías por posición, luego por nombre
                 const categoriasOrdenadas = Object.entries(seccionData.categorias).sort(([nombreA, a], [nombreB, b]) => {
@@ -193,33 +238,27 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                                     <div className="ml-6 space-y-4">
                                         {categoriaData.servicios.map((servicio: any) => {
                                             const costo = servicio.costo_snapshot || servicio.costo || 0;
+                                            const gasto = servicio.gasto_snapshot || servicio.gasto || 0;
                                             const cantidad = servicio.cantidad || 1;
                                             const total = costo * cantidad;
 
                                             return (
                                                 <div key={servicio.id} className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-4 hover:bg-zinc-800 transition-colors">
-                                                    {/* Línea 1: Nombre del servicio */}
-                                                    <h5 className="text-zinc-100 font-medium mb-2">
-                                                        {servicio.nombre_snapshot || servicio.nombre || 'Servicio sin nombre'}
-                                                    </h5>
-
-                                                    {/* Línea 2: Costo y cantidad */}
-                                                    <div className="flex items-center gap-4 mb-3 text-sm text-zinc-300">
-                                                        <span>
-                                                            <strong className="text-zinc-200">Costo:</strong> ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                        </span>
-                                                        <span>
-                                                            <strong className="text-zinc-200">Cantidad:</strong> {cantidad}
-                                                        </span>
-                                                        <span className="font-medium text-green-400">
-                                                            <strong>Total:</strong> ${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    {/* Línea 1: Nombre del servicio | Cantidad */}
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <h5 className="text-zinc-100 font-medium">
+                                                            {servicio.nombre_snapshot || servicio.nombre || 'Servicio sin nombre'}
+                                                        </h5>
+                                                        <span className="text-sm text-zinc-300 bg-zinc-700 px-2 py-1 rounded">
+                                                            x{cantidad}
                                                         </span>
                                                     </div>
 
-                                                    {/* Línea 3: Personal, Asignar, Autorizar pago */}
-                                                    <div className="flex items-center justify-between">
+                                                    {/* Línea 2: Personal | Botón asignar | Botón pagar (si usuario asignado) */}
+                                                    <div className="flex items-center justify-between mb-3">
                                                         {/* Personal asignado */}
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-2 flex-1">
+                                                            <span className="text-sm text-zinc-400">Personal:</span>
                                                             {servicio.User ? (
                                                                 <div className="flex items-center gap-2 px-3 py-1 bg-blue-900/30 border border-blue-700 rounded-full">
                                                                     <User className="w-4 h-4 text-blue-400" />
@@ -228,13 +267,13 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                                                                     </span>
                                                                 </div>
                                                             ) : (
-                                                                <span className="text-xs text-zinc-500 px-3 py-1 bg-zinc-700/50 rounded-full">
-                                                                    Sin personal asignado
+                                                                <span className="text-sm text-zinc-500 px-3 py-1 bg-zinc-700/50 rounded-full">
+                                                                    Sin asignar
                                                                 </span>
                                                             )}
                                                         </div>
 
-                                                        {/* Acciones */}
+                                                        {/* Botones */}
                                                         <div className="flex items-center gap-2">
                                                             {servicio.User ? (
                                                                 <>
@@ -252,7 +291,7 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                                                                         title="Autorizar pago"
                                                                     >
                                                                         <CheckCircle className="w-3 h-3" />
-                                                                        Autorizar Pago
+                                                                        Pagar
                                                                     </button>
                                                                 </>
                                                             ) : (
@@ -261,11 +300,37 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                                                                     className="flex items-center gap-1 px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
                                                                 >
                                                                     <UserPlus className="w-3 h-3" />
-                                                                    Asignar Personal
+                                                                    Asignar
                                                                 </button>
                                                             )}
                                                         </div>
                                                     </div>
+
+                                                    {/* Línea 3: Costo, cantidad, total + botón pagar (condicional) */}
+                                                    {mostrarInformacionFinanciera && (
+                                                        <div className="flex items-center justify-between pt-2 border-t border-zinc-700">
+                                                            <div className="flex items-center gap-4 text-sm text-zinc-300">
+                                                                <span>
+                                                                    <strong className="text-zinc-200">Costo:</strong> ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                </span>
+                                                                <span>
+                                                                    <strong className="text-zinc-200">Cantidad:</strong> {cantidad}
+                                                                </span>
+                                                                <span className="font-medium text-green-400">
+                                                                    <strong>Total:</strong> ${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                </span>
+                                                            </div>
+                                                            <button
+                                                                onClick={handleAutorizarPago}
+                                                                className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600/80 hover:bg-green-600 text-white rounded transition-colors"
+                                                                title="Autorizar pago"
+                                                                disabled={!servicio.User}
+                                                            >
+                                                                <CheckCircle className="w-3 h-3" />
+                                                                Pagar
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}

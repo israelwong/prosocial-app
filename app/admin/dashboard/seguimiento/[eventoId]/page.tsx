@@ -42,20 +42,26 @@ export default async function Page({ params }: PageProps) {
 
                 {/* Grid de información financiera y servicios */}
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    {/* Balance Financiero Avanzado */}
-                    <BalanceFinancieroAvanzado
-                        cotizacion={datos.cotizacion ? {
-                            ...datos.cotizacion,
-                            evento: {
-                                id: eventoId,
-                                cotizaciones: [{
-                                    id: datos.cotizacion.id || '',
-                                    nombre: datos.cotizacion.nombre || `Cotización ${datos.cotizacion.id?.slice(-4) || 'N/A'}`
-                                }]
-                            }
-                        } as any : null}
-                        pagos={datos.pagos as any}
-                    />
+                    <div className='space-y-5'>
+
+                        {/* Balance Financiero Avanzado */}
+                        <BalanceFinancieroAvanzado
+                            cotizacion={datos.cotizacion ? {
+                                ...datos.cotizacion,
+                                evento: {
+                                    id: eventoId,
+                                    cotizaciones: [{
+                                        id: datos.cotizacion.id || '',
+                                        nombre: datos.cotizacion.nombre || `Cotización ${datos.cotizacion.id?.slice(-4) || 'N/A'}`
+                                    }]
+                                }
+                            } as any : null}
+                            pagos={datos.pagos as any}
+                        />
+
+                        {/* Bitácora (Placeholder hasta implementar) */}
+                        <BitacoraSimple bitacora={null} />
+                    </div>
 
                     {/* Servicios Asociados */}
                     <ServiciosAsociados
@@ -64,8 +70,6 @@ export default async function Page({ params }: PageProps) {
                     />
                 </div>
 
-                {/* Bitácora (Placeholder hasta implementar) */}
-                <BitacoraSimple bitacora={null} />
 
                 {/* Debug Data (Colapsable) */}
                 <details className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
