@@ -17,6 +17,19 @@ export async function obtenerAgendaConEventos() {
                             select: {
                                 nombre: true
                             }
+                        },
+                        Cotizacion: {
+                            where: { status: 'aprobada' },
+                            select: {
+                                status: true,
+                                precio: true,
+                                Pago: {
+                                    where: { status: 'paid' },
+                                    select: {
+                                        monto: true
+                                    }
+                                }
+                            }
                         }
                     }
                 },

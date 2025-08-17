@@ -7,14 +7,23 @@ import { Calendar, Clock, Search, ChevronRight, User } from 'lucide-react'
 
 interface AgendaEvento extends Agenda {
     Evento: {
-        nombre: string
+        nombre: string;
         EventoTipo: {
-            nombre: string
-        }
-    }
+            nombre: string;
+        };
+        Cotizacion: {
+            precio: number;
+            Pago: {
+                monto: number;
+            }[];
+        }[];
+    };
     User: {
-        username: string
-    }
+        username: string;
+    };
+    cotizacionPrecio?: number;
+    totalPagado?: number;
+    totalPendiente?: number;
 }
 
 // Componente para una tarjeta de agenda individual
@@ -68,6 +77,27 @@ const AgendaCard = ({ agenda, color, onClick }: { agenda: AgendaEvento, color: s
                         <span>{agenda.User.username}</span>
                     </div>
                 </div>
+
+                {agenda.agendaTipo?.toLowerCase() === 'evento' && (
+                    <div className="mt-4 pt-3 border-t border-zinc-800">
+                        <div className="flex justify-between items-center text-xs">
+                            <div className="text-left px-1">
+                                <span className="text-zinc-400 block text-xs">Total</span>
+                                <span className="font-medium text-zinc-200 text-sm">
+                                    ${agenda.cotizacionPrecio !== undefined ? agenda.cotizacionPrecio.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '0'}
+                                </span>
+                            </div>
+                            <div className="text-left px-1">
+                                <span className="text-green-400 block text-xs">Pagado</span>
+                                <span className="font-medium text-green-400 text-sm">${agenda.totalPagado?.toLocaleString('es-MX') || 0}</span>
+                            </div>
+                            <div className="text-left px-1">
+                                <span className="text-amber-400 block text-xs">Pendiente</span>
+                                <span className="font-medium text-amber-400 text-sm">${agenda.totalPendiente?.toLocaleString('es-MX') || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
             <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 transition-colors duration-200 flex-shrink-0" />
         </div>
@@ -84,19 +114,37 @@ export default function ListaAgenda() {
         setLoading(true)
         obtenerAgendaConEventos().then((data) => {
             setAgenda(
-                data.map((agenda: any): AgendaEvento => ({
-                    ...agenda,
-                    Evento: {
-                        ...agenda.Evento,
-                        nombre: agenda.Evento?.nombre ?? 'Sin nombre de evento',
-                        EventoTipo: {
-                            nombre: agenda.Evento?.EventoTipo?.nombre ?? 'Sin tipo'
+                data.map((agenda: any): AgendaEvento => {
+                    let cotizacionPrecio = 0;
+                    let totalPagado = 0;
+                    let totalPendiente = 0;
+
+                    if (agenda.agendaTipo?.toLowerCase() === 'evento') {
+                        const cotizacionAprobada = agenda.Evento?.Cotizacion?.find((c: any) => c.status === 'aprobada');
+                        if (cotizacionAprobada) {
+                            cotizacionPrecio = cotizacionAprobada.precio;
+                            totalPagado = cotizacionAprobada.Pago.reduce((sum: number, pago: any) => sum + pago.monto, 0);
+                            totalPendiente = cotizacionPrecio - totalPagado;
                         }
-                    },
-                    User: {
-                        username: agenda.User?.username ?? 'Sin asignar'
                     }
-                }))
+
+                    return {
+                        ...agenda,
+                        Evento: {
+                            ...agenda.Evento,
+                            nombre: agenda.Evento?.nombre ?? 'Sin nombre de evento',
+                            EventoTipo: {
+                                nombre: agenda.Evento?.EventoTipo?.nombre ?? 'Sin tipo'
+                            }
+                        },
+                        User: {
+                            username: agenda.User?.username ?? 'Sin asignar'
+                        },
+                        cotizacionPrecio,
+                        totalPagado,
+                        totalPendiente,
+                    };
+                })
             )
             setLoading(false)
         })
@@ -111,7 +159,7 @@ export default function ListaAgenda() {
         }
     };
 
-    const groupedAgenda = useMemo(() => {
+    const { grouped, sortedMonths, monthlyTotals, totalGeneralPendiente } = useMemo(() => {
         const filtered = agenda.filter(item => {
             if (item.status !== 'pendiente') return false;
             const lowerCaseSearchTerm = searchTerm.toLowerCase()
@@ -137,6 +185,18 @@ export default function ListaAgenda() {
             return acc;
         }, {} as Record<string, AgendaEvento[]>);
 
+        const monthlyTotals = Object.keys(grouped).reduce((acc, month) => {
+            acc[month] = grouped[month].reduce((sum, item) => {
+                if (item.agendaTipo?.toLowerCase() === 'evento') {
+                    return sum + (item.totalPendiente || 0);
+                }
+                return sum;
+            }, 0);
+            return acc;
+        }, {} as Record<string, number>);
+
+        const totalGeneralPendiente = Object.values(monthlyTotals).reduce((sum, total) => sum + total, 0);
+
         for (const month in grouped) {
             grouped[month].sort((a, b) => new Date(a.fecha!).getTime() - new Date(b.fecha!).getTime());
         }
@@ -150,7 +210,7 @@ export default function ListaAgenda() {
             return dateA.getTime() - dateB.getTime();
         });
 
-        return { grouped, sortedMonths };
+        return { grouped, sortedMonths, monthlyTotals, totalGeneralPendiente };
     }, [agenda, searchTerm]);
 
     if (loading) {
@@ -194,6 +254,12 @@ export default function ListaAgenda() {
                         {agenda.filter(a => a.status === 'pendiente').length} eventos pendientes en total
                     </p>
                 </div>
+                <div className="text-right">
+                    <span className="text-xs text-amber-400 block">Pendiente a cobrar (Total)</span>
+                    <span className="text-lg font-medium text-amber-400">
+                        ${totalGeneralPendiente.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                </div>
             </div>
 
             {/* Búsqueda */}
@@ -210,22 +276,27 @@ export default function ListaAgenda() {
 
             {/* Kanban Board */}
             <div className="flex-1 overflow-x-auto overflow-y-hidden -mx-6 px-6">
-                {groupedAgenda.sortedMonths.length > 0 ? (
+                {sortedMonths.length > 0 ? (
                     <div className="flex h-full space-x-4 pb-4">
-                        {groupedAgenda.sortedMonths.map(month => (
-                            <div key={month} className="w-80 md:w-96 flex-shrink-0">
+                        {sortedMonths.map(month => (
+                            <div key={month} className="w-80 flex-shrink-0">
                                 <div className="flex flex-col h-full bg-zinc-900/80 rounded-lg">
-                                    <div className="p-3 border-b border-zinc-800 sticky top-0 bg-zinc-900/80 backdrop-blur-sm">
-                                        <h3 className="font-semibold text-zinc-200 capitalize">{month}</h3>
-                                        <p className="text-sm text-zinc-500">{groupedAgenda.grouped[month].length} Tareas</p>
+                                    <div className="flex justify-between items-center p-3 border-b border-zinc-800">
+                                        <h2 className="font-medium text-zinc-200">{month}</h2>
+                                        <div className="text-right">
+                                            <span className="text-xs text-amber-400 block">Pendiente</span>
+                                            <span className="text-sm font-medium text-amber-400">
+                                                ${monthlyTotals[month].toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                                        {groupedAgenda.grouped[month].map(item => (
+                                    <div className="p-3 space-y-3 overflow-y-auto">
+                                        {grouped[month].map(item => (
                                             <AgendaCard
                                                 key={item.id}
                                                 agenda={item}
                                                 color={getTipoAgendaColor(item.agendaTipo)}
-                                                onClick={() => router.push(`/admin/dashboard/seguimiento/${item.eventoId}`)}
+                                                onClick={() => router.push(`/admin/dashboard/eventos/${item.eventoId}`)}
                                             />
                                         ))}
                                     </div>
@@ -235,16 +306,10 @@ export default function ListaAgenda() {
                     </div>
                 ) : (
                     <div className="flex items-center justify-center h-full">
-                        <div className="text-center py-12">
-                            <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <Calendar className="w-6 h-6 text-zinc-500" />
-                            </div>
-                            <h3 className="text-sm font-medium text-zinc-400 mb-1">
-                                No hay eventos pendientes
-                            </h3>
-                            <p className="text-sm text-zinc-600">
-                                {searchTerm ? 'Intenta ajustar tu búsqueda' : 'No tienes eventos agendados próximamente'}
-                            </p>
+                        <div className="text-center">
+                            <Calendar className="mx-auto h-12 w-12 text-zinc-600" />
+                            <h3 className="mt-2 text-sm font-medium text-zinc-200">No hay eventos pendientes</h3>
+                            <p className="mt-1 text-sm text-zinc-500">No se encontraron agendamientos que coincidan con la búsqueda.</p>
                         </div>
                     </div>
                 )}
