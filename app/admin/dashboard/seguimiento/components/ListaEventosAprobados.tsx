@@ -208,8 +208,8 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                         <button
                             onClick={() => setFiltroBalance('todos')}
                             className={`px-4 py-2 rounded-lg font-medium transition-all ${filtroBalance === 'todos'
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
                                 }`}
                         >
                             Todos ({metricas.totalEventos})
@@ -217,8 +217,8 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                         <button
                             onClick={() => setFiltroBalance('pagados')}
                             className={`px-4 py-2 rounded-lg font-medium transition-all ${filtroBalance === 'pagados'
-                                    ? 'bg-green-500 text-white'
-                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                                ? 'bg-green-500 text-white'
+                                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
                                 }`}
                         >
                             Pagados ({metricas.eventosPagados})
@@ -226,8 +226,8 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                         <button
                             onClick={() => setFiltroBalance('pendientes')}
                             className={`px-4 py-2 rounded-lg font-medium transition-all ${filtroBalance === 'pendientes'
-                                    ? 'bg-red-500 text-white'
-                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                                ? 'bg-red-500 text-white'
+                                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
                                 }`}
                         >
                             Pendientes ({metricas.eventosPendientes})
@@ -249,13 +249,35 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                 {Object.entries(eventosFiltradosPorEtapa).map(([etapaNombre, eventos]) => (
                     <div key={etapaNombre} className="bg-zinc-900 rounded-lg p-4">
                         {/* Header de Etapa */}
-                        <div className="mb-4 pb-3 border-b border-zinc-700">
-                            <h2 className="text-lg font-semibold text-white">
-                                {etapaNombre}
-                            </h2>
-                            <p className="text-sm text-zinc-400">
-                                {eventos.length} evento{eventos.length !== 1 ? 's' : ''}
-                            </p>
+                        <div className="mb-6 pb-4 border-b border-zinc-700 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <span className="inline-block w-2 h-2 rounded-full"
+                                        style={{
+                                            background:
+                                                etapaNombre === 'Aprobado'
+                                                    ? '#38bdf8'
+                                                    : etapaNombre === 'En edición'
+                                                        ? '#fbbf24'
+                                                        : etapaNombre === 'En revisión por cliente'
+                                                            ? '#a78bfa'
+                                                            : '#d4d4d8'
+                                        }}
+                                    ></span>
+                                    {etapaNombre}
+                                </h2>
+                                <div className="flex items-center gap-3 mt-1">
+                                    <span className="text-sm text-zinc-400">
+                                        {eventos.length} evento{eventos.length !== 1 ? 's' : ''}
+                                    </span>
+                                    {eventos.length > 0 && (
+                                        <span className="text-xs bg-orange-500/10 text-orange-400 px-2 py-1 rounded font-semibold flex items-center gap-1">
+                                            {formatearPrecio(eventos.reduce((sum, ev) => sum + (ev.balance > 0 ? ev.balance : 0), 0))}
+                                            <span className="ml-1 text-zinc-400 font-normal">pendiente</span>
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Lista de Eventos */}
@@ -280,6 +302,7 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                                                 {evento.nombre || 'Sin nombre'}
                                             </h3>
                                         </div>
+
 
                                         {/* Cliente */}
                                         <div className="flex items-center text-zinc-300 mb-2">
