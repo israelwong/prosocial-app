@@ -1,18 +1,19 @@
 'use client'
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Cookies from 'js-cookie';
 import Link from 'next/link';
 import Image from 'next/image';
 import { User } from '@/app/admin/_lib/types';
 import { verifyToken, cerrarSesion } from '@/app/lib/auth';
-import { Bell, Menu, X, LogOut, ChevronDown, User as UserIcon } from 'lucide-react'
+import { Bell, Menu, X, LogOut, ChevronDown, User as UserIcon, Settings, LayoutDashboard } from 'lucide-react'
 import { supabase } from '../_lib/supabase';
 
 function Navbar() {
     const [user, setUser] = useState<User | null>(null);
     const [menuOpen, setMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const userMenuRef = useRef<HTMLDivElement>(null);
     const pathname = usePathname();
     const router = useRouter();
     const token = Cookies.get('token');
@@ -65,6 +66,18 @@ function Navbar() {
         validarToken(token);
     }, [token, router, suscripcionNotificaciones]);
 
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+                setUserMenuOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
     async function handleCerrarSesion() {
         if (confirm('¿Estás seguro de cerrar sesión?')) {
             if (user && user.token) {
@@ -77,20 +90,12 @@ function Navbar() {
         }
     }
 
-    const links = [
-        { href: '/admin/dashboard', label: 'Dashboard' },
-        { href: '/admin/presentacion', label: 'Presentar' }
+    const links: { href: string; label: string }[] = [
+        // { href: '/admin/presentacion', label: 'Presentar' }
     ];
 
-    if (user && user.role === 'admin') {
-        links.push(
-            { href: '/admin/marketing', label: 'Marketing' },
-            { href: '/admin/configurar', label: 'Configurar' },
-        );
-    }
-
     return (
-        <nav className='bg-zinc-900/95 backdrop-blur-sm border-b border-zinc-800/50 sticky top-0 z-50'>
+        <nav className='bg-zinc-900/95 backdrop-blur-sm border-b border-zinc-800/50 sticky top-0 z-[60]'>
             <div className='w-full mx-auto px-4 sm:px-6 lg:px-8'>
                 <div className='flex justify-between items-center h-16'>
 
@@ -134,7 +139,7 @@ function Navbar() {
                         </button>
 
                         {/* User Menu */}
-                        <div className='relative'>
+                        <div className='relative' ref={userMenuRef}>
                             <button
                                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                                 className='flex items-center space-x-2 p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 rounded-lg transition-all duration-200'
@@ -148,11 +153,25 @@ function Navbar() {
 
                             {/* User Dropdown */}
                             {userMenuOpen && (
-                                <div className='absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl py-1 z-50'>
+                                <div className='absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl py-1 z-[100]'>
                                     <div className='px-4 py-2 border-b border-zinc-800'>
                                         <p className='text-sm font-medium text-zinc-200'>{user?.username}</p>
                                         <p className='text-xs text-zinc-500'>{user?.role}</p>
                                     </div>
+                                    <Link href="/admin/dashboard">
+                                        <span className='w-full px-4 py-2 text-left text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex items-center space-x-2 cursor-pointer'>
+                                            <LayoutDashboard size={16} />
+                                            <span>Dashboard</span>
+                                        </span>
+                                    </Link>
+                                    {user && user.role === 'admin' && (
+                                        <Link href="/admin/configurar">
+                                            <span className='w-full px-4 py-2 text-left text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex items-center space-x-2 cursor-pointer'>
+                                                <Settings size={16} />
+                                                <span>Configurar</span>
+                                            </span>
+                                        </Link>
+                                    )}
                                     <button
                                         onClick={handleCerrarSesion}
                                         className='w-full px-4 py-2 text-left text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex items-center space-x-2'

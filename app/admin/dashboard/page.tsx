@@ -6,6 +6,6 @@ export const metadata = {
 }
 
 export default function Dashboard() {
-  redirect('/gestion')
+  redirect('/admin/dashboard/gestion')
   return null
 }

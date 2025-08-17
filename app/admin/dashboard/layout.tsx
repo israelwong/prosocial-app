@@ -6,7 +6,7 @@ import { Toaster } from 'sonner'
 
 export default function LayoutDashboard({ children }: Readonly<{ children: React.ReactNode }>) {
     return (
-        <div className='h-screen flex flex-col'>
+        <div className='h-screen flex flex-col relative'>
             <Navbar />
             <div className="flex flex-1 overflow-hidden">
                 <SideBarDashboard />
@@ -16,11 +16,13 @@ export default function LayoutDashboard({ children }: Readonly<{ children: React
                     </div>
                 </main>
             </div>
-            <Toaster
-                theme="dark"
-                position="top-right"
-                richColors
-            />
+            <div style={{ position: 'absolute', zIndex: 50, top: 0, right: 0, width: '100%' }}>
+                <Toaster
+                    theme="dark"
+                    position="top-right"
+                    richColors
+                />
+            </div>
         </div>
     );
 }
