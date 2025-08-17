@@ -129,3 +129,52 @@ export async function actualzarStatusAgendaActividad(agendaId: string, status: s
         throw error;
     }
 }
+
+export async function verificarDisponibilidadFecha(fecha: Date, eventoIdExcluir?: string) {
+    try {
+        // Convertir fecha a inicio y fin del día para búsqueda
+        const inicioDelDia = new Date(fecha)
+        inicioDelDia.setHours(0, 0, 0, 0)
+
+        const finDelDia = new Date(fecha)
+        finDelDia.setHours(23, 59, 59, 999)
+
+        // Buscar eventos en agenda para esa fecha (excluyendo el evento actual si se especifica)
+        const eventosEnFecha = await prisma.agenda.findMany({
+            where: {
+                fecha: {
+                    gte: inicioDelDia,
+                    lte: finDelDia
+                },
+                ...(eventoIdExcluir && {
+                    eventoId: {
+                        not: eventoIdExcluir
+                    }
+                }),
+                status: {
+                    not: 'cancelado' // No contar eventos cancelados
+                }
+            },
+            include: {
+                Evento: {
+                    select: {
+                        nombre: true,
+                        EventoTipo: {
+                            select: {
+                                nombre: true
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        return {
+            disponible: eventosEnFecha.length === 0,
+            eventosEnFecha: eventosEnFecha
+        }
+    } catch (error) {
+        console.error('Error al verificar disponibilidad de fecha:', error)
+        throw error
+    }
+}

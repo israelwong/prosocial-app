@@ -32,7 +32,8 @@ export async function obtenerEventoPorId(id: string) {
             },
             EventoEtapa: {
                 select: {
-                    nombre: true
+                    nombre: true,
+                    posicion: true
                 }
             }
         }

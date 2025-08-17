@@ -2,7 +2,7 @@ import React from 'react'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { obtenerEventoPorId } from '@/app/admin/_lib/evento.actions'
-import SessionTiempoReal from '../_components/SessionTiempoReal'
+import SessionTiempoReal from '../components/SessionTiempoReal'
 
 export const metadata: Metadata = {
     title: 'Sesión de Presentación Ejecutiva'

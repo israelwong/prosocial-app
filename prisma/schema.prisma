@@ -154,6 +154,7 @@ model Cotizacion {
   
   nombre                             String
   precio                             Float
+  descripcion                        String?
   condicionesComercialesId           String?
   CondicionesComerciales             CondicionesComerciales?            @relation(fields: [condicionesComercialesId], references: [id])
   condicionesComercialesMetodoPagoId String?
