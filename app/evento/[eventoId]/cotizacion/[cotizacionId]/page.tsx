@@ -3,7 +3,8 @@ import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { obtenerCotizacion } from '@/app/admin/_lib/cotizacion.actions'
 import { obtenerEventoPorId } from '@/app/admin/_lib/evento.actions'
-import CotizacionDetalle from './CotizacionDetalle'
+import CotizacionDetalle from './components/CotizacionDetalle'
+
 
 export const metadata: Metadata = {
     title: 'Detalle de Cotización'
@@ -48,15 +49,23 @@ export default async function CotizacionDetallePage({ params, searchParams }: Pa
         const fechaOcupada = evento.status === 'contratado'
 
         return (
-            <CotizacionDetalle
-                cotizacion={cotizacion}
-                evento={evento}
-                esRealtime={realtime === 'true'}
-                esAdmin={admin === 'true'}
-                esLegacy={legacy === 'true'}
-                estaExpirada={estaExpirada}
-                fechaOcupada={fechaOcupada}
-            />
+            <div>
+                <h1>Detalle de Cotización</h1>
+                <p>Evento: {evento.nombre}</p>
+                <p>Cotización: {cotizacion.nombre}</p>
+                <p>Estado: {cotizacion.status}</p>
+                <p>Fecha de creación: {cotizacion.createdAt.toString()}</p>
+                <p>Fecha de expiración: {cotizacion.expiresAt?.toString()}</p>
+            </div>
+            // <CotizacionDetalle
+            //     cotizacion={cotizacion}
+            //     evento={evento}
+            //     esRealtime={realtime === 'true'}
+            //     esAdmin={admin === 'true'}
+            //     esLegacy={legacy === 'true'}
+            //     estaExpirada={estaExpirada}
+            //     fechaOcupada={fechaOcupada}
+            // />
         )
 
     } catch (error) {

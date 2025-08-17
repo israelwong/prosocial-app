@@ -18,9 +18,10 @@ AAMMDD-HHMM-descripcion-breve.md
 
 ### **Agosto 2025**
 
-| Archivo                                     | Commit ID | Fecha/Hora       | Descripción                                                    |
-| ------------------------------------------- | --------- | ---------------- | -------------------------------------------------------------- |
-| `250815-1745-paquetes-simplificacion-ux.md` | `b9abe32` | 15/08/2025 17:45 | Simplificación UX módulo paquetes, validaciones en tiempo real |
+| Archivo                                            | Commit ID | Fecha/Hora       | Descripción                                                          |
+| -------------------------------------------------- | --------- | ---------------- | -------------------------------------------------------------------- |
+| `250815-1745-paquetes-simplificacion-ux.md`        | `b9abe32` | 15/08/2025 17:45 | Simplificación UX módulo paquetes, validaciones en tiempo real       |
+| `250816-1425-modularizacion-componentes-evento.md` | `40ffe5d` | 16/08/2025 14:25 | Modularización componentes evento UI, reducción código, tema púrpura |
 
 ---
 

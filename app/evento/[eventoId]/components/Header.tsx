@@ -26,10 +26,10 @@ export default function Header({ evento, disponible, diasRestantes }: Props) {
     return (
         <header className="bg-zinc-900/95 backdrop-blur-sm border-b border-zinc-800 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 py-6">
-
-                    {/* Logo y branding */}
-                    <div className="flex items-center gap-4">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 py-6 w-full">
+                    {/* Columna 1: Logo y branding */}
+                    <div className="flex-1 flex items-center">
+                        {/* Logo y branding se mantiene aquí */}
                         <div className="flex-shrink-0">
                             <Image
                                 src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_blanco.svg"
@@ -41,10 +41,8 @@ export default function Header({ evento, disponible, diasRestantes }: Props) {
                             />
                         </div>
                     </div>
-
-                    {/* Información del evento */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-
+                    {/* Columna 2: Información del evento */}
+                    <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-4 justify-end">
                         {/* Fecha y disponibilidad */}
                         <div className="flex flex-col gap-2">
                             {/* Estado de disponibilidad */}
@@ -66,6 +64,8 @@ export default function Header({ evento, disponible, diasRestantes }: Props) {
                         </div>
                     </div>
                 </div>
+
+
             </div>
         </header>
     )
