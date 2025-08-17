@@ -41,7 +41,13 @@ interface Props {
 // Tipo para servicios agrupados
 interface ServiciosAgrupados {
     [seccion: string]: {
-        [categoria: string]: any[];
+        posicion: number;
+        categorias: {
+            [categoria: string]: {
+                posicion: number;
+                servicios: any[];
+            };
+        };
     };
 }
 
@@ -60,21 +66,41 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
         return total + (costo * cantidad);
     }, 0);
 
-    // Agrupar servicios por sección y categoría
+    // Agrupar servicios por sección y categoría con ordenamiento
     const serviciosAgrupados: ServiciosAgrupados = servicios.reduce((acc: ServiciosAgrupados, servicio: any) => {
         const seccion = servicio.seccion_nombre_snapshot || servicio.seccion_nombre || 'Sin Sección';
         const categoria = servicio.categoria_nombre_snapshot || servicio.categoria_nombre || 'Sin Categoría';
 
         if (!acc[seccion]) {
-            acc[seccion] = {};
+            acc[seccion] = {
+                // Intentar obtener la posición de la sección desde diferentes fuentes
+                posicion: servicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 
+                         servicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
+                         0,
+                categorias: {}
+            };
         }
-        if (!acc[seccion][categoria]) {
-            acc[seccion][categoria] = [];
+        if (!acc[seccion].categorias[categoria]) {
+            acc[seccion].categorias[categoria] = {
+                // Intentar obtener la posición de la categoría desde diferentes fuentes
+                posicion: servicio.ServicioCategoria?.posicion || 
+                         servicio.Servicio?.ServicioCategoria?.posicion ||
+                         0,
+                servicios: []
+            };
         }
-        acc[seccion][categoria].push(servicio);
+        acc[seccion].categorias[categoria].servicios.push(servicio);
 
         return acc;
     }, {} as ServiciosAgrupados);
+
+    // Ordenar secciones por posición, luego por nombre
+    const seccionesOrdenadas = Object.entries(serviciosAgrupados).sort(([nombreA, a], [nombreB, b]) => {
+        if (a.posicion !== b.posicion) {
+            return a.posicion - b.posicion;
+        }
+        return nombreA.localeCompare(nombreB);
+    });
 
     const handleAsignar = (servicio: any) => {
         setServicioSeleccionado(servicio);
@@ -121,100 +147,122 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
             </div>
 
             {/* Servicios Agrupados */}
-            {Object.entries(serviciosAgrupados).map(([seccion, categorias]) => (
-                <div key={seccion} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-zinc-200 mb-4">{seccion}</h3>
+            {seccionesOrdenadas.map(([seccion, seccionData]) => {
+                // Ordenar categorías por posición, luego por nombre
+                const categoriasOrdenadas = Object.entries(seccionData.categorias).sort(([nombreA, a], [nombreB, b]) => {
+                    if (a.posicion !== b.posicion) {
+                        return a.posicion - b.posicion;
+                    }
+                    return nombreA.localeCompare(nombreB);
+                });
 
-                    {Object.entries(categorias).map(([categoria, serviciosCategoria]) => (
-                        <div key={categoria} className="mb-6 last:mb-0">
-                            <h4 className="text-md font-medium text-zinc-300 mb-3 border-b border-zinc-700 pb-2">
-                                {categoria}
-                            </h4>
+                return (
+                    <div key={seccion} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+                        {/* Nombre de la Sección */}
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
+                                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                {seccion}
+                            </h3>
+                        </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead>
-                                        <tr className="text-xs text-zinc-400 border-b border-zinc-700">
-                                            <th className="text-left py-2 px-3">Servicio</th>
-                                            <th className="text-right py-2 px-3">Costo</th>
-                                            <th className="text-center py-2 px-3">Cantidad</th>
-                                            <th className="text-right py-2 px-3">Total</th>
-                                            <th className="text-center py-2 px-3">Asignado a</th>
-                                            <th className="text-center py-2 px-3">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {serviciosCategoria.map((servicio: any) => {
+                        {/* Categorías */}
+                        <div className="ml-6 space-y-6">
+                            {categoriasOrdenadas.map(([categoria, categoriaData]) => (
+                                <div key={categoria} className="border-l-2 border-zinc-700 pl-4">
+                                    {/* Nombre de la Categoría */}
+                                    <h4 className="text-md font-medium text-zinc-200 mb-4 flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full"></span>
+                                        {categoria}
+                                    </h4>
+
+                                    {/* Servicios */}
+                                    <div className="ml-6 space-y-4">
+                                        {categoriaData.servicios.map((servicio: any) => {
                                             const costo = servicio.costo_snapshot || servicio.costo || 0;
                                             const cantidad = servicio.cantidad || 1;
                                             const total = costo * cantidad;
 
                                             return (
-                                                <tr key={servicio.id} className="border-b border-zinc-800 hover:bg-zinc-800/50">
-                                                    <td className="py-3 px-3 text-zinc-200">
+                                                <div key={servicio.id} className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-4 hover:bg-zinc-800 transition-colors">
+                                                    {/* Línea 1: Nombre del servicio */}
+                                                    <h5 className="text-zinc-100 font-medium mb-2">
                                                         {servicio.nombre_snapshot || servicio.nombre || 'Servicio sin nombre'}
-                                                    </td>
-                                                    <td className="py-3 px-3 text-right text-zinc-300">
-                                                        ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                    </td>
-                                                    <td className="py-3 px-3 text-center text-zinc-300">
-                                                        {cantidad}
-                                                    </td>
-                                                    <td className="py-3 px-3 text-right font-medium text-zinc-200">
-                                                        ${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                    </td>
-                                                    <td className="py-3 px-3 text-center">
-                                                        {servicio.User ? (
-                                                            <div className="flex items-center justify-center gap-1">
-                                                                <User className="w-4 h-4 text-blue-400" />
-                                                                <span className="text-sm text-blue-400">
-                                                                    {servicio.User.username || servicio.User.email}
+                                                    </h5>
+
+                                                    {/* Línea 2: Costo y cantidad */}
+                                                    <div className="flex items-center gap-4 mb-3 text-sm text-zinc-300">
+                                                        <span>
+                                                            <strong className="text-zinc-200">Costo:</strong> ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </span>
+                                                        <span>
+                                                            <strong className="text-zinc-200">Cantidad:</strong> {cantidad}
+                                                        </span>
+                                                        <span className="font-medium text-green-400">
+                                                            <strong>Total:</strong> ${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Línea 3: Personal, Asignar, Autorizar pago */}
+                                                    <div className="flex items-center justify-between">
+                                                        {/* Personal asignado */}
+                                                        <div className="flex items-center gap-2">
+                                                            {servicio.User ? (
+                                                                <div className="flex items-center gap-2 px-3 py-1 bg-blue-900/30 border border-blue-700 rounded-full">
+                                                                    <User className="w-4 h-4 text-blue-400" />
+                                                                    <span className="text-sm text-blue-300">
+                                                                        {servicio.User.username || servicio.User.email}
+                                                                    </span>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-xs text-zinc-500 px-3 py-1 bg-zinc-700/50 rounded-full">
+                                                                    Sin personal asignado
                                                                 </span>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-xs text-zinc-500">Sin asignar</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-3 px-3">
-                                                        <div className="flex items-center justify-center gap-2">
+                                                            )}
+                                                        </div>
+
+                                                        {/* Acciones */}
+                                                        <div className="flex items-center gap-2">
                                                             {servicio.User ? (
                                                                 <>
                                                                     <button
                                                                         onClick={() => handleRemover(servicio)}
-                                                                        className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors"
+                                                                        className="flex items-center gap-1 px-3 py-1 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
                                                                         title="Remover asignación"
                                                                     >
-                                                                        <XCircle className="w-4 h-4" />
+                                                                        <XCircle className="w-3 h-3" />
+                                                                        Remover
                                                                     </button>
                                                                     <button
                                                                         onClick={handleAutorizarPago}
-                                                                        className="p-1 text-green-400 hover:text-green-300 hover:bg-green-900/20 rounded transition-colors"
+                                                                        className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600/80 hover:bg-green-600 text-white rounded transition-colors"
                                                                         title="Autorizar pago"
                                                                     >
-                                                                        <CheckCircle className="w-4 h-4" />
+                                                                        <CheckCircle className="w-3 h-3" />
+                                                                        Autorizar Pago
                                                                     </button>
                                                                 </>
                                                             ) : (
                                                                 <button
                                                                     onClick={() => handleAsignar(servicio)}
-                                                                    className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                                                                    className="flex items-center gap-1 px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
                                                                 >
                                                                     <UserPlus className="w-3 h-3" />
-                                                                    Asignar
+                                                                    Asignar Personal
                                                                 </button>
                                                             )}
                                                         </div>
-                                                    </td>
-                                                </tr>
+                                                    </div>
+                                                </div>
                                             );
                                         })}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
-            ))}
+                    </div>
+                );
+            })}
 
             {/* Modal de Asignación */}
             <AsignarUsuarioModal

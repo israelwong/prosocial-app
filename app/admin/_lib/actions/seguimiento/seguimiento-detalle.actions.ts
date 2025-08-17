@@ -65,10 +65,26 @@ export async function obtenerEventoDetalleCompleto(
                             include: {
                                 Servicio: {
                                     include: {
-                                        ServicioCategoria: true
+                                        ServicioCategoria: {
+                                            include: {
+                                                seccionCategoria: {
+                                                    include: {
+                                                        Seccion: true
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 },
-                                ServicioCategoria: true
+                                ServicioCategoria: {
+                                    include: {
+                                        seccionCategoria: {
+                                            include: {
+                                                Seccion: true
+                                            }
+                                        }
+                                    }
+                                }
                             },
                             orderBy: { posicion: 'asc' }
                         },
