@@ -12,21 +12,21 @@ import prisma from '../../prismaClient';
 export async function asignarUsuarioAServicio(servicioId: string, userId: string, eventoId: string) {
     try {
         console.log('🔄 [SERVER] Iniciando asignación:', { servicioId, userId, eventoId });
-        
+
         const resultado = await prisma.cotizacionServicio.update({
             where: { id: servicioId },
-            data: { 
+            data: {
                 userId: userId,
                 fechaAsignacion: new Date()
             },
         });
-        
+
         console.log('✅ [SERVER] Usuario asignado exitosamente:', resultado);
-        
+
         // Revalida la página de detalle del evento para reflejar el cambio.
         console.log('🔄 [SERVER] Revalidando ruta:', `/admin/dashboard/seguimiento/${eventoId}`);
         revalidatePath(`/admin/dashboard/seguimiento/${eventoId}`);
-        
+
         console.log('✅ [SERVER] Ruta revalidada');
         return resultado;
     } catch (error) {
@@ -43,22 +43,22 @@ export async function asignarUsuarioAServicio(servicioId: string, userId: string
 export async function removerUsuarioDeServicio(servicioId: string, eventoId: string) {
     try {
         console.log('🔄 [SERVER] Removiendo asignación:', { servicioId, eventoId });
-        
+
         const resultado = await prisma.cotizacionServicio.update({
             where: { id: servicioId },
             // Establece el userId a null para remover la asignación.
-            data: { 
+            data: {
                 userId: null,
                 fechaAsignacion: null
             },
         });
-        
+
         console.log('✅ [SERVER] Asignación removida exitosamente:', resultado);
-        
+
         // Revalida la página de detalle del evento para reflejar el cambio.
         console.log('🔄 [SERVER] Revalidando ruta:', `/admin/dashboard/seguimiento/${eventoId}`);
         revalidatePath(`/admin/dashboard/seguimiento/${eventoId}`);
-        
+
         console.log('✅ [SERVER] Ruta revalidada');
         return resultado;
     } catch (error) {

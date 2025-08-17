@@ -120,20 +120,20 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
     };
 
     const handleConfirmarAsignacion = async (usuarioId: string) => {
-        console.log('🔄 Iniciando asignación:', { 
-            servicioId: servicioSeleccionado?.id, 
-            usuarioId, 
-            eventoId: evento.id 
+        console.log('🔄 Iniciando asignación:', {
+            servicioId: servicioSeleccionado?.id,
+            usuarioId,
+            eventoId: evento.id
         });
-        
+
         if (servicioSeleccionado) {
             try {
                 const resultado = await asignarUsuarioAServicio(servicioSeleccionado.id, usuarioId, evento.id);
                 console.log('✅ Asignación exitosa:', resultado);
-                
+
                 setModalAbierto(false);
                 setServicioSeleccionado(null);
-                
+
                 console.log('🔄 Modal cerrado, esperando recarga...');
             } catch (error) {
                 console.error('❌ Error al asignar usuario:', error);
