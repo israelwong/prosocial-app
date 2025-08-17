@@ -2,10 +2,11 @@ import React from 'react'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { obtenerEventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.actions'
+import { obtenerUsuarios } from '@/app/admin/_lib/actions/users/users.actions'
 import { HeaderSimple } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/HeaderSimple'
 import { BitacoraSimple } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/BitacoraSimple'
 import { BalanceFinancieroAvanzado } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/BalanceFinancieroAvanzado'
-import { ServiciosAsociadosPlaceholder } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/ServiciosAsociadosPlaceholder'
+import ServiciosAsociados from '@/app/admin/dashboard/seguimiento/[eventoId]/components/ServiciosAsociados'
 
 export const metadata: Metadata = {
     title: 'Detalle del evento',
@@ -19,9 +20,12 @@ export default async function Page({ params }: PageProps) {
     try {
         const { eventoId } = await params;
 
-        // Cargar todos los datos del evento en el servidor
+        // Cargar todos los datos del evento y usuarios en el servidor
         console.log('🔄 Cargando datos del evento en el servidor:', eventoId);
-        const datos = await obtenerEventoDetalleCompleto(eventoId);
+        const [datos, usuarios] = await Promise.all([
+            obtenerEventoDetalleCompleto(eventoId),
+            obtenerUsuarios()
+        ]);
 
         // Mostrar datos con componentes V3 simples
         return (
@@ -53,9 +57,10 @@ export default async function Page({ params }: PageProps) {
                         pagos={datos.pagos as any}
                     />
 
-                    {/* Servicios Asociados (Placeholder) */}
-                    <ServiciosAsociadosPlaceholder
-                        servicios={datos.serviciosDetalle}
+                    {/* Servicios Asociados */}
+                    <ServiciosAsociados
+                        evento={datos.evento as any}
+                        usuarios={usuarios}
                     />
                 </div>
 

@@ -24,6 +24,8 @@ const STATUS_COLORS = {
 
 export function ServiciosAsociadosPlaceholder({ servicios }: ServiciosAsociadosPlaceholderProps) {
 
+    console.log('Servicios recibidos en el placeholder:', servicios);
+
     // Función de formateo consistente
     const formatearMoneda = (cantidad: number) => {
         return new Intl.NumberFormat('es-MX', {

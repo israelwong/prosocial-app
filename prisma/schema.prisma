@@ -23,6 +23,7 @@ model User {
   Agenda    Agenda[]
   Pago      Pago[]
   Evento    Evento[]
+  CotizacionServicio CotizacionServicio[]
   // Notificacion Notificacion[]
 }
 
@@ -183,6 +184,7 @@ model CotizacionServicio {
   cantidad            Int               @default(1)
   posicion            Int               @default(0)
   userId              String?
+  User                User?             @relation(fields: [userId], references: [id])
   fechaAsignacion     DateTime?
   FechaEntrega        DateTime?
   status              String            @default("pendiente")
