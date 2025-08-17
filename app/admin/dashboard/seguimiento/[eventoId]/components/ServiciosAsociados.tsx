@@ -74,18 +74,18 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
         if (!acc[seccion]) {
             acc[seccion] = {
                 // Intentar obtener la posición de la sección desde diferentes fuentes
-                posicion: servicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 
-                         servicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
-                         0,
+                posicion: servicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
+                    servicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
+                    0,
                 categorias: {}
             };
         }
         if (!acc[seccion].categorias[categoria]) {
             acc[seccion].categorias[categoria] = {
                 // Intentar obtener la posición de la categoría desde diferentes fuentes
-                posicion: servicio.ServicioCategoria?.posicion || 
-                         servicio.Servicio?.ServicioCategoria?.posicion ||
-                         0,
+                posicion: servicio.ServicioCategoria?.posicion ||
+                    servicio.Servicio?.ServicioCategoria?.posicion ||
+                    0,
                 servicios: []
             };
         }
@@ -120,14 +120,27 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
     };
 
     const handleConfirmarAsignacion = async (usuarioId: string) => {
+        console.log('🔄 Iniciando asignación:', { 
+            servicioId: servicioSeleccionado?.id, 
+            usuarioId, 
+            eventoId: evento.id 
+        });
+        
         if (servicioSeleccionado) {
             try {
-                await asignarUsuarioAServicio(servicioSeleccionado.id, usuarioId, evento.id);
+                const resultado = await asignarUsuarioAServicio(servicioSeleccionado.id, usuarioId, evento.id);
+                console.log('✅ Asignación exitosa:', resultado);
+                
                 setModalAbierto(false);
                 setServicioSeleccionado(null);
+                
+                console.log('🔄 Modal cerrado, esperando recarga...');
             } catch (error) {
-                console.error('Error al asignar usuario:', error);
+                console.error('❌ Error al asignar usuario:', error);
+                alert('Error al asignar usuario: ' + (error as Error).message);
             }
+        } else {
+            console.warn('⚠️ No hay servicio seleccionado');
         }
     };
 

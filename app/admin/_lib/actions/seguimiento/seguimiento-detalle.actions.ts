@@ -63,6 +63,8 @@ export async function obtenerEventoDetalleCompleto(
                         // 🛠️ SERVICIOS - Lista completa de servicios de la cotización  
                         Servicio: {
                             include: {
+                                // @ts-ignore - Temporal hasta resolver tipos de Prisma
+                                User: true, // ✅ Incluir usuario asignado
                                 Servicio: {
                                     include: {
                                         ServicioCategoria: {
