@@ -85,60 +85,60 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Navigation */}
-            <div className={`
-                md:hidden fixed inset-0 bg-zinc-900/98 backdrop-blur-sm z-50 transition-all duration-300
-                ${isMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}
-            `}>
-                <div className="flex flex-col h-full">
-
-                    {/* Mobile Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-zinc-800">
-                        <Image
-                            src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_blanco.svg"
-                            width={100}
-                            height={32}
-                            alt="ProSocial"
-                            className="h-6 w-auto"
-                            unoptimized
-                        />
-                        <button
-                            onClick={toggleMenu}
-                            className="p-2 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-                        >
-                            <X size={20} />
-                        </button>
-                    </div>
-
-                    {/* Mobile Menu Items */}
-                    <nav className="flex-1 flex flex-col justify-center px-4">
-                        <div className="space-y-1">
-                            {menu.map((item, index) => (
-                                <Link
-                                    key={index}
-                                    href={item.link}
-                                    className={`
-                                        block px-4 py-4 text-lg font-medium rounded-lg transition-all duration-200
-                                        ${activeItem === item.link
-                                            ? 'text-white bg-zinc-800'
-                                            : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-                                        }
-                                    `}
-                                    onClick={() => handleLinkClick(item.link)}
+            {isMenuOpen && (
+                <div className="md:hidden fixed inset-0 bg-black/80 z-40" onClick={toggleMenu}>
+                    <div className="fixed top-0 right-0 h-full w-80 max-w-full bg-zinc-900 shadow-xl z-50 transform transition-transform duration-300">
+                        <div className="flex flex-col h-full">
+                            {/* Mobile Header */}
+                            <div className="flex items-center justify-between p-4 border-b border-zinc-800">
+                                <Image
+                                    src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_blanco.svg"
+                                    width={100}
+                                    height={32}
+                                    alt="ProSocial"
+                                    className="h-6 w-auto"
+                                    unoptimized
+                                />
+                                <button
+                                    onClick={toggleMenu}
+                                    className="p-2 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
                                 >
-                                    {item.name}
-                                </Link>
-                            ))}
-                        </div>
-                    </nav>
+                                    <X size={20} />
+                                </button>
+                            </div>
 
-                    {/* Mobile Footer */}
-                    <div className="p-4 border-t border-zinc-800">
-                        <p className="text-center text-sm text-zinc-500">
-                            Momentos para toda la vida
-                        </p>
+                            {/* Mobile Menu Items */}
+                            <nav className="flex-1 px-4 py-6">
+                                <div className="space-y-2">
+                                    {menu.map((item, index) => (
+                                        <Link
+                                            key={index}
+                                            href={item.link}
+                                            className={`
+                                                block px-4 py-3 text-base font-medium rounded-lg transition-all duration-200
+                                                ${activeItem === item.link
+                                                    ? 'text-white bg-purple-600 shadow-sm'
+                                                    : 'text-zinc-300 hover:text-white hover:bg-zinc-800'
+                                                }
+                                            `}
+                                            onClick={() => handleLinkClick(item.link)}
+                                        >
+                                            {item.name}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </nav>
+
+                            {/* Mobile Footer */}
+                            <div className="p-4 border-t border-zinc-800 bg-zinc-950">
+                                <p className="text-center text-sm text-zinc-500">
+                                    Momentos para toda la vida
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </header>
     );
 }

@@ -4,13 +4,14 @@ import { redirect } from 'next/navigation'
 import { obtenerCotizacionesParaEvento } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.actions'
 // Nuevos componentes
-import EventoHeader from './components/layout/EventoHeader'
-import EventoFooter from './components/layout/EventoFooter'
+import EventoHeader from '../components/layout/EventoHeader'
+import EventoFooter from '../components/layout/EventoFooter'
 import HeroSection from './components/sections/HeroSection'
 import CotizacionesSection from './components/sections/CotizacionesSection'
 import PaquetesSection from './components/sections/PaquetesSection'
 import PortfolioSection from './components/sections/PortfolioSection'
 import TestimoniosSection from './components/sections/TestimoniosSection'
+import EventoMetadataProvider from './components/EventoMetadataProvider'
 // Componentes legacy (mantenemos para casos específicos)
 import FechaNoDisponible from './components/FechaNoDisponible'
 
@@ -79,6 +80,15 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
         if (resultadoCotizaciones.paquetes && resultadoCotizaciones.paquetes.length > 0) {
             return (
                 <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
+                    {/* Metadata provider para guardar contexto del evento */}
+                    <EventoMetadataProvider
+                        metadata={{
+                            eventoId: evento.id,
+                            eventoTipoId: evento.eventoTipoId || '',
+                            eventoTipoNombre: evento.EventoTipo?.nombre || 'Evento'
+                        }}
+                    />
+
                     <EventoHeader />
                     <HeroSection
                         evento={evento}
@@ -153,6 +163,15 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
     // Si hay múltiples cotizaciones, mostrar lista
     return (
         <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
+            {/* Metadata provider para guardar contexto del evento */}
+            <EventoMetadataProvider
+                metadata={{
+                    eventoId: evento.id,
+                    eventoTipoId: evento.eventoTipoId || '',
+                    eventoTipoNombre: evento.EventoTipo?.nombre || 'Evento'
+                }}
+            />
+
             <EventoHeader />
             <HeroSection
                 evento={evento}

@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Package, DollarSign, Calendar, Users, CheckCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 // Tipos para la estructura de datos (reutilizando la lógica exitosa)
 interface ServiciosAgrupados {
@@ -63,6 +64,7 @@ interface Props {
 
 export default function PaqueteDetalle({ paquete }: Props) {
     // Función para agrupar servicios usando la misma lógica exitosa de cotización y seguimiento
+    const router = useRouter();
     const agruparServicios = (paqueteServicios: PaqueteServicio[]): ServiciosAgrupados => {
         const serviciosAgrupados: ServiciosAgrupados = {};
 
@@ -121,40 +123,37 @@ export default function PaqueteDetalle({ paquete }: Props) {
         <div className="max-w-6xl mx-auto px-4 py-8">
             {/* Header con navegación */}
             <div className="mb-8">
-                <Link
-                    href="/evento/paquetes"
+
+
+                <button
+                    type="button"
+                    onClick={() => router.back()}
                     className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors mb-6"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     Volver a paquetes
-                </Link>
+                </button>
 
-                <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl p-8 text-white">
-                    <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-4">
-                                <Package className="w-8 h-8" />
-                                <h1 className="text-3xl font-bold">{paquete.nombre}</h1>
+                <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl p-6 text-white">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-3">
+                                <Package className="w-6 h-6" />
+                                <h1 className="text-2xl md:text-3xl font-bold truncate">{paquete.nombre}</h1>
                             </div>
 
-                            <div className="flex items-center gap-6 text-purple-100">
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-5 h-5" />
-                                    <span>Para {paquete.EventoTipo.nombre}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Users className="w-5 h-5" />
-                                    <span>{totalServicios} servicios incluidos</span>
-                                </div>
+                            <div className="flex items-center gap-2 text-purple-100">
+                                <Calendar className="w-4 h-4" />
+                                <span className="text-sm">Para {paquete.EventoTipo.nombre}</span>
                             </div>
                         </div>
 
                         {paquete.precio && (
-                            <div className="text-right">
-                                <div className="text-purple-200 text-sm mb-1">Precio del paquete</div>
-                                <div className="flex items-center gap-2 text-3xl font-bold">
-                                    <DollarSign className="w-8 h-8" />
-                                    {paquete.precio.toLocaleString('es-MX')}
+                            <div className="text-left md:text-right flex-shrink-0">
+                                <div className="text-purple-200 text-xs mb-1">Precio del paquete</div>
+                                <div className="flex items-center gap-1 text-xl md:text-2xl font-bold">
+                                    <DollarSign className="w-5 h-5 md:w-6 md:h-6" />
+                                    <span className="break-all">{paquete.precio.toLocaleString('es-MX')}</span>
                                 </div>
                             </div>
                         )}
