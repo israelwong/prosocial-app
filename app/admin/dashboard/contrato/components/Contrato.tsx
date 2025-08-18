@@ -6,7 +6,7 @@ import { Cliente, Cotizacion, CotizacionServicio, CondicionesComerciales, Servic
 import { obtenerEventoContrato } from '@/app/admin/_lib/evento.actions'
 import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
 import { obtenerCategories } from '@/app/admin/_lib/categorias.actions'
-import FichaServicioContrato from '../../seguimiento/[eventoId]/components/FichaServicioContrato'
+// import FichaServicioContrato from '../../seguimiento/[eventoId]/components/FichaServicioContrato'
 
 interface Props {
     eventoId: string
@@ -84,9 +84,12 @@ export default function Contrato({ eventoId }: Props) {
                             {serviciosFiltrados.map(servicio => {
                                 return (
                                     <li key={servicio.id} className='px-0 py-2 '>
-                                        <FichaServicioContrato
+                                        {/* <FichaServicioContrato
                                             cotizacionServicioId={servicio.id}
-                                        />
+                                        /> */}
+                                        <div className="text-zinc-400 text-sm">
+                                            Servicio: {servicio.nombre || 'Sin nombre'} - ${servicio.precio || 0}
+                                        </div>
                                     </li>
                                 )
                             })}

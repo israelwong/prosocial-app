@@ -63,8 +63,8 @@ export default async function Page({ params }: PageProps) {
                         {/* Ficha de Agenda V3 */}
                         <FichaAgendaV3 eventoId={eventoId} />
 
-                        {/* Bitácora (Placeholder hasta implementar) */}
-                        <BitacoraSimple bitacora={null} />
+                        {/* Bitácora del Evento */}
+                        <BitacoraSimple eventoId={eventoId} />
                     </div>
 
                     {/* Servicios Asociados */}
