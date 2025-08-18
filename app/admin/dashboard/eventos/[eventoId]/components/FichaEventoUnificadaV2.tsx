@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import Cookies from 'js-cookie'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
 import type { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.schemas'
+import { crearFechaLocal, formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import {
     actualizarEventoBasico,
     asignarUsuarioEvento,
@@ -44,11 +45,20 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
 
     const evento = eventoCompleto
 
+    // Helper para convertir fecha a formato input (YYYY-MM-DD)
+    const fechaParaInput = (fecha: Date | string | null): string => {
+        if (!fecha) return '';
+        const fechaLocal = crearFechaLocal(fecha);
+        const year = fechaLocal.getFullYear();
+        const month = String(fechaLocal.getMonth() + 1).padStart(2, '0');
+        const day = String(fechaLocal.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     // Estados del formulario
     const [formData, setFormData] = useState({
         nombre: evento.nombre || '',
-        fecha_evento: evento.fecha_evento ?
-            new Date(evento.fecha_evento).toISOString().split('T')[0] : '',
+        fecha_evento: fechaParaInput(evento.fecha_evento),
         sede: evento.sede || '',
         direccion: evento.direccion || '',
         status: evento.status || 'active'
@@ -96,8 +106,7 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
     const handleCancel = () => {
         setFormData({
             nombre: evento.nombre || '',
-            fecha_evento: evento.fecha_evento ?
-                new Date(evento.fecha_evento).toISOString().split('T')[0] : '',
+            fecha_evento: fechaParaInput(evento.fecha_evento),
             sede: evento.sede || '',
             direccion: evento.direccion || '',
             status: evento.status || 'active'
@@ -222,7 +231,7 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
                     ) : (
                         <p className="text-zinc-200">
                             {evento.fecha_evento ?
-                                new Date(evento.fecha_evento).toLocaleDateString('es-ES', {
+                                formatearFecha(evento.fecha_evento, {
                                     year: 'numeric',
                                     month: 'long',
                                     day: 'numeric'

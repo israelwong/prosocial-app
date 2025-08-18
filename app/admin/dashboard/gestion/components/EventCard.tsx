@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Calendar, User, MapPin, DollarSign, GripVertical, Archive } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { EventoKanbanType } from '@/app/admin/_lib/actions/gestion/gestion.schemas';
+import { crearFechaLocal, formatearFecha } from '@/app/admin/_lib/utils/fechas';
 
 interface EventCardProps {
     evento: EventoKanbanType;
@@ -82,7 +83,7 @@ export default function EventCard({ evento, isDragging = false, onArchive }: Eve
     };
 
     const formatDate = (date: Date) => {
-        const eventDate = new Date(date);
+        const eventDate = crearFechaLocal(date);
         const today = new Date();
         const diffTime = eventDate.getTime() - today.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -102,13 +103,13 @@ export default function EventCard({ evento, isDragging = false, onArchive }: Eve
         }
 
         return {
-            dayName: eventDate.toLocaleDateString('es-ES', { weekday: 'long' }),
+            dayName: formatearFecha(eventDate, { weekday: 'long' }),
             day: eventDate.getDate(),
-            monthName: eventDate.toLocaleDateString('es-ES', { month: 'long' }),
+            monthName: formatearFecha(eventDate, { month: 'long' }),
             year: eventDate.getFullYear(),
             timeStatus,
             timeColor,
-            shortFormat: eventDate.toLocaleDateString('es-ES', {
+            shortFormat: formatearFecha(eventDate, {
                 weekday: 'short',
                 day: 'numeric',
                 month: 'short'

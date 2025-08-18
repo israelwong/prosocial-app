@@ -4,6 +4,7 @@ import { obtenerAgendaConEventos } from '@/app/admin/_lib/agenda.actions'
 import { Agenda } from '@/app/admin/_lib/types'
 import { useRouter } from 'next/navigation'
 import { Calendar, Clock, Search, ChevronRight, User } from 'lucide-react'
+import { formatearFecha, crearFechaLocal, compararFechas } from '@/app/admin/_lib/utils/fechas'
 
 interface AgendaEvento extends Agenda {
     Evento: {
@@ -56,7 +57,7 @@ const AgendaCard = ({ agenda, color, onClick }: { agenda: AgendaEvento, color: s
                         <div className="flex items-center gap-1.5">
                             <Calendar className="w-3.5 h-3.5" />
                             <span>
-                                {new Date(new Date(agenda.fecha).getTime() + new Date().getTimezoneOffset() * 60000).toLocaleDateString('es-ES', {
+                                {formatearFecha(agenda.fecha, {
                                     weekday: 'long',
                                     day: 'numeric',
                                     month: 'long',
@@ -174,7 +175,7 @@ export default function ListaAgenda() {
 
         const grouped = filtered.reduce((acc, item) => {
             if (!item.fecha) return acc;
-            const itemDate = new Date(new Date(item.fecha).getTime() + new Date().getTimezoneOffset() * 60000);
+            const itemDate = crearFechaLocal(item.fecha);
             const monthYear = itemDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
             const capitalizedMonthYear = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
 
@@ -198,7 +199,7 @@ export default function ListaAgenda() {
         const totalGeneralPendiente = Object.values(monthlyTotals).reduce((sum, total) => sum + total, 0);
 
         for (const month in grouped) {
-            grouped[month].sort((a, b) => new Date(a.fecha!).getTime() - new Date(b.fecha!).getTime());
+            grouped[month].sort((a, b) => compararFechas(a.fecha!, b.fecha!));
         }
 
         const monthMap: { [key: string]: number } = { 'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5, 'julio': 6, 'agosto': 7, 'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11 };

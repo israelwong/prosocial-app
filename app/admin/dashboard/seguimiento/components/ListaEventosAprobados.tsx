@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { CircleDollarSign, Calendar, CircleUserRound, Search } from 'lucide-react'
 import { type SeguimientoEtapas, type EventoSeguimiento } from '@/app/admin/_lib/actions/seguimiento'
+import { formatearFecha, calcularDiasRestantes, compararFechas, crearFechaLocal } from '@/app/admin/_lib/utils/fechas'
 
 interface Props {
     eventosPorEtapaIniciales: SeguimientoEtapas;
@@ -19,7 +20,7 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
         Object.values(eventosPorEtapaIniciales).forEach(eventosEtapa => {
             eventos.push(...eventosEtapa)
         })
-        return eventos.sort((a, b) => new Date(a.fecha_evento).getTime() - new Date(b.fecha_evento).getTime())
+        return eventos.sort((a, b) => compararFechas(a.fecha_evento, b.fecha_evento))
     }, [eventosPorEtapaIniciales])
 
     // Aplicar filtros
@@ -30,7 +31,12 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                 evento.nombre?.toLowerCase().includes(filtro.toLowerCase()) ||
                 evento.clienteNombre.toLowerCase().includes(filtro.toLowerCase()) ||
                 evento.tipoEventoNombre.toLowerCase().includes(filtro.toLowerCase()) ||
-                new Date(evento.fecha_evento).toLocaleDateString('es-ES').includes(filtro)
+                formatearFecha(evento.fecha_evento, {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                }).toLowerCase().includes(filtro.toLowerCase())
             )
 
             // Filtro de balance
@@ -64,15 +70,6 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
 
     const handleClickEvento = (eventoId: string) => {
         router.push(`/admin/dashboard/seguimiento/${eventoId}`)
-    }
-
-    const formatearFecha = (fecha: Date) => {
-        return new Date(fecha).toLocaleDateString('es-ES', {
-            weekday: 'short',
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-        })
     }
 
     const formatearPrecio = (precio: number) => {
@@ -314,13 +311,23 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                                         <div className="flex items-center text-zinc-300 mb-3">
                                             <Calendar size={16} className="mr-2 text-zinc-400" />
                                             <div className="text-sm">
-                                                <span>{formatearFecha(evento.fecha_evento)}</span>
-                                                <span className={`ml-2 text-xs ${evento.diasRestantes < 0 ? 'text-red-400' :
-                                                    evento.diasRestantes <= 7 ? 'text-yellow-400' :
-                                                        'text-zinc-400'
-                                                    }`}>
-                                                    ({obtenerDiasTexto(evento.diasRestantes)})
-                                                </span>
+                                                <span>{formatearFecha(evento.fecha_evento, {
+                                                    weekday: 'short',
+                                                    day: 'numeric',
+                                                    month: 'short',
+                                                    year: 'numeric'
+                                                })}</span>
+                                                {(() => {
+                                                    const diasRestantes = calcularDiasRestantes(evento.fecha_evento);
+                                                    return (
+                                                        <span className={`ml-2 text-xs ${diasRestantes < 0 ? 'text-red-400' :
+                                                            diasRestantes <= 7 ? 'text-yellow-400' :
+                                                                'text-zinc-400'
+                                                            }`}>
+                                                            ({obtenerDiasTexto(diasRestantes)})
+                                                        </span>
+                                                    );
+                                                })()}
                                             </div>
                                         </div>
 

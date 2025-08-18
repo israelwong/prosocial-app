@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Search, Plus, User, Calendar, MapPin, Clock } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { EventosPorEtapa, EventoEtapa } from '@/app/admin/_lib/types'
+import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
 
 interface Props {
     eventosIniciales: EventosPorEtapa[]
@@ -43,14 +44,6 @@ export default function ListaEventosSimple({ eventosIniciales, etapasIniciales }
 
     const handleVerEvento = (eventoId: string) => {
         router.push(`/admin/dashboard/eventos/${eventoId}`)
-    }
-
-    const formatearFecha = (fecha: Date) => {
-        return new Date(fecha).toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-        })
     }
 
     const totalEventos = eventosFiltrados.length
@@ -172,7 +165,12 @@ export default function ListaEventosSimple({ eventosIniciales, etapasIniciales }
                                                 <div className="flex items-center justify-between text-xs text-zinc-500">
                                                     <div className="flex items-center gap-1">
                                                         <Calendar className="h-3 w-3" />
-                                                        <span>{formatearFecha(evento.fecha_evento)}</span>
+                                                        <span>{formatearFecha(evento.fecha_evento, {
+                                                            weekday: 'short',
+                                                            day: '2-digit',
+                                                            month: 'short',
+                                                            year: 'numeric'
+                                                        })}</span>
                                                     </div>
                                                     {evento.userId && (
                                                         <div className="flex items-center gap-1 text-green-400">

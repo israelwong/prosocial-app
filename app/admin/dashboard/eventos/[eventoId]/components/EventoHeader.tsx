@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import { Button } from '@/app/components/ui/button'
+import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import {
     Calendar,
     User,
@@ -37,16 +38,6 @@ export default function EventoHeader({
     onCerrar,
     onGestionarEvento
 }: Props) {
-
-    const formatearFecha = (fecha: Date | null) => {
-        if (!fecha) return 'Fecha por definir'
-        return fecha.toLocaleDateString('es-ES', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        })
-    }
 
     const getStatusColor = (etapa: string) => {
         switch (etapa.toLowerCase()) {
@@ -135,7 +126,17 @@ export default function EventoHeader({
                     {eventoData.fechaEvento && (
                         <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4" />
-                            <span>{formatearFecha(eventoData.fechaEvento)}</span>
+                            <span>
+                                {eventoData.fechaEvento ?
+                                    formatearFecha(eventoData.fechaEvento, {
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    }) :
+                                    'Fecha por definir'
+                                }
+                            </span>
                         </div>
                     )}
 
