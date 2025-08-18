@@ -9,6 +9,100 @@ import { PaqueteSchema } from './paquetes.schemas';
 
 const basePath = '/admin/configurar/paquetes';
 
+export async function obtenerPaquetesParaCliente() {
+    return await prisma.eventoTipo.findMany({
+        include: {
+            Paquete: {
+                where: { status: 'active' },
+                orderBy: { posicion: 'asc' },
+                include: {
+                    PaqueteServicio: {
+                        include: {
+                            Servicio: {
+                                include: {
+                                    ServicioCategoria: {
+                                        include: {
+                                            seccionCategoria: {
+                                                include: {
+                                                    Seccion: true
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            ServicioCategoria: {
+                                include: {
+                                    seccionCategoria: {
+                                        include: {
+                                            Seccion: true
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        where: {
+                            status: 'active',
+                            visible_cliente: true
+                        },
+                        orderBy: { posicion: 'asc' }
+                    }
+                }
+            },
+        },
+        orderBy: { posicion: 'asc' },
+    });
+}
+
+export async function obtenerPaqueteDetalleParaCliente(paqueteId: string) {
+    const paquete = await prisma.paquete.findUnique({
+        where: {
+            id: paqueteId,
+            status: 'active'
+        },
+        include: {
+            EventoTipo: true,
+            PaqueteServicio: {
+                include: {
+                    Servicio: {
+                        include: {
+                            ServicioCategoria: {
+                                include: {
+                                    seccionCategoria: {
+                                        include: {
+                                            Seccion: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    ServicioCategoria: {
+                        include: {
+                            seccionCategoria: {
+                                include: {
+                                    Seccion: true
+                                }
+                            }
+                        }
+                    }
+                },
+                where: {
+                    status: 'active',
+                    visible_cliente: true
+                },
+                orderBy: { posicion: 'asc' }
+            }
+        }
+    });
+
+    if (!paquete) {
+        throw new Error('Paquete no encontrado');
+    }
+
+    return paquete;
+}
+
 // --- Funciones de Lectura ---
 export async function obtenerPaquetesAgrupados() {
     return await prisma.eventoTipo.findMany({

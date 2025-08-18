@@ -89,41 +89,51 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
     // Calcular total a pagar (para retrocompatibilidad)
     const totalAPagar = totales.costoTotal;
 
-    // Agrupar servicios por sección y categoría con ordenamiento
-    const serviciosAgrupados: ServiciosAgrupados = servicios.reduce((acc: ServiciosAgrupados, servicio: any) => {
-        const seccion = servicio.seccion_nombre_snapshot || servicio.seccion_nombre || 'Sin Sección';
-        const categoria = servicio.categoria_nombre_snapshot || servicio.categoria_nombre || 'Sin Categoría';
+    // Agrupar servicios por sección y categoría usando la misma lógica exitosa de la cotización pública
+    const serviciosAgrupados: ServiciosAgrupados = {};
 
-        if (!acc[seccion]) {
-            acc[seccion] = {
-                // Intentar obtener la posición de la sección desde diferentes fuentes
-                posicion: servicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
-                    servicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
-                    0,
+    servicios.forEach((servicio: any) => {
+        // Usar la misma lógica exitosa: snapshots primero, luego relaciones como fallback
+        const seccionNombre = servicio.seccion_nombre_snapshot ||
+            servicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
+            servicio.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
+            'Servicios Generales';
+
+        const categoriaNombre = servicio.categoria_nombre_snapshot ||
+            servicio.Servicio?.ServicioCategoria?.nombre ||
+            servicio.ServicioCategoria?.nombre ||
+            'Sin categoría';
+
+        // Obtener posiciones usando las relaciones correctas
+        const seccionPosicion = servicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
+            servicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 0;
+
+        const categoriaPosicion = servicio.Servicio?.ServicioCategoria?.posicion ||
+            servicio.ServicioCategoria?.posicion || 0;
+
+        // Inicializar sección si no existe
+        if (!serviciosAgrupados[seccionNombre]) {
+            serviciosAgrupados[seccionNombre] = {
+                posicion: seccionPosicion,
                 categorias: {}
             };
         }
-        if (!acc[seccion].categorias[categoria]) {
-            acc[seccion].categorias[categoria] = {
-                // Intentar obtener la posición de la categoría desde diferentes fuentes
-                posicion: servicio.ServicioCategoria?.posicion ||
-                    servicio.Servicio?.ServicioCategoria?.posicion ||
-                    0,
+
+        // Inicializar categoría si no existe
+        if (!serviciosAgrupados[seccionNombre].categorias[categoriaNombre]) {
+            serviciosAgrupados[seccionNombre].categorias[categoriaNombre] = {
+                posicion: categoriaPosicion,
                 servicios: []
             };
         }
-        acc[seccion].categorias[categoria].servicios.push(servicio);
 
-        return acc;
-    }, {} as ServiciosAgrupados);
-
-    // Ordenar secciones por posición, luego por nombre
-    const seccionesOrdenadas = Object.entries(serviciosAgrupados).sort(([nombreA, a], [nombreB, b]) => {
-        if (a.posicion !== b.posicion) {
-            return a.posicion - b.posicion;
-        }
-        return nombreA.localeCompare(nombreB);
+        // Agregar el servicio a la categoría correspondiente
+        serviciosAgrupados[seccionNombre].categorias[categoriaNombre].servicios.push(servicio);
     });
+
+    // Ordenar secciones por posición
+    const seccionesOrdenadas = Object.entries(serviciosAgrupados)
+        .sort(([, a], [, b]) => (a.posicion || 0) - (b.posicion || 0));
 
     const handleAsignar = (servicio: any) => {
         setServicioSeleccionado(servicio);
@@ -363,164 +373,166 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                                     </h3>
                                 </div>
 
-                                {/* Categorías */}
+                                {/* Categorías ordenadas por posición */}
                                 <div className="ml-6 space-y-6">
-                                    {categoriasOrdenadas.map(([categoria, categoriaData]) => (
-                                        <div key={categoria} className="border-l-2 border-zinc-700 pl-4">
-                                            {/* Nombre de la Categoría */}
-                                            <h4 className="text-md font-medium text-zinc-200 mb-4 flex items-center gap-2">
-                                                <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full"></span>
-                                                {categoria}
-                                            </h4>
+                                    {Object.entries(seccionData.categorias)
+                                        .sort(([, a], [, b]) => (a.posicion || 0) - (b.posicion || 0))
+                                        .map(([categoria, categoriaData]) => (
+                                            <div key={categoria} className="border-l-2 border-zinc-700 pl-4">
+                                                {/* Nombre de la Categoría */}
+                                                <h4 className="text-md font-medium text-zinc-200 mb-4 flex items-center gap-2">
+                                                    <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full"></span>
+                                                    {categoria}
+                                                </h4>
 
-                                            {/* Servicios */}
-                                            <div className="ml-6 space-y-4">
-                                                {categoriaData.servicios.map((servicio: any) => {
-                                                    const costo = servicio.costo_snapshot || servicio.costo || 0;
-                                                    const gasto = servicio.gasto_snapshot || servicio.gasto || 0;
-                                                    const cantidad = servicio.cantidad || 1;
-                                                    const total = costo * cantidad;
+                                                {/* Servicios */}
+                                                <div className="ml-6 space-y-4">
+                                                    {categoriaData.servicios.map((servicio: any) => {
+                                                        const costo = servicio.costo_snapshot || servicio.costo || 0;
+                                                        const gasto = servicio.gasto_snapshot || servicio.gasto || 0;
+                                                        const cantidad = servicio.cantidad || 1;
+                                                        const total = costo * cantidad;
 
-                                                    return (
-                                                        <div key={servicio.id} className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-4 hover:bg-zinc-800 transition-colors">
-                                                            {/* Línea 1: Nombre del servicio | Cantidad */}
-                                                            <div className="flex items-center justify-between mb-3">
-                                                                <h5 className="text-zinc-100 font-medium">
-                                                                    {servicio.nombre_snapshot || servicio.nombre || 'Servicio sin nombre'}
-                                                                </h5>
-                                                                <span className="text-sm text-zinc-300 bg-zinc-700 px-2 py-1 rounded">
-                                                                    x{cantidad}
-                                                                </span>
-                                                            </div>
+                                                        return (
+                                                            <div key={servicio.id} className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-4 hover:bg-zinc-800 transition-colors">
+                                                                {/* Línea 1: Nombre del servicio | Cantidad */}
+                                                                <div className="flex items-center justify-between mb-3">
+                                                                    <h5 className="text-zinc-100 font-medium">
+                                                                        {servicio.nombre_snapshot || servicio.nombre || 'Servicio sin nombre'}
+                                                                    </h5>
+                                                                    <span className="text-sm text-zinc-300 bg-zinc-700 px-2 py-1 rounded">
+                                                                        x{cantidad}
+                                                                    </span>
+                                                                </div>
 
-                                                            {/* Línea 2: Personal | Botón asignar | Botón pagar (si usuario asignado) */}
-                                                            <div className="flex items-center justify-between mb-3">
-                                                                {/* Personal asignado */}
-                                                                <div className="flex items-center gap-2 flex-1">
-                                                                    <span className="text-sm text-zinc-400">Personal:</span>
-                                                                    {servicio.User ? (
-                                                                        <div className="flex items-center gap-2 px-3 py-1 bg-blue-900/30 border border-blue-700 rounded-full">
-                                                                            <User className="w-4 h-4 text-blue-400" />
-                                                                            <span className="text-sm text-blue-300">
-                                                                                {servicio.User.username || servicio.User.email}
+                                                                {/* Línea 2: Personal | Botón asignar | Botón pagar (si usuario asignado) */}
+                                                                <div className="flex items-center justify-between mb-3">
+                                                                    {/* Personal asignado */}
+                                                                    <div className="flex items-center gap-2 flex-1">
+                                                                        <span className="text-sm text-zinc-400">Personal:</span>
+                                                                        {servicio.User ? (
+                                                                            <div className="flex items-center gap-2 px-3 py-1 bg-blue-900/30 border border-blue-700 rounded-full">
+                                                                                <User className="w-4 h-4 text-blue-400" />
+                                                                                <span className="text-sm text-blue-300">
+                                                                                    {servicio.User.username || servicio.User.email}
+                                                                                </span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span className="text-sm text-zinc-500 px-3 py-1 bg-zinc-700/50 rounded-full">
+                                                                                Sin asignar
                                                                             </span>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <span className="text-sm text-zinc-500 px-3 py-1 bg-zinc-700/50 rounded-full">
-                                                                            Sin asignar
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-
-                                                                {/* Botones */}
-                                                                <div className="flex items-center gap-2">
-                                                                    {servicio.User ? (
-                                                                        <>
-                                                                            {/* Solo mostrar botón remover si no existe nómina o si la nómina está cancelada */}
-                                                                            {(() => {
-                                                                                const infoNomina = obtenerInfoNomina(servicio);
-                                                                                // Solo mostrar botón remover si no hay nómina o está cancelada
-                                                                                const puedeRemover = !infoNomina || infoNomina.status === 'cancelado';
-
-                                                                                if (puedeRemover) {
-                                                                                    return (
-                                                                                        <button
-                                                                                            onClick={() => handleRemover(servicio)}
-                                                                                            className="flex items-center gap-1 px-3 py-1 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
-                                                                                            title="Remover asignación"
-                                                                                        >
-                                                                                            <XCircle className="w-3 h-3" />
-                                                                                            Remover
-                                                                                        </button>
-                                                                                    );
-                                                                                }
-                                                                                return null;
-                                                                            })()}
-
-                                                                            {/* Mostrar solo badge de estado si existe nómina, sin botones */}
-                                                                            {(() => {
-                                                                                const infoNomina = obtenerInfoNomina(servicio);
-
-                                                                                if (infoNomina) {
-                                                                                    return (
-                                                                                        <div className="flex items-center gap-2">
-                                                                                            {obtenerBadgeNomina(infoNomina)}
-                                                                                        </div>
-                                                                                    );
-                                                                                }
-                                                                                return null;
-                                                                            })()}
-                                                                        </>
-                                                                    ) : (
-                                                                        <button
-                                                                            onClick={() => handleAsignar(servicio)}
-                                                                            className="flex items-center gap-1 px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-                                                                        >
-                                                                            <UserPlus className="w-3 h-3" />
-                                                                            Asignar
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Línea 3: Costo, cantidad, total + estado nómina (condicional) */}
-                                                            {mostrarInformacionFinanciera && (
-                                                                <div className="flex items-center justify-between pt-2 border-t border-zinc-700">
-                                                                    <div className="flex items-center gap-4 text-sm text-zinc-300">
-                                                                        <span>
-                                                                            <strong className="text-zinc-200">Costo:</strong> ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                                        </span>
-                                                                        <span>
-                                                                            <strong className="text-zinc-200">Cant.:</strong> {cantidad}
-                                                                        </span>
-                                                                        <span className="font-medium text-green-400">
-                                                                            <strong>Total:</strong> ${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                                        </span>
+                                                                        )}
                                                                     </div>
 
-                                                                    {/* Mostrar estado de nómina o botón crear nómina */}
-                                                                    {(() => {
-                                                                        if (!servicio.User) return null;
+                                                                    {/* Botones */}
+                                                                    <div className="flex items-center gap-2">
+                                                                        {servicio.User ? (
+                                                                            <>
+                                                                                {/* Solo mostrar botón remover si no existe nómina o si la nómina está cancelada */}
+                                                                                {(() => {
+                                                                                    const infoNomina = obtenerInfoNomina(servicio);
+                                                                                    // Solo mostrar botón remover si no hay nómina o está cancelada
+                                                                                    const puedeRemover = !infoNomina || infoNomina.status === 'cancelado';
 
-                                                                        const infoNomina = obtenerInfoNomina(servicio);
+                                                                                    if (puedeRemover) {
+                                                                                        return (
+                                                                                            <button
+                                                                                                onClick={() => handleRemover(servicio)}
+                                                                                                className="flex items-center gap-1 px-3 py-1 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition-colors"
+                                                                                                title="Remover asignación"
+                                                                                            >
+                                                                                                <XCircle className="w-3 h-3" />
+                                                                                                Remover
+                                                                                            </button>
+                                                                                        );
+                                                                                    }
+                                                                                    return null;
+                                                                                })()}
 
-                                                                        if (infoNomina) {
-                                                                            // Si existe nómina, mostrar solo botón ver (sin monto duplicado)
-                                                                            return (
-                                                                                <div className="flex items-center gap-2">
-                                                                                    {/* Botón Ver para todos los estados */}
-                                                                                    <button
-                                                                                        onClick={() => {/* TODO: Implementar ver nómina */ }}
-                                                                                        className="flex items-center gap-1 px-3 py-1 text-xs bg-zinc-600 hover:bg-zinc-500 text-white rounded transition-colors"
-                                                                                        title="Ver nómina"
-                                                                                    >
-                                                                                        <FileText className="w-3 h-3" />
-                                                                                        Ver
-                                                                                    </button>
-                                                                                </div>
-                                                                            );
-                                                                        } else {
-                                                                            // Si no existe nómina, mostrar botón crear
-                                                                            return (
-                                                                                <button
-                                                                                    onClick={() => handleAutorizarPago(servicio)}
-                                                                                    className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600/80 hover:bg-green-600 text-white rounded transition-colors"
-                                                                                    title="Crear nómina de pago"
-                                                                                >
-                                                                                    <DollarSign className="w-3 h-3" />
-                                                                                    Pagar
-                                                                                </button>
-                                                                            );
-                                                                        }
-                                                                    })()}
+                                                                                {/* Mostrar solo badge de estado si existe nómina, sin botones */}
+                                                                                {(() => {
+                                                                                    const infoNomina = obtenerInfoNomina(servicio);
+
+                                                                                    if (infoNomina) {
+                                                                                        return (
+                                                                                            <div className="flex items-center gap-2">
+                                                                                                {obtenerBadgeNomina(infoNomina)}
+                                                                                            </div>
+                                                                                        );
+                                                                                    }
+                                                                                    return null;
+                                                                                })()}
+                                                                            </>
+                                                                        ) : (
+                                                                            <button
+                                                                                onClick={() => handleAsignar(servicio)}
+                                                                                className="flex items-center gap-1 px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                                                                            >
+                                                                                <UserPlus className="w-3 h-3" />
+                                                                                Asignar
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
+
+                                                                {/* Línea 3: Costo, cantidad, total + estado nómina (condicional) */}
+                                                                {mostrarInformacionFinanciera && (
+                                                                    <div className="flex items-center justify-between pt-2 border-t border-zinc-700">
+                                                                        <div className="flex items-center gap-4 text-sm text-zinc-300">
+                                                                            <span>
+                                                                                <strong className="text-zinc-200">Costo:</strong> ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                            </span>
+                                                                            <span>
+                                                                                <strong className="text-zinc-200">Cant.:</strong> {cantidad}
+                                                                            </span>
+                                                                            <span className="font-medium text-green-400">
+                                                                                <strong>Total:</strong> ${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                            </span>
+                                                                        </div>
+
+                                                                        {/* Mostrar estado de nómina o botón crear nómina */}
+                                                                        {(() => {
+                                                                            if (!servicio.User) return null;
+
+                                                                            const infoNomina = obtenerInfoNomina(servicio);
+
+                                                                            if (infoNomina) {
+                                                                                // Si existe nómina, mostrar solo botón ver (sin monto duplicado)
+                                                                                return (
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        {/* Botón Ver para todos los estados */}
+                                                                                        <button
+                                                                                            onClick={() => {/* TODO: Implementar ver nómina */ }}
+                                                                                            className="flex items-center gap-1 px-3 py-1 text-xs bg-zinc-600 hover:bg-zinc-500 text-white rounded transition-colors"
+                                                                                            title="Ver nómina"
+                                                                                        >
+                                                                                            <FileText className="w-3 h-3" />
+                                                                                            Ver
+                                                                                        </button>
+                                                                                    </div>
+                                                                                );
+                                                                            } else {
+                                                                                // Si no existe nómina, mostrar botón crear
+                                                                                return (
+                                                                                    <button
+                                                                                        onClick={() => handleAutorizarPago(servicio)}
+                                                                                        className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600/80 hover:bg-green-600 text-white rounded transition-colors"
+                                                                                        title="Crear nómina de pago"
+                                                                                    >
+                                                                                        <DollarSign className="w-3 h-3" />
+                                                                                        Pagar
+                                                                                    </button>
+                                                                                );
+                                                                            }
+                                                                        })()}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
                                 </div>
                             </div>
                         );
