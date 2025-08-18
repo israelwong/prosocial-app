@@ -10,6 +10,7 @@ import HeroSection from './components/sections/HeroSection'
 import CotizacionesSection from './components/sections/CotizacionesSection'
 import PaquetesSection from './components/sections/PaquetesSection'
 import PortfolioSection from './components/sections/PortfolioSection'
+import TestimoniosSection from './components/sections/TestimoniosSection'
 // Componentes legacy (mantenemos para casos específicos)
 import FechaNoDisponible from './components/FechaNoDisponible'
 
@@ -90,9 +91,10 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                         eventoId={eventoId}
                     />
                     <PortfolioSection
-                        tipoEvento={evento.EventoTipo?.nombre?.toLowerCase().includes('xv') || 
-                                  evento.EventoTipo?.nombre?.toLowerCase().includes('15') ? 'xv' : 'boda'}
+                        tipoEvento={evento.EventoTipo?.nombre?.toLowerCase().includes('xv') ||
+                            evento.EventoTipo?.nombre?.toLowerCase().includes('15') ? 'xv' : 'boda'}
                     />
+                    <TestimoniosSection />
                     <EventoFooter />
                 </div>
             )
@@ -167,9 +169,12 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
 
             {/* Portfolio section */}
             <PortfolioSection
-                tipoEvento={evento.EventoTipo?.nombre?.toLowerCase().includes('xv') || 
-                          evento.EventoTipo?.nombre?.toLowerCase().includes('15') ? 'xv' : 'boda'}
+                tipoEvento={evento.EventoTipo?.nombre?.toLowerCase().includes('xv') ||
+                    evento.EventoTipo?.nombre?.toLowerCase().includes('15') ? 'xv' : 'boda'}
             />
+
+            {/* Testimonios section */}
+            <TestimoniosSection />
 
             {/* Paquetes como alternativa */}
             {resultadoCotizaciones.paquetes && resultadoCotizaciones.paquetes.length > 0 && (

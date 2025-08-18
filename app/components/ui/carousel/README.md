@@ -5,37 +5,40 @@ Este sistema proporciona componentes de carrusel flexibles y reutilizables para 
 ## Componentes disponibles
 
 ### 1. ImageCarousel (Componente base)
+
 Carrusel genérico y totalmente configurable.
 
 ```tsx
-import { ImageCarousel } from '@/app/components/ui/carousel'
+import { ImageCarousel } from "@/app/components/ui/carousel";
 
 <ImageCarousel
-  images={['1.jpg', '2.jpg', '3.jpg']}
+  images={["1.jpg", "2.jpg", "3.jpg"]}
   baseUrl="https://tu-servidor.com/imagenes/"
   perView={3.5}
   autoplay={3000}
   gap={16}
   breakpoints={{
     1024: { perView: 4 },
-    640: { perView: 1.3 }
+    640: { perView: 1.3 },
   }}
-/>
+/>;
 ```
 
 ### 2. EventCarousel (Carrusel inteligente por tipo de evento)
+
 Selecciona automáticamente las imágenes y configuración según el tipo de evento.
 
 ```tsx
-import { EventCarousel } from '@/app/components/ui/carousel'
+import { EventCarousel } from "@/app/components/ui/carousel";
 
-<EventCarousel 
-  tipoEvento="xv"  // o "boda"
+<EventCarousel
+  tipoEvento="xv" // o "boda"
   className="w-full"
-/>
+/>;
 ```
 
 ### 3. XVCarousel / BodaCarousel (Carruseles específicos)
+
 Carruseles preconfigurados para cada tipo de evento.
 
 ```tsx
@@ -46,26 +49,29 @@ import { XVCarousel, BodaCarousel } from '@/app/components/ui/carousel'
 ```
 
 ### 4. PortfolioSection (Sección completa con carrusel)
+
 Sección completa con título, descripción y carrusel integrado.
 
 ```tsx
-import PortfolioSection from '@/app/evento/[eventoId]/components/sections/PortfolioSection'
+import PortfolioSection from "@/app/evento/[eventoId]/components/sections/PortfolioSection";
 
-<PortfolioSection 
+<PortfolioSection
   tipoEvento="xv"
   titulo="Título personalizado"
   descripcion="Descripción personalizada"
-/>
+/>;
 ```
 
 ## Configuración de imágenes
 
 ### XV Años
+
 - **URL base**: `https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/`
 - **Imágenes**: `1.jpg` hasta `10.jpg`
 - **Estilo**: Colores rosa/morado, enfoque en elegancia juvenil
 
 ### Bodas
+
 - **URL base**: `https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/bodas/`
 - **Imágenes**: `boda-1.jpg` hasta `boda-8.jpg`
 - **Estilo**: Colores rosa/dorado, enfoque en romance y elegancia
@@ -80,6 +86,7 @@ import PortfolioSection from '@/app/evento/[eventoId]/components/sections/Portfo
 ## Personalización
 
 Todos los componentes aceptan:
+
 - `className` para estilos adicionales
 - Configuración de velocidad, cantidad de elementos visibles
 - Breakpoints responsivos personalizados
