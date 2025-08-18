@@ -93,7 +93,7 @@ export default function HeroSection({
     const handleCompartir = async () => {
         const url = window.location.href
         const texto = `${contenido.titulo} - ${contenido.subtitulo}`
-        
+
         if (navigator.share) {
             try {
                 await navigator.share({

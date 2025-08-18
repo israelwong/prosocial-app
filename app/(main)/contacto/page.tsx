@@ -1,6 +1,6 @@
 import React from 'react'
 // import FormContacto from '@/app/ui/main/FormContacto';
-import LeadForm from './_components/LeadForm';
+import LeadForm from './components/LeadForm';
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {

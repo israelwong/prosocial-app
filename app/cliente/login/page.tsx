@@ -1,6 +1,6 @@
 import React from 'react'
 import { Metadata } from 'next'
-import LoginFormCliente from '../_components/LoginFormCliente'
+import LoginFormCliente from '../components/LoginFormCliente'
 
 export const metadata: Metadata = {
     title: 'Acceso Clientes - ProSocial'
