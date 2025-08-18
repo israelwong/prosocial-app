@@ -125,7 +125,7 @@ export async function obtenerDatosCotizacion(
                 tieneEventoTipoEspecifico: !!tipoEventoSeleccionado,
                 totalServicios: catalogo ? catalogo.reduce((acc, seccion) =>
                     acc + (seccion.seccionCategorias?.reduce((secAcc, cat) =>
-                        secAcc + (cat.Servicio?.length || 0), 0) || 0), 0) : 0
+                        secAcc + (cat.ServicioCategoria?.Servicio.length || 0), 0) || 0), 0) : 0
             }
         };
 
@@ -158,10 +158,26 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
                     include: {
                         Servicio: {
                             include: {
-                                ServicioCategoria: true
+                                ServicioCategoria: {
+                                    include: {
+                                        seccionCategoria: {
+                                            include: {
+                                                Seccion: true
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         },
-                        ServicioCategoria: true
+                        ServicioCategoria: {
+                            include: {
+                                seccionCategoria: {
+                                    include: {
+                                        Seccion: true
+                                    }
+                                }
+                            }
+                        }
                     },
                     orderBy: { posicion: 'asc' }
                 }

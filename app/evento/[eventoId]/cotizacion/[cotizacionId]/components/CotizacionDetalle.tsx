@@ -131,19 +131,35 @@ export default function CotizacionDetalle({
                     ? cotizacionServicio.nombre_snapshot
                     : cotizacionServicio.Servicio?.nombre || 'Servicio sin nombre'
 
-                const categoriaNombre = cotizacionServicio.categoria_nombre_snapshot || cotizacionServicio.ServicioCategoria?.nombre || 'Sin categoría'
-                const seccionNombre = cotizacionServicio.seccion_nombre_snapshot || 'Servicios Generales'
+                // Mejorar la obtención de categoría y sección usando relaciones correctas
+                const categoriaNombre = cotizacionServicio.categoria_nombre_snapshot ||
+                    cotizacionServicio.Servicio?.ServicioCategoria?.nombre ||
+                    cotizacionServicio.ServicioCategoria?.nombre ||
+                    'Sin categoría'
+
+                const seccionNombre = cotizacionServicio.seccion_nombre_snapshot ||
+                    cotizacionServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
+                    cotizacionServicio.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
+                    'Servicios Generales'
                 const precio = cotizacionServicio.precio_unitario_snapshot || cotizacionServicio.precioUnitario || 0
                 const cantidad = cotizacionServicio.cantidad || 1
                 const subtotal = cotizacionServicio.subtotal || (cantidad * precio)
 
-                console.log(`\nProcesando: Sección="${seccionNombre}", Categoría="${categoriaNombre}", Servicio="${nombreServicio}"`)
+                // Obtener posiciones de sección y categoría usando relaciones correctas
+                const seccionPosicion = cotizacionServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
+                    cotizacionServicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 0
+
+
+                const categoriaPosicion = cotizacionServicio.Servicio?.ServicioCategoria?.posicion ||
+                    cotizacionServicio.ServicioCategoria?.posicion || 0
+
+                console.log(`\nProcesando: Sección="${seccionNombre}" (pos:${seccionPosicion}), Categoría="${categoriaNombre}" (pos:${categoriaPosicion}), Servicio="${nombreServicio}"`)
                 console.log(`Cantidad: ${cantidad}, Precio: ${precio}, Subtotal: ${subtotal}`)
 
                 // Inicializar sección si no existe
                 if (!agrupados[seccionNombre]) {
                     agrupados[seccionNombre] = {
-                        posicion: 0,
+                        posicion: seccionPosicion,
                         categorias: {}
                     }
                 }
@@ -151,7 +167,7 @@ export default function CotizacionDetalle({
                 // Inicializar categoría si no existe
                 if (!agrupados[seccionNombre].categorias[categoriaNombre]) {
                     agrupados[seccionNombre].categorias[categoriaNombre] = {
-                        posicion: 0,
+                        posicion: categoriaPosicion,
                         servicios: []
                     }
                 }
@@ -465,8 +481,8 @@ export default function CotizacionDetalle({
                                 .map(([seccionNombre, seccionData]) => (
                                     <div key={seccionNombre} className="border border-zinc-600 rounded-lg overflow-hidden">
                                         {/* Header de la sección */}
-                                        <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3">
-                                            <h4 className="text-lg font-bold text-white uppercase tracking-wide">
+                                        <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-2">
+                                            <h4 className="text-sm font-medium text-white">
                                                 {seccionNombre}
                                             </h4>
                                         </div>
@@ -483,9 +499,6 @@ export default function CotizacionDetalle({
                                                             <h5 className="text-base font-semibold text-blue-300">
                                                                 {categoriaNombre}
                                                             </h5>
-                                                            <span className="text-xs text-zinc-400 bg-zinc-800 px-2 py-1 rounded">
-                                                                {categoriaData.servicios.length} servicio{categoriaData.servicios.length !== 1 ? 's' : ''}
-                                                            </span>
                                                         </div>
 
                                                         {/* Lista de servicios */}
