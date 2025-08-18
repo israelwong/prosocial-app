@@ -97,7 +97,7 @@ export default function CotizacionDetalle({
 
             // Usar los servicios que ya vienen en la cotizacion
             console.log('3. Usando servicios de cotización directamente...')
-            
+
             if (!cotizacion.Servicio || cotizacion.Servicio.length === 0) {
                 console.log('❌ No hay servicios en la cotización')
                 setServiciosAgrupados({})
@@ -105,7 +105,7 @@ export default function CotizacionDetalle({
             }
 
             console.log('✅ Servicios encontrados:', cotizacion.Servicio.length)
-            
+
             // Mostrar cada servicio detalladamente
             cotizacion.Servicio.forEach((cotizacionServicio: any, index: number) => {
                 console.log(`\n📦 SERVICIO ${index + 1}:`)
@@ -125,12 +125,12 @@ export default function CotizacionDetalle({
 
             cotizacion.Servicio.forEach((cotizacionServicio: any, index: number) => {
                 console.log(`\n--- Servicio ${index + 1} ---`)
-                
+
                 // Usar primero los snapshots, luego los datos relacionados como fallback
-                const nombreServicio = cotizacionServicio.nombre_snapshot && cotizacionServicio.nombre_snapshot !== 'Servicio migrado' 
-                    ? cotizacionServicio.nombre_snapshot 
+                const nombreServicio = cotizacionServicio.nombre_snapshot && cotizacionServicio.nombre_snapshot !== 'Servicio migrado'
+                    ? cotizacionServicio.nombre_snapshot
                     : cotizacionServicio.Servicio?.nombre || 'Servicio sin nombre'
-                    
+
                 const categoriaNombre = cotizacionServicio.categoria_nombre_snapshot || cotizacionServicio.ServicioCategoria?.nombre || 'Sin categoría'
                 const seccionNombre = cotizacionServicio.seccion_nombre_snapshot || 'Servicios Generales'
                 const precio = cotizacionServicio.precio_unitario_snapshot || cotizacionServicio.precioUnitario || 0
@@ -503,7 +503,8 @@ export default function CotizacionDetalle({
                                                                             </div>
                                                                         </div>
 
-                                                                        {/* Subtotal del servicio */}
+                                                                        {/* Subtotal del servicio - OCULTO temporalmente */}
+                                                                        {/* 
                                                                         <div className="text-right">
                                                                             <div className="text-green-400 font-semibold">
                                                                                 {cotizacionServicio.subtotal.toLocaleString('es-MX', {
@@ -512,6 +513,7 @@ export default function CotizacionDetalle({
                                                                                 })}
                                                                             </div>
                                                                         </div>
+                                                                        */}
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -533,6 +535,8 @@ export default function CotizacionDetalle({
                                         <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
                                     </div>
 
+                                    {/* Total de servicios - OCULTO temporalmente */}
+                                    {/* 
                                     <div className="bg-white/10 rounded-lg py-4 px-6">
                                         <div className="text-white font-bold text-3xl">
                                             {Object.values(serviciosAgrupados)
@@ -546,6 +550,7 @@ export default function CotizacionDetalle({
                                             Total antes de anticipo
                                         </div>
                                     </div>
+                                    */}
                                 </div>
                             </div>
                         </div>
