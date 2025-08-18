@@ -231,7 +231,7 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                 bg: 'bg-yellow-900/30',
                 border: 'border-yellow-700',
                 text: 'text-yellow-300',
-                label: 'Pendiente'
+                label: 'Programado'
             },
             autorizado: {
                 bg: 'bg-blue-900/30',

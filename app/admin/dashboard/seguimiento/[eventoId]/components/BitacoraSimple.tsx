@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { obtenerEventoBitacora, crearBitacoraEvento, eliminarBitacoraEvento, actualizarBitacoraEvento } from '@/app/admin/_lib/EventoBitacora.actions'
 import { Clock, FileText, AlertCircle, Plus, MoreVertical, Edit, Trash, X, MessageCircle } from 'lucide-react'
+import { formatearFecha as formatearFechaLib, esFechaValida } from '@/app/admin/_lib/utils/fechas'
 
 interface BitacoraItem {
     id: string
@@ -72,7 +73,9 @@ export function BitacoraSimple({ eventoId }: BitacoraSimpleProps) {
     }
 
     const formatearFecha = (fecha: Date) => {
-        return new Date(fecha).toLocaleDateString('es-MX', {
+        if (!esFechaValida(fecha)) return 'Fecha no válida'
+
+        return formatearFechaLib(fecha, {
             year: 'numeric',
             month: 'short',
             day: 'numeric',

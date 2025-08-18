@@ -169,7 +169,7 @@ export default function ListaNominas({ nominas, onAutorizar, onMarcarPagado, onC
                         </span>
                     </div>
                     <div className="text-center">
-                        <span className="text-sm text-zinc-400 block">Pendiente</span>
+                        <span className="text-sm text-zinc-400 block">Programado</span>
                         <span className="text-lg font-bold text-yellow-400">
                             {formatCurrency(totalNominas.pendiente)}
                         </span>

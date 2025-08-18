@@ -5,6 +5,7 @@ import { Button } from "@/app/components/ui/button"
 import { Calendar, User, FileText, Edit, MapPin } from "lucide-react"
 import { WhatsAppIcon } from "@/app/components/ui/WhatsAppIcon"
 import Link from "next/link"
+import { formatearFecha, formatearFechaCorta, esFechaValida } from "@/app/admin/_lib/utils/fechas"
 
 interface HeaderSimpleProps {
     eventoNombre: string
@@ -24,35 +25,16 @@ export function HeaderSimple({
     fechaEvento
 }: HeaderSimpleProps) {
 
-    const formatearFecha = (fecha?: Date | string) => {
+    const formatearFechaEvento = (fecha?: Date | string) => {
         if (!fecha) return 'Fecha no definida'
-
-        try {
-            const fechaObj = typeof fecha === 'string' ? new Date(fecha) : fecha
-            return fechaObj.toLocaleDateString('es-MX', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            })
-        } catch {
-            return 'Fecha no válida'
-        }
+        if (!esFechaValida(fecha)) return 'Fecha no válida'
+        return formatearFecha(fecha)
     }
 
-    const formatearFechaCorta = (fecha?: Date | string) => {
+    const formatearFechaEventoCorta = (fecha?: Date | string) => {
         if (!fecha) return 'Sin fecha'
-
-        try {
-            const fechaObj = typeof fecha === 'string' ? new Date(fecha) : fecha
-            return fechaObj.toLocaleDateString('es-MX', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric'
-            })
-        } catch {
-            return 'Fecha no válida'
-        }
+        if (!esFechaValida(fecha)) return 'Fecha no válida'
+        return formatearFechaCorta(fecha)
     }
 
     const abrirWhatsApp = () => {
@@ -123,10 +105,10 @@ export function HeaderSimple({
                             <span className="text-sm font-medium text-zinc-300">Fecha</span>
                         </div>
                         <p className="text-lg font-semibold text-zinc-100">
-                            {formatearFechaCorta(fechaEvento)}
+                            {formatearFechaEventoCorta(fechaEvento)}
                         </p>
                         <p className="text-xs text-zinc-400 mt-1">
-                            {formatearFecha(fechaEvento)}
+                            {formatearFechaEvento(fechaEvento)}
                         </p>
                     </div>
 
