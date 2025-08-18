@@ -3,54 +3,18 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { suscribirCotizacion, desuscribirCotizacion, ESTADOS_COTIZACION } from '@/lib/supabase-realtime'
 import { obtenerEventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.actions'
+import type { EventoExtendido, ServicioDetalle, EventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.schemas'
 import { verificarDisponibilidadFecha } from '@/app/admin/_lib/agenda.actions'
+import type { Cliente, EventoTipo, Cotizacion, Evento } from '@/app/admin/_lib/types'
 
-interface Cotizacion {
-    id: string
-    nombre: string
-    precio: number
-    status: string
-    createdAt: Date
-    expiresAt?: Date | null
-    eventoId: string
-}
-
-interface Evento {
-    id: string
-    nombre: string | null
-    fecha_evento: Date
-    status: string
-    sede?: string | null
-    direccion?: string | null
-}
-
-interface CotizacionServicio {
-    id: string
-    cantidad: number
-    precioUnitario: number
-    subtotal: number
-    servicio: {
-        id: string
-        nombre: string
-        ServicioCategoria?: {
-            id: string
-            nombre: string
-            Seccion: {
-                id: string
-                nombre: string
-                posicion: number
-            }
-        } | null
-    }
-}
-
+// Tipos específicos para servicios agrupados en el display
 interface ServiciosAgrupados {
     [seccion: string]: {
         posicion: number
         categorias: {
             [categoria: string]: {
                 posicion: number
-                servicios: CotizacionServicio[]
+                servicios: ServicioDetalle[]
             }
         }
     }
@@ -95,7 +59,7 @@ export default function CotizacionDetalle({
             console.log('Iniciando sesión de tiempo real...')
             setConectado(true)
 
-            const channel = suscribirCotizacion(cotizacion.id, (payload) => {
+            const channel = suscribirCotizacion(cotizacion.id!, (payload) => {
                 console.log('Actualización recibida:', payload)
 
                 if (payload.table === 'Cotizacion') {
@@ -133,7 +97,7 @@ export default function CotizacionDetalle({
 
             // Usar la función que sí funciona correctamente
             console.log('3. Llamando a obtenerEventoDetalleCompleto...')
-            const resultado = await obtenerEventoDetalleCompleto(evento.id)
+            const resultado = await obtenerEventoDetalleCompleto(evento.id!)
             
             console.log('4. Resultado completo:', JSON.stringify(resultado, null, 2))
             console.log('5. Cotización en resultado:', resultado.cotizacion)
@@ -200,18 +164,8 @@ export default function CotizacionDetalle({
                     }
                 }
 
-                // Agregar el servicio con la información necesaria
-                agrupados[seccionNombre].categorias[categoriaNombre].servicios.push({
-                    id: servicioDetalle.id,
-                    cantidad: cantidad,
-                    precioUnitario: precioUnitario,
-                    subtotal: subtotal,
-                    servicio: {
-                        id: servicioDetalle.servicioId || servicioDetalle.id,
-                        nombre: nombreServicio,
-                        ServicioCategoria: null
-                    }
-                })
+                // Agregar el servicio directamente como ServicioDetalle
+                agrupados[seccionNombre].categorias[categoriaNombre].servicios.push(servicioDetalle)
             })
 
             console.log('\n=== SERVICIOS AGRUPADOS RESULTADO ===')
@@ -222,7 +176,7 @@ export default function CotizacionDetalle({
                 Object.entries(datos.categorias).forEach(([categoria, catDatos]) => {
                     console.log(`    Categoría: ${categoria} - ${catDatos.servicios.length} servicios`)
                     catDatos.servicios.forEach((servicio, idx) => {
-                        console.log(`      ${idx + 1}. ${servicio.servicio.nombre} (Cant: ${servicio.cantidad}, Precio: $${servicio.precioUnitario})`)
+                        console.log(`      ${idx + 1}. ${servicio.nombre} (Cant: ${servicio.cantidad}, Precio: $${servicio.precio})`)
                     })
                 })
             })
@@ -231,7 +185,7 @@ export default function CotizacionDetalle({
             Object.keys(agrupados).forEach(seccionNombre => {
                 Object.keys(agrupados[seccionNombre].categorias).forEach(categoriaNombre => {
                     agrupados[seccionNombre].categorias[categoriaNombre].servicios.sort((a, b) =>
-                        a.servicio.nombre.localeCompare(b.servicio.nombre)
+                        a.nombre.localeCompare(b.nombre)
                     )
                 })
             })
@@ -523,7 +477,7 @@ export default function CotizacionDetalle({
                                                                         {/* Información del servicio */}
                                                                         <div className="flex-1 min-w-0">
                                                                             <h6 className="text-white font-medium text-sm leading-tight">
-                                                                                {cotizacionServicio.servicio.nombre}
+                                                                                {cotizacionServicio.nombre}
                                                                             </h6>
                                                                             <div className="text-xs text-zinc-400 mt-1">
                                                                                 Cantidad: {cotizacionServicio.cantidad}
@@ -694,16 +648,18 @@ export default function CotizacionDetalle({
                 {/* Información adicional */}
                 <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
                     <div className="text-zinc-400 space-y-2 text-sm">
-                        <div>Creada: {new Date(cotizacion.createdAt).toLocaleDateString('es-MX')}</div>
+                        <div>Creada: {cotizacion.createdAt ? new Date(cotizacion.createdAt).toLocaleDateString('es-MX') : 'Fecha no disponible'}</div>
                         {cotizacion.expiresAt && (
                             <div>Expira: {new Date(cotizacion.expiresAt).toLocaleDateString('es-MX')}</div>
                         )}
+                        {/* Temporalmente comentado hasta identificar la propiedad correcta
                         {evento.sede && (
                             <div className="flex items-center">
                                 <span className="mr-2">📍</span>
                                 <span className="truncate">{evento.sede}</span>
                             </div>
                         )}
+                        */}
                         <div className="text-xs text-zinc-500">ID: {cotizacion.id}</div>
                     </div>
                 </div>

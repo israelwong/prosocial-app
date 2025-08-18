@@ -40,9 +40,12 @@ export async function obtenerEventoDetalleCompleto(
 ): Promise<EventoDetalleCompleto> {
     try {
         console.log('🔍 Obteniendo datos completos para evento:', eventoId);
+        console.log('🔍 Tipo de eventoId:', typeof eventoId);
+        console.log('🔍 Longitud del eventoId:', eventoId.length);
 
         // Validar parámetros
         const validatedParams = EventoDetalleParamsSchema.parse({ eventoId });
+        console.log('🔍 Parámetros validados:', validatedParams);
 
         // Consulta principal optimizada con todos los includes necesarios
         const evento = await prisma.evento.findUnique({
