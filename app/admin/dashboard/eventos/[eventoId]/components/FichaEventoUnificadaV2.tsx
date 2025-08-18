@@ -4,14 +4,11 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { toast } from 'sonner'
-import Cookies from 'js-cookie'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
 import type { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.schemas'
 import { crearFechaLocal, formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import {
     actualizarEventoBasico,
-    asignarUsuarioEvento,
-    liberarUsuarioEvento,
     cambiarEtapaEvento,
     obtenerEtapasEvento
 } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.actions'
@@ -23,11 +20,7 @@ import {
     Edit3,
     Check,
     X,
-    UserPlus,
-    UserMinus,
-    Clock,
-    Building,
-    ChevronDown
+    Clock
 } from 'lucide-react'
 
 interface Props {
@@ -39,7 +32,6 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
     const [loading, setLoading] = useState(true)
     const [isEditing, setIsEditing] = useState(false)
     const [saving, setSaving] = useState(false)
-    const [asignandoEvento, setAsignandoEvento] = useState(false)
     const [etapas, setEtapas] = useState<EventoEtapa[]>([])
     const router = useRouter()
 
@@ -114,46 +106,6 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
         setIsEditing(false)
     }
 
-    const handleAsignarEvento = async () => {
-        setAsignandoEvento(true)
-        try {
-            const userId = Cookies.get('userId')
-            if (!userId) {
-                toast.error('Usuario no autenticado')
-                return
-            }
-
-            await asignarUsuarioEvento({
-                eventoId: evento.id,
-                userId: userId
-            })
-
-            toast.success('Evento asignado correctamente')
-            onAsignacionEvento?.(true)
-            router.refresh()
-        } catch (error) {
-            console.error('Error asignando evento:', error)
-            toast.error('Error al asignar evento')
-        } finally {
-            setAsignandoEvento(false)
-        }
-    }
-
-    // const handleLiberarEvento = async () => {
-    //     setAsignandoEvento(true)
-    //     try {
-    //         await liberarUsuarioEvento(evento.id)
-    //         toast.success('Evento liberado correctamente')
-    //         onAsignacionEvento?.(false)
-    //         router.refresh()
-    //     } catch (error) {
-    //         console.error('Error liberando evento:', error)
-    //         toast.error('Error al liberar evento')
-    //     } finally {
-    //         setAsignandoEvento(false)
-    //     }
-    // }
-
     const handleCambiarEtapa = async (etapaId: string) => {
         try {
             await cambiarEtapaEvento({
@@ -182,9 +134,38 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
 
     return (
         <div className="space-y-4">
-            {/* Cabecera con título */}
-            <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-zinc-200 border-b border-zinc-700 pb-2">Información del Evento</h3>
+            {/* Cabecera con título y botón de edición */}
+            <div className="flex items-center justify-between border-b border-zinc-700 pb-2">
+                <h3 className="text-lg font-semibold text-zinc-200">Información del Evento</h3>
+                {!isEditing && (
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors"
+                        title="Editar información"
+                    >
+                        <Edit3 className="w-4 h-4" />
+                    </button>
+                )}
+                {isEditing && (
+                    <div className="flex gap-1">
+                        <button
+                            onClick={handleCancel}
+                            disabled={saving}
+                            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-zinc-800 rounded-md transition-colors disabled:opacity-50"
+                            title="Cancelar edición"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="p-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-zinc-800 rounded-md transition-colors disabled:opacity-50"
+                            title={saving ? 'Guardando...' : 'Guardar cambios'}
+                        >
+                            <Check className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Contenido */}
@@ -280,62 +261,6 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
                             day: 'numeric'
                         })}
                     </p>
-                </div>
-            </div>
-
-            {/* Footer con botones de acción */}
-            <div className="border-t border-zinc-700 pt-3 mt-4">
-                <div className="flex gap-2 justify-center md:justify-start">
-                    {/* Botón de editar */}
-                    {!isEditing ? (
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-700 text-blue-100 border border-blue-600 rounded-md hover:bg-blue-600 transition-colors"
-                        >
-                            <Edit3 className="w-4 h-4" />
-                            Editar
-                        </button>
-                    ) : (
-                        <>
-                            <button
-                                onClick={handleCancel}
-                                disabled={saving}
-                                className="flex items-center gap-2 px-4 py-2 bg-red-700 text-red-100 border border-red-600 rounded-md hover:bg-red-600 transition-colors disabled:opacity-50"
-                            >
-                                <X className="w-4 h-4" />
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                disabled={saving}
-                                className="flex items-center gap-2 px-4 py-2 bg-emerald-700 text-emerald-100 border border-emerald-600 rounded-md hover:bg-emerald-600 transition-colors disabled:opacity-50"
-                            >
-                                <Check className="w-4 h-4" />
-                                {saving ? 'Guardando...' : 'Guardar'}
-                            </button>
-                        </>
-                    )}
-
-                    {/* Botón de seguimiento (asignación) */}
-                    {/* {!eventoAsignado ? (
-                        <button
-                            onClick={handleAsignarEvento}
-                            disabled={asignandoEvento}
-                            className="flex items-center gap-2 px-4 py-2 bg-purple-700 text-purple-100 border border-purple-600 rounded-md hover:bg-purple-600 transition-colors disabled:opacity-50"
-                        >
-                            <UserPlus className="w-4 h-4" />
-                            {asignandoEvento ? 'Asignando...' : 'Tomar seguimiento'}
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleLiberarEvento}
-                            disabled={asignandoEvento}
-                            className="flex items-center gap-2 px-4 py-2 bg-amber-700 text-amber-100 border border-amber-600 rounded-md hover:bg-amber-600 transition-colors disabled:opacity-50"
-                        >
-                            <UserMinus className="w-4 h-4" />
-                            {asignandoEvento ? 'Liberando...' : 'Liberar seguimiento'}
-                        </button>
-                    )} */}
                 </div>
             </div>
         </div>

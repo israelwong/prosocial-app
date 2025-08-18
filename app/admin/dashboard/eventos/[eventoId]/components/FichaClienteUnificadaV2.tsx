@@ -15,8 +15,7 @@ import {
     Tag,
     Edit3,
     Check,
-    X,
-    ExternalLink
+    X
 } from 'lucide-react'
 
 interface Props {
@@ -217,9 +216,38 @@ export default function FichaClienteUnificadaV2({ eventoCompleto, showActions = 
 
     return (
         <div className="space-y-4">
-            {/* Cabecera con título */}
-            <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-zinc-200 border-b border-zinc-700 pb-2">Información del Cliente</h3>
+            {/* Cabecera con título y botón de edición */}
+            <div className="flex items-center justify-between border-b border-zinc-700 pb-2">
+                <h3 className="text-lg font-semibold text-zinc-200">Información del Cliente</h3>
+                {showActions && !isEditing && (
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors"
+                        title="Editar información"
+                    >
+                        <Edit3 className="w-4 h-4" />
+                    </button>
+                )}
+                {isEditing && (
+                    <div className="flex gap-1">
+                        <button
+                            onClick={handleCancel}
+                            disabled={saving}
+                            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-zinc-800 rounded-md transition-colors disabled:opacity-50"
+                            title="Cancelar edición"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="p-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-zinc-800 rounded-md transition-colors disabled:opacity-50"
+                            title={saving ? 'Guardando...' : 'Guardar cambios'}
+                        >
+                            <Check className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Contenido */}
@@ -332,53 +360,6 @@ export default function FichaClienteUnificadaV2({ eventoCompleto, showActions = 
                     </p>
                 </div>
             </div>
-
-            {/* Footer con botones de acción */}
-            {showActions && (
-                <div className="border-t border-zinc-700 pt-3 mt-4">
-                    <div className="flex gap-2 justify-center md:justify-start">
-                        {!isEditing ? (
-                            <>
-                                <button
-                                    onClick={() => setIsEditing(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-700 text-blue-100 border border-blue-600 rounded-md hover:bg-blue-600 transition-colors"
-                                >
-                                    <Edit3 className="w-4 h-4" />
-                                    Editar
-                                </button>
-                                {cliente.telefono && (
-                                    <button
-                                        onClick={abrirWhatsApp}
-                                        className="flex items-center gap-2 px-4 py-2 bg-green-700 text-green-100 border border-green-600 rounded-md hover:bg-green-600 transition-colors"
-                                    >
-                                        <ExternalLink className="w-4 h-4" />
-                                        WhatsApp
-                                    </button>
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                <button
-                                    onClick={handleCancel}
-                                    disabled={saving}
-                                    className="flex items-center gap-2 px-4 py-2 bg-red-700 text-red-100 border border-red-600 rounded-md hover:bg-red-600 transition-colors disabled:opacity-50"
-                                >
-                                    <X className="w-4 h-4" />
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={handleSave}
-                                    disabled={saving}
-                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-700 text-emerald-100 border border-emerald-600 rounded-md hover:bg-emerald-600 transition-colors disabled:opacity-50"
-                                >
-                                    <Check className="w-4 h-4" />
-                                    {saving ? 'Guardando...' : 'Guardar'}
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
         </div>
     )
 }
