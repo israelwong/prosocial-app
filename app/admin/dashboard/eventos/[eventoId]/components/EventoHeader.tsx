@@ -1,18 +1,23 @@
 'use client'
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/app/components/ui/button'
 import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
+import { validarDisponibilidadFecha } from '@/app/admin/_lib/actions/evento/crearEventoCompleto/crearEventoCompleto.actions'
+import type { DisponibilidadFecha } from '@/app/admin/_lib/actions/evento/crearEventoCompleto/crearEventoCompleto.schemas'
 import {
     Calendar,
     User,
     Settings,
     X,
     Clock,
-    MapPin
+    MapPin,
+    CheckCircle,
+    AlertCircle
 } from 'lucide-react'
 
 interface EventoData {
+    id: string
     clienteId: string
     eventoTipoId: string
     nombreCliente: string
@@ -38,6 +43,25 @@ export default function EventoHeader({
     onGestionarEvento
 }: Props) {
 
+    const [disponibilidadFecha, setDisponibilidadFecha] = useState<DisponibilidadFecha | null>(null)
+    const [cargandoDisponibilidad, setCargandoDisponibilidad] = useState(false)
+
+    // Verificar disponibilidad de fecha cuando cambie fechaEvento
+    useEffect(() => {
+        if (eventoData.fechaEvento) {
+            setCargandoDisponibilidad(true)
+            validarDisponibilidadFecha({
+                fecha_evento: eventoData.fechaEvento,
+                permitirDuplicada: false
+            }).then((resultado) => {
+                setDisponibilidadFecha(resultado)
+                setCargandoDisponibilidad(false)
+            }).catch(() => {
+                setCargandoDisponibilidad(false)
+            })
+        }
+    }, [eventoData.fechaEvento])
+
     const getStatusColor = (etapa: string) => {
         switch (etapa.toLowerCase()) {
             case 'nuevo':
@@ -58,6 +82,53 @@ export default function EventoHeader({
     }
 
     const puedeGestionarEvento = eventoData.nombreEtapa !== 'Nuevo' && eventoData.nombreEtapa !== 'Seguimiento'
+
+    const renderEtiquetaDisponibilidad = () => {
+        if (cargandoDisponibilidad) {
+            return (
+                <span className="text-xs text-zinc-400 flex items-center gap-1">
+                    <Clock className="h-3 w-3 animate-spin" />
+                    Verificando...
+                </span>
+            )
+        }
+
+        if (!disponibilidadFecha || !eventoData.fechaEvento) {
+            return null
+        }
+
+        // Verificar si hay conflictos con otros eventos
+        const hayConflictos = disponibilidadFecha.conflictos && disponibilidadFecha.conflictos.length > 0
+        const eventoActualEnConflictos = hayConflictos &&
+            disponibilidadFecha.conflictos?.some(conflicto => conflicto.id === eventoData.id)
+
+        if (hayConflictos && !eventoActualEnConflictos) {
+            // Fecha ocupada por otro evento
+            const conflicto = disponibilidadFecha.conflictos?.[0]
+            return (
+                <span className="px-2 py-1 rounded-md text-xs border bg-red-500/20 text-red-400 border-red-500/30 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Fecha no disponible ({conflicto?.cliente})
+                </span>
+            )
+        } else if (hayConflictos && eventoActualEnConflictos) {
+            // Fecha asignada a este evento
+            return (
+                <span className="px-2 py-1 rounded-md text-xs border bg-green-500/20 text-green-400 border-green-500/30 flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    Fecha asignada
+                </span>
+            )
+        } else {
+            // Fecha disponible
+            return (
+                <span className="px-2 py-1 rounded-md text-xs border bg-green-500/20 text-green-400 border-green-500/30 flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    Fecha aún disponible para agendar
+                </span>
+            )
+        }
+    }
 
     return (
         <div className="bg-zinc-900/80 backdrop-blur-sm border-b border-zinc-800 sticky top-0 z-50">
@@ -90,6 +161,9 @@ export default function EventoHeader({
                                 </span>
                             </div>
                         )}
+
+                        {/* Etiqueta de disponibilidad */}
+                        {renderEtiquetaDisponibilidad()}
                     </div>
 
                     {/* Acciones minimalistas */}

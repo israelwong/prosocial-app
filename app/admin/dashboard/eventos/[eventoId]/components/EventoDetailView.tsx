@@ -26,6 +26,7 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
 
     // Extraer datos del evento completo
     const eventoData = {
+        id: eventoCompleto.id,
         clienteId: eventoCompleto.clienteId,
         eventoTipoId: eventoCompleto.eventoTipoId ?? '',
         nombreCliente: eventoCompleto.Cliente.nombre,

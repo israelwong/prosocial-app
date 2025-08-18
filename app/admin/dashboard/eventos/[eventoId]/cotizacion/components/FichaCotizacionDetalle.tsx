@@ -8,7 +8,7 @@ import BotonAutorizarCotizacion from './BotonAutorizarCotizacion'
 import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
 import { toast } from 'sonner'
 
-import { Pencil, Eye, Layers2, ArrowUpRight, Trash2, Archive, ArchiveRestore, Copy, Check, MoreVertical, CheckCircle } from 'lucide-react'
+import { Pencil, Eye, Layers2, ArrowUpRight, Trash2, Archive, ArchiveRestore, Copy, Check, MoreVertical, CheckCircle, Calendar } from 'lucide-react'
 
 interface Props {
     cotizacion: Cotizacion
@@ -203,7 +203,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                 </button>
 
                                 {/* Autorizar - Solo si no está autorizado */}
-                                {cotizacion.status !== 'autorizado' && (
+                                {cotizacion.status !== 'autorizado' && cotizacion.status !== 'aprobada' && (
                                     <>
                                         <button
                                             onClick={handleAutorizar}
@@ -212,6 +212,23 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                         >
                                             <CheckCircle className="w-4 h-4" />
                                             {autorizando ? 'Autorizando...' : 'Autorizar cotización'}
+                                        </button>
+                                        <div className="border-t border-zinc-700 my-1"></div>
+                                    </>
+                                )}
+
+                                {/* Ir a seguimiento - Solo si está aprobada */}
+                                {cotizacion.status === 'aprobada' && (
+                                    <>
+                                        <button
+                                            onClick={() => {
+                                                router.push(`/admin/dashboard/seguimiento/${eventoId}`)
+                                                setMenuAbierto(false)
+                                            }}
+                                            className="w-full px-3 py-2 text-left text-blue-400 hover:bg-zinc-700 flex items-center gap-2 text-sm"
+                                        >
+                                            <Calendar className="w-4 h-4" />
+                                            Ir a seguimiento
                                         </button>
                                         <div className="border-t border-zinc-700 my-1"></div>
                                     </>
@@ -278,12 +295,29 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                 </p>
             </div>
 
-            {/* Status autorizado */}
+            {/* Status autorizado o aprobado */}
             {cotizacion.status === 'autorizado' && (
-                <div className="mt-3 p-3 bg-green-900/30 border border-green-700 rounded-lg">
-                    <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
+                <div className="mt-3 p-3 bg-blue-900/30 border border-blue-700 rounded-lg">
+                    <div className="flex items-center gap-2 text-blue-400 text-sm font-medium">
                         <CheckCircle className="w-4 h-4" />
                         Cotización Autorizada
+                    </div>
+                </div>
+            )}
+
+            {cotizacion.status === 'aprobada' && (
+                <div className="mt-3 p-3 bg-green-900/30 border border-green-700 rounded-lg">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
+                            <CheckCircle className="w-4 h-4" />
+                            Cotización Aprobada
+                        </div>
+                        <button
+                            onClick={() => router.push(`/admin/dashboard/seguimiento/${eventoId}`)}
+                            className="text-green-300 hover:text-green-200 text-xs px-2 py-1 bg-green-800/50 hover:bg-green-800/70 rounded transition-colors"
+                        >
+                            Ir a seguimiento
+                        </button>
                     </div>
                 </div>
             )}

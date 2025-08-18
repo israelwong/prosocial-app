@@ -305,9 +305,11 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                         {cotizaciones.map((cotizacion, index) => (
                             <li
                                 key={cotizacion.id}
-                                className={`rounded-md p-4 ${cotizacion.status === 'pendiente'
-                                    ? 'bg-zinc-900 border border-zinc-800'
-                                    : 'bg-green-900/10 border border-green-950/30'
+                                className={`rounded-md p-4 ${cotizacion.status === 'aprobada'
+                                        ? 'bg-green-900/20 border border-green-700/50'
+                                        : cotizacion.status === 'autorizado'
+                                            ? 'bg-blue-900/20 border border-blue-700/50'
+                                            : 'bg-zinc-900 border border-zinc-800'
                                     }`}
                             >
                                 <FichaCotizacionDetalle
@@ -323,9 +325,11 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                         {cotizacionesSimples.map((cotizacion, index) => (
                             <li
                                 key={cotizacion.id}
-                                className={`rounded-md p-4 ${cotizacion.status === 'pendiente'
-                                    ? 'bg-zinc-900 border border-zinc-800'
-                                    : 'bg-green-900/10 border border-green-950/30'
+                                className={`rounded-md p-4 ${cotizacion.status === 'aprobada'
+                                        ? 'bg-green-900/20 border border-green-700/50'
+                                        : cotizacion.status === 'autorizado'
+                                            ? 'bg-blue-900/20 border border-blue-700/50'
+                                            : 'bg-zinc-900 border border-zinc-800'
                                     }`}
                             >
                                 <div className="flex items-center justify-between">
