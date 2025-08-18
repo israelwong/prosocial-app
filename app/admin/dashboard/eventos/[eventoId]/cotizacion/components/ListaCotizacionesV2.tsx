@@ -76,7 +76,7 @@ const ListaCotizaciones: React.FC<Props> = ({ eventoId, eventoTipoId, eventoAsig
     //! Crear nueva cotización
     const handleNuevaCotizacion = useCallback((paqueteId: string) => {
         setGenerandoCotizacion(true)
-        router.push(`/admin/dashboard/cotizaciones/nueva?eventoId=${eventoId}&eventoTipoId=${eventoTipoId}&paqueteId=${paqueteId}`)
+        router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/nueva?eventoTipoId=${eventoTipoId}&paqueteId=${paqueteId}`)
     }, [eventoId, eventoTipoId, router])
 
     //! Eliminar cotización
@@ -180,6 +180,7 @@ const ListaCotizaciones: React.FC<Props> = ({ eventoId, eventoTipoId, eventoAsig
                                             <FichaCotizacionDetalle
                                                 cotizacion={cotizacion}
                                                 onEliminarCotizacion={handleEliminarCotizacion}
+                                                eventoId={eventoId}
                                             />
                                         </li>
                                     ))}
