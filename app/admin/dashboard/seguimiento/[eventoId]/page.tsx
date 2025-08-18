@@ -7,6 +7,7 @@ import { HeaderSimple } from '@/app/admin/dashboard/seguimiento/[eventoId]/compo
 import { BitacoraSimple } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/BitacoraSimple'
 import { BalanceFinancieroAvanzado } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/BalanceFinancieroAvanzado'
 import ServiciosAsociados from '@/app/admin/dashboard/seguimiento/[eventoId]/components/ServiciosAsociados'
+import FichaAgendaV3 from '@/app/admin/dashboard/seguimiento/[eventoId]/components/FichaAgendaV3'
 
 export const metadata: Metadata = {
     title: 'Detalle del evento',
@@ -58,6 +59,9 @@ export default async function Page({ params }: PageProps) {
                             } as any : null}
                             pagos={datos.pagos as any}
                         />
+
+                        {/* Ficha de Agenda V3 */}
+                        <FichaAgendaV3 eventoId={eventoId} />
 
                         {/* Bitácora (Placeholder hasta implementar) */}
                         <BitacoraSimple bitacora={null} />
