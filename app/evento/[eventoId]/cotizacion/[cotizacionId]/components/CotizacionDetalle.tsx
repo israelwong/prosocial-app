@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { suscribirCotizacion, desuscribirCotizacion, ESTADOS_COTIZACION } from '@/lib/supabase-realtime'
-import { obtenerCotizacionCompleta } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
+import { obtenerEventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.actions'
+import { verificarDisponibilidadFecha } from '@/app/admin/_lib/agenda.actions'
 
 interface Cotizacion {
     id: string
@@ -10,17 +11,17 @@ interface Cotizacion {
     precio: number
     status: string
     createdAt: Date
-    expiresAt?: Date
+    expiresAt?: Date | null
     eventoId: string
 }
 
 interface Evento {
     id: string
-    nombre: string
+    nombre: string | null
     fecha_evento: Date
     status: string
-    sede?: string
-    direccion?: string
+    sede?: string | null
+    direccion?: string | null
 }
 
 interface CotizacionServicio {
@@ -31,7 +32,7 @@ interface CotizacionServicio {
     servicio: {
         id: string
         nombre: string
-        ServicioCategoria: {
+        ServicioCategoria?: {
             id: string
             nombre: string
             Seccion: {
@@ -39,7 +40,7 @@ interface CotizacionServicio {
                 nombre: string
                 posicion: number
             }
-        }
+        } | null
     }
 }
 
@@ -61,7 +62,7 @@ interface Props {
     esRealtime?: boolean
     esAdmin?: boolean
     esLegacy?: boolean
-    estaExpirada?: boolean
+    estaExpirada?: boolean | null
     fechaOcupada?: boolean
 }
 
@@ -77,12 +78,18 @@ export default function CotizacionDetalle({
     const [cotizacion, setCotizacion] = useState(cotizacionInicial)
     const [serviciosAgrupados, setServiciosAgrupados] = useState<ServiciosAgrupados>({})
     const [costos, setCostos] = useState([])
+    const [condicionesComerciales, setCondicionesComerciales] = useState<any[]>([])
+    const [metodosPago, setMetodosPago] = useState<any[]>([])
+    const [condicionSeleccionada, setCondicionSeleccionada] = useState<string>('')
+    const [fechaRealmenterOcupada, setFechaRealmenteOcupada] = useState<boolean>(false)
     const [loading, setLoading] = useState(false)
     const [conectado, setConectado] = useState(false)
 
     useEffect(() => {
         // Cargar servicios al montar el componente
         cargarServiciosAgrupados()
+        cargarCondicionesComerciales()
+        verificarDisponibilidadReal()
 
         if (esRealtime) {
             console.log('Iniciando sesión de tiempo real...')
@@ -112,53 +119,75 @@ export default function CotizacionDetalle({
         }
     }, [cotizacion.id, esRealtime])
 
+    const verificarDisponibilidadReal = async () => {
+        const fechaOcupada = await verificarDisponibilidad()
+        setFechaRealmenteOcupada(fechaOcupada)
+    }
+
     const cargarServiciosAgrupados = async () => {
         try {
             setLoading(true)
-            console.log('Cargando servicios agrupados para cotización:', cotizacion.id)
+            console.log('🔍 === INICIANDO DEBUG DE SERVICIOS ===')
+            console.log('1. Evento ID:', evento.id)
+            console.log('2. Cotización ID:', cotizacion.id)
 
-            // Obtener la cotización completa con servicios
-            const resultado = await obtenerCotizacionCompleta(cotizacion.id)
-            const cotizacionCompleta = resultado.cotizacion
+            // Usar la función que sí funciona correctamente
+            console.log('3. Llamando a obtenerEventoDetalleCompleto...')
+            const resultado = await obtenerEventoDetalleCompleto(evento.id)
+            
+            console.log('4. Resultado completo:', JSON.stringify(resultado, null, 2))
+            console.log('5. Cotización en resultado:', resultado.cotizacion)
+            console.log('6. Servicios detalle:', resultado.serviciosDetalle)
+            
+            const serviciosDetalle = resultado.serviciosDetalle
 
-            console.log('Cotización completa obtenida:', cotizacionCompleta)
-            console.log('Servicios en cotización:', cotizacionCompleta?.Servicio)
-
-            if (!cotizacionCompleta?.Servicio || cotizacionCompleta.Servicio.length === 0) {
-                console.log('No hay servicios en la cotización')
+            if (!serviciosDetalle || serviciosDetalle.length === 0) {
+                console.log('❌ No hay servicios en la cotización')
                 setServiciosAgrupados({})
                 return
             }
 
-            // Agrupar servicios por sección y categoría
+            console.log('✅ Servicios encontrados:', serviciosDetalle.length)
+            
+            // Mostrar cada servicio detalladamente
+            serviciosDetalle.forEach((servicio: any, index: number) => {
+                console.log(`\n📦 SERVICIO ${index + 1}:`)
+                console.log('  - ID:', servicio.id)
+                console.log('  - Nombre:', servicio.nombre)
+                console.log('  - Categoría:', servicio.categoriaNombre)
+                console.log('  - Sección:', servicio.seccion)
+                console.log('  - Precio:', servicio.precio)
+                console.log('  - Cantidad:', servicio.cantidad)
+                console.log('  - Subtotal:', servicio.subtotal)
+                console.log('  - Objeto completo:', JSON.stringify(servicio, null, 2))
+            })
+
+            // Procesar agrupación
             const agrupados: ServiciosAgrupados = {}
 
-            cotizacionCompleta.Servicio.forEach((cotizacionServicio: any) => {
-                console.log('Procesando cotización servicio:', cotizacionServicio)
+            serviciosDetalle.forEach((servicioDetalle: any, index: number) => {
+                console.log(`\n--- Servicio ${index + 1} ---`)
+                console.log('Nombre:', servicioDetalle.nombre)
+                console.log('Categoría:', servicioDetalle.categoriaNombre)
+                console.log('Precio:', servicioDetalle.precio)
+                console.log('Cantidad:', servicioDetalle.cantidad)
+                console.log('Subtotal:', servicioDetalle.subtotal)
 
-                const servicio = cotizacionServicio.Servicio
-                const servicioCategoria = cotizacionServicio.ServicioCategoria || servicio?.ServicioCategoria
+                // Usar los datos ya procesados correctamente
+                const nombreServicio = servicioDetalle.nombre || 'Servicio sin nombre'
+                const categoriaNombre = servicioDetalle.categoriaNombre || 'Sin categoría'
+                const seccionNombre = servicioDetalle.seccion || servicioDetalle.categoriaNombre || 'Servicios Generales'
+                const precioUnitario = servicioDetalle.precio || 0
+                const cantidad = servicioDetalle.cantidad || 1
+                const subtotal = servicioDetalle.subtotal || (cantidad * precioUnitario)
 
-                console.log('Servicio:', servicio)
-                console.log('ServicioCategoria:', servicioCategoria)
-
-                if (!servicio && !servicioCategoria) {
-                    console.log('No se encontró servicio ni categoría, saltando...')
-                    return
-                }
-
-                // Obtener datos de sección y categoría
-                const seccionNombre = servicioCategoria?.Seccion?.nombre || 'Sin sección'
-                const categoriaNombre = servicioCategoria?.nombre || 'Sin categoría'
-                const posicionSeccion = servicioCategoria?.Seccion?.posicion || 999
-                const posicionCategoria = 999 // Las categorías no tienen posición en el schema
-
-                console.log(`Sección: ${seccionNombre}, Categoría: ${categoriaNombre}`)
+                console.log(`\nProcesando: Sección="${seccionNombre}", Categoría="${categoriaNombre}", Servicio="${nombreServicio}"`)
+                console.log(`Cantidad: ${cantidad}, Precio: ${precioUnitario}, Subtotal: ${subtotal}`)
 
                 // Inicializar sección si no existe
                 if (!agrupados[seccionNombre]) {
                     agrupados[seccionNombre] = {
-                        posicion: posicionSeccion,
+                        posicion: 0,
                         categorias: {}
                     }
                 }
@@ -166,26 +195,37 @@ export default function CotizacionDetalle({
                 // Inicializar categoría si no existe
                 if (!agrupados[seccionNombre].categorias[categoriaNombre]) {
                     agrupados[seccionNombre].categorias[categoriaNombre] = {
-                        posicion: posicionCategoria,
+                        posicion: 0,
                         servicios: []
                     }
                 }
 
                 // Agregar el servicio con la información necesaria
                 agrupados[seccionNombre].categorias[categoriaNombre].servicios.push({
-                    id: cotizacionServicio.id,
-                    cantidad: cotizacionServicio.cantidad,
-                    precioUnitario: cotizacionServicio.precioUnitario,
-                    subtotal: cotizacionServicio.subtotal,
+                    id: servicioDetalle.id,
+                    cantidad: cantidad,
+                    precioUnitario: precioUnitario,
+                    subtotal: subtotal,
                     servicio: {
-                        id: servicio?.id || cotizacionServicio.servicioId,
-                        nombre: servicio?.nombre || cotizacionServicio.nombre_snapshot || 'Servicio sin nombre',
-                        ServicioCategoria: servicioCategoria
+                        id: servicioDetalle.servicioId || servicioDetalle.id,
+                        nombre: nombreServicio,
+                        ServicioCategoria: null
                     }
                 })
             })
 
-            console.log('Servicios agrupados resultado:', agrupados)
+            console.log('\n=== SERVICIOS AGRUPADOS RESULTADO ===')
+            console.log('Secciones encontradas:', Object.keys(agrupados))
+            Object.entries(agrupados).forEach(([seccion, datos]) => {
+                console.log(`\nSección: ${seccion}`)
+                console.log(`  Categorías: ${Object.keys(datos.categorias)}`)
+                Object.entries(datos.categorias).forEach(([categoria, catDatos]) => {
+                    console.log(`    Categoría: ${categoria} - ${catDatos.servicios.length} servicios`)
+                    catDatos.servicios.forEach((servicio, idx) => {
+                        console.log(`      ${idx + 1}. ${servicio.servicio.nombre} (Cant: ${servicio.cantidad}, Precio: $${servicio.precioUnitario})`)
+                    })
+                })
+            })
 
             // Ordenar servicios dentro de cada categoría por nombre
             Object.keys(agrupados).forEach(seccionNombre => {
@@ -205,13 +245,56 @@ export default function CotizacionDetalle({
         }
     }
 
+    const cargarCondicionesComerciales = async () => {
+        try {
+            // Por ahora usaremos datos mock hasta que implementemos la consulta real
+            const condicionesMock = [
+                {
+                    id: '1',
+                    nombre: 'Contado',
+                    descripcion: 'Pago completo al contratar',
+                    descuento: 10,
+                    metodosPago: ['Transferencia', 'Efectivo']
+                },
+                {
+                    id: '2',
+                    nombre: '50% Anticipo',
+                    descripcion: '50% anticipo, 50% una semana antes del evento',
+                    descuento: 5,
+                    metodosPago: ['Transferencia', 'Tarjeta']
+                },
+                {
+                    id: '3',
+                    nombre: 'Apartado',
+                    descripcion: 'Apartar con anticipo mínimo',
+                    descuento: 0,
+                    metodosPago: ['Transferencia', 'Efectivo', 'Tarjeta']
+                }
+            ]
+            setCondicionesComerciales(condicionesMock)
+        } catch (error) {
+            console.error('Error al cargar condiciones comerciales:', error)
+        }
+    }
+
+    // Verificar disponibilidad de fecha real usando agenda
+    const verificarDisponibilidad = async () => {
+        try {
+            const disponibilidad = await verificarDisponibilidadFecha(evento.fecha_evento, evento.id)
+            return !disponibilidad.disponible
+        } catch (error) {
+            console.error('Error al verificar disponibilidad:', error)
+            return false
+        }
+    }
+
     const cargarCostos = async () => {
         console.log('Cargando costos...')
         // Aquí iría la llamada real para obtener costos
     }
 
     const iniciarPago = () => {
-        if (fechaOcupada) {
+        if (fechaRealmenterOcupada) {
             alert('Lo sentimos, la fecha ya ha sido ocupada por otro cliente.')
             return
         }
@@ -227,10 +310,10 @@ export default function CotizacionDetalle({
 
     // Determinar el estado visual
     const getEstadoVisual = () => {
-        if (fechaOcupada) {
+        if (fechaRealmenterOcupada) {
             return {
                 titulo: 'Fecha no disponible',
-                mensaje: 'Esta fecha ya ha sido reservada.',
+                mensaje: 'Esta fecha ya ha sido reservada en agenda.',
                 color: 'red',
                 icon: '🚫'
             }
@@ -263,7 +346,7 @@ export default function CotizacionDetalle({
     }
 
     const estadoVisual = getEstadoVisual()
-    const puedeRealizarPago = !fechaOcupada && !estaExpirada && cotizacion.status === ESTADOS_COTIZACION.APROBADA
+    const puedeRealizarPago = !fechaRealmenterOcupada && !estaExpirada && cotizacion.status === ESTADOS_COTIZACION.APROBADA && condicionSeleccionada
 
     const urlRegreso = esLegacy ? `/cotizacion/${cotizacion.id}` : `/evento/${evento.id}`
 
@@ -301,12 +384,41 @@ export default function CotizacionDetalle({
                             {cotizacion.nombre}
                         </h1>
                         <div className="text-zinc-400 text-sm">
-                            {evento.nombre} - {new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
+                            {evento.nombre || 'Evento sin nombre'} - {new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
                                 month: 'short',
                                 day: 'numeric'
                             })}
                         </div>
                     </div>
+
+                    {/* Botón de compartir */}
+                    <button
+                        onClick={() => {
+                            const url = window.location.href
+                            const titulo = `Cotización: ${cotizacion.nombre}`
+                            const texto = `Te comparto mi cotización para ${evento.nombre}`
+
+                            if (navigator.share) {
+                                navigator.share({
+                                    title: titulo,
+                                    text: texto,
+                                    url: url
+                                }).catch(console.error)
+                            } else {
+                                navigator.clipboard.writeText(url).then(() => {
+                                    alert('Enlace copiado al portapapeles')
+                                }).catch(() => {
+                                    alert('No se pudo copiar el enlace')
+                                })
+                            }
+                        }}
+                        className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-lg transition-colors"
+                        title="Compartir cotización"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                        </svg>
+                    </button>
                 </div>
             </div>
 
@@ -347,9 +459,14 @@ export default function CotizacionDetalle({
             <div className="p-4 pb-24 space-y-4">
                 {/* Servicios incluidos */}
                 <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
-                    <h3 className="font-bold text-white mb-3">
-                        Servicios incluidos
-                    </h3>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold text-white text-lg">
+                            📋 Servicios incluidos
+                        </h3>
+                        <div className="text-xs text-zinc-400 bg-zinc-700 px-2 py-1 rounded">
+                            {Object.keys(serviciosAgrupados).length} sección{Object.keys(serviciosAgrupados).length !== 1 ? 'es' : ''}
+                        </div>
+                    </div>
 
                     {loading ? (
                         <div className="text-center py-6">
@@ -401,102 +518,61 @@ export default function CotizacionDetalle({
                                                         {/* Lista de servicios */}
                                                         <div className="space-y-2">
                                                             {categoriaData.servicios.map((cotizacionServicio) => (
-                                                                <div key={cotizacionServicio.id} className="bg-zinc-800/50 rounded-md p-4 border border-zinc-600/30 hover:border-zinc-500/50 transition-colors">
-                                                                    {/* Diseño responsivo: stack en móvil, grid en desktop */}
-                                                                    <div className="flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:gap-4 sm:items-center">
-                                                                        {/* Nombre del servicio */}
-                                                                        <div className="sm:col-span-6">
-                                                                            <h6 className="text-white font-medium text-sm sm:text-base leading-tight">
+                                                                <div key={cotizacionServicio.id} className="bg-gradient-to-r from-zinc-900/50 to-zinc-800/50 rounded-lg p-3 border border-zinc-600/30 hover:border-zinc-500/50 transition-all duration-200">
+                                                                    <div className="flex items-center justify-between gap-4">
+                                                                        {/* Información del servicio */}
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <h6 className="text-white font-medium text-sm leading-tight">
                                                                                 {cotizacionServicio.servicio.nombre}
                                                                             </h6>
-                                                                        </div>
-
-                                                                        {/* Cantidad */}
-                                                                        <div className="sm:col-span-2">
-                                                                            <div className="flex items-center gap-2">
-                                                                                <span className="text-xs text-zinc-400 sm:hidden">Cantidad:</span>
-                                                                                <span className="text-zinc-300 font-medium text-sm sm:text-center">
-                                                                                    x{cotizacionServicio.cantidad}
-                                                                                </span>
+                                                                            <div className="text-xs text-zinc-400 mt-1">
+                                                                                Cantidad: {cotizacionServicio.cantidad}
                                                                             </div>
                                                                         </div>
 
-                                                                        {/* Precio unitario (solo en desktop) */}
-                                                                        <div className="hidden sm:block sm:col-span-2 text-center">
-                                                                            <span className="text-zinc-400 text-sm">
-                                                                                {cotizacionServicio.precioUnitario.toLocaleString('es-MX', {
+                                                                        {/* Subtotal del servicio */}
+                                                                        <div className="text-right">
+                                                                            <div className="text-green-400 font-semibold">
+                                                                                {cotizacionServicio.subtotal.toLocaleString('es-MX', {
                                                                                     style: 'currency',
                                                                                     currency: 'MXN'
                                                                                 })}
-                                                                            </span>
-                                                                        </div>
-
-                                                                        {/* Subtotal */}
-                                                                        <div className="sm:col-span-2">
-                                                                            <div className="flex items-center justify-between sm:justify-end gap-2">
-                                                                                <span className="text-xs text-zinc-400 sm:hidden">Subtotal:</span>
-                                                                                <span className="text-green-400 font-bold text-base sm:text-lg">
-                                                                                    {cotizacionServicio.subtotal.toLocaleString('es-MX', {
-                                                                                        style: 'currency',
-                                                                                        currency: 'MXN'
-                                                                                    })}
-                                                                                </span>
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                             ))}
                                                         </div>
-
-                                                        {/* Subtotal de la categoría */}
-                                                        <div className="flex justify-end pt-2 border-t border-zinc-600/50">
-                                                            <div className="bg-blue-900/30 px-4 py-2 rounded-lg border border-blue-500/30">
-                                                                <div className="flex items-center gap-3">
-                                                                    <span className="text-blue-300 font-medium text-sm">
-                                                                        Subtotal {categoriaNombre}:
-                                                                    </span>
-                                                                    <span className="text-blue-200 font-bold text-lg">
-                                                                        {categoriaData.servicios.reduce((total, servicio) => total + servicio.subtotal, 0)
-                                                                            .toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
                                                     </div>
                                                 ))}
-                                        </div>
-
-                                        {/* Subtotal de la sección */}
-                                        <div className="bg-purple-900/30 px-4 py-3 border-t border-purple-500/30">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-purple-300 font-semibold">
-                                                    Total {seccionNombre}:
-                                                </span>
-                                                <span className="text-purple-200 font-bold text-xl">
-                                                    {Object.values(seccionData.categorias)
-                                                        .reduce((total, categoria) =>
-                                                            total + categoria.servicios.reduce((catTotal, servicio) => catTotal + servicio.subtotal, 0), 0)
-                                                        .toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                                </span>
-                                            </div>
                                         </div>
                                     </div>
                                 ))}
 
                             {/* Total general de todos los servicios */}
-                            <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-lg p-4 border border-green-500/50">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-green-100 font-bold text-lg">
-                                        TOTAL SERVICIOS:
-                                    </span>
-                                    <span className="text-white font-bold text-2xl">
-                                        {Object.values(serviciosAgrupados)
-                                            .reduce((total, seccion) =>
-                                                total + Object.values(seccion.categorias)
-                                                    .reduce((secTotal, categoria) =>
-                                                        secTotal + categoria.servicios.reduce((catTotal, servicio) => catTotal + servicio.subtotal, 0), 0), 0)
-                                            .toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                    </span>
+                            <div className="bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 rounded-xl p-6 border border-green-500/50 shadow-xl">
+                                <div className="text-center space-y-3">
+                                    <div className="flex items-center justify-center gap-2 mb-2">
+                                        <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
+                                        <span className="text-green-100 font-semibold text-sm uppercase tracking-wide">
+                                            Total de servicios
+                                        </span>
+                                        <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
+                                    </div>
+
+                                    <div className="bg-white/10 rounded-lg py-4 px-6">
+                                        <div className="text-white font-bold text-3xl">
+                                            {Object.values(serviciosAgrupados)
+                                                .reduce((total, seccion) =>
+                                                    total + Object.values(seccion.categorias)
+                                                        .reduce((secTotal, categoria) =>
+                                                            secTotal + categoria.servicios.reduce((catTotal, servicio) => catTotal + servicio.subtotal, 0), 0), 0)
+                                                .toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                        </div>
+                                        <div className="text-green-200 text-sm mt-1">
+                                            Total antes de anticipo
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -522,6 +598,99 @@ export default function CotizacionDetalle({
                     </div>
                 )}
 
+                {/* Condiciones comerciales */}
+                {condicionesComerciales.length > 0 && (
+                    <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
+                        <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+                            💳 Condiciones comerciales disponibles
+                        </h3>
+
+                        <div className="space-y-3">
+                            {condicionesComerciales.map((condicion: any) => (
+                                <div
+                                    key={condicion.id}
+                                    className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 ${condicionSeleccionada === condicion.id
+                                        ? 'border-green-500 bg-green-900/20'
+                                        : 'border-zinc-600 bg-zinc-700/30 hover:border-zinc-500'
+                                        }`}
+                                    onClick={() => setCondicionSeleccionada(condicion.id)}
+                                >
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div className="flex-1">
+                                            <h4 className="text-white font-semibold text-base mb-1">
+                                                {condicion.nombre}
+                                            </h4>
+                                            {condicion.descripcion && (
+                                                <p className="text-zinc-400 text-sm mb-2">
+                                                    {condicion.descripcion}
+                                                </p>
+                                            )}
+
+                                            <div className="flex items-center gap-4 text-sm">
+                                                {condicion.descuento && (
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-green-400">💰</span>
+                                                        <span className="text-green-300">
+                                                            {condicion.descuento}% descuento
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {condicion.porcentaje_anticipo && (
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-blue-400">📊</span>
+                                                        <span className="text-blue-300">
+                                                            {condicion.porcentaje_anticipo}% anticipo
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Métodos de pago disponibles para esta condición */}
+                                            <div className="mt-3">
+                                                <div className="text-xs text-zinc-500 mb-2">Métodos de pago disponibles:</div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {condicion.CondicionesComercialesMetodoPago?.map((rel: any) => {
+                                                        const metodoPago = metodosPago.find(m => m.id === rel.metodoPagoId)
+                                                        return metodoPago ? (
+                                                            <span
+                                                                key={metodoPago.id}
+                                                                className="px-2 py-1 bg-zinc-600 text-zinc-300 text-xs rounded uppercase"
+                                                            >
+                                                                {metodoPago.metodo_pago}
+                                                            </span>
+                                                        ) : null
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Indicador de selección */}
+                                        <div className={`w-5 h-5 rounded-full border-2 transition-colors ${condicionSeleccionada === condicion.id
+                                            ? 'border-green-500 bg-green-500'
+                                            : 'border-zinc-500'
+                                            }`}>
+                                            {condicionSeleccionada === condicion.id && (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="w-2 h-2 rounded-full bg-white"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {!condicionSeleccionada && (
+                            <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+                                <p className="text-yellow-300 text-sm">
+                                    ⚠️ Selecciona una condición comercial para continuar con el pago
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Información adicional */}
                 <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
                     <div className="text-zinc-400 space-y-2 text-sm">
@@ -541,20 +710,30 @@ export default function CotizacionDetalle({
             </div>
 
             {/* Footer fijo con resumen y acciones */}
-            <div className="fixed bottom-0 left-0 right-0 bg-zinc-800 border-t border-zinc-700 p-4">
+            <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-zinc-900 via-zinc-800 to-zinc-800 border-t border-zinc-700 p-4 shadow-2xl">
                 {/* Resumen de precio */}
-                <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                        <span className="text-zinc-400 text-sm">Total:</span>
-                        <span className="text-white text-xl font-bold">
-                            ${(cotizacion.precio + costos.reduce((sum: number, c: any) => sum + (c.monto || 0), 0)).toLocaleString('es-MX')}
-                        </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <span className="text-zinc-400 text-xs">Anticipo requerido (50%):</span>
-                        <span className="text-green-400 font-bold">
-                            ${((cotizacion.precio + costos.reduce((sum: number, c: any) => sum + (c.monto || 0), 0)) * 0.5).toLocaleString('es-MX')}
-                        </span>
+                <div className="mb-4 bg-zinc-700/50 rounded-lg p-4 border border-zinc-600/50">
+                    <div className="space-y-3">
+                        {/* Total principal */}
+                        <div className="flex justify-between items-center">
+                            <span className="text-zinc-300 font-medium">💰 Total del evento:</span>
+                            <span className="text-white text-2xl font-bold">
+                                ${(cotizacion.precio + costos.reduce((sum: number, c: any) => sum + (c.monto || 0), 0)).toLocaleString('es-MX')}
+                            </span>
+                        </div>
+
+                        {/* Anticipo */}
+                        <div className="bg-green-900/30 rounded-lg p-3 border border-green-500/30">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <span className="text-green-300 text-sm font-medium">🎯 Anticipo requerido</span>
+                                    <div className="text-green-400 text-xs">50% para apartar tu fecha</div>
+                                </div>
+                                <span className="text-green-400 font-bold text-xl">
+                                    ${((cotizacion.precio + costos.reduce((sum: number, c: any) => sum + (c.monto || 0), 0)) * 0.5).toLocaleString('es-MX')}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -572,9 +751,10 @@ export default function CotizacionDetalle({
                             disabled
                             className="w-full bg-zinc-700 text-zinc-400 font-bold py-3 px-4 rounded-lg cursor-not-allowed"
                         >
-                            {fechaOcupada ? 'Fecha ocupada' :
+                            {fechaRealmenterOcupada ? 'Fecha ocupada' :
                                 estaExpirada ? 'Cotización expirada' :
-                                    'Pago no disponible'}
+                                    !condicionSeleccionada ? 'Selecciona condición comercial' :
+                                        'Pago no disponible'}
                         </button>
                     )}
 

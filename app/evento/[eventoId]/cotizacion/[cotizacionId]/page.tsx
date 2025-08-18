@@ -49,23 +49,15 @@ export default async function CotizacionDetallePage({ params, searchParams }: Pa
         const fechaOcupada = evento.status === 'contratado'
 
         return (
-            <div>
-                <h1>Detalle de Cotización</h1>
-                <p>Evento: {evento.nombre}</p>
-                <p>Cotización: {cotizacion.nombre}</p>
-                <p>Estado: {cotizacion.status}</p>
-                <p>Fecha de creación: {cotizacion.createdAt.toString()}</p>
-                <p>Fecha de expiración: {cotizacion.expiresAt?.toString()}</p>
-            </div>
-            // <CotizacionDetalle
-            //     cotizacion={cotizacion}
-            //     evento={evento}
-            //     esRealtime={realtime === 'true'}
-            //     esAdmin={admin === 'true'}
-            //     esLegacy={legacy === 'true'}
-            //     estaExpirada={estaExpirada}
-            //     fechaOcupada={fechaOcupada}
-            // />
+            <CotizacionDetalle
+                cotizacion={cotizacion}
+                evento={evento}
+                esRealtime={realtime === 'true'}
+                esAdmin={admin === 'true'}
+                esLegacy={legacy === 'true'}
+                estaExpirada={estaExpirada}
+                fechaOcupada={fechaOcupada}
+            />
         )
 
     } catch (error) {

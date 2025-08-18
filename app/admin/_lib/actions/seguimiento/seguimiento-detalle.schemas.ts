@@ -136,6 +136,7 @@ export type ServicioDetalle = {
     subtotal: number;
     categoria: string;
     categoriaNombre: string;
+    seccion?: string; // Agregamos el campo de sección
 
     // Información del responsable
     responsableId?: string | null;

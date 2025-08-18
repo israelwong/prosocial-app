@@ -180,6 +180,20 @@ export async function obtenerEventoDetalleCompleto(
         // Procesar servicios con detalles
         const serviciosDetalle = procesarServiciosDetalle(cotizacion?.Servicio || [], usuarios);
 
+        // 🔍 DEBUG: Servicios procesados
+        console.log('🔍 DEBUG Servicios procesados:', {
+            totalServicios: serviciosDetalle.length,
+            servicios: serviciosDetalle.map(s => ({
+                id: s.id,
+                nombre: s.nombre,
+                categoria: s.categoriaNombre,
+                seccion: s.seccion,
+                precio: s.precio,
+                cantidad: s.cantidad,
+                subtotal: s.subtotal
+            }))
+        });
+
         // Procesar agenda con detalles - simplificado
         const agendaDetalle = (evento as any).Agenda.map((item: any) => ({
             ...item,
@@ -521,7 +535,22 @@ function procesarPagosDetalle(pagos: any[]): any[] {
  * Incluye tanto servicios de catálogo como servicios personalizados
  */
 function procesarServiciosDetalle(servicios: any[], usuarios: any[]): ServicioDetalle[] {
+    console.log('🔍 DEBUG procesarServiciosDetalle entrada:', {
+        totalServicios: servicios.length,
+        serviciosRaw: JSON.stringify(servicios, null, 2)
+    });
+
     return servicios.map(cotizacionServicio => {
+        console.log('🔍 Procesando servicio:', {
+            id: cotizacionServicio.id,
+            nombre_snapshot: cotizacionServicio.nombre_snapshot,
+            categoria_nombre_snapshot: cotizacionServicio.categoria_nombre_snapshot,
+            seccion_nombre_snapshot: cotizacionServicio.seccion_nombre_snapshot,
+            precio_unitario_snapshot: cotizacionServicio.precio_unitario_snapshot,
+            cantidad: cotizacionServicio.cantidad,
+            subtotal: cotizacionServicio.subtotal,
+            objetoCompleto: JSON.stringify(cotizacionServicio, null, 2)
+        });
         // Buscar usuario asignado
         const responsable = usuarios.find(u => u.id === cotizacionServicio.userId);
 
@@ -537,6 +566,13 @@ function procesarServiciosDetalle(servicios: any[], usuarios: any[]): ServicioDe
             cotizacionServicio.ServicioCategoria?.nombre ||
             cotizacionServicio.Servicio?.ServicioCategoria?.nombre ||
             'Sin categoría';
+
+        // Determinar sección (usar snapshot primero, luego relación)
+        const seccionNombre = cotizacionServicio.seccion_nombre_snapshot ||
+            cotizacionServicio.seccion_nombre ||
+            cotizacionServicio.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
+            cotizacionServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
+            categoriaNombre; // Fallback a la categoría si no hay sección
 
         // Calcular precio correcto
         const precio = cotizacionServicio.precioUnitario ||
@@ -554,6 +590,7 @@ function procesarServiciosDetalle(servicios: any[], usuarios: any[]): ServicioDe
             subtotal: cotizacionServicio.subtotal || (precio * (cotizacionServicio.cantidad || 1)),
             categoria: categoriaNombre,
             categoriaNombre,
+            seccion: seccionNombre, // Agregamos la sección
 
             // Información del responsable asignado
             responsableId: cotizacionServicio.userId,
