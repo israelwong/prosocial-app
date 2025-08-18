@@ -36,8 +36,8 @@ export default function BotonAutorizarCotizacion({
         const confirmacion = window.confirm(
             '¿Estás seguro de que deseas autorizar esta cotización?\n\n' +
             'Esto realizará las siguientes acciones:\n' +
-            '• Cambiará el estatus de la cotización a "Autorizado"\n' +
-            '• Moverá el evento a la etapa "Autorizado" en el pipeline\n' +
+            '• Cambiará el estatus de la cotización a "Aprobada"\n' +
+            '• Moverá el evento a la etapa "Aprobado" en el pipeline\n' +
             '• Agregará el evento a la agenda\n' +
             '• Creará una entrada en la bitácora del evento'
         );

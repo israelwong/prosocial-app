@@ -2,15 +2,14 @@
 import React from 'react'
 import { Button } from '@/app/components/ui/button'
 import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
+import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
 import {
     Calendar,
     User,
-    MessageCircle,
     Settings,
     X,
-    Phone,
-    MapPin,
-    Clock
+    Clock,
+    MapPin
 } from 'lucide-react'
 
 interface EventoData {
@@ -62,96 +61,71 @@ export default function EventoHeader({
 
     return (
         <div className="bg-zinc-900/80 backdrop-blur-sm border-b border-zinc-800 sticky top-0 z-50">
-            <div className="container mx-auto px-4 py-4">
-                {/* Información Principal */}
-                <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1 min-w-0">
-                        {/* Cliente y Evento */}
-                        <div className="flex items-center gap-3 mb-2">
-                            <User className="h-5 w-5 text-zinc-400 flex-shrink-0" />
-                            <h1 className="text-xl font-bold text-zinc-100 truncate">
+            <div className="container mx-auto px-4 py-3">
+                {/* Header minimalista */}
+                <div className="flex items-center justify-between">
+                    {/* Información básica */}
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-zinc-400" />
+                            <h1 className="text-lg font-semibold text-zinc-100 truncate">
                                 {eventoData.nombreCliente}
                             </h1>
-                            <span className={`px-2 py-1 rounded-md text-xs border ${getStatusColor(eventoData.nombreEtapa)}`}>
-                                {eventoData.nombreEtapa}
-                            </span>
                         </div>
 
-                        <div className="flex items-center gap-3 text-zinc-300">
-                            <Calendar className="h-4 w-4 text-zinc-500" />
-                            <span className="text-lg font-medium truncate">
-                                {eventoData.nombreEvento}
-                            </span>
-                        </div>
+                        <span className={`px-2 py-1 rounded-md text-xs border ${getStatusColor(eventoData.nombreEtapa)}`}>
+                            {eventoData.nombreEtapa}
+                        </span>
+
+                        {eventoData.fechaEvento && (
+                            <div className="flex items-center gap-1 text-sm font-medium text-zinc-200">
+                                <Clock className="h-4 w-4" />
+                                <span>
+                                    {formatearFecha(eventoData.fechaEvento, {
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    })}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Acciones Rápidas */}
+                    {/* Acciones minimalistas */}
                     <div className="flex items-center gap-2 flex-shrink-0">
+                        {eventoData.telefono && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={onAbrirConversacion}
+                                className="bg-green-600 hover:bg-green-700 text-white border-green-600 h-8 px-3"
+                            >
+                                <WhatsAppIcon className="h-4 w-4 mr-2" size={16} />
+                                Hola {eventoData.nombreCliente}
+                            </Button>
+                        )}
+
                         {puedeGestionarEvento && (
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={onGestionarEvento}
-                                className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                                className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600 h-8 px-3"
                             >
-                                <Settings className="h-4 w-4 mr-2" />
-                                Gestionar {eventoData.nombreEtapa}
+                                <Settings className="h-4 w-4 mr-1" />
+                                Gestionar
                             </Button>
                         )}
 
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={onAbrirConversacion}
-                            className="bg-green-600 hover:bg-green-700 text-white border-green-600"
-                        >
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            WhatsApp
-                        </Button>
-
-                        <Button
-                            variant="outline"
-                            size="sm"
                             onClick={onCerrar}
-                            className="bg-zinc-700 hover:bg-zinc-600 text-zinc-200 border-zinc-600"
+                            className="bg-zinc-700 hover:bg-zinc-600 text-zinc-200 border-zinc-600 h-8 px-2"
                         >
-                            <X className="h-4 w-4 mr-2" />
-                            Cerrar
+                            <X className="h-4 w-4" />
                         </Button>
-                    </div>
-                </div>
-
-                {/* Información Secundaria */}
-                <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-400">
-                    {eventoData.fechaEvento && (
-                        <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
-                            <span>
-                                {eventoData.fechaEvento ?
-                                    formatearFecha(eventoData.fechaEvento, {
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    }) :
-                                    'Fecha por definir'
-                                }
-                            </span>
-                        </div>
-                    )}
-
-                    {eventoData.telefono && (
-                        <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4" />
-                            <span>{eventoData.telefono}</span>
-                        </div>
-                    )}
-
-                    <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        <span className={eventoData.eventoAsignado ? 'text-green-400' : 'text-yellow-400'}>
-                            {eventoData.eventoAsignado ? 'Evento asignado' : 'Sin asignar'}
-                        </span>
                     </div>
                 </div>
             </div>
