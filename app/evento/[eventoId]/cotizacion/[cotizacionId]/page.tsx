@@ -74,8 +74,6 @@ export default async function CotizacionDetallePage({ params, searchParams }: Pa
                     esRealtime={realtime === 'true'}
                     esAdmin={admin === 'true'}
                     esLegacy={legacy === 'true'}
-                    estaExpirada={estaExpirada}
-                    fechaOcupada={fechaOcupada}
                 />
             </>
         )

@@ -105,10 +105,7 @@ export default function CotizacionDetalle({
             const condicionesActivas = await obtenerCondicionesComerciales()
 
             // Filtrar solo las condiciones activas
-            const condicionesFiltradas = condicionesActivas.filter(condicion => {
-                console.log('Condición encontrada:', condicion.nombre, 'Status:', condicion.status)
-                return condicion.status === 'active' || condicion.status === 'activa'
-            })
+            const condicionesFiltradas = condicionesActivas.filter(condicion => condicion.status === 'activa')
 
             console.log('Condiciones comerciales encontradas:', condicionesFiltradas.length)
 
@@ -152,12 +149,10 @@ export default function CotizacionDetalle({
 
             console.log('Condiciones comerciales con métodos de pago:', condicionesConMetodos)
             setCondicionesComerciales(condicionesConMetodos)
-            console.log('✅ Estado actualizado - condicionesComerciales:', condicionesConMetodos.length, 'condiciones')
 
             // Si hay condiciones, seleccionar la primera por defecto
             if (condicionesConMetodos.length > 0) {
                 setCondicionSeleccionada(condicionesConMetodos[0].id)
-                console.log('✅ Condición seleccionada por defecto:', condicionesConMetodos[0].id)
             }
         } catch (error) {
             console.error('Error al cargar condiciones comerciales:', error)
@@ -396,19 +391,19 @@ export default function CotizacionDetalle({
 
             {/* Contenido principal */}
             <div className="p-4 pb-24 space-y-4">
-                {/* Servicios incluidos */}
-                <ServiciosAgrupados
-                    serviciosAgrupados={serviciosAgrupados}
-                    loading={loading}
-                    esRealtime={esRealtime}
-                />
-
                 {/* Condiciones comerciales */}
                 <CondicionesComerciales
                     condicionesComerciales={condicionesComerciales}
                     condicionSeleccionada={condicionSeleccionada}
                     onCondicionChange={handleCondicionChange}
                     fechaDisponible={fechaDisponible}
+                />
+
+                {/* Servicios incluidos */}
+                <ServiciosAgrupados
+                    serviciosAgrupados={serviciosAgrupados}
+                    loading={loading}
+                    esRealtime={esRealtime}
                 />
 
                 {/* Información adicional */}
