@@ -9,6 +9,7 @@ import EventoFooter from './components/layout/EventoFooter'
 import HeroSection from './components/sections/HeroSection'
 import CotizacionesSection from './components/sections/CotizacionesSection'
 import PaquetesSection from './components/sections/PaquetesSection'
+import PortfolioSection from './components/sections/PortfolioSection'
 // Componentes legacy (mantenemos para casos específicos)
 import FechaNoDisponible from './components/FechaNoDisponible'
 
@@ -88,6 +89,10 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                         paquetes={resultadoCotizaciones.paquetes}
                         eventoId={eventoId}
                     />
+                    <PortfolioSection
+                        tipoEvento={evento.EventoTipo?.nombre?.toLowerCase().includes('xv') || 
+                                  evento.EventoTipo?.nombre?.toLowerCase().includes('15') ? 'xv' : 'boda'}
+                    />
                     <EventoFooter />
                 </div>
             )
@@ -158,6 +163,12 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
             <CotizacionesSection
                 cotizaciones={resultadoCotizaciones.cotizaciones || []}
                 eventoId={eventoId}
+            />
+
+            {/* Portfolio section */}
+            <PortfolioSection
+                tipoEvento={evento.EventoTipo?.nombre?.toLowerCase().includes('xv') || 
+                          evento.EventoTipo?.nombre?.toLowerCase().includes('15') ? 'xv' : 'boda'}
             />
 
             {/* Paquetes como alternativa */}
