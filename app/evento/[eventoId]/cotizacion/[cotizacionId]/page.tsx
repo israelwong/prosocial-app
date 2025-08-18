@@ -1,7 +1,7 @@
 import React from 'react'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { obtenerEventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.actions'
+import { obtenerCotizacionCompleta } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import CotizacionDetalle from './components/CotizacionDetalle'
 
 
@@ -20,46 +20,45 @@ export default async function CotizacionDetallePage({ params, searchParams }: Pa
 
     try {
         console.log('🔍 PAGE: Cargando página con IDs:', { eventoId, cotizacionId })
-        
-        // Obtener todos los datos del evento usando la función unificada
-        const resultado = await obtenerEventoDetalleCompleto(eventoId)
-        
-        console.log('🔍 PAGE: Resultado obtenido:', {
-            eventoId: resultado.evento.id,
-            clienteNombre: resultado.cliente.nombre,
-            totalCotizaciones: resultado.cotizacion ? 1 : 0,
-            cotizacionId: resultado.cotizacion?.id,
-            totalServicios: resultado.serviciosDetalle.length
+
+        // Obtener la cotización completa directamente (igual que en el admin)
+        const datosCotizacion = await obtenerCotizacionCompleta(cotizacionId)
+
+        console.log('🔍 PAGE: Cotización obtenida:', {
+            cotizacionId: datosCotizacion?.cotizacion?.id,
+            eventoId: datosCotizacion?.cotizacion?.Evento?.id,
+            clienteNombre: datosCotizacion?.cotizacion?.Evento?.Cliente?.nombre,
+            totalServicios: datosCotizacion?.cotizacion?.Servicio?.length || 0
         })
 
-        if (!resultado.evento || !resultado.cotizacion) {
-            console.log('❌ PAGE: No se encontró evento o cotización')
+        if (!datosCotizacion.cotizacion || !datosCotizacion.cotizacion.Evento) {
+            console.log('❌ PAGE: No se encontró cotización o evento')
             redirect('/404')
         }
 
-        // Verificar que la cotización que buscamos sea la que está en el resultado
-        if (resultado.cotizacion.id !== cotizacionId) {
-            console.log('❌ PAGE: La cotización encontrada no coincide con la solicitada')
+        // Verificar que el evento coincida
+        if (datosCotizacion.cotizacion.Evento.id !== eventoId) {
+            console.log('❌ PAGE: El evento de la cotización no coincide con el solicitado')
             redirect('/404')
         }
 
         // Verificar si el evento ya está contratado
-        if (resultado.evento.status === 'contratado') {
+        if (datosCotizacion.cotizacion.Evento.status === 'contratado') {
             redirect('/cliente/login')
         }
 
         // Verificar si la cotización está expirada
         const hoy = new Date()
-        const expira = resultado.cotizacion.expiresAt ? new Date(resultado.cotizacion.expiresAt) : null
+        const expira = datosCotizacion.cotizacion.expiresAt ? new Date(datosCotizacion.cotizacion.expiresAt) : null
         const estaExpirada = expira && expira < hoy
 
         // Verificar disponibilidad de fecha
-        const fechaOcupada = resultado.evento.status === 'contratado'
+        const fechaOcupada = datosCotizacion.cotizacion.Evento.status === 'contratado'
 
         return (
             <CotizacionDetalle
-                cotizacion={resultado.cotizacion}
-                evento={resultado.evento}
+                cotizacion={datosCotizacion.cotizacion}
+                evento={datosCotizacion.cotizacion.Evento}
                 esRealtime={realtime === 'true'}
                 esAdmin={admin === 'true'}
                 esLegacy={legacy === 'true'}

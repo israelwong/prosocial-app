@@ -23,7 +23,8 @@ import type {
  * Schema para obtener detalle completo de evento
  */
 export const EventoDetalleParamsSchema = z.object({
-    eventoId: z.string().min(1, "ID del evento es requerido")
+    eventoId: z.string().min(1, "ID del evento es requerido"),
+    cotizacionId: z.string().optional() // Parámetro opcional para obtener cotización específica
 });
 
 /**

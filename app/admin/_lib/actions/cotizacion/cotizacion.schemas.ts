@@ -57,7 +57,7 @@ export const CotizacionEditarSchema = z.object({
     nombre: z.string().min(1, 'Nombre de cotización requerido'),
     precio: z.number().min(0, 'Precio debe ser mayor o igual a 0'),
     condicionesComercialesId: z.string().optional(),
-    status: z.enum(['pending', 'aprobado', 'rechazado']).default('pending'),
+    status: z.enum(['pending', 'aprobado', 'aprobada', 'rechazado']).default('pending'),
     visible_cliente: z.boolean().default(true),
     servicios: z.array(CotizacionServicioSchema),
     costos: z.array(CotizacionCostoSchema).optional().default([])

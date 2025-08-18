@@ -36,15 +36,17 @@ import {
  * Esta función centraliza todas las consultas necesarias en una sola llamada
  */
 export async function obtenerEventoDetalleCompleto(
-    eventoId: string
+    eventoId: string,
+    cotizacionId?: string
 ): Promise<EventoDetalleCompleto> {
     try {
         console.log('🔍 Obteniendo datos completos para evento:', eventoId);
+        console.log('🔍 CotizacionId específica:', cotizacionId);
         console.log('🔍 Tipo de eventoId:', typeof eventoId);
         console.log('🔍 Longitud del eventoId:', eventoId.length);
 
         // Validar parámetros
-        const validatedParams = EventoDetalleParamsSchema.parse({ eventoId });
+        const validatedParams = EventoDetalleParamsSchema.parse({ eventoId, cotizacionId });
         console.log('🔍 Parámetros validados:', validatedParams);
 
         // Consulta principal optimizada con todos los includes necesarios
@@ -110,12 +112,14 @@ export async function obtenerEventoDetalleCompleto(
                         // 📋 CONDICIONES COMERCIALES
                         CondicionesComerciales: true
                     },
-                    where: {
-                        OR: [
-                            { status: 'aprobado' },
-                            { status: 'aprobada' }  // Ambos valores posibles
-                        ]
-                    },
+                    where: cotizacionId
+                        ? { id: cotizacionId } // Si se especifica cotizacionId, buscar esa específica
+                        : { // Si no, buscar cotizaciones aprobadas (para dashboard)
+                            OR: [
+                                { status: 'aprobado' },
+                                { status: 'aprobada' }  // Ambos valores posibles
+                            ]
+                        },
                     orderBy: { createdAt: 'desc' },
                     take: 1
                 },
