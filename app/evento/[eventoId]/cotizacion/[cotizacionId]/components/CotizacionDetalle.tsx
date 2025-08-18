@@ -50,9 +50,26 @@ export default function CotizacionDetalle({
     const [condicionesComerciales, setCondicionesComerciales] = useState<any[]>([])
     const [metodosPago, setMetodosPago] = useState<any[]>([])
     const [condicionSeleccionada, setCondicionSeleccionada] = useState<string>('')
+    const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<string>('')
+    const [precioFinalStripe, setPrecioFinalStripe] = useState<number>(0)
+    const [infoMetodoPago, setInfoMetodoPago] = useState<{
+        esMSI: boolean
+        numMSI: number
+        esAnticipo: boolean
+        montoPorPago: number
+    } | null>(null)
     const [fechaDisponible, setFechaDisponible] = useState<boolean>(true)
     const [loading, setLoading] = useState(false)
     const [conectado, setConectado] = useState(false)
+    const [totalCotizacion, setTotalCotizacion] = useState<number>(0)
+
+    // Función para obtener el total de la cotización
+    const calcularTotalCotizacion = () => {
+        // Usar directamente el precio de la cotización
+        const precio = cotizacion.precio || 0
+        console.log('� Precio de cotización:', precio)
+        return precio
+    }
 
     useEffect(() => {
         // Cargar servicios al montar el componente
@@ -88,6 +105,13 @@ export default function CotizacionDetalle({
         }
     }, [cotizacion.id, esRealtime])
 
+    // Efecto para calcular el total cuando cambie la cotización
+    useEffect(() => {
+        const total = calcularTotalCotizacion()
+        setTotalCotizacion(total)
+        console.log('💰 Total de cotización actualizado:', total)
+    }, [cotizacion.precio])
+
     const verificarDisponibilidadReal = async () => {
         try {
             const fechaEvento = new Date(evento.fecha_evento)
@@ -106,7 +130,6 @@ export default function CotizacionDetalle({
 
             // Filtrar solo las condiciones activas
             const condicionesFiltradas = condicionesActivas.filter(condicion => {
-                console.log('Condición encontrada:', condicion.nombre, 'Status:', condicion.status)
                 return condicion.status === 'active' || condicion.status === 'activa'
             })
 
@@ -152,12 +175,10 @@ export default function CotizacionDetalle({
 
             console.log('Condiciones comerciales con métodos de pago:', condicionesConMetodos)
             setCondicionesComerciales(condicionesConMetodos)
-            console.log('✅ Estado actualizado - condicionesComerciales:', condicionesConMetodos.length, 'condiciones')
 
             // Si hay condiciones, seleccionar la primera por defecto
             if (condicionesConMetodos.length > 0) {
                 setCondicionSeleccionada(condicionesConMetodos[0].id)
-                console.log('✅ Condición seleccionada por defecto:', condicionesConMetodos[0].id)
             }
         } catch (error) {
             console.error('Error al cargar condiciones comerciales:', error)
@@ -314,15 +335,68 @@ export default function CotizacionDetalle({
             return
         }
 
-        // Redirigir a Stripe Checkout
-        window.location.href = `/api/checkout/create-session?cotizacionId=${cotizacion.id}`
+        if (!condicionSeleccionada || !metodoPagoSeleccionado) {
+            alert('Por favor selecciona una condición comercial y método de pago.')
+            return
+        }
+
+        console.log('🚀 Iniciando pago con:', {
+            condicionSeleccionada,
+            metodoPagoSeleccionado,
+            precioFinalStripe: precioFinalStripe.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
+        })
+
+        // Redirigir a Stripe Checkout con el precio final calculado (incluyendo comisiones)
+        const params = new URLSearchParams({
+            cotizacionId: cotizacion.id,
+            condicionId: condicionSeleccionada,
+            metodoPagoId: metodoPagoSeleccionado,
+            montoFinal: precioFinalStripe.toString()
+        })
+
+        window.location.href = `/api/checkout/create-session?${params.toString()}`
     }
 
     const handleCondicionChange = (condicionId: string) => {
         setCondicionSeleccionada(condicionId)
+        // Limpiar método de pago cuando cambie la condición
+        setMetodoPagoSeleccionado('')
+        setPrecioFinalStripe(0)
+        setInfoMetodoPago(null)
     }
 
-    const puedeRealizarPago = fechaDisponible && !!condicionSeleccionada
+    const handleMetodoPagoChange = (metodoPagoId: string, precioFinal: number) => {
+        setMetodoPagoSeleccionado(metodoPagoId)
+        setPrecioFinalStripe(precioFinal)
+
+        // Buscar información detallada del método de pago
+        const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
+        const metodoActivo = condicionActiva?.metodosPago.find((m: any) => m.metodoPagoId === metodoPagoId)
+
+        if (metodoActivo) {
+            const esMSI = metodoActivo.num_msi > 0
+            const esAnticipo = !!condicionActiva?.porcentaje_anticipo && condicionActiva.porcentaje_anticipo > 0
+            const montoPorPago = esMSI ? precioFinal / metodoActivo.num_msi : precioFinal
+
+            setInfoMetodoPago({
+                esMSI,
+                numMSI: metodoActivo.num_msi,
+                esAnticipo,
+                montoPorPago
+            })
+
+            console.log('💳 Método de pago seleccionado:', {
+                metodoPagoId,
+                precioFinal: precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                esMSI,
+                numMSI: metodoActivo.num_msi,
+                esAnticipo,
+                montoPorPago: montoPorPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
+            })
+        }
+    }
+
+    const puedeRealizarPago = fechaDisponible && !!condicionSeleccionada && !!metodoPagoSeleccionado
     const urlRegreso = esLegacy ? `/cotizacion/${cotizacion.id}` : `/evento/${evento.id}`
 
     return (
@@ -409,6 +483,9 @@ export default function CotizacionDetalle({
                     condicionSeleccionada={condicionSeleccionada}
                     onCondicionChange={handleCondicionChange}
                     fechaDisponible={fechaDisponible}
+                    montoTotal={totalCotizacion}
+                    metodoPagoSeleccionado={metodoPagoSeleccionado}
+                    onMetodoPagoChange={handleMetodoPagoChange}
                 />
 
                 {/* Información adicional */}
@@ -425,6 +502,9 @@ export default function CotizacionDetalle({
                 puedeRealizarPago={puedeRealizarPago}
                 fechaDisponible={fechaDisponible}
                 condicionSeleccionada={condicionSeleccionada}
+                metodoPagoSeleccionado={metodoPagoSeleccionado}
+                precioFinal={precioFinalStripe}
+                infoMetodoPago={infoMetodoPago}
                 onIniciarPago={iniciarPago}
                 loading={loading}
             />

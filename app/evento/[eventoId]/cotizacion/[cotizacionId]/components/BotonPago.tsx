@@ -5,6 +5,14 @@ interface Props {
     puedeRealizarPago: boolean
     fechaDisponible: boolean
     condicionSeleccionada: string
+    metodoPagoSeleccionado?: string
+    precioFinal?: number
+    infoMetodoPago?: {
+        esMSI: boolean
+        numMSI: number
+        esAnticipo: boolean
+        montoPorPago: number
+    } | null
     onIniciarPago: () => void
     loading?: boolean
 }
@@ -13,6 +21,9 @@ export default function BotonPago({
     puedeRealizarPago,
     fechaDisponible,
     condicionSeleccionada,
+    metodoPagoSeleccionado,
+    precioFinal,
+    infoMetodoPago,
     onIniciarPago,
     loading = false
 }: Props) {
@@ -34,6 +45,14 @@ export default function BotonPago({
             }
         }
 
+        if (!metodoPagoSeleccionado) {
+            return {
+                texto: 'Selecciona método de pago',
+                className: 'bg-zinc-600/20 text-zinc-400 border-zinc-500/30 cursor-not-allowed',
+                disabled: true
+            }
+        }
+
         if (loading) {
             return {
                 texto: 'Procesando...',
@@ -42,8 +61,24 @@ export default function BotonPago({
             }
         }
 
+        // Generar texto dinámico según el tipo de pago
+        let textoBoton = 'Pagar ahora'
+
+        if (infoMetodoPago && precioFinal) {
+            if (infoMetodoPago.esMSI) {
+                // MSI: "Pagar 3 MSI de $1,500.00"
+                textoBoton = `Pagar ${infoMetodoPago.numMSI} MSI de ${infoMetodoPago.montoPorPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
+            } else if (infoMetodoPago.esAnticipo) {
+                // Anticipo: "Pagar anticipo $5,000.00"
+                textoBoton = `Pagar anticipo ${precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
+            } else {
+                // Pago completo: "Pagar $15,000.00"
+                textoBoton = `Pagar ${precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`
+            }
+        }
+
         return {
-            texto: 'Continuar al pago',
+            texto: textoBoton,
             className: 'bg-purple-600 hover:bg-purple-700 text-white border-purple-500 hover:border-purple-400 cursor-pointer',
             disabled: false
         }
@@ -52,33 +87,18 @@ export default function BotonPago({
     const estadoBoton = getEstadoBoton()
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-700 p-4 z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-700 p-4 z-50">
             <div className="max-w-md mx-auto">
                 <button
                     onClick={onIniciarPago}
                     disabled={estadoBoton.disabled}
-                    className={`w-full py-4 px-6 rounded-lg border font-semibold text-center transition-all duration-200 ${estadoBoton.className}`}
+                    className={`
+                        w-full py-3 px-6 rounded-lg border font-medium text-sm transition-all duration-200
+                        ${estadoBoton.className}
+                    `}
                 >
-                    {loading && (
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    )}
                     {estadoBoton.texto}
                 </button>
-
-                {!fechaDisponible && (
-                    <p className="text-center text-red-400 text-sm mt-2">
-                        Esta fecha no está disponible para reservar
-                    </p>
-                )}
-
-                {fechaDisponible && !condicionSeleccionada && (
-                    <p className="text-center text-zinc-400 text-sm mt-2">
-                        Selecciona una condición de pago para continuar
-                    </p>
-                )}
             </div>
         </div>
     )
