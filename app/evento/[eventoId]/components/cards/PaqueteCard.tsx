@@ -135,7 +135,7 @@ export default function PaqueteCard({ paquete, eventoId, index, isPopular = fals
             </div>
 
             {/* Botón de acción */}
-            <Link href={`/evento/${eventoId}/paquete/${paquete.id}`}>
+            <Link href={`/evento/paquetes/${paquete.id}`}>
                 <button className={`
                     w-full py-4 px-6 rounded-xl font-semibold text-white 
                     transition-all duration-200 border-2

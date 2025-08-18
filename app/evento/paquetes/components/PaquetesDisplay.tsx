@@ -136,8 +136,8 @@ export default function PaquetesDisplay({ tiposEventoConPaquetes }: Props) {
                             key={tipoEvento.id}
                             onClick={() => setTipoEventoSeleccionado(tipoEvento.id)}
                             className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${tipoEventoSeleccionado === tipoEvento.id
-                                    ? 'bg-purple-600 text-white shadow-lg transform scale-105'
-                                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white'
+                                ? 'bg-purple-600 text-white shadow-lg transform scale-105'
+                                : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white'
                                 }`}
                         >
                             <Calendar className="w-5 h-5 inline mr-2" />

@@ -40,7 +40,7 @@ export default function ListaPaquetes({ paquetes, eventoId }: Props) {
                     {paquetes.map((paquete) => (
                         <Link
                             key={paquete.id}
-                            href={`/evento/${eventoId}/paquete/${paquete.id}`}
+                            href={`/evento/paquetes/${paquete.id}`}
                             className="block w-full max-w-sm mx-auto"
                         >
                             <div className="p-5 rounded-xl border border-zinc-700 bg-zinc-900 hover:border-white/20 transition">

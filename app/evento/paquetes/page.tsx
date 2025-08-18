@@ -10,7 +10,43 @@ export const metadata: Metadata = {
 
 export default async function PaquetesPage() {
     try {
-        const tiposEventoConPaquetes = await obtenerPaquetesParaCliente()
+        const rawTiposEventoConPaquetes = await obtenerPaquetesParaCliente()
+
+        // Adaptar los datos al tipo esperado por PaquetesDisplay
+        const tiposEventoConPaquetes = rawTiposEventoConPaquetes.map((tipoEvento: any) => ({
+            ...tipoEvento,
+            Paquete: tipoEvento.Paquete.map((paquete: any) => ({
+                ...paquete,
+                PaqueteServicio: paquete.PaqueteServicio.map((paqueteServicio: any) => ({
+                    ...paqueteServicio,
+                    Servicio: {
+                        ...paqueteServicio.Servicio,
+                        ServicioCategoria: {
+                            ...paqueteServicio.Servicio.ServicioCategoria,
+                            seccionCategoria: paqueteServicio.Servicio.ServicioCategoria.seccionCategoria
+                                ? {
+                                    Seccion: {
+                                        nombre: paqueteServicio.Servicio.ServicioCategoria.seccionCategoria.Seccion.nombre,
+                                        posicion: paqueteServicio.Servicio.ServicioCategoria.seccionCategoria.Seccion.posicion,
+                                    }
+                                }
+                                : undefined,
+                        }
+                    },
+                    ServicioCategoria: {
+                        ...paqueteServicio.ServicioCategoria,
+                        seccionCategoria: paqueteServicio.ServicioCategoria?.seccionCategoria
+                            ? {
+                                Seccion: {
+                                    nombre: paqueteServicio.ServicioCategoria.seccionCategoria.Seccion.nombre,
+                                    posicion: paqueteServicio.ServicioCategoria.seccionCategoria.Seccion.posicion,
+                                }
+                            }
+                            : undefined,
+                    }
+                }))
+            }))
+        }))
 
         return (
             <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
