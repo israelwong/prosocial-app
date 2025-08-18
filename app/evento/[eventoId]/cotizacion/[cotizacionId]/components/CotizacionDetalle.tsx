@@ -26,8 +26,6 @@ interface Props {
     esRealtime?: boolean
     esAdmin?: boolean
     esLegacy?: boolean
-    estaExpirada?: boolean | null
-    fechaOcupada?: boolean
 }
 
 export default function CotizacionDetalle({
@@ -35,9 +33,7 @@ export default function CotizacionDetalle({
     evento,
     esRealtime = false,
     esAdmin = false,
-    esLegacy = false,
-    estaExpirada = false,
-    fechaOcupada = false
+    esLegacy = false
 }: Props) {
     const [cotizacion, setCotizacion] = useState(cotizacionInicial)
     const [serviciosAgrupados, setServiciosAgrupados] = useState<ServiciosAgrupados>({})
@@ -45,7 +41,7 @@ export default function CotizacionDetalle({
     const [condicionesComerciales, setCondicionesComerciales] = useState<any[]>([])
     const [metodosPago, setMetodosPago] = useState<any[]>([])
     const [condicionSeleccionada, setCondicionSeleccionada] = useState<string>('')
-    const [fechaRealmenterOcupada, setFechaRealmenteOcupada] = useState<boolean>(false)
+    const [fechaDisponible, setFechaDisponible] = useState<boolean>(true)
     const [loading, setLoading] = useState(false)
     const [conectado, setConectado] = useState(false)
 
@@ -84,8 +80,14 @@ export default function CotizacionDetalle({
     }, [cotizacion.id, esRealtime])
 
     const verificarDisponibilidadReal = async () => {
-        const fechaOcupada = await verificarDisponibilidad()
-        setFechaRealmenteOcupada(fechaOcupada)
+        try {
+            const fechaEvento = new Date(evento.fecha_evento)
+            const disponibilidad = await verificarDisponibilidadFecha(fechaEvento, evento.id)
+            setFechaDisponible(disponibilidad.disponible)
+        } catch (error) {
+            console.error('Error al verificar disponibilidad:', error)
+            setFechaDisponible(true) // Por defecto asumimos que está disponible si hay error
+        }
     }
 
     const cargarServiciosAgrupados = async () => {
@@ -266,14 +268,15 @@ export default function CotizacionDetalle({
         }
     }
 
-    // Verificar disponibilidad de fecha real usando agenda
+    // Verificar disponibilidad de fecha usando la entidad Agenda
     const verificarDisponibilidad = async () => {
         try {
-            const disponibilidad = await verificarDisponibilidadFecha(evento.fecha_evento, evento.id)
-            return !disponibilidad.disponible
+            const fechaEvento = new Date(evento.fecha_evento)
+            const disponibilidad = await verificarDisponibilidadFecha(fechaEvento, evento.id)
+            return disponibilidad.disponible
         } catch (error) {
             console.error('Error al verificar disponibilidad:', error)
-            return false
+            return true // Por defecto asumimos disponible si hay error
         }
     }
 
@@ -283,13 +286,8 @@ export default function CotizacionDetalle({
     }
 
     const iniciarPago = () => {
-        if (fechaRealmenterOcupada) {
+        if (!fechaDisponible) {
             alert('Lo sentimos, la fecha ya ha sido ocupada por otro cliente.')
-            return
-        }
-
-        if (estaExpirada) {
-            alert('Esta cotización ha expirado. Por favor contacta al equipo de ventas.')
             return
         }
 
@@ -299,43 +297,23 @@ export default function CotizacionDetalle({
 
     // Determinar el estado visual
     const getEstadoVisual = () => {
-        if (fechaRealmenterOcupada) {
+        if (!fechaDisponible) {
             return {
                 titulo: 'Fecha no disponible',
-                mensaje: 'Esta fecha ya ha sido reservada en agenda.',
                 color: 'red',
                 icon: '🚫'
             }
         }
 
-        if (estaExpirada) {
-            return {
-                titulo: 'Cotización expirada',
-                mensaje: 'Esta cotización ha expirado.',
-                color: 'orange',
-                icon: '⏰'
-            }
-        }
-
-        if (cotizacion.status === ESTADOS_COTIZACION.APROBADA) {
-            return {
-                titulo: 'Cotización aprobada',
-                mensaje: 'Puedes proceder con el pago.',
-                color: 'green',
-                icon: '✅'
-            }
-        }
-
         return {
-            titulo: 'Cotización pendiente',
-            mensaje: 'Esta cotización está siendo revisada.',
-            color: 'blue',
-            icon: '⏳'
+            titulo: 'Fecha disponible',
+            color: 'green',
+            icon: '✅'
         }
     }
 
     const estadoVisual = getEstadoVisual()
-    const puedeRealizarPago = !fechaRealmenterOcupada && !estaExpirada && cotizacion.status === ESTADOS_COTIZACION.APROBADA && condicionSeleccionada
+    const puedeRealizarPago = fechaDisponible && condicionSeleccionada
 
     const urlRegreso = esLegacy ? `/cotizacion/${cotizacion.id}` : `/evento/${evento.id}`
 
@@ -413,35 +391,27 @@ export default function CotizacionDetalle({
 
             {/* Estado de la cotización */}
             <div className="p-4">
-                <div className={`p-4 rounded-lg border ${estadoVisual.color === 'red' ? 'bg-red-500/20 border-red-500/30' :
-                    estadoVisual.color === 'orange' ? 'bg-orange-500/20 border-orange-500/30' :
-                        estadoVisual.color === 'green' ? 'bg-green-500/20 border-green-500/30' :
-                            'bg-blue-500/20 border-blue-500/30'
-                    }`}>
-                    <div className="flex items-start space-x-3">
-                        <div className="text-2xl">{estadoVisual.icon}</div>
-                        <div className="flex-1">
-                            <h2 className="font-bold text-white mb-1">
-                                {estadoVisual.titulo}
-                            </h2>
-                            <p className="text-zinc-300 text-sm">
-                                {estadoVisual.mensaje}
-                            </p>
-
-                            {esRealtime && !esAdmin && (
-                                <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-3 mt-3">
-                                    <div className="flex items-center space-x-2 mb-1">
-                                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                                        <span className="text-blue-400 font-medium text-sm">Sesión en tiempo real</span>
-                                    </div>
-                                    <p className="text-blue-300 text-xs">
-                                        Estás viendo esta cotización en tiempo real.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                <div className="flex items-center justify-center mt-4">
+                    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${estadoVisual.color === 'green'
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        }`}>
+                        <span className="text-xs">{estadoVisual.icon}</span>
+                        {estadoVisual.titulo}
+                    </span>
                 </div>
+
+                {esRealtime && !esAdmin && (
+                    <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-3 mb-4">
+                        <div className="flex items-center space-x-2 mb-1">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                            <span className="text-blue-400 font-medium text-sm">Sesión en tiempo real</span>
+                        </div>
+                        <p className="text-blue-300 text-xs">
+                            Estás viendo esta cotización en tiempo real.
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Contenido principal */}
@@ -503,21 +473,23 @@ export default function CotizacionDetalle({
 
                                                         {/* Lista de servicios */}
                                                         <div className="space-y-2">
-                                                            {categoriaData.servicios.map((cotizacionServicio) => (
-                                                                <div key={cotizacionServicio.id} className="bg-gradient-to-r from-zinc-900/50 to-zinc-800/50 rounded-lg p-3 border border-zinc-600/30 hover:border-zinc-500/50 transition-all duration-200">
-                                                                    <div className="flex items-center justify-between gap-4">
-                                                                        {/* Información del servicio */}
-                                                                        <div className="flex-1 min-w-0">
-                                                                            <h6 className="text-white font-medium text-sm leading-tight">
-                                                                                {cotizacionServicio.nombre}
-                                                                            </h6>
-                                                                            <div className="text-xs text-zinc-400 mt-1">
-                                                                                Cantidad: {cotizacionServicio.cantidad}
+                                                            {categoriaData.servicios
+                                                                .sort((a, b) => (a.posicion || 0) - (b.posicion || 0))
+                                                                .map((cotizacionServicio) => (
+                                                                    <div key={cotizacionServicio.id} className="bg-gradient-to-r from-zinc-900/50 to-zinc-800/50 rounded-lg p-3 border border-zinc-600/30 hover:border-zinc-500/50 transition-all duration-200">
+                                                                        <div className="flex items-center justify-between gap-4">
+                                                                            {/* Información del servicio */}
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <h6 className="text-white font-medium text-sm leading-tight">
+                                                                                    {cotizacionServicio.nombre}
+                                                                                </h6>
+                                                                                <div className="text-xs text-zinc-400 mt-1">
+                                                                                    Cantidad: {cotizacionServicio.cantidad}
+                                                                                </div>
                                                                             </div>
-                                                                        </div>
 
-                                                                        {/* Subtotal del servicio - OCULTO temporalmente */}
-                                                                        {/* 
+                                                                            {/* Subtotal del servicio - OCULTO temporalmente */}
+                                                                            {/* 
                                                                         <div className="text-right">
                                                                             <div className="text-green-400 font-semibold">
                                                                                 {cotizacionServicio.subtotal.toLocaleString('es-MX', {
@@ -527,9 +499,9 @@ export default function CotizacionDetalle({
                                                                             </div>
                                                                         </div>
                                                                         */}
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            ))}
+                                                                ))}
                                                         </div>
                                                     </div>
                                                 ))}
@@ -686,17 +658,6 @@ export default function CotizacionDetalle({
                 <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
                     <div className="text-zinc-400 space-y-2 text-sm">
                         <div>Creada: {cotizacion.createdAt ? new Date(cotizacion.createdAt).toLocaleDateString('es-MX') : 'Fecha no disponible'}</div>
-                        {cotizacion.expiresAt && (
-                            <div>Expira: {new Date(cotizacion.expiresAt).toLocaleDateString('es-MX')}</div>
-                        )}
-                        {/* Temporalmente comentado hasta identificar la propiedad correcta
-                        {evento.sede && (
-                            <div className="flex items-center">
-                                <span className="mr-2">📍</span>
-                                <span className="truncate">{evento.sede}</span>
-                            </div>
-                        )}
-                        */}
                         <div className="text-xs text-zinc-500">ID: {cotizacion.id}</div>
                     </div>
                 </div>
@@ -744,10 +705,9 @@ export default function CotizacionDetalle({
                             disabled
                             className="w-full bg-zinc-700 text-zinc-400 font-bold py-3 px-4 rounded-lg cursor-not-allowed"
                         >
-                            {fechaRealmenterOcupada ? 'Fecha ocupada' :
-                                estaExpirada ? 'Cotización expirada' :
-                                    !condicionSeleccionada ? 'Selecciona condición comercial' :
-                                        'Pago no disponible'}
+                            {!fechaDisponible ? 'Fecha ocupada' :
+                                !condicionSeleccionada ? 'Selecciona condición comercial' :
+                                    'Pago no disponible'}
                         </button>
                     )}
 
