@@ -72,7 +72,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
     //! Copiar link de cotización
     const handleCopiarLink = async (cotizacionId: string) => {
         setCopiado(cotizacionId)
-        const link = `${window.location.origin}/cotizacion/${cotizacionId}`
+        const link = `${window.location.origin}/evento/${eventoId}/cotizacion/${cotizacionId}`
         await navigator.clipboard.writeText(link)
         setTimeout(() => setCopiado(null), 2000)
         setMenuAbierto(false)
@@ -80,7 +80,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
 
     //! Compartir por WhatsApp
     const handleCompartirWhatsApp = (cotizacionId: string) => {
-        const link = `${window.location.origin}/cotizacion/${cotizacionId}`
+        const link = `${window.location.origin}/evento/${eventoId}/cotizacion/${cotizacionId}`
         const mensaje = `¡Hola! Te comparto la cotización para tu evento: ${link}`
         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`
         window.open(whatsappUrl, '_blank')
@@ -100,7 +100,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
     }
 
     const handlePreview = () => {
-        window.open(`/cotizacion/${cotizacion.id}?preview=true`, '_blank')
+        window.open(`/evento/${eventoId}/cotizacion/${cotizacion.id}?preview=true`, '_blank')
         setMenuAbierto(false)
     }
 

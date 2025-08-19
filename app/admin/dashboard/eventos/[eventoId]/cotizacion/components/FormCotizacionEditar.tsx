@@ -340,7 +340,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
     }
 
     const handleCopiar = () => {
-        navigator.clipboard.writeText(`https://www.prosocial.mx/cotizacion/${cotizacionId}`)
+        navigator.clipboard.writeText(`https://www.prosocial.mx/evento/${eventoId}/cotizacion/${cotizacionId}`)
         setCopiado(true)
         setTimeout(() => {
             setCopiado(false)
@@ -433,7 +433,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
         if (asunto === 'compatir') {
             const fechaEventoLocal = new Date(eventoFecha);
             fechaEventoLocal.setMinutes(fechaEventoLocal.getMinutes() + fechaEventoLocal.getTimezoneOffset());
-            const mensaje = `Hola ${clienteNombre}, te compartimos la cotización para el evento de ${eventoNombre} que celebrarán el día ${fechaEventoLocal.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}:\n\nhttps://www.prosocial.mx/cotizacion/${cotizacionId}`;
+            const mensaje = `Hola ${clienteNombre}, te compartimos la cotización para el evento de ${eventoNombre} que celebrarán el día ${fechaEventoLocal.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}:\n\nhttps://www.prosocial.mx/evento/${eventoId}/cotizacion/${cotizacionId}`;
             window.open(`https://api.whatsapp.com/send?phone=52${clienteTelefono}&text=${encodeURIComponent(mensaje)}`, '_blank');
         } else {
             window.open(`https://api.whatsapp.com/send?phone=52${clienteTelefono}`, '_blank');

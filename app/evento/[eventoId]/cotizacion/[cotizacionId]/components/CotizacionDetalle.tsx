@@ -13,7 +13,7 @@ import type { Cliente, EventoTipo, Cotizacion, Evento } from '@/app/admin/_lib/t
 // 🔥 STRIPE ELEMENTS INTEGRATION
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
-import FormularioPagoStripe from '@/app/cotizacion/components/FormularioPagoStripe'
+import FormularioPagoStripe from '@/app/components/checkout/FormularioPagoStripe'
 
 // Subcomponentes
 import BadgeDisponibilidad from './BadgeDisponibilidad'

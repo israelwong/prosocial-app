@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { obtenerPagoSesionStripe } from '@/app/admin/_lib/pago.actions'
 import { Pago as PagoType, Cliente as ClienteType } from '@/app/admin/_lib/types'
-import Skeleton from '@/app/cotizacion/components/skeleton'
+import Skeleton from '@/app/components/ui/Skeleton'
 
 export default function PagoExitoso() {
 

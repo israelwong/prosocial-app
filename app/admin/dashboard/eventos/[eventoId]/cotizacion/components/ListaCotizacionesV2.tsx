@@ -152,7 +152,7 @@ const ListaCotizaciones: React.FC<Props> = ({ eventoId, eventoTipoId, eventoAsig
 
                             <button
                                 onClick={() => {
-                                    navigator.clipboard.writeText(`https://www.prosocial.mx/cotizacion/evento/${eventoId}`);
+                                    navigator.clipboard.writeText(`https://www.prosocial.mx/evento/${eventoId}`);
                                     setCopiado('Copiado');
                                     setTimeout(() => setCopiado(null), 2000);
                                 }}
