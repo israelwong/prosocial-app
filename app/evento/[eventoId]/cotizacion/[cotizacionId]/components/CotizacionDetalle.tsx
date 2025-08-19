@@ -10,11 +10,19 @@ import type { EventoExtendido, ServicioDetalle, EventoDetalleCompleto } from '@/
 import { verificarDisponibilidadFecha } from '@/app/admin/_lib/agenda.actions'
 import type { Cliente, EventoTipo, Cotizacion, Evento } from '@/app/admin/_lib/types'
 
+// 🔥 STRIPE ELEMENTS INTEGRATION
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements } from '@stripe/react-stripe-js'
+import FormularioPagoStripe from '@/app/cotizacion/components/FormularioPagoStripe'
+
 // Subcomponentes
 import BadgeDisponibilidad from './BadgeDisponibilidad'
 import CondicionesComerciales from './CondicionesComerciales'
 import ServiciosAgrupados from './ServiciosAgrupados'
 import BotonPago from './BotonPago'
+
+// 🔑 Configuración de Stripe
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 // Tipos específicos para servicios agrupados en el display
 interface ServiciosAgrupados {
@@ -62,6 +70,11 @@ export default function CotizacionDetalle({
     const [loading, setLoading] = useState(false)
     const [conectado, setConectado] = useState(false)
     const [totalCotizacion, setTotalCotizacion] = useState<number>(0)
+
+    // 🚀 Estados para Payment Intents con modal
+    const [modalPagoAbierto, setModalPagoAbierto] = useState(false)
+    const [clientSecret, setClientSecret] = useState<string | null>(null)
+    const [procesandoPago, setProcesandoPago] = useState(false)
 
     // Función para obtener el total de la cotización
     const calcularTotalCotizacion = () => {
@@ -329,7 +342,8 @@ export default function CotizacionDetalle({
         // Aquí iría la llamada real para obtener costos
     }
 
-    const iniciarPago = () => {
+    // 🚀 NUEVA FUNCIÓN PAYMENT INTENTS - Reemplaza create-session
+    const iniciarPago = async () => {
         if (!fechaDisponible) {
             alert('Lo sentimos, la fecha ya ha sido ocupada por otro cliente.')
             return
@@ -340,43 +354,69 @@ export default function CotizacionDetalle({
             return
         }
 
-        console.log('🚀 Iniciando pago con:', {
-            condicionSeleccionada,
-            metodoPagoSeleccionado,
-            precioFinalStripe: precioFinalStripe.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
-        })
+        if (procesandoPago) return
 
-        // Obtener información del método de pago seleccionado
-        const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
-        const metodoActivo = condicionActiva?.metodosPago.find((m: any) => m.metodoPagoId === metodoPagoSeleccionado)
+        setProcesandoPago(true)
+        console.log('🚀 Iniciando creación de Payment Intent...')
 
-        // Determinar el tipo de método de pago para Stripe
-        let paymentMethod = 'card' // Por defecto
-        let numMSI = 0
+        try {
+            // Obtener información del método de pago seleccionado
+            const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
+            const metodoActivo = condicionActiva?.metodosPago.find((m: any) => m.metodoPagoId === metodoPagoSeleccionado)
 
-        if (metodoActivo) {
-            // Usar el payment_method si está disponible, o mapear desde metodo_pago
-            paymentMethod = metodoActivo.payment_method || metodoActivo.metodo_pago || 'card'
-            numMSI = metodoActivo.num_msi || 0
+            // Determinar el tipo de método de pago
+            let metodoPago = 'card' // Por defecto
+            if (metodoActivo) {
+                metodoPago = metodoActivo.payment_method || metodoActivo.metodo_pago || 'card'
+            }
 
-            console.log('💳 Información del método para Stripe:', {
-                paymentMethod,
-                numMSI,
-                metodoCompleto: metodoActivo
+            // 🎯 LLAMADA A PAYMENT INTENT API
+            const response = await fetch('/api/checkout/create-payment-intent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cotizacionId: cotizacion.id,
+                    metodoPago: metodoPago,
+                    montoConComision: precioFinalStripe,
+                }),
             })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Error al preparar el pago.')
+            }
+
+            console.log('✅ Payment Intent creado:', {
+                paymentIntentId: data.paymentIntentId,
+                metodoPago: data.metodoPago,
+                montoFinal: data.montoFinal,
+                clientSecret: data.clientSecret ? '***RECIBIDO***' : 'NO_RECIBIDO'
+            })
+
+            // 🎨 Abrir modal con el clientSecret
+            setClientSecret(data.clientSecret)
+            setModalPagoAbierto(true)
+
+        } catch (error) {
+            console.error('❌ Error al crear Payment Intent:', error)
+            alert('Error al preparar el pago. Por favor inténtalo de nuevo.')
         }
 
-        // Redirigir a Stripe Checkout con el precio final calculado (incluyendo comisiones)
-        const params = new URLSearchParams({
-            cotizacionId: cotizacion.id,
-            condicionId: condicionSeleccionada,
-            metodoPagoId: metodoPagoSeleccionado,
-            paymentMethod: paymentMethod, // ← AGREGADO para Stripe
-            num_msi: numMSI.toString(), // ← AGREGADO para MSI
-            montoFinal: precioFinalStripe.toString()
-        })
+        setProcesandoPago(false)
+    }
 
-        window.location.href = `/api/checkout/create-session?${params.toString()}`
+    const cerrarModalPago = () => {
+        setModalPagoAbierto(false)
+        setClientSecret(null)
+        setProcesandoPago(false)
+    }
+
+    const onPagoExitoso = () => {
+        console.log('✅ Pago procesado exitosamente')
+        setModalPagoAbierto(false)
+        setClientSecret(null)
+        // Aquí podrías actualizar el estado de la cotización, mostrar mensaje de éxito, etc.
     }
 
     const handleCondicionChange = (condicionId: string) => {
@@ -528,8 +568,71 @@ export default function CotizacionDetalle({
                 precioFinal={precioFinalStripe}
                 infoMetodoPago={infoMetodoPago}
                 onIniciarPago={iniciarPago}
-                loading={loading}
+                loading={procesandoPago}
             />
+
+            {/* 🔥 MODAL DE PAGO CON STRIPE ELEMENTS */}
+            {modalPagoAbierto && clientSecret && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+                    <div className="bg-zinc-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-white text-xl font-bold">Completa tu pago</h2>
+                            <button
+                                onClick={cerrarModalPago}
+                                className="text-zinc-400 hover:text-white text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <Elements
+                            stripe={stripePromise}
+                            options={{
+                                clientSecret,
+                                appearance: {
+                                    theme: 'night',
+                                    variables: {
+                                        colorPrimary: '#8b5cf6',
+                                        colorBackground: '#27272a',
+                                        colorText: '#ffffff',
+                                        colorDanger: '#ef4444',
+                                        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                                        spacingUnit: '4px',
+                                        borderRadius: '8px',
+                                    }
+                                }
+                            }}
+                        >
+                            <FormularioPagoStripe
+                                cotizacionId={cotizacion.id}
+                                paymentData={{
+                                    montoFinal: precioFinalStripe,
+                                    esMSI: infoMetodoPago?.esMSI || false,
+                                    numMSI: infoMetodoPago?.numMSI || 0,
+                                    tipoPago: infoMetodoPago?.esMSI ? 'card' : 'spei',
+                                    cotizacion: {
+                                        nombre: cotizacion.nombre || 'Cotización',
+                                        cliente: cotizacion.Evento?.Cliente?.nombre || 'Cliente'
+                                    },
+                                    metodo: {
+                                        nombre: infoMetodoPago?.esMSI ? `${infoMetodoPago.numMSI} MSI` : 'Pago único',
+                                        tipo: infoMetodoPago?.esMSI ? 'msi' : 'single'
+                                    }
+                                }}
+                                onSuccess={onPagoExitoso}
+                                onCancel={cerrarModalPago}
+                            />
+                        </Elements>
+
+                        <button
+                            onClick={cerrarModalPago}
+                            className="text-zinc-400 text-sm mt-4 w-full text-center hover:text-white transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
