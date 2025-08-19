@@ -4,19 +4,6 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 import Stripe from "stripe";
 
-//
-// 🔧 CONFIGURACIÓN MSI:
-//
-// MSI está TEMPORALMENTE DESHABILITADO para control total del flujo de pago.
-//
-// Para REACTIVAR MSI:
-// 1. Buscar la sección "else if (metodoPago === card)"
-// 2. Descomentar el bloque MSI
-// 3. Comentar la configuración actual de "solo pagos únicos"
-//
-// Estado actual: Solo pagos únicos de tarjeta + SPEI
-//
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-08-16",
 });
@@ -169,62 +156,9 @@ export default async function handler(req, res) {
       // } else if (metodoPago === 'oxxo') {
       //     sessionParams.payment_method_types = ['oxxo'];
     } else if (metodoPago === "card") {
+      // 🚫 MSI DESHABILITADO - Solo pagos únicos para control total
       sessionParams.payment_method_types = ["card"];
 
-      // 🚫 MSI TEMPORALMENTE DESHABILITADO - Solo pagos únicos para control total
-      // Para reactivar MSI: descomentar el bloque siguiente y comentar la configuración simple
-
-      /*
-      // ✅ CONFIGURACIÓN MSI - Descomentada para reactivar MSI
-      if (num_msi > 0) {
-        if ([3, 6, 9, 12].includes(num_msi)) {
-          console.log(
-            `🔧 Configurando pago con tarjeta a ${num_msi} MSI específicos`
-          );
-
-          // Configuración oficial MSI según documentación de Stripe
-          sessionParams.payment_method_options = {
-            card: {
-              installments: {
-                enabled: true,
-              },
-            },
-          };
-
-          // Metadata para tracking de MSI
-          sessionParams.metadata = {
-            ...sessionParams.metadata,
-            msi_months: num_msi.toString(),
-            is_installment: "true",
-          };
-
-          console.log(`📱 Configuración MSI enviada a Stripe:`, {
-            payment_method_options: {
-              card: {
-                installments: {
-                  enabled: true,
-                },
-              },
-            },
-            metadata: {
-              msi_months: num_msi,
-              is_installment: "true",
-            },
-          });
-        } else {
-          throw new Error("Número de MSI no soportado. Debe ser 3, 6, 9 o 12.");
-        }
-      } else {
-        // Tarjeta sin MSI - solo pago único
-        console.log("🔧 Configurando pago con tarjeta sin MSI");
-        sessionParams.metadata = {
-          ...sessionParams.metadata,
-          is_installment: "false",
-        };
-      }
-      */
-
-      // 🔧 CONFIGURACIÓN ACTUAL: Solo pagos únicos (comentar para reactivar MSI)
       console.log(
         "🔧 Configurando pago con tarjeta - pago único (MSI deshabilitado)"
       );

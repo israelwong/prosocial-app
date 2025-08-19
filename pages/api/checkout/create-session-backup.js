@@ -4,19 +4,6 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 import Stripe from "stripe";
 
-//
-// 🔧 CONFIGURACIÓN MSI:
-//
-// MSI está TEMPORALMENTE DESHABILITADO para control total del flujo de pago.
-//
-// Para REACTIVAR MSI:
-// 1. Buscar la sección "else if (metodoPago === card)"
-// 2. Descomentar el bloque MSI
-// 3. Comentar la configuración actual de "solo pagos únicos"
-//
-// Estado actual: Solo pagos únicos de tarjeta + SPEI
-//
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-08-16",
 });
@@ -32,7 +19,7 @@ export default async function handler(req, res) {
     const descripcion =
       data.descripcion || `Pago para evento - Cotización ${data.cotizacionId}`;
     let metodoPago = data.paymentMethod; // Puede venir del frontend
-    let num_msi = parseInt(data.num_msi, 10) || 0; // Ya no se usa, mantenido para compatibilidad
+    let num_msi = parseInt(data.num_msi, 10) || 0;
     const cotizacionId = data.cotizacionId;
 
     const condicionesComercialesId =
@@ -65,16 +52,24 @@ export default async function handler(req, res) {
 
         if (metodoPagoInfo?.MetodoPago) {
           metodoPago = metodoPagoInfo.MetodoPago.metodo_pago_clave; // spei, card, etc.
+          const numMsiFromDB = metodoPagoInfo.num_msi || 0;
 
           console.log("✅ Información del método de pago obtenida:", {
             metodoPago,
+            num_msi: numMsiFromDB,
             nombre: metodoPagoInfo.MetodoPago.nombre,
           });
+
+          // Actualizar num_msi si viene de la BD
+          if (numMsiFromDB > 0) {
+            num_msi = numMsiFromDB;
+          }
         } else {
           console.log("❌ No se encontró información del método de pago en BD");
           // 🚨 TEMPORAL: Usar método por defecto cuando no se encuentra
-          console.log("🔧 Usando método de pago por defecto: card");
+          console.log("🔧 Usando método de pago por defecto: card con MSI");
           metodoPago = "card";
+          num_msi = 6; // MSI por defecto para pruebas
         }
       } catch (error) {
         console.error("❌ Error consultando método de pago:", error);
@@ -85,6 +80,7 @@ export default async function handler(req, res) {
     console.log("💳 CREATE-SESSION API - Datos procesados:", {
       metodo: req.method,
       metodoPago,
+      num_msi,
       monto,
       precioFinal,
       cotizacionId,
@@ -170,19 +166,20 @@ export default async function handler(req, res) {
       //     sessionParams.payment_method_types = ['oxxo'];
     } else if (metodoPago === "card") {
       sessionParams.payment_method_types = ["card"];
-
-      // 🚫 MSI TEMPORALMENTE DESHABILITADO - Solo pagos únicos para control total
-      // Para reactivar MSI: descomentar el bloque siguiente y comentar la configuración simple
-
-      /*
-      // ✅ CONFIGURACIÓN MSI - Descomentada para reactivar MSI
-      if (num_msi > 0) {
+      
+      // 🚫 MSI DESHABILITADO - Solo pagos únicos para control total
+      console.log("🔧 Configurando pago con tarjeta - pago único (MSI omitido)");
+      sessionParams.metadata = {
+        ...sessionParams.metadata,
+        is_installment: "false",
+        payment_type: "single",
+      };
         if ([3, 6, 9, 12].includes(num_msi)) {
           console.log(
             `🔧 Configurando pago con tarjeta a ${num_msi} MSI específicos`
           );
 
-          // Configuración oficial MSI según documentación de Stripe
+          // ✅ CONFIGURACIÓN OFICIAL MSI según documentación de Stripe
           sessionParams.payment_method_options = {
             card: {
               installments: {
@@ -191,24 +188,19 @@ export default async function handler(req, res) {
             },
           };
 
-          // Metadata para tracking de MSI
+          // También agregar información en metadata para estadísticas
           sessionParams.metadata = {
             ...sessionParams.metadata,
             msi_months: num_msi.toString(),
             is_installment: "true",
           };
 
-          console.log(`📱 Configuración MSI enviada a Stripe:`, {
-            payment_method_options: {
-              card: {
-                installments: {
-                  enabled: true,
-                },
-              },
-            },
-            metadata: {
-              msi_months: num_msi,
-              is_installment: "true",
+          console.log(`� Configuración MSI enviada a Stripe:`, {
+            enabled: true,
+            plan: {
+              count: num_msi,
+              interval: "month",
+              type: "fixed_count",
             },
           });
         } else {
@@ -222,17 +214,6 @@ export default async function handler(req, res) {
           is_installment: "false",
         };
       }
-      */
-
-      // 🔧 CONFIGURACIÓN ACTUAL: Solo pagos únicos (comentar para reactivar MSI)
-      console.log(
-        "🔧 Configurando pago con tarjeta - pago único (MSI deshabilitado)"
-      );
-      sessionParams.metadata = {
-        ...sessionParams.metadata,
-        is_installment: "false",
-        payment_type: "single",
-      };
     } else {
       throw new Error("Método de pago no soportado.");
     }
@@ -285,7 +266,7 @@ export default async function handler(req, res) {
     });
     */
 
-    console.log("🔧 TEMPORAL: Inserción en BD comentada para pruebas");
+    console.log("🔧 TEMPORAL: Inserción en BD comentada para pruebas de MSI");
 
     // Redirigir si es GET, o retornar JSON si es POST
     if (isGET) {

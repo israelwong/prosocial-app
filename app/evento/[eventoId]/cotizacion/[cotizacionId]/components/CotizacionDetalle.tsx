@@ -346,11 +346,33 @@ export default function CotizacionDetalle({
             precioFinalStripe: precioFinalStripe.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
         })
 
+        // Obtener información del método de pago seleccionado
+        const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
+        const metodoActivo = condicionActiva?.metodosPago.find((m: any) => m.metodoPagoId === metodoPagoSeleccionado)
+
+        // Determinar el tipo de método de pago para Stripe
+        let paymentMethod = 'card' // Por defecto
+        let numMSI = 0
+
+        if (metodoActivo) {
+            // Usar el payment_method si está disponible, o mapear desde metodo_pago
+            paymentMethod = metodoActivo.payment_method || metodoActivo.metodo_pago || 'card'
+            numMSI = metodoActivo.num_msi || 0
+
+            console.log('💳 Información del método para Stripe:', {
+                paymentMethod,
+                numMSI,
+                metodoCompleto: metodoActivo
+            })
+        }
+
         // Redirigir a Stripe Checkout con el precio final calculado (incluyendo comisiones)
         const params = new URLSearchParams({
             cotizacionId: cotizacion.id,
             condicionId: condicionSeleccionada,
             metodoPagoId: metodoPagoSeleccionado,
+            paymentMethod: paymentMethod, // ← AGREGADO para Stripe
+            num_msi: numMSI.toString(), // ← AGREGADO para MSI
             montoFinal: precioFinalStripe.toString()
         })
 

@@ -69,7 +69,10 @@ export default async function Page({ params }: PageProps) {
 
                     {/* Servicios Asociados */}
                     <ServiciosAsociados
-                        evento={datos.evento as any}
+                        evento={{
+                            ...datos.evento,
+                            Cotizacion: datos.cotizacion ? [datos.cotizacion] : []
+                        } as any}
                         usuarios={usuarios}
                     />
                 </div>

@@ -1,10 +1,22 @@
 'use client'
 import React from 'react'
 
+//
+// 🔧 NOTA MSI FRONTEND:
+// 
+// El backend tiene MSI TEMPORALMENTE DESHABILITADO para control total.
+// Este componente mantiene la lógica MSI para compatibilidad y futuras reactivaciones.
+// 
+// Para reactivar: Descomentar configuración MSI en:
+// - pages/api/checkout/create-session.js (bloque MSI comentado)
+// 
+// Estado actual: Frontend muestra MSI, Backend procesa solo pagos únicos
+//
+
 interface MetodoPago {
     metodoPagoId: string
     metodo_pago: string
-    num_msi: number
+    num_msi: number // Mantenido para compatibilidad (backend ignora este valor)
     orden: number
     comision_porcentaje_base?: number
     comision_fija_monto?: number

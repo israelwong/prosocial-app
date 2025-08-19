@@ -72,6 +72,23 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
     const cotizacionAprobada = evento?.Cotizacion?.[0];
     const servicios = cotizacionAprobada?.Servicio || [];
 
+    // 🔍 DEBUG: Agregar logs para diagnosticar el problema
+    console.log('🔍 SERVICIOS DEBUG:', {
+        evento: evento?.id,
+        cotizacionAprobada: cotizacionAprobada?.id,
+        totalServicios: servicios.length,
+        servicios: servicios.map((s: any) => ({
+            id: s.id,
+            nombre_snapshot: s.nombre_snapshot,
+            nombre: s.nombre,
+            costo_snapshot: s.costo_snapshot,
+            costo: s.costo,
+            cantidad: s.cantidad,
+            seccion_nombre_snapshot: s.seccion_nombre_snapshot,
+            categoria_nombre_snapshot: s.categoria_nombre_snapshot
+        }))
+    });
+
     // Calcular totales financieros
     const totales = servicios.reduce((acc: any, servicio: any) => {
         const costo = servicio.costo_snapshot || servicio.costo || 0;
@@ -392,6 +409,19 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                                                         const gasto = servicio.gasto_snapshot || servicio.gasto || 0;
                                                         const cantidad = servicio.cantidad || 1;
                                                         const total = costo * cantidad;
+
+                                                        // 🔍 DEBUG: Log cada servicio individual
+                                                        console.log('🔍 SERVICIO INDIVIDUAL:', {
+                                                            id: servicio.id,
+                                                            nombre_snapshot: servicio.nombre_snapshot,
+                                                            nombre: servicio.nombre,
+                                                            nombre_final: servicio.nombre_snapshot || servicio.nombre || 'Servicio sin nombre',
+                                                            costo_snapshot: servicio.costo_snapshot,
+                                                            costo: servicio.costo,
+                                                            costo_final: costo,
+                                                            cantidad,
+                                                            total
+                                                        });
 
                                                         return (
                                                             <div key={servicio.id} className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-4 hover:bg-zinc-800 transition-colors">
