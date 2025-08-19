@@ -8,25 +8,30 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-08-
 
 export default async function handler(req, res) {
     try {
-        const monto = req.body.monto;
-        const concepto = req.body.concepto;
-        const descripcion = req.body.descripcion;
-        const metodoPago = req.body.paymentMethod;
-        const num_msi = parseInt(req.body.num_msi, 10);
-        const cotizacionId = req.body.cotizacionId;
+        // Obtener parámetros de la query string (GET) o del body (POST)
+        const isGET = req.method === 'GET';
+        const data = isGET ? req.query : req.body;
+
+        const monto = parseFloat(data.montoFinal || data.monto);
+        const concepto = data.concepto;
+        const descripcion = data.descripcion;
+        const metodoPago = data.paymentMethod;
+        const num_msi = parseInt(data.num_msi, 10) || 0;
+        const cotizacionId = data.cotizacionId;
         
-        const condicionesComercialesId = req.body.condicionesComercialesId;
-        const metodoPagoId = req.body.metodoPagoId;
+        const condicionesComercialesId = data.condicionesComercialesId;
+        const metodoPagoId = data.metodoPagoId;
 
-        const clienteId = req.body.clienteId;
-        const nombreCliente = req.body.nombreCliente;
-        const emailCliente = req.body.emailCliente; 
-        const telefonoCliente = req.body.telefonoCliente;
+        const clienteId = data.clienteId;
+        const nombreCliente = data.nombreCliente;
+        const emailCliente = data.emailCliente; 
+        const telefonoCliente = data.telefonoCliente;
 
-        const precioFinal = req.body.precioFinal;
+        const precioFinal = parseFloat(data.precioFinal || data.montoFinal);
 
         // Debug: Información del pago
-        console.log('💳 CHECKOUT API - Datos recibidos:', {
+        console.log('💳 CREATE-SESSION API - Datos recibidos:', {
+            metodo: req.method,
             metodoPago,
             num_msi,
             monto,
@@ -52,7 +57,7 @@ export default async function handler(req, res) {
                 },
             ],
             mode: 'payment',
-            //endirección solo si paga con tarjeta
+            //redirección solo si paga con tarjeta
             success_url: `${req.headers.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${req.headers.origin}/cotizacion/${cotizacionId}`,
         };
@@ -168,9 +173,14 @@ export default async function handler(req, res) {
             },
         });
 
-        res.status(200).json({ url: session.url });
+        // Redirigir si es GET, o retornar JSON si es POST
+        if (isGET) {
+            res.redirect(303, session.url);
+        } else {
+            res.status(200).json({ url: session.url });
+        }
     } catch (error) {
-        console.error('Error processing request body:', error);
-        return res.status(400).json({ error: 'Invalid request body', details: error.message });
+        console.error('Error processing request:', error);
+        return res.status(400).json({ error: 'Invalid request', details: error.message });
     }
 }
