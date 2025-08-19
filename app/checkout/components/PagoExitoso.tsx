@@ -1,12 +1,16 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { obtenerPagoSesionStripe } from '@/app/admin/_lib/pago.actions'
 import { Pago as PagoType, Cliente as ClienteType } from '@/app/admin/_lib/types'
 import Skeleton from '@/app/components/ui/Skeleton'
 
-export default function PagoExitoso() {
+interface Props {
+    cotizacionId?: string | null
+}
 
+export default function PagoExitoso({ cotizacionId }: Props) {
+    const router = useRouter()
     const searchParams = useSearchParams()
     const sessionId = searchParams ? searchParams.get('session_id') : null
     const [pago, setPago] = useState<PagoType | null>(null)
@@ -61,8 +65,15 @@ export default function PagoExitoso() {
             </p>
 
             <button className="bg-zinc-700 text-white font-bold py-2 px-4 rounded mb-10"
-                onClick={() => { window.location.href = '/login/' }
-                }>
+                onClick={() => {
+                    if (cotizacionId) {
+                        // Redirigir a la página de cotización específica
+                        window.location.href = `/cliente/login?redirect=/evento/cotizacion/${cotizacionId}`
+                    } else {
+                        // Redirigir al login general
+                        window.location.href = '/login/'
+                    }
+                }}>
                 Ingresar ahora
             </button>
 

@@ -138,8 +138,8 @@ export default async function handler(req, res) {
         metodoPagoId: metodoPagoId || "",
       },
       //redirección solo si paga con tarjeta
-      success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/cotizacion/${cotizacionId}`,
+      success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&cotizacionId=${cotizacionId}`,
+      cancel_url: `${baseUrl}/checkout/cancel?cotizacionId=${cotizacionId}`,
     };
 
     //! Configurar el método de pago

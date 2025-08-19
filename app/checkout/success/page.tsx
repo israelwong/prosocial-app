@@ -1,11 +1,14 @@
 'use client'
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Header from '@/app/components/ui/Header';
 import Footer from '@/app/components/ui/Footer';
 import PagoExitoso from '../components/PagoExitoso';
 
 export default function Page() {
     const [isClient, setIsClient] = useState(false);
+    const searchParams = useSearchParams();
+    const cotizacionId = searchParams ? searchParams.get('cotizacionId') : null;
 
     useEffect(() => {
         setIsClient(true);
@@ -18,7 +21,7 @@ export default function Page() {
 
             {/* BODY */}
             <div className='max-w-screen-sm mx-auto'>
-                <PagoExitoso />
+                <PagoExitoso cotizacionId={cotizacionId} />
             </div>
 
             {/* FOOTER */}

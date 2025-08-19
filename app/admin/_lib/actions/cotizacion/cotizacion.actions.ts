@@ -634,7 +634,7 @@ export async function obtenerCotizacionesParaEvento(eventoId: string) {
                 eventoId,
                 visible_cliente: true,
                 status: {
-                    in: ['pendiente', 'aprobada'] // Solo cotizaciones activas
+                    in: ['pending', 'pendiente', 'aprobada', 'approved'] // Incluir ambas variantes
                 }
             },
             select: {
@@ -665,7 +665,9 @@ export async function obtenerCotizacionesParaEvento(eventoId: string) {
         }) : []
 
         // 6. Verificar si hay cotizaciones aprobadas (requiere login)
-        const cotizacionesAprobadas = cotizaciones.filter(cot => cot.status === 'aprobada')
+        const cotizacionesAprobadas = cotizaciones.filter(cot => 
+            ['aprobada', 'approved'].includes(cot.status)
+        )
         const requiereClienteLogin = cotizacionesAprobadas.length > 0 || eventoContratado
 
         if (requiereClienteLogin) {
