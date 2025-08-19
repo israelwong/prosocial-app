@@ -8,9 +8,9 @@ import CotizacionAutorizada from './CotizacionAutorizada'
 import CotizacionExpirada from './CotizacionExpirada'
 import CotizacionNoDisponible from './CotizacionNoDisponible'
 
-import Header from './Header';
-import Footer from './Footer';
-import Skeleton from './skeleton'
+import Header from '@/app/components/ui/Header';
+import Footer from '@/app/components/ui/Footer';
+import Skeleton from '@/app/components/ui/Skeleton'
 
 interface Props {
     cotizacionId: string

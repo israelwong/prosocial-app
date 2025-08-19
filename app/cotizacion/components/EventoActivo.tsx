@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Evento, Cliente, Cotizacion, CondicionesComerciales } from '@/app/admin/_lib/types'
 import { obtenerEventoCotizaciones } from '@/app/admin/_lib/evento.actions'
 import { obtenerCondicionesComercialesActivas } from '@/app/admin/_lib/condicionesComerciales.actions'
-import Skeleton from './skeleton'
+import Skeleton from '@/app/components/ui/Skeleton'
 import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
 import { supabase } from '@/app/admin/_lib/supabase';

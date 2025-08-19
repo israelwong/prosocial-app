@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import Header from '../../cotizacion/components/Header';
-import Footer from '../../cotizacion/components/Footer';
+import Header from '@/app/components/ui/Header';
+import Footer from '@/app/components/ui/Footer';
 import PagoExitoso from '../components/PagoExitoso';
 
 export default function Page() {
