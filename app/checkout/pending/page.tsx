@@ -67,7 +67,7 @@ export default function Page() {
                     Mientras tanto, puedes revisar los detalles de tu cotización.
                 </p>
 
-                <button 
+                <button
                     className="bg-zinc-700 hover:bg-zinc-600 text-white font-bold py-3 px-6 rounded mb-10"
                     onClick={handleVolverACotizacion}
                 >

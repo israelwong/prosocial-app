@@ -42,7 +42,7 @@ export default function Page() {
                     No se ha realizado ningún cargo a tu cuenta. Puedes volver a intentar el pago cuando gustes.
                 </p>
 
-                <button 
+                <button
                     className="bg-zinc-700 hover:bg-zinc-600 text-white font-bold py-3 px-6 rounded mb-10"
                     onClick={handleVolverACotizacion}
                 >

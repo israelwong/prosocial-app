@@ -549,14 +549,6 @@ export default function CotizacionDetalle({
                     metodoPagoSeleccionado={metodoPagoSeleccionado}
                     onMetodoPagoChange={handleMetodoPagoChange}
                 />
-
-                {/* Información adicional */}
-                <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
-                    <div className="text-zinc-400 space-y-2 text-sm">
-                        <div>Creada: {cotizacion.createdAt ? new Date(cotizacion.createdAt).toLocaleDateString('es-MX') : 'Fecha no disponible'}</div>
-                        <div className="text-xs text-zinc-500">ID: {cotizacion.id}</div>
-                    </div>
-                </div>
             </div>
 
             {/* Botón de pago */}
