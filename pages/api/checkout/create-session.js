@@ -35,6 +35,12 @@ export default async function handler(req, res) {
     let num_msi = parseInt(data.num_msi, 10) || 0; // Ya no se usa, mantenido para compatibilidad
     const cotizacionId = data.cotizacionId;
 
+    // 🎯 NUEVO: Soporte para portal del cliente
+    const isClientPortal =
+      data.isClientPortal === "true" || data.isClientPortal === true;
+    const customReturnUrl = data.returnUrl;
+    const customCancelUrl = data.cancelUrl;
+
     const condicionesComercialesId =
       data.condicionesComercialesId || data.condicionId;
     const metodoPagoId = data.metodoPagoId;
@@ -136,10 +142,19 @@ export default async function handler(req, res) {
         cotizacionId: cotizacionId.toString(),
         metodoPago,
         metodoPagoId: metodoPagoId || "",
+        isClientPortal: isClientPortal.toString(),
       },
       //redirección solo si paga con tarjeta
-      success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&cotizacionId=${cotizacionId}`,
-      cancel_url: `${baseUrl}/checkout/cancel?cotizacionId=${cotizacionId}`,
+      success_url:
+        customReturnUrl ||
+        (isClientPortal
+          ? `${baseUrl}/cliente/pagos/success?session_id={CHECKOUT_SESSION_ID}&cotizacionId=${cotizacionId}`
+          : `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&cotizacionId=${cotizacionId}`),
+      cancel_url:
+        customCancelUrl ||
+        (isClientPortal
+          ? `${baseUrl}/cliente/cotizaciones/${cotizacionId}`
+          : `${baseUrl}/checkout/cancel?cotizacionId=${cotizacionId}`),
     };
 
     //! Configurar el método de pago

@@ -101,14 +101,14 @@ async function obtenerEtapaContratado() {
     const etapaContratado = await prisma.eventoEtapa.findFirst({
       where: {
         OR: [
-          { nombre: { contains: "Contratado", mode: 'insensitive' } },
-          { nombre: { contains: "Confirmado", mode: 'insensitive' } },
-          { posicion: 5 } // Asumiendo que posición 5 es "Contratado"
-        ]
+          { nombre: { contains: "Contratado", mode: "insensitive" } },
+          { nombre: { contains: "Confirmado", mode: "insensitive" } },
+          { posicion: 5 }, // Asumiendo que posición 5 es "Contratado"
+        ],
       },
-      orderBy: { posicion: 'asc' }
+      orderBy: { posicion: "asc" },
     });
-    
+
     return etapaContratado?.id || null;
   } catch (error) {
     console.error("❌ Error al obtener etapa contratado:", error);
@@ -121,8 +121,6 @@ async function obtenerEtapaContratado() {
 async function handlePaymentIntentSucceeded(paymentIntent) {
   console.log("✅ Payment Intent succeeded:", paymentIntent.id);
   console.log("📊 Metadata:", paymentIntent.metadata);
-
-  const { cotizacionId } = paymentIntent.metadata;
 
   // 🔍 Detectar método de pago automáticamente
   let metodoPago = "tarjeta_credito";
@@ -141,18 +139,38 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
   }
 
   try {
-    // 1. Crear registro de pago en BD
-    const pago = await prisma.pago.create({
+    // 1. Buscar el pago existente por Payment Intent ID
+    const pagoExistente = await prisma.pago.findFirst({
+      where: { stripe_payment_id: paymentIntent.id },
+      include: {
+        Cotizacion: {
+          include: {
+            Evento: {
+              include: {
+                Cliente: true,
+                EventoTipo: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!pagoExistente) {
+      console.log(
+        `❌ No se encontró el pago correspondiente para Payment Intent: ${paymentIntent.id}`
+      );
+      return;
+    }
+
+    // 2. Actualizar el pago existente
+    const pagoActualizado = await prisma.pago.update({
+      where: { id: pagoExistente.id },
       data: {
-        cotizacion_id: cotizacionId,
-        stripe_payment_id: paymentIntent.id,
-        monto: paymentIntent.amount / 100, // Convertir de centavos
         status: "completado",
         metodo_pago: metodoPago,
         meses_sin_intereses: mesesSinIntereses,
         fecha_pago: new Date(),
-        concepto: `Pago cotización ${cotizacionId}`,
-        descripcion: `Pago procesado automáticamente vía Stripe - Payment Intent: ${paymentIntent.id}`,
         metadata: JSON.stringify({
           payment_intent_id: paymentIntent.id,
           amount: paymentIntent.amount,
@@ -162,93 +180,96 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
       },
     });
 
-    // 2. Actualizar estado de cotización
+    console.log("✅ Pago actualizado:", {
+      pagoId: pagoActualizado.id,
+      cotizacionId: pagoExistente.cotizacionId,
+      monto: pagoActualizado.monto,
+      metodoPago: metodoPago,
+      msi: mesesSinIntereses,
+    });
+
+    // 3. Actualizar estado de cotización
     await prisma.cotizacion.update({
-      where: { id: cotizacionId },
-      data: { 
-        status: "aprobada" // Usar "aprobada" en lugar de "PAGADA" para consistencia
+      where: { id: pagoExistente.cotizacionId },
+      data: {
+        status: "aprobada", // Usar "aprobada" para consistencia
       },
     });
 
-    // 3. Actualizar estado del evento y crear agenda
-    const cotizacion = await prisma.cotizacion.findUnique({
-      where: { id: cotizacionId },
-      include: { 
-        Evento: {
-          include: {
-            Cliente: true,
-            EventoTipo: true
-          }
-        }
-      },
-    });
+    console.log(
+      "✅ Cotización actualizada a 'aprobada':",
+      pagoExistente.cotizacionId
+    );
 
-    if (cotizacion?.Evento) {
+    // 4. Actualizar estado del evento y crear agenda
+    if (pagoExistente.Cotizacion?.Evento) {
+      const evento = pagoExistente.Cotizacion.Evento;
+
       // Obtener ID de etapa "Contratado" dinámicamente
       const etapaContratadoId = await obtenerEtapaContratado();
-      
+
       // Actualizar estado del evento
-      const updateData = { 
-        status: "contratado"
+      const updateData = {
+        status: "contratado",
       };
-      
+
       // Solo actualizar etapa si encontramos una válida
       if (etapaContratadoId) {
         updateData.eventoEtapaId = etapaContratadoId;
       }
-      
+
       await prisma.evento.update({
-        where: { id: cotizacion.Evento.id },
+        where: { id: evento.id },
         data: updateData,
       });
 
       console.log("✅ Evento actualizado:", {
-        eventoId: cotizacion.Evento.id,
+        eventoId: evento.id,
         nuevoStatus: "contratado",
-        etapaActualizada: !!etapaContratadoId
+        etapaActualizada: !!etapaContratadoId,
       });
 
-      // 4. Crear entrada en agenda
+      // 5. Crear entrada en agenda
       try {
         // Verificar si ya existe entrada en agenda para este evento
         const agendaExistente = await prisma.agenda.findFirst({
-          where: { 
-            eventoId: cotizacion.Evento.id,
-            status: { not: 'cancelado' }
-          }
+          where: {
+            eventoId: evento.id,
+            status: { not: "cancelado" },
+          },
         });
 
         if (!agendaExistente) {
           const nuevaAgenda = await prisma.agenda.create({
             data: {
-              eventoId: cotizacion.Evento.id,
-              fecha: cotizacion.Evento.fecha_evento,
-              status: 'confirmado',
-              observaciones: `Evento confirmado automáticamente - Pago procesado: ${pago.monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`,
+              eventoId: evento.id,
+              fecha: evento.fecha_evento,
+              status: "confirmado",
+              observaciones: `Evento confirmado automáticamente - Pago procesado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`,
               createdAt: new Date(),
-              updatedAt: new Date()
-            }
+              updatedAt: new Date(),
+            },
           });
 
           console.log("📅 Agenda creada exitosamente:", {
             agendaId: nuevaAgenda.id,
-            eventoId: cotizacion.Evento.id,
-            fecha: cotizacion.Evento.fecha_evento
+            eventoId: evento.id,
+            fecha: evento.fecha_evento,
           });
         } else {
           // Si ya existe, actualizar su status
           await prisma.agenda.update({
             where: { id: agendaExistente.id },
             data: {
-              status: 'confirmado',
-              observaciones: `${agendaExistente.observaciones || ''} - Pago confirmado: ${pago.monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`,
-              updatedAt: new Date()
-            }
+              status: "confirmado",
+              observaciones: `${agendaExistente.observaciones || ""} - Pago confirmado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`,
+              updatedAt: new Date(),
+            },
           });
 
           console.log("📅 Agenda actualizada exitosamente:", {
             agendaId: agendaExistente.id,
-            nuevoStatus: 'confirmado'
+            nuevoStatus: "confirmado",
           });
         }
       } catch (agendaError) {
@@ -256,23 +277,23 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
         // No fallo el webhook por error de agenda, solo lo registramos
       }
 
-      // 5. Crear notificación para el equipo
+      // 6. Crear notificación para el equipo
       try {
         await prisma.notificacion.create({
           data: {
-            eventoId: cotizacion.Evento.id,
-            titulo: `💰 Pago confirmado - ${cotizacion.Evento.Cliente?.nombre}`,
-            mensaje: `Se ha confirmado el pago de ${pago.monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })} para la cotización "${cotizacion.nombre}". El evento ha sido automáticamente contratado y agregado a la agenda.`,
-            tipo: 'pago_confirmado',
-            status: 'no_leida',
+            eventoId: evento.id,
+            titulo: `💰 Pago confirmado - ${evento.Cliente?.nombre}`,
+            mensaje: `Se ha confirmado el pago de ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })} para la cotización "${pagoExistente.Cotizacion.nombre}". El evento ha sido automáticamente contratado y agregado a la agenda.`,
+            tipo: "pago_confirmado",
+            status: "no_leida",
             metadata: JSON.stringify({
-              cotizacionId: cotizacion.id,
-              pagoId: pago.id,
-              metodoPago: pago.metodo_pago,
-              msi: mesesSinIntereses
+              cotizacionId: pagoExistente.cotizacionId,
+              pagoId: pagoActualizado.id,
+              metodoPago: pagoActualizado.metodo_pago,
+              msi: mesesSinIntereses,
             }),
-            createdAt: new Date()
-          }
+            createdAt: new Date(),
+          },
         });
 
         console.log("🔔 Notificación creada para el equipo");
@@ -282,10 +303,10 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
     }
 
     console.log("✅ Pago procesado exitosamente:", {
-      pagoId: pago.id,
-      cotizacionId,
-      monto: pago.monto,
-      metodo: pago.metodo_pago,
+      pagoId: pagoActualizado.id,
+      cotizacionId: pagoExistente.cotizacionId,
+      monto: pagoActualizado.monto,
+      metodo: pagoActualizado.metodo_pago,
       msi: mesesSinIntereses,
     });
   } catch (error) {
