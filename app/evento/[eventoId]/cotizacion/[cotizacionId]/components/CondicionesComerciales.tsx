@@ -208,12 +208,15 @@ export default function CondicionesComerciales({
                                                     {infoPago.anticipo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
                                                 </span>
                                             </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-zinc-300">A diferir:</span>
-                                                <span className="text-zinc-400">
-                                                    {infoPago.aDiferir.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                                                </span>
-                                            </div>
+                                            {/* Solo mostrar "A diferir" si hay monto pendiente */}
+                                            {infoPago.aDiferir > 0 && (
+                                                <div className="flex justify-between">
+                                                    <span className="text-zinc-300">A diferir:</span>
+                                                    <span className="text-zinc-400">
+                                                        {infoPago.aDiferir.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
