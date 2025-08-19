@@ -245,7 +245,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
               eventoId: evento.id,
               fecha: evento.fecha_evento,
               status: "confirmado",
-              observaciones: `Evento confirmado automáticamente - Pago procesado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`,
+              descripcion: `Evento confirmado automáticamente - Pago procesado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`,
               createdAt: new Date(),
               updatedAt: new Date(),
             },
@@ -262,7 +262,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
             where: { id: agendaExistente.id },
             data: {
               status: "confirmado",
-              observaciones: `${agendaExistente.observaciones || ""} - Pago confirmado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`,
+              descripcion: `${agendaExistente.descripcion || ""} - Pago confirmado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`,
               updatedAt: new Date(),
             },
           });
@@ -281,17 +281,10 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
       try {
         await prisma.notificacion.create({
           data: {
-            eventoId: evento.id,
+            cotizacionId: pagoExistente.cotizacionId,
             titulo: `💰 Pago confirmado - ${evento.Cliente?.nombre}`,
             mensaje: `Se ha confirmado el pago de ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })} para la cotización "${pagoExistente.Cotizacion.nombre}". El evento ha sido automáticamente contratado y agregado a la agenda.`,
-            tipo: "pago_confirmado",
-            status: "no_leida",
-            metadata: JSON.stringify({
-              cotizacionId: pagoExistente.cotizacionId,
-              pagoId: pagoActualizado.id,
-              metodoPago: pagoActualizado.metodo_pago,
-              msi: mesesSinIntereses,
-            }),
+            status: "active",
             createdAt: new Date(),
           },
         });
