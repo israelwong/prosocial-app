@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Cotizacion } from '@/app/admin/_lib/types'
-import { eliminarCotizacion, clonarCotizacion } from '@/app/admin/_lib/cotizacion.actions'
+import { eliminarCotizacion, clonarCotizacion, archivarCotizacion, desarchivarCotizacion } from '@/app/admin/_lib/cotizacion.actions'
 import { useRouter } from 'next/navigation'
 import { actualizarVisibilidadCotizacion } from '@/app/admin/_lib/cotizacion.actions'
 import { autorizarCotizacion } from '@/app/admin/_lib/autorizarCotizacion.actions'
@@ -26,7 +26,8 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
     const [visibleCliente, setVisibleCliente] = useState<boolean>(cotizacion?.visible_cliente ?? false)
     const [menuAbierto, setMenuAbierto] = useState(false)
     const [autorizando, setAutorizando] = useState(false)
-    
+    const [archivada, setArchivada] = useState<boolean>(cotizacion?.archivada ?? false)
+
     // Hook para modal de eliminación
     const modalEliminacion = useEliminacionCotizacion()
 
@@ -48,6 +49,14 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
     //! Eliminar cotización usando el modal
     const handleEliminarCotizacion = async (cotizacionId: string) => {
         const datos = modalEliminacion.prepararDatosCotizacion(cotizacion)
+
+        // Agregar lógica para detectar si se debe ofrecer archivado
+        // Si la cotización está aprobada, sugerir archivado cuando hay bloqueos
+        if (cotizacion.status === 'aprobada') {
+            // Agregar bloqueo usando la función del modal
+            modalEliminacion.actualizarBloqueos(['Cotización aprobada con posibles dependencias activas'])
+        }
+
         modalEliminacion.abrirModal(datos)
         setMenuAbierto(false)
     }
@@ -55,36 +64,36 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
     //! Confirmar eliminación desde el modal
     const confirmarEliminacion = async () => {
         if (!cotizacion.id) return
-        
+
         await modalEliminacion.ejecutarEliminacion(
             () => eliminarCotizacion(cotizacion.id!),
             (resultado) => {
                 // Mensaje de éxito
                 const { eliminados, preservados } = resultado
                 let successMessage = 'Cotización eliminada exitosamente'
-                
+
                 if (eliminados) {
                     const detalles = []
                     if (eliminados.servicios > 0) detalles.push(`${eliminados.servicios} servicios`)
                     if (eliminados.visitas > 0) detalles.push(`${eliminados.visitas} visitas`)
                     if (eliminados.costos > 0) detalles.push(`${eliminados.costos} costos`)
                     if (eliminados.nominas > 0) detalles.push(`${eliminados.nominas} nóminas`)
-                    
+
                     if (detalles.length > 0) {
                         successMessage += `\n\nEliminados: ${detalles.join(', ')}`
                     }
                 }
-                
+
                 if (preservados && (preservados.pagos > 0 || preservados.agendas > 0)) {
                     const preservadosDetalles = []
                     if (preservados.pagos > 0) preservadosDetalles.push(`${preservados.pagos} pagos`)
                     if (preservados.agendas > 0) preservadosDetalles.push(`${preservados.agendas} agendas`)
-                    
+
                     if (preservadosDetalles.length > 0) {
                         successMessage += `\nPreservados: ${preservadosDetalles.join(', ')}`
                     }
                 }
-                
+
                 toast.success(successMessage)
                 onEliminarCotizacion(cotizacion.id!)
             },
@@ -92,7 +101,9 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                 toast.error(typeof error === 'string' ? error : 'Error inesperado al eliminar la cotización')
             }
         )
-    }    //! Clonar cotización
+    }
+
+    //! Clonar cotización
     const handleClonarCotizacion = async (cotizacionId: string) => {
         if (confirm('¿Estás seguro de clonar esta cotización?')) {
             setClonando(cotizacionId)
@@ -160,11 +171,68 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
         }
     }
 
+    //! Archivar cotización
+    const handleArchivarCotizacion = async () => {
+        if (!cotizacion.id) return
+
+        try {
+            const resultado = await archivarCotizacion(cotizacion.id)
+            if (resultado.success) {
+                setArchivada(true)
+                toast.success('Cotización archivada exitosamente')
+            } else {
+                toast.error(resultado.message || 'Error al archivar cotización')
+            }
+        } catch (error) {
+            console.error('Error archivando cotización:', error)
+            toast.error('Error al archivar cotización')
+        }
+        setMenuAbierto(false)
+    }
+
+    //! Desarchivar cotización
+    const handleDesarchivarCotizacion = async () => {
+        if (!cotizacion.id) return
+
+        try {
+            const resultado = await desarchivarCotizacion(cotizacion.id)
+            if (resultado.success) {
+                setArchivada(false)
+                toast.success('Cotización desarchivada exitosamente')
+            } else {
+                toast.error(resultado.message || 'Error al desarchivar cotización')
+            }
+        } catch (error) {
+            console.error('Error desarchivando cotización:', error)
+            toast.error('Error al desarchivar cotización')
+        }
+        setMenuAbierto(false)
+    }
+
     return (
-        <div className="space-y-4">
+        <div className={`space-y-4 ${archivada ? 'bg-amber-900/30 border-2 border-amber-600/60 rounded-lg p-4' : ''}`}>
+            {/* Indicador de archivado */}
+            {archivada && (
+                <div className="bg-amber-900/50 border border-amber-500 p-3 rounded-lg">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-amber-200 text-sm font-medium">
+                            <Archive className="w-4 h-4" />
+                            Cotización Archivada
+                        </div>
+                        <button
+                            onClick={handleDesarchivarCotizacion}
+                            className="text-amber-200 hover:text-amber-100 text-xs px-2 py-1 bg-amber-800/60 hover:bg-amber-800/80 rounded transition-colors flex items-center gap-1"
+                        >
+                            <ArchiveRestore className="w-3 h-3" />
+                            Desarchivar
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Header con título como link y menú contextual */}
             <div className="flex items-start justify-between">
-                <div className="flex items-start gap-2 flex-1 min-w-0">
+                <div className={`flex items-start gap-2 flex-1 min-w-0 ${archivada ? 'opacity-30' : ''}`}>
                     <button
                         onClick={() => router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/${cotizacion.id}`)}
                         className="text-zinc-300 hover:text-zinc-100 transition-colors mt-1"
@@ -183,12 +251,12 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
 
                 <div className="flex items-center gap-2 flex-shrink-0">
                     {/* Contador de visitas */}
-                    <div className="flex items-center gap-1 text-zinc-500 text-sm ml-2">
+                    <div className={`flex items-center gap-1 text-zinc-500 text-sm ml-2 ${archivada ? 'opacity-30' : ''}`}>
                         <Eye className="w-4 h-4" />
                         <span>{cotizacion.visitas}</span>
                     </div>
 
-                    {/* Menú contextual */}
+                    {/* Menú contextual - siempre visible */}
                     <div className="relative menu-container">
                         <button
                             onClick={() => setMenuAbierto(!menuAbierto)}
@@ -282,20 +350,40 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                     {clonando === cotizacion.id ? 'Clonando...' : 'Clonar'}
                                 </button>
 
-                                {/* Archivar/Restaurar */}
+                                {/* Archivar/Desarchivar para cotizaciones aprobadas */}
+                                {cotizacion.status === 'aprobada' && (
+                                    <button
+                                        onClick={archivada ? handleDesarchivarCotizacion : handleArchivarCotizacion}
+                                        className="w-full px-3 py-2 text-left text-amber-400 hover:bg-zinc-700 flex items-center gap-2 text-sm"
+                                    >
+                                        {archivada ? (
+                                            <>
+                                                <ArchiveRestore className="w-4 h-4" />
+                                                Desarchivar cotización
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Archive className="w-4 h-4" />
+                                                Archivar cotización
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+
+                                {/* Ocultar/Mostrar al cliente */}
                                 <button
                                     onClick={handleVisibleCliente}
                                     className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
                                 >
                                     {visibleCliente ? (
                                         <>
-                                            <Archive className="w-4 h-4" />
-                                            Archivar
+                                            <Eye className="w-4 h-4" />
+                                            Ocultar al cliente
                                         </>
                                     ) : (
                                         <>
-                                            <ArchiveRestore className="w-4 h-4" />
-                                            Restaurar
+                                            <Eye className="w-4 h-4" />
+                                            Mostrar al cliente
                                         </>
                                     )}
                                 </button>
@@ -318,7 +406,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
             </div>
 
             {/* Información adicional */}
-            <div className="text-sm text-zinc-500 space-y-1">
+            <div className={`text-sm text-zinc-500 space-y-1 ${archivada ? 'opacity-30' : ''}`}>
                 <p>
                     Creada el {cotizacion.createdAt ? new Date(cotizacion.createdAt).toLocaleString('es-MX', {
                         year: 'numeric',
@@ -332,7 +420,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
 
             {/* Status autorizado o aprobado */}
             {cotizacion.status === 'autorizado' && (
-                <div className="mt-3 p-3 bg-blue-900/30 border border-blue-700 rounded-lg">
+                <div className={`mt-3 p-3 bg-blue-900/30 border border-blue-700 rounded-lg ${archivada ? 'opacity-30' : ''}`}>
                     <div className="flex items-center gap-2 text-blue-400 text-sm font-medium">
                         <CheckCircle className="w-4 h-4" />
                         Cotización Autorizada
@@ -341,7 +429,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
             )}
 
             {cotizacion.status === 'aprobada' && (
-                <div className="mt-3 p-3 bg-green-900/30 border border-green-700 rounded-lg">
+                <div className={`mt-3 p-3 bg-green-900/30 border border-green-700 rounded-lg ${archivada ? 'opacity-30' : ''}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
                             <CheckCircle className="w-4 h-4" />
@@ -356,7 +444,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                     </div>
                 </div>
             )}
-            
+
             {/* Modal de confirmación de eliminación */}
             {modalEliminacion.datos && (
                 <ModalConfirmacionEliminacion
@@ -370,6 +458,8 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                     bloqueos={modalEliminacion.datos.bloqueos}
                     isLoading={modalEliminacion.isLoading}
                     loadingText="Eliminando cotización..."
+                    onArchivar={handleArchivarCotizacion}
+                    mostrarBotonArchivar={cotizacion.status === 'aprobada'}
                 />
             )}
         </div>

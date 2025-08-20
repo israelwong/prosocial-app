@@ -50,7 +50,7 @@ export function useModalEliminacion() {
         setIsLoading(true)
         try {
             const resultado = await accionEliminacion()
-            
+
             if (resultado.success) {
                 onSuccess?.(resultado)
                 cerrarModal()
@@ -142,12 +142,12 @@ export function useEliminacionCotizacion() {
 
     const prepararDatosCotizacion = (cotizacion: any) => {
         const dependencias = []
-        
+
         // Agregar servicios si existen
         if (cotizacion.servicios && cotizacion.servicios.length > 0) {
             dependencias.push(modal.crearDependenciaServicio(cotizacion.servicios.length))
         }
-        
+
         // Agregar dependencias estándar
         dependencias.push(
             modal.crearDependenciaVisitas(),

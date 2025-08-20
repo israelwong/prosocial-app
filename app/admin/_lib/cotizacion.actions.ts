@@ -234,6 +234,86 @@ export async function actualizarCotizacionStatus(cotizacionId: string, status: s
     }
 }
 
+export async function archivarCotizacion(cotizacionId: string) {
+    try {
+        console.log(`📁 Archivando cotización ${cotizacionId}...`);
+
+        // Verificar que la cotización existe
+        const cotizacion = await prisma.cotizacion.findUnique({
+            where: { id: cotizacionId },
+            select: {
+                id: true,
+                nombre: true,
+                status: true,
+                archivada: true
+            }
+        });
+
+        if (!cotizacion) {
+            return { error: 'Cotización no encontrada' };
+        }
+
+        if (cotizacion.archivada) {
+            return { error: 'La cotización ya está archivada' };
+        }
+
+        // Archivar la cotización
+        await prisma.cotizacion.update({
+            where: { id: cotizacionId },
+            data: { archivada: true }
+        });
+
+        console.log(`✅ Cotización "${cotizacion.nombre}" archivada exitosamente`);
+        return {
+            success: true,
+            message: `Cotización "${cotizacion.nombre}" archivada exitosamente`
+        };
+
+    } catch (error) {
+        console.error('❌ Error archivando cotización:', error);
+        return { error: 'Error al archivar la cotización' };
+    }
+}
+
+export async function desarchivarCotizacion(cotizacionId: string) {
+    try {
+        console.log(`📂 Desarchivando cotización ${cotizacionId}...`);
+
+        const cotizacion = await prisma.cotizacion.findUnique({
+            where: { id: cotizacionId },
+            select: {
+                id: true,
+                nombre: true,
+                archivada: true
+            }
+        });
+
+        if (!cotizacion) {
+            return { error: 'Cotización no encontrada' };
+        }
+
+        if (!cotizacion.archivada) {
+            return { error: 'La cotización no está archivada' };
+        }
+
+        // Desarchivar la cotización
+        await prisma.cotizacion.update({
+            where: { id: cotizacionId },
+            data: { archivada: false }
+        });
+
+        console.log(`✅ Cotización "${cotizacion.nombre}" desarchivada exitosamente`);
+        return {
+            success: true,
+            message: `Cotización "${cotizacion.nombre}" desarchivada exitosamente`
+        };
+
+    } catch (error) {
+        console.error('❌ Error desarchivando cotización:', error);
+        return { error: 'Error al desarchivar la cotización' };
+    }
+}
+
 export async function eliminarCotizacion(cotizacionId: string) {
     try {
         // 1. Verificar que la cotización existe y obtener todas las dependencias
@@ -287,7 +367,12 @@ export async function eliminarCotizacion(cotizacionId: string) {
 
         // Contar nóminas asociadas
         let nominasCount = 0;
-        const nominasActivas = [];
+        const nominasActivas: Array<{
+            id: string;
+            concepto: string;
+            status: string;
+            responsable: string | null | undefined;
+        }> = [];
         cotizacion.Servicio.forEach(servicio => {
             servicio.NominaServicio.forEach(nominaServ => {
                 nominasCount++;
@@ -303,7 +388,7 @@ export async function eliminarCotizacion(cotizacionId: string) {
         });
 
         console.log(`🔍 Analizando dependencias para cotización ${cotizacionId}:`);
-        console.log(`- Cotización: "${cotizacion.nombre}" ($${cotizacion.precio.toLocaleString('es-MX')})`);
+        console.log(`- Cotización: "${cotizacion.nombre}" ($${cotizacion.precio.toLocaleString('es-MX')}) - Status: ${cotizacion.status}`);
         console.log(`- ${serviciosCount} servicios`);
         console.log(`- ${visitasCount} visitas`);
         console.log(`- ${pagosCount} pagos`);
@@ -311,24 +396,33 @@ export async function eliminarCotizacion(cotizacionId: string) {
         console.log(`- ${agendasCount} agendas en el evento`);
         console.log(`- ${nominasCount} nóminas asociadas (${nominasActivas.length} activas)`);
 
-        // 3. Verificar si hay dependencias que impidan la eliminación
-        if (nominasActivas.length > 0) {
-            console.log('❌ Eliminación bloqueada por nóminas activas:');
+        // 3. Verificar si hay dependencias críticas que bloqueen eliminación
+
+        // BLOQUEO: Cotización aprobada con nóminas activas
+        if (cotizacion.status === 'aprobada' && nominasActivas.length > 0) {
+            console.log('❌ Eliminación bloqueada: Cotización aprobada con nóminas activas');
             nominasActivas.forEach((nomina, index) => {
                 console.log(`   ${index + 1}. ${nomina.concepto} (${nomina.status}) - ${nomina.responsable}`);
             });
 
             return {
-                error: `No se puede eliminar. Hay ${nominasActivas.length} nómina(s) activa(s) asociada(s). Cancela o transfiere las nóminas primero.`,
+                error: `No se puede eliminar una cotización aprobada con ${nominasActivas.length} nómina(s) activa(s). Considera archivarla en su lugar.`,
                 dependencias: {
                     nominasActivas: nominasActivas.length,
-                    agendas: agendasCount,
-                    pagos: pagosCount
+                    status: cotizacion.status,
+                    sugerencia: 'archivar'
                 }
             };
         }
 
         // 4. Mostrar advertencias informativas (no bloquean eliminación)
+        if (nominasActivas.length > 0) {
+            console.log(`💼 Info: ${nominasActivas.length} nómina(s) activa(s) serán preservadas como registros independientes:`);
+            nominasActivas.forEach((nomina, index) => {
+                console.log(`   ${index + 1}. ${nomina.concepto} (${nomina.status}) - ${nomina.responsable}`);
+            });
+        }
+
         if (agendasCount > 0) {
             console.log(`⚠️  Advertencia: ${agendasCount} agenda(s) en el evento (no se eliminarán)`);
         }
@@ -350,7 +444,7 @@ export async function eliminarCotizacion(cotizacionId: string) {
         }
 
         // Eliminar la cotización (esto eliminará automáticamente por cascada):
-        // - CotizacionServicio (y sus NominaServicio asociados)
+        // - CotizacionServicio (las nóminas asociadas se preservan como registros huérfanos)
         // - CotizacionVisita  
         // - CotizacionCosto
         console.log('🗑️  Eliminando cotización principal...');
@@ -364,10 +458,10 @@ export async function eliminarCotizacion(cotizacionId: string) {
             eliminados: {
                 servicios: serviciosCount,
                 visitas: visitasCount,
-                costos: costosCount,
-                nominas: nominasCount // Se eliminaron por cascada
+                costos: costosCount
             },
             preservados: {
+                nominas: nominasCount, // Se preservan como registros independientes
                 pagos: pagosCount, // Desvinculados pero preservados
                 agendas: agendasCount // Permanecen en el evento
             }
@@ -426,6 +520,7 @@ export async function cotizacionDetalle(id: string) {
             condicionesComercialesId: true,
             condicionesComercialesMetodoPagoId: true,
             status: true,
+            archivada: true,
             expiresAt: true,
         }
     });

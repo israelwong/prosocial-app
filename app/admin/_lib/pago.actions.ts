@@ -152,31 +152,36 @@ export async function obtenerDetallesPago(pagoId: string) {
         }
     });
 
-    const pagosCotizacion = await prisma.pago.findMany({
+    if (!pago) {
+        throw new Error(`Pago con ID ${pagoId} no encontrado`);
+    }
+
+    const pagosCotizacion = pago.cotizacionId ? await prisma.pago.findMany({
         where: {
-            cotizacionId: pago?.cotizacionId ?? undefined,
+            cotizacionId: pago.cotizacionId,
             status: 'paid'
         }
-    });
+    }) : [];
 
     const cliente = await prisma.cliente.findUnique({
         where: {
-            id: pago?.clienteId ?? undefined
+            id: pago.clienteId ?? undefined
         }
     });
 
-    const cotizacion = await prisma.cotizacion.findUnique({
+    // Solo buscar cotización si cotizacionId no es null
+    const cotizacion = pago.cotizacionId ? await prisma.cotizacion.findUnique({
         where: {
-            id: pago?.cotizacionId ?? undefined
+            id: pago.cotizacionId
         }
-    });
+    }) : null;
 
-    const evento = await prisma.evento.findUnique({
+    // Solo buscar evento si hay cotización
+    const evento = cotizacion ? await prisma.evento.findUnique({
         where: {
-            id: cotizacion?.eventoId ?? undefined
+            id: cotizacion.eventoId ?? undefined
         }
-    });
-
+    }) : null;
 
     const detallesPago = { pago, pagosCotizacion, cotizacion, evento, cliente };
     return detallesPago;
@@ -295,10 +300,17 @@ export async function validarPagoStripe(pagoId: string) {
         if (pago?.status === 'paid' && evento?.eventoEtapaId == 'cm6498zw00001gu1a67s88y5h') {
 
             // console.log('pago nuevo cliente');
+
+            // Solo proceder si tenemos evento y cotización válidos
+            if (!evento || !cotizacion) {
+                console.log('Pago procesado pero sin cotización/evento asociado (posiblemente eliminado)');
+                return { success: true, message: 'Pago procesado sin actualizaciones adicionales' };
+            }
+
             try {
                 // console.log('Actualizando evento:', evento?.id);
                 await prisma.evento.update({
-                    where: { id: evento?.id },
+                    where: { id: evento.id },
                     data: { eventoEtapaId: 'cm6499aqs0002gu1ae4k1a7ls' }
                 });
                 // console.log('Evento actualizado:', evento?.id);
@@ -308,10 +320,12 @@ export async function validarPagoStripe(pagoId: string) {
 
             try {
                 // console.log('Actualizando cliente:', cliente?.id);
-                await prisma.cliente.update({
-                    where: { id: cliente?.id },
-                    data: { status: 'cliente' }
-                });
+                if (cliente?.id) {
+                    await prisma.cliente.update({
+                        where: { id: cliente.id },
+                        data: { status: 'cliente' }
+                    });
+                }
                 // console.log('Cliente actualizado:', cliente?.id);
             } catch (error) {
                 console.error('Error actualizando cliente:', error);
@@ -320,7 +334,7 @@ export async function validarPagoStripe(pagoId: string) {
             try {
                 // console.log('Actualizando cotización:', cotizacion?.id);
                 await prisma.cotizacion.update({
-                    where: { id: cotizacion?.id },
+                    where: { id: cotizacion.id },
                     data: { status: 'aprobada' }
                 });
                 // console.log('Cotización actualizada:', cotizacion?.id);
@@ -330,13 +344,13 @@ export async function validarPagoStripe(pagoId: string) {
             try {
                 // console.log('Creando agenda para el evento:', evento?.id);
                 const agenda = {
-                    concepto: evento?.nombre,
+                    concepto: evento.nombre,
                     descripcion: '',
                     googleMapsUrl: '',
                     direccion: '',
-                    fecha: evento?.fecha_evento,
+                    fecha: evento.fecha_evento,
                     hora: '',
-                    eventoId: evento?.id ?? '',
+                    eventoId: evento.id ?? '',
                     userId: evento.userId,
                     agendaTipo: 'evento',
                 }

@@ -167,6 +167,7 @@ model Cotizacion {
   condicionesComercialesMetodoPagoId String?
   CondicionesComercialesMetodoPago   CondicionesComercialesMetodoPago[]
   status                             String                             @default("pending") //pendiente, aprobado, rechazado
+  archivada                          Boolean                            @default(false)
   visible_cliente                    Boolean?                           @default(true)
   createdAt                          DateTime                           @default(now())
   updatedAt                          DateTime                           @updatedAt
@@ -584,8 +585,8 @@ model NominaServicio {
   id                    String                @id @default(cuid())
   nominaId              String
   Nomina                Nomina                @relation(fields: [nominaId], references: [id], onDelete: Cascade)
-  cotizacionServicioId  String
-  CotizacionServicio    CotizacionServicio    @relation(fields: [cotizacionServicioId], references: [id], onDelete: Cascade)
+  cotizacionServicioId  String?
+  CotizacionServicio    CotizacionServicio?   @relation(fields: [cotizacionServicioId], references: [id], onDelete: SetNull)
   
   // === SNAPSHOT DEL SERVICIO AL MOMENTO DEL PAGO ===
   servicio_nombre       String                // Snapshot del nombre

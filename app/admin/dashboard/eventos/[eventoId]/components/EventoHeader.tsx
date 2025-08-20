@@ -147,7 +147,7 @@ export default function EventoHeader({
                         <span className={`px-2 py-1 rounded-md text-xs border ${getStatusColor(eventoData.nombreEtapa)}`}>
                             {eventoData.nombreEtapa}
                         </span>
-
+                        {/* 
                         {eventoData.fechaEvento && (
                             <div className="flex items-center gap-1 text-sm font-medium text-zinc-200">
                                 <Clock className="h-4 w-4" />
@@ -160,7 +160,7 @@ export default function EventoHeader({
                                     })}
                                 </span>
                             </div>
-                        )}
+                        )} */}
 
                         {/* Etiqueta de disponibilidad */}
                         {renderEtiquetaDisponibilidad()}
@@ -198,7 +198,8 @@ export default function EventoHeader({
                             onClick={onCerrar}
                             className="bg-zinc-700 hover:bg-zinc-600 text-zinc-200 border-zinc-600 h-8 px-2"
                         >
-                            <X className="h-4 w-4" />
+                            <X className="h-4 w-4 mr-1" />
+                            Cerrar
                         </Button>
                     </div>
                 </div>

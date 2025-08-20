@@ -23,6 +23,8 @@ interface ModalConfirmacionEliminacionProps {
     bloqueos?: string[]
     isLoading?: boolean
     loadingText?: string
+    onArchivar?: () => void
+    mostrarBotonArchivar?: boolean
 }
 
 export default function ModalConfirmacionEliminacion({
@@ -35,7 +37,9 @@ export default function ModalConfirmacionEliminacion({
     advertencias = [],
     bloqueos = [],
     isLoading = false,
-    loadingText = 'Procesando...'
+    loadingText = 'Procesando...',
+    onArchivar,
+    mostrarBotonArchivar = false
 }: ModalConfirmacionEliminacionProps) {
 
     if (!isOpen) return null
@@ -201,14 +205,32 @@ export default function ModalConfirmacionEliminacion({
                     >
                         Cancelar
                     </button>
+
+                    {/* Botón de Archivar - solo se muestra cuando hay bloqueos y está disponible */}
+                    {hayBloqueos && mostrarBotonArchivar && onArchivar && (
+                        <button
+                            onClick={onArchivar}
+                            disabled={isLoading}
+                            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-medium transition-colors disabled:opacity-50"
+                        >
+                            {isLoading ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    Archivando...
+                                </div>
+                            ) : (
+                                'Archivar Cotización'
+                            )}
+                        </button>
+                    )}
+
                     <button
                         onClick={onConfirm}
                         disabled={isLoading || hayBloqueos}
-                        className={`px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                            hayBloqueos 
-                                ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                                : 'bg-red-600 hover:bg-red-700 text-white'
-                        }`}
+                        className={`px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${hayBloqueos
+                            ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                            : 'bg-red-600 hover:bg-red-700 text-white'
+                            }`}
                     >
                         {isLoading ? (
                             <div className="flex items-center gap-2">
