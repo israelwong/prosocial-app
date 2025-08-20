@@ -84,7 +84,6 @@ export default function CotizacionCard({ cotizacion, eventoId, index, isRecommen
 
                 {/* Precio destacado */}
                 <div className="flex items-baseline gap-2">
-                    <DollarSign className={`w-5 h-5 ${colors.accent}`} />
                     <span className={`text-2xl sm:text-3xl font-bold ${colors.accent}`}>
                         {formatearPrecio(cotizacion.precio)}
                     </span>
