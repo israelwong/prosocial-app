@@ -52,10 +52,18 @@ model Cliente {
   canalId   String?
   Canal     Canal?   @relation(fields: [canalId], references: [id])
   userId    String?
+  
+  // Campos para autenticación cliente
+  passwordHash    String?   // null hasta onboarding
+  emailVerified   Boolean   @default(false)
+  isActive        Boolean   @default(true)
+  lastLogin       DateTime?
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Evento    Evento[]
   Pago      Pago[]
+  Suscripcion Suscripcion?
 }
 
 model Evento {
@@ -594,9 +602,28 @@ model NominaServicio {
   categoria_nombre      String?               // Snapshot de la categoría
   costo_asignado        Float                 // Costo específico para este pago
   cantidad_asignada     Int                   @default(1)
-  
+
   createdAt             DateTime              @default(now())
   
   @@unique([nominaId, cotizacionServicioId]) // Un servicio solo puede estar en una nómina
+}
+
+// === NUEVOS MODELOS PARA PORTAL CLIENTE ===
+
+// Suscripciones (para funcionalidad futura)
+model Suscripcion {
+  id                String   @id @default(cuid())
+  clienteId         String   @unique  // 1 cliente = 1 suscripción global
+  tipo              String   @default("evento") // 'evento', 'mensual', 'anual'
+  status            String   @default("activa") // 'activa', 'inactiva', 'vencida'
+  fechaInicio       DateTime @default(now())
+  fechaVencimiento  DateTime?
+  precio            Float?
+  descripcion       String?
+  
+  // Relaciones
+  cliente           Cliente  @relation(fields: [clienteId], references: [id])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
