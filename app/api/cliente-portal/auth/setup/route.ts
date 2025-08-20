@@ -42,11 +42,11 @@ export async function POST(request: NextRequest) {
             )
         }
 
-                // Hash de la contraseña
+        // Hash de la contraseña
         const saltRounds = 10;
         const passwordHash = await bcrypt.hash(password, saltRounds);
 
-                // Actualizar el cliente con la contraseña hasheada
+        // Actualizar el cliente con la contraseña hasheada
         const clienteActualizado = await prisma.cliente.update({
             where: {
                 id: clienteId

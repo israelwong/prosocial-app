@@ -37,7 +37,7 @@ export default function ClientePortalLoginPage() {
                 <div className="mt-6 text-center">
                     <p className="text-zinc-500 text-sm">
                         ¿Problemas para acceder?{' '}
-                        <a 
+                        <a
                             href="https://wa.me/5544546582?text=Hola, necesito ayuda para acceder a mi portal de cliente"
                             target="_blank"
                             rel="noopener noreferrer"

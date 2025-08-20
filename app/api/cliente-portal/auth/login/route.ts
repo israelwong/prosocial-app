@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
                 email: cliente.email,
                 telefono: cliente.telefono
             },
-            message: hasPassword 
-                ? 'Cliente verificado, proceder con login' 
+            message: hasPassword
+                ? 'Cliente verificado, proceder con login'
                 : 'Cliente verificado, requiere configuración inicial'
         })
 

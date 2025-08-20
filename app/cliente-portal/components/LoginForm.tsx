@@ -69,15 +69,18 @@ export default function LoginForm() {
             }
 
             const data = await response.json()
+            console.log('🔐 Login response:', data) // Debug log
 
             // Si el cliente no tiene contraseña, redirigir a onboarding
             if (!data.hasPassword) {
+                console.log('👤 Cliente sin contraseña, redirigiendo a setup') // Debug log
                 sessionStorage.setItem('cliente-setup', JSON.stringify(data.cliente))
                 router.push('/cliente-portal/auth/setup')
                 return
             }
 
             // Si ya tiene contraseña, ir al dashboard
+            console.log('✅ Cliente con contraseña, redirigiendo a dashboard') // Debug log
             sessionStorage.setItem('cliente-data', JSON.stringify(data.cliente))
             router.push('/cliente-portal/dashboard')
 

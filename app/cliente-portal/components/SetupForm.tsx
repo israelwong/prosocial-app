@@ -10,20 +10,32 @@ export default function SetupForm() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [clienteId, setClienteId] = useState<string | null>(null)
-    
+    const [clienteNombre, setClienteNombre] = useState('')
+
     const router = useRouter()
-    const searchParams = useSearchParams()
 
     useEffect(() => {
-        if (searchParams) {
-            const id = searchParams.get('clienteId')
-            if (!id) {
-                router.push('/cliente-portal/auth/login')
-            } else {
-                setClienteId(id)
-            }
+        console.log('🔧 SetupForm: Iniciando...') // Debug log
+        // Obtener datos del cliente desde sessionStorage
+        const clienteSetupData = sessionStorage.getItem('cliente-setup')
+        console.log('📦 Setup data from sessionStorage:', clienteSetupData) // Debug log
+
+        if (!clienteSetupData) {
+            console.log('❌ No hay datos de setup, redirigiendo a login') // Debug log
+            router.push('/cliente-portal/auth/login')
+            return
         }
-    }, [searchParams, router])
+
+        try {
+            const cliente = JSON.parse(clienteSetupData)
+            console.log('👤 Cliente parseado:', cliente) // Debug log
+            setClienteId(cliente.id)
+            setClienteNombre(cliente.nombre)
+        } catch (error) {
+            console.error('❌ Error al parsear datos del cliente:', error)
+            router.push('/cliente-portal/auth/login')
+        }
+    }, [router])
 
     const validatePassword = (password: string) => {
         if (password.length < 8) {
@@ -94,7 +106,7 @@ export default function SetupForm() {
             }
 
             const data = await response.json()
-            
+
             // Guardar datos del cliente y redirigir al dashboard
             sessionStorage.setItem('cliente-data', JSON.stringify(data.cliente))
             sessionStorage.removeItem('cliente-setup') // Limpiar datos de setup

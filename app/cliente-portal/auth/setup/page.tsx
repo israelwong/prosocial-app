@@ -44,7 +44,7 @@ export default function ClienteSetupPage() {
                         <div>
                             <p className="text-blue-400 text-sm font-medium">Seguridad</p>
                             <p className="text-blue-300/80 text-xs mt-1">
-                                Tu contraseña se almacena de forma segura y encriptada. 
+                                Tu contraseña se almacena de forma segura y encriptada.
                                 Solo tú podrás acceder a la información de tu evento.
                             </p>
                         </div>
