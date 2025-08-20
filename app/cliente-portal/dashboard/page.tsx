@@ -107,9 +107,9 @@ export default function ClienteDashboard() {
     }
   }
 
-    const getSaldoPendiente = (total: number, pagado: number) => {
-        return total - pagado
-    }
+  const getSaldoPendiente = (total: number, pagado: number) => {
+    return total - pagado
+  }
 
   if (loading) {
     return (
