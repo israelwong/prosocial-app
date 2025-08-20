@@ -145,7 +145,7 @@ export default function EventoDetalle() {
                         <p className="text-zinc-400 mb-4">
                             No se pudo cargar la información del evento.
                         </p>
-                        <Button 
+                        <Button
                             onClick={() => router.push('/cliente-portal/dashboard')}
                             className="bg-blue-600 hover:bg-blue-700"
                         >
@@ -198,31 +198,31 @@ export default function EventoDetalle() {
                                         <CalendarDays className="h-4 w-4 mr-3 text-zinc-500" />
                                         <div>
                                             <p className="font-medium text-zinc-300">Fecha</p>
-                            <p className="text-zinc-400">{formatFecha(evento.fecha_evento)}</p>
-                        </div>
-                    </div>
+                                            <p className="text-zinc-400">{formatFecha(evento.fecha_evento)}</p>
+                                        </div>
+                                    </div>
 
-                    <div className="flex items-center text-sm">
-                        <Clock className="h-4 w-4 mr-3 text-zinc-500" />
-                        <div>
-                            <p className="font-medium text-zinc-300">Hora</p>
-                            <p className="text-zinc-400">{evento.hora_evento}</p>
-                        </div>
-                    </div>
+                                    <div className="flex items-center text-sm">
+                                        <Clock className="h-4 w-4 mr-3 text-zinc-500" />
+                                        <div>
+                                            <p className="font-medium text-zinc-300">Hora</p>
+                                            <p className="text-zinc-400">{evento.hora_evento}</p>
+                                        </div>
+                                    </div>
 
-                    <div className="flex items-center text-sm">
-                        <Users className="h-4 w-4 mr-3 text-zinc-500" />
-                        <div>
-                            <p className="font-medium text-zinc-300">Invitados</p>
-                            <p className="text-zinc-400">{evento.numero_invitados} personas</p>
-                        </div>
-                    </div>
+                                    <div className="flex items-center text-sm">
+                                        <Users className="h-4 w-4 mr-3 text-zinc-500" />
+                                        <div>
+                                            <p className="font-medium text-zinc-300">Invitados</p>
+                                            <p className="text-zinc-400">{evento.numero_invitados} personas</p>
+                                        </div>
+                                    </div>
 
-                    <div className="flex items-center text-sm">
-                        <MapPin className="h-4 w-4 mr-3 text-zinc-500" />
-                        <div>
-                            <p className="font-medium text-zinc-300">Lugar</p>
-                            <p className="text-zinc-400">{evento.lugar}</p>
+                                    <div className="flex items-center text-sm">
+                                        <MapPin className="h-4 w-4 mr-3 text-zinc-500" />
+                                        <div>
+                                            <p className="font-medium text-zinc-300">Lugar</p>
+                                            <p className="text-zinc-400">{evento.lugar}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -293,8 +293,8 @@ export default function EventoDetalle() {
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">Saldo pendiente:</span>
                                             <span className={`font-semibold ${getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) > 0
-                                                    ? 'text-amber-600'
-                                                    : 'text-green-600'
+                                                ? 'text-amber-600'
+                                                : 'text-green-600'
                                                 }`}>
                                                 {formatMoney(getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado))}
                                             </span>
