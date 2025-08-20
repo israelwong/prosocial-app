@@ -203,6 +203,9 @@ export default function CotizacionForm({
             nombre: modo === 'editar' && cotizacionExistente
                 ? cotizacionExistente.nombre
                 : paqueteBase ? `Paquete ${paqueteBase.nombre}` : 'Nueva Cotización',
+            descripcion: modo === 'editar' && cotizacionExistente
+                ? cotizacionExistente.descripcion || ''
+                : '',
             eventoTipoId: eventoTipoIdFinal,
             servicios: serviciosParaFormulario,
             costos: costosParaFormulario
@@ -762,6 +765,7 @@ export default function CotizacionForm({
                 const payloadEdicion = {
                     id: cotizacionExistente.id,
                     nombre: data.nombre,
+                    descripcion: data.descripcion,
                     precio: precioFinal,
                     condicionesComercialesId: data.condicionesComercialesId || undefined,
                     status: cotizacionExistente.status || 'pendiente',

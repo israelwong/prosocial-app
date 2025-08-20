@@ -236,7 +236,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                             {cotizacion.nombre} - {cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
                         </button>
                         <div className="text-sm text-zinc-400 truncate max-w-full">
-                            {cotizacion.servicios?.length ? `${cotizacion.servicios.length} servicios incluidos` : 'Sin descripción'}
+                            {cotizacion.descripcion || (cotizacion.servicios?.length ? `${cotizacion.servicios.length} servicios incluidos` : 'Sin descripción')}
                         </div>
                     </div>
                 </div>

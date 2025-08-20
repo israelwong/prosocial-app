@@ -241,6 +241,7 @@ export interface Cotizacion {
     eventoId: string
     nombre: string
     precio: number
+    descripcion?: string | null
     condicionesComercialesId?: string | null
     condicionesComercialesMetodoPagoId?: string | null
     status?: string
