@@ -13,6 +13,13 @@ import {
     obtenerEtapasEvento
 } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.actions'
 import {
+    eliminarEvento,
+    archivarEvento,
+    desarchivarEvento
+} from '@/app/admin/_lib/actions/evento/evento/evento.actions'
+import ModalConfirmacionEliminacion from '@/app/components/ui/ModalConfirmacionEliminacion'
+import { useModalEliminacionEvento } from '@/app/hooks/useModalEliminacionEvento'
+import {
     Calendar,
     MapPin,
     Users,
@@ -20,7 +27,11 @@ import {
     Edit3,
     Check,
     X,
-    Clock
+    Clock,
+    MoreVertical,
+    Trash2,
+    Archive,
+    ArchiveRestore
 } from 'lucide-react'
 
 interface Props {
@@ -29,13 +40,18 @@ interface Props {
 }
 
 export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEvento }: Props) {
+    const evento = eventoCompleto
+
     const [loading, setLoading] = useState(true)
     const [isEditing, setIsEditing] = useState(false)
     const [saving, setSaving] = useState(false)
     const [etapas, setEtapas] = useState<EventoEtapa[]>([])
+    const [menuAbierto, setMenuAbierto] = useState(false)
+    const [archivado, setArchivado] = useState<boolean>(evento.status === 'archived')
     const router = useRouter()
 
-    const evento = eventoCompleto
+    // Hook para modal de eliminación
+    const modalEliminacion = useModalEliminacionEvento()
 
     // Helper para convertir fecha a formato input (YYYY-MM-DD)
     const fechaParaInput = (fecha: Date | string | null): string => {
@@ -120,6 +136,81 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
         }
     }
 
+    // Cerrar menú al hacer clic fuera
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element
+            if (!target.closest('.menu-container')) {
+                setMenuAbierto(false)
+            }
+        }
+
+        if (menuAbierto) {
+            document.addEventListener('mousedown', handleClickOutside)
+            return () => document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [menuAbierto])
+
+    //! Eliminar evento usando el modal
+    const handleEliminarEvento = async (eventoId: string) => {
+        try {
+            await modalEliminacion.abrirModal(eventoId, evento.nombre || 'Evento sin nombre')
+        } catch (error) {
+            toast.error('Error verificando dependencias del evento')
+        }
+    }
+
+    const confirmarEliminacion = async () => {
+        await modalEliminacion.ejecutarEliminacion(
+            () => eliminarEvento(evento.id),
+            (resultado) => {
+                toast.success(resultado.message || 'Evento eliminado exitosamente')
+                router.push('/admin/dashboard/eventos')
+            },
+            (error) => {
+                toast.error(typeof error === 'string' ? error : 'Error inesperado al eliminar el evento')
+            }
+        )
+    }
+
+    //! Archivar evento
+    const handleArchivarEvento = async () => {
+        if (!evento.id) return
+
+        try {
+            const resultado = await archivarEvento(evento.id)
+            if (resultado.success) {
+                setArchivado(true)
+                toast.success('Evento archivado exitosamente')
+            } else {
+                toast.error(resultado.message || 'Error al archivar evento')
+            }
+        } catch (error) {
+            console.error('Error archivando evento:', error)
+            toast.error('Error al archivar evento')
+        }
+        setMenuAbierto(false)
+    }
+
+    //! Desarchivar evento
+    const handleDesarchivarEvento = async () => {
+        if (!evento.id) return
+
+        try {
+            const resultado = await desarchivarEvento(evento.id)
+            if (resultado.success) {
+                setArchivado(false)
+                toast.success('Evento desarchivado exitosamente')
+            } else {
+                toast.error(resultado.message || 'Error al desarchivar evento')
+            }
+        } catch (error) {
+            console.error('Error desarchivando evento:', error)
+            toast.error('Error al desarchivar evento')
+        }
+        setMenuAbierto(false)
+    }
+
     const eventoAsignado = !!evento.userId
 
     if (loading) {
@@ -133,18 +224,85 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
     }
 
     return (
-        <div className="space-y-4">
-            {/* Cabecera con título y botón de edición */}
+        <div className={`space-y-4 ${archivado ? 'bg-amber-900/30 border-2 border-amber-600/60 rounded-lg p-4' : ''}`}>
+            {/* Indicador de archivado */}
+            {archivado && (
+                <div className="bg-amber-900/50 border border-amber-500 p-3 rounded-lg">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-amber-200 text-sm font-medium">
+                            <Archive className="w-4 h-4" />
+                            Evento Archivado
+                        </div>
+                        <button
+                            onClick={handleDesarchivarEvento}
+                            className="text-amber-200 hover:text-amber-100 text-xs px-2 py-1 bg-amber-800/60 hover:bg-amber-800/80 rounded transition-colors flex items-center gap-1"
+                        >
+                            <ArchiveRestore className="w-3 h-3" />
+                            Desarchivar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Cabecera con título y botones */}
             <div className="flex items-center justify-between border-b border-zinc-700 pb-2">
                 <h3 className="text-lg font-semibold text-zinc-200">Información del Evento</h3>
                 {!isEditing && (
-                    <button
-                        onClick={() => setIsEditing(true)}
-                        className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors"
-                        title="Editar información"
-                    >
-                        <Edit3 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsEditing(true)}
+                            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors"
+                            title="Editar información"
+                        >
+                            <Edit3 className="w-4 h-4" />
+                        </button>
+
+                        {/* Menú contextual */}
+                        <div className="relative menu-container">
+                            <button
+                                onClick={() => setMenuAbierto(!menuAbierto)}
+                                className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors"
+                                title="Opciones"
+                            >
+                                <MoreVertical className="w-4 h-4" />
+                            </button>
+
+                            {menuAbierto && (
+                                <div className="absolute right-0 top-8 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg py-1 z-10 min-w-48">
+
+                                    {/* Archivar/Desarchivar */}
+                                    <button
+                                        onClick={archivado ? handleDesarchivarEvento : handleArchivarEvento}
+                                        className="w-full px-3 py-2 text-left text-amber-400 hover:bg-zinc-700 flex items-center gap-2 text-sm"
+                                    >
+                                        {archivado ? (
+                                            <>
+                                                <ArchiveRestore className="w-4 h-4" />
+                                                Desarchivar evento
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Archive className="w-4 h-4" />
+                                                Archivar evento
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <div className="border-t border-zinc-700 my-1"></div>
+
+                                    {/* Eliminar */}
+                                    <button
+                                        onClick={() => evento.id && handleEliminarEvento(evento.id)}
+                                        disabled={modalEliminacion.isLoading}
+                                        className="w-full px-3 py-2 text-left text-red-400 hover:bg-zinc-700 flex items-center gap-2 text-sm disabled:opacity-50"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        {modalEliminacion.isLoading ? 'Verificando...' : 'Eliminar evento'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 )}
                 {isEditing && (
                     <div className="flex gap-1">
@@ -169,7 +327,7 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
             </div>
 
             {/* Contenido */}
-            <div className="space-y-4">
+            <div className={`space-y-4 ${archivado ? 'opacity-30' : ''}`}>
                 {/* Tipo de evento */}
                 <div className="space-y-2">
                     <label className="text-sm text-zinc-400 flex items-center gap-2">
@@ -263,6 +421,24 @@ export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEve
                     </p>
                 </div>
             </div>
+
+            {/* Modal de confirmación de eliminación */}
+            {modalEliminacion.datos && (
+                <ModalConfirmacionEliminacion
+                    isOpen={modalEliminacion.isOpen}
+                    onClose={modalEliminacion.cerrarModal}
+                    onConfirm={confirmarEliminacion}
+                    titulo="Eliminar Evento"
+                    entidad={modalEliminacion.datos.entidad}
+                    dependencias={modalEliminacion.datos.dependencias}
+                    advertencias={modalEliminacion.datos.advertencias}
+                    bloqueos={modalEliminacion.datos.bloqueos}
+                    isLoading={modalEliminacion.isLoading}
+                    loadingText="Eliminando evento..."
+                    onArchivar={handleArchivarEvento}
+                    mostrarBotonArchivar={!archivado}
+                />
+            )}
         </div>
     )
 }

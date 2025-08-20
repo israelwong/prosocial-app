@@ -257,3 +257,193 @@ export async function obtenerStatusEvento(eventoId: string) {
 
     return evento?.status
 }
+
+/**
+ * Verifica las dependencias de un evento antes de eliminar
+ */
+export async function verificarDependenciasEvento(eventoId: string) {
+    const evento = await prisma.evento.findUnique({
+        where: { id: eventoId },
+        include: {
+            Cotizacion: {
+                select: {
+                    id: true,
+                    nombre: true,
+                    status: true
+                }
+            },
+            Agenda: {
+                select: {
+                    id: true,
+                    fecha: true,
+                    concepto: true
+                }
+            },
+            Nomina: {
+                select: {
+                    id: true,
+                    concepto: true
+                }
+            },
+            EventoBitacora: {
+                select: {
+                    id: true
+                }
+            }
+        }
+    })
+
+    if (!evento) {
+        return {
+            success: false,
+            message: 'Evento no encontrado'
+        }
+    }
+
+    const dependencias: string[] = []
+    const advertencias: string[] = []
+    const bloqueos: string[] = []
+
+    // Verificar cotizaciones
+    if (evento.Cotizacion && evento.Cotizacion.length > 0) {
+        const cotizacionesAprobadas = evento.Cotizacion.filter(c => c.status === 'aprobada')
+
+        if (cotizacionesAprobadas.length > 0) {
+            bloqueos.push(`Tiene ${cotizacionesAprobadas.length} cotización(es) aprobada(s)`)
+        } else {
+            dependencias.push(`${evento.Cotizacion.length} cotización(es)`)
+        }
+    }
+
+    // Verificar agenda
+    if (evento.Agenda && evento.Agenda.length > 0) {
+        dependencias.push(`${evento.Agenda.length} entrada(s) de agenda`)
+    }
+
+    // Verificar nóminas (siempre bloquea)
+    if (evento.Nomina && evento.Nomina.length > 0) {
+        bloqueos.push(`Tiene ${evento.Nomina.length} nómina(s) asociada(s)`)
+    }
+
+    // Verificar bitácora
+    if (evento.EventoBitacora && evento.EventoBitacora.length > 0) {
+        dependencias.push(`${evento.EventoBitacora.length} entrada(s) de bitácora`)
+    }
+
+    return {
+        success: true,
+        dependencias,
+        advertencias,
+        bloqueos,
+        puedeEliminar: bloqueos.length === 0
+    }
+}
+
+/**
+ * Elimina un evento y sus dependencias (excepto nóminas)
+ */
+export async function eliminarEvento(eventoId: string) {
+    try {
+        // Verificar dependencias primero
+        const verificacion = await verificarDependenciasEvento(eventoId)
+
+        if (!verificacion.success) {
+            return {
+                success: false,
+                message: verificacion.message
+            }
+        }
+
+        if (!verificacion.puedeEliminar) {
+            return {
+                success: false,
+                message: 'No se puede eliminar el evento debido a dependencias críticas',
+                bloqueos: verificacion.bloqueos
+            }
+        }
+
+        // Eliminar en cascada (excepto nóminas que tienen SetNull)
+        await prisma.$transaction(async (tx) => {
+            // Eliminar bitácora
+            await tx.eventoBitacora.deleteMany({
+                where: { eventoId }
+            })
+
+            // Eliminar cotizaciones (solo las que no sean aprobadas)
+            await tx.cotizacion.deleteMany({
+                where: {
+                    eventoId,
+                    status: { not: 'aprobada' }
+                }
+            })
+
+            // Eliminar agenda
+            await tx.agenda.deleteMany({
+                where: { eventoId }
+            })
+
+            // Finalmente eliminar el evento
+            await tx.evento.delete({
+                where: { id: eventoId }
+            })
+        })
+
+        return {
+            success: true,
+            message: 'Evento eliminado exitosamente'
+        }
+
+    } catch (error) {
+        console.error('Error eliminando evento:', error)
+        return {
+            success: false,
+            message: 'Error inesperado al eliminar el evento'
+        }
+    }
+}
+
+/**
+ * Archiva un evento (cambia status a 'archived')
+ */
+export async function archivarEvento(eventoId: string) {
+    try {
+        await prisma.evento.update({
+            where: { id: eventoId },
+            data: { status: 'archived' }
+        })
+
+        return {
+            success: true,
+            message: 'Evento archivado exitosamente'
+        }
+    } catch (error) {
+        console.error('Error archivando evento:', error)
+        return {
+            success: false,
+            message: 'Error al archivar evento'
+        }
+    }
+}
+
+/**
+ * Desarchivar un evento (cambia status a 'active')
+ */
+export async function desarchivarEvento(eventoId: string) {
+    try {
+        await prisma.evento.update({
+            where: { id: eventoId },
+            data: { status: 'active' }
+        })
+
+        return {
+            success: true,
+            message: 'Evento desarchivado exitosamente'
+        }
+    } catch (error) {
+        console.error('Error desarchivando evento:', error)
+        return {
+            success: false,
+            message: 'Error al desarchivar evento'
+        }
+    }
+}
