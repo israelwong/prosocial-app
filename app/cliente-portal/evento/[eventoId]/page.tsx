@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
+import ServiciosPortalCliente from '../../components/ServiciosPortalCliente'
 import {
     CalendarDays,
     MapPin,
@@ -35,8 +36,13 @@ interface EventoDetalle {
             id: string
             nombre: string
             cantidad: number
-            precio_unitario: number
-            subtotal: number
+            precio_unitario?: number
+            subtotal?: number
+            seccion?: string
+            categoria?: string
+            seccionPosicion?: number
+            categoriaPosicion?: number
+            posicion?: number
         }>
     }
 }
@@ -228,9 +234,9 @@ export default function EventoDetalle() {
                                 </div>
 
                                 {evento.cotizacion.descripcion && (
-                                    <div className="mt-6 pt-6 border-t">
-                                        <h4 className="font-medium mb-2">Descripción</h4>
-                                        <p className="text-gray-600 text-sm leading-relaxed">
+                                    <div className="mt-6 pt-6 border-t border-zinc-800">
+                                        <h4 className="font-medium mb-2 text-zinc-300">Descripción</h4>
+                                        <p className="text-zinc-400 text-sm leading-relaxed">
                                             {evento.cotizacion.descripcion}
                                         </p>
                                     </div>
@@ -239,38 +245,17 @@ export default function EventoDetalle() {
                         </Card>
 
                         {/* Servicios Incluidos */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center">
-                                    <Package className="h-5 w-5 mr-2" />
-                                    Servicios Incluidos
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-3">
-                                    {evento.cotizacion.servicios.map((servicio) => (
-                                        <div key={servicio.id} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
-                                            <div className="flex-1">
-                                                <p className="font-medium text-gray-900">{servicio.nombre}</p>
-                                                <p className="text-sm text-gray-600">
-                                                    Cantidad: {servicio.cantidad} × {formatMoney(servicio.precio_unitario)}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="font-medium">{formatMoney(servicio.subtotal)}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <ServiciosPortalCliente
+                            servicios={evento.cotizacion.servicios}
+                            loading={loading}
+                        />
                     </div>
 
                     {/* Resumen de Pago */}
                     <div className="space-y-6">
-                        <Card>
+                        <Card className="bg-zinc-900 border-zinc-800">
                             <CardHeader>
-                                <CardTitle className="flex items-center">
+                                <CardTitle className="flex items-center text-zinc-100">
                                     <CreditCard className="h-5 w-5 mr-2" />
                                     Resumen de Pago
                                 </CardTitle>
@@ -278,23 +263,23 @@ export default function EventoDetalle() {
                             <CardContent className="space-y-4">
                                 <div className="space-y-3">
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Total:</span>
-                                        <span className="font-semibold">{formatMoney(evento.cotizacion.total)}</span>
+                                        <span className="text-zinc-400">Total:</span>
+                                        <span className="font-semibold text-zinc-100">{formatMoney(evento.cotizacion.total)}</span>
                                     </div>
 
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Pagado:</span>
-                                        <span className="font-semibold text-green-600">
+                                        <span className="text-zinc-400">Pagado:</span>
+                                        <span className="font-semibold text-green-400">
                                             {formatMoney(evento.cotizacion.pagado)}
                                         </span>
                                     </div>
 
-                                    <div className="border-t pt-3">
+                                    <div className="border-t border-zinc-800 pt-3">
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">Saldo pendiente:</span>
+                                            <span className="text-zinc-400">Saldo pendiente:</span>
                                             <span className={`font-semibold ${getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) > 0
-                                                ? 'text-amber-600'
-                                                : 'text-green-600'
+                                                ? 'text-yellow-400'
+                                                : 'text-green-400'
                                                 }`}>
                                                 {formatMoney(getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado))}
                                             </span>
@@ -305,7 +290,7 @@ export default function EventoDetalle() {
                                 {evento.cotizacion.status === 'aprobada' &&
                                     getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) > 0 && (
                                         <Button
-                                            className="w-full mt-6"
+                                            className="w-full mt-6 bg-blue-600 hover:bg-blue-700"
                                             onClick={() => router.push(`/cliente-portal/pago/${evento.cotizacion.id}`)}
                                         >
                                             <CreditCard className="h-4 w-4 mr-2" />
@@ -316,28 +301,28 @@ export default function EventoDetalle() {
                         </Card>
 
                         {/* Contacto */}
-                        <Card>
+                        <Card className="bg-zinc-900 border-zinc-800">
                             <CardHeader>
-                                <CardTitle>¿Necesitas ayuda?</CardTitle>
+                                <CardTitle className="text-zinc-100">¿Necesitas ayuda?</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3">
                                 <div className="flex items-center text-sm">
-                                    <Phone className="h-4 w-4 mr-3 text-gray-400" />
+                                    <Phone className="h-4 w-4 mr-3 text-zinc-500" />
                                     <div>
-                                        <p className="font-medium">Teléfono</p>
-                                        <p className="text-gray-600">+52 55 1234 5678</p>
+                                        <p className="font-medium text-zinc-300">Teléfono</p>
+                                        <p className="text-zinc-400">+52 55 1234 5678</p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-center text-sm">
-                                    <Mail className="h-4 w-4 mr-3 text-gray-400" />
+                                    <Mail className="h-4 w-4 mr-3 text-zinc-500" />
                                     <div>
-                                        <p className="font-medium">Email</p>
-                                        <p className="text-gray-600">contacto@prosocial.mx</p>
+                                        <p className="font-medium text-zinc-300">Email</p>
+                                        <p className="text-zinc-400">contacto@prosocial.mx</p>
                                     </div>
                                 </div>
 
-                                <Button variant="outline" className="w-full mt-4">
+                                <Button variant="outline" className="w-full mt-4 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100">
                                     Contactar Equipo
                                 </Button>
                             </CardContent>

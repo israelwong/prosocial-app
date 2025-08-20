@@ -99,7 +99,6 @@ export default function ServiciosAgrupados({ serviciosAgrupados, loading, esReal
                                                                         </div>
                                                                     </div>
 
-
                                                                 </div>
                                                             </div>
                                                         ))}
