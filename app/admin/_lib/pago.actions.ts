@@ -251,7 +251,7 @@ export async function ontenerDetallesPago(pagoId: string) {
             id: cotizacion.eventoId
         }
     }) : null;
-    
+
     // Solo buscar tipo de evento si evento y eventoTipoId existen
     const tipoEvento = (evento && evento.eventoTipoId) ? await prisma.eventoTipo.findUnique({
         where: {
