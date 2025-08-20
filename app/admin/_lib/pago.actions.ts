@@ -136,11 +136,12 @@ export async function obtenerPagoSesionStripe(stripe_session_id: string) {
         }
     });
 
-    const cliente = await prisma.cliente.findUnique({
+    // Solo buscar cliente si clienteId existe
+    const cliente = pago?.clienteId ? await prisma.cliente.findUnique({
         where: {
-            id: pago?.clienteId ?? undefined
+            id: pago.clienteId
         }
-    });
+    }) : null;
 
     return { pago, cliente };
 }
@@ -163,11 +164,12 @@ export async function obtenerDetallesPago(pagoId: string) {
         }
     }) : [];
 
-    const cliente = await prisma.cliente.findUnique({
+    // Solo buscar cliente si clienteId existe
+    const cliente = pago.clienteId ? await prisma.cliente.findUnique({
         where: {
-            id: pago.clienteId ?? undefined
+            id: pago.clienteId
         }
-    });
+    }) : null;
 
     // Solo buscar cotización si cotizacionId no es null
     const cotizacion = pago.cotizacionId ? await prisma.cotizacion.findUnique({
@@ -176,10 +178,10 @@ export async function obtenerDetallesPago(pagoId: string) {
         }
     }) : null;
 
-    // Solo buscar evento si hay cotización
-    const evento = cotizacion ? await prisma.evento.findUnique({
+    // Solo buscar evento si hay cotización y eventoId
+    const evento = (cotizacion && cotizacion.eventoId) ? await prisma.evento.findUnique({
         where: {
-            id: cotizacion.eventoId ?? undefined
+            id: cotizacion.eventoId
         }
     }) : null;
 
@@ -229,31 +231,36 @@ export async function ontenerDetallesPago(pagoId: string) {
         }
     });
 
-    const cliente = await prisma.cliente.findUnique({
+    // Solo buscar cliente si clienteId existe
+    const cliente = pago?.clienteId ? await prisma.cliente.findUnique({
         where: {
-            id: pago?.clienteId ?? undefined
+            id: pago.clienteId
         }
-    });
+    }) : null;
 
-    const cotizacion = await prisma.cotizacion.findUnique({
+    // Solo buscar cotización si cotizacionId existe
+    const cotizacion = pago?.cotizacionId ? await prisma.cotizacion.findUnique({
         where: {
-            id: pago?.cotizacionId ?? undefined
+            id: pago.cotizacionId
         }
-    });
+    }) : null;
 
-    const evento = await prisma.evento.findUnique({
+    // Solo buscar evento si cotización y eventoId existen
+    const evento = (cotizacion && cotizacion.eventoId) ? await prisma.evento.findUnique({
         where: {
-            id: cotizacion?.eventoId ?? undefined
+            id: cotizacion.eventoId
         }
-    });
-    const tipoEvento = await prisma.eventoTipo.findUnique({
+    }) : null;
+    
+    // Solo buscar tipo de evento si evento y eventoTipoId existen
+    const tipoEvento = (evento && evento.eventoTipoId) ? await prisma.eventoTipo.findUnique({
         where: {
-            id: evento?.eventoTipoId ?? undefined
+            id: evento.eventoTipoId
         },
         select: {
             nombre: true
         }
-    });
+    }) : null;
 
     const eventoConTipo = {
         ...evento,
