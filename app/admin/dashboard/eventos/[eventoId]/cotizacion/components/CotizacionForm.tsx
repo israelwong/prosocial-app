@@ -719,6 +719,7 @@ export default function CotizacionForm({
                 eventoId: evento.id,
                 eventoTipoId: eventoTipoIdFinal, // Usar el ID final validado
                 nombre: data.nombre,
+                descripcion: data.descripcion,
                 precio: precioFinal, // Usar precio final incluyendo costos
                 condicionesComercialesId: data.condicionesComercialesId || undefined,
                 servicios: serviciosCotizacion,
@@ -738,6 +739,7 @@ export default function CotizacionForm({
             console.log('- eventoId:', payload.eventoId);
             console.log('- eventoTipoId:', payload.eventoTipoId);
             console.log('- nombre:', payload.nombre);
+            console.log('- descripcion:', payload.descripcion);
             console.log('- precio:', payload.precio);
             console.log('- servicios cantidad:', payload.servicios.length);
             console.log('- costos cantidad:', payload.costos.length);
