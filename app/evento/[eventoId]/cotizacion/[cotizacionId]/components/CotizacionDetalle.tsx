@@ -202,12 +202,12 @@ export default function CotizacionDetalle({
     const cargarServiciosAgrupados = async () => {
         try {
             setLoading(true)
-            console.log('🔍 === INICIANDO DEBUG DE SERVICIOS ===')
-            console.log('1. Evento ID:', evento.id)
-            console.log('2. Cotización ID:', cotizacion.id)
+            // console.log('🔍 === INICIANDO DEBUG DE SERVICIOS ===')
+            // console.log('1. Evento ID:', evento.id)
+            // console.log('2. Cotización ID:', cotizacion.id)
 
             // Usar los servicios que ya vienen en la cotizacion
-            console.log('3. Usando servicios de cotización directamente...')
+            // console.log('3. Usando servicios de cotización directamente...')
 
             if (!cotizacion.Servicio || cotizacion.Servicio.length === 0) {
                 console.log('❌ No hay servicios en la cotización')
@@ -215,7 +215,7 @@ export default function CotizacionDetalle({
                 return
             }
 
-            console.log('✅ Servicios encontrados:', cotizacion.Servicio.length)
+            // console.log('✅ Servicios encontrados:', cotizacion.Servicio.length)
 
             // Mostrar cada servicio detalladamente
             cotizacion.Servicio.forEach((cotizacionServicio: any, index: number) => {

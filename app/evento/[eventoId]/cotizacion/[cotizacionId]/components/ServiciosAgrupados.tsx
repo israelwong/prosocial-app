@@ -86,7 +86,6 @@ export default function ServiciosAgrupados({ serviciosAgrupados, loading, esReal
                                                 <div className="space-y-2">
                                                     {/* 🔧 ORDENAMIENTO DESHABILITADO TEMPORALMENTE PARA DIAGNÓSTICO */}
                                                     {categoriaData.servicios
-                                                        // .sort((a, b) => (a.posicion || 0) - (b.posicion || 0))
                                                         .map((cotizacionServicio) => (
                                                             <div key={cotizacionServicio.id} className="bg-gradient-to-r from-zinc-900/50 to-zinc-800/50 rounded-lg p-3 border border-zinc-600/30 hover:border-zinc-500/50 transition-all duration-200">
                                                                 <div className="flex items-center justify-between gap-4">
@@ -100,17 +99,7 @@ export default function ServiciosAgrupados({ serviciosAgrupados, loading, esReal
                                                                         </div>
                                                                     </div>
 
-                                                                    {/* Subtotal del servicio - OCULTO temporalmente */}
-                                                                    {/* 
-                                                                    <div className="text-right">
-                                                                        <div className="text-green-400 font-semibold">
-                                                                            {cotizacionServicio.subtotal.toLocaleString('es-MX', {
-                                                                                style: 'currency',
-                                                                                currency: 'MXN'
-                                                                            })}
-                                                                        </div>
-                                                                    </div>
-                                                                    */}
+
                                                                 </div>
                                                             </div>
                                                         ))}
