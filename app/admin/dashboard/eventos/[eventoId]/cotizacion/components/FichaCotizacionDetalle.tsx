@@ -6,6 +6,8 @@ import { actualizarVisibilidadCotizacion } from '@/app/admin/_lib/cotizacion.act
 import { autorizarCotizacion } from '@/app/admin/_lib/autorizarCotizacion.actions'
 import BotonAutorizarCotizacion from './BotonAutorizarCotizacion'
 import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
+import ModalConfirmacionEliminacion from '@/app/components/ui/ModalConfirmacionEliminacion'
+import { useEliminacionCotizacion } from '@/app/hooks/useModalEliminacion'
 import { toast } from 'sonner'
 
 import { Pencil, Eye, Layers2, ArrowUpRight, Trash2, Archive, ArchiveRestore, Copy, Check, MoreVertical, CheckCircle, Calendar } from 'lucide-react'
@@ -19,12 +21,14 @@ interface Props {
 export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacion, eventoId }: Props) {
 
     const router = useRouter()
-    const [eliminando, setEliminando] = useState<string | null>(null)
     const [clonando, setClonando] = useState<string | null>(null)
     const [copiado, setCopiado] = useState<string | null>(null)
     const [visibleCliente, setVisibleCliente] = useState<boolean>(cotizacion?.visible_cliente ?? false)
     const [menuAbierto, setMenuAbierto] = useState(false)
     const [autorizando, setAutorizando] = useState(false)
+    
+    // Hook para modal de eliminación
+    const modalEliminacion = useEliminacionCotizacion()
 
     // Cerrar menú al hacer clic fuera
     useEffect(() => {
@@ -41,23 +45,54 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
         }
     }, [menuAbierto])
 
-    //! Eliminar cotización
+    //! Eliminar cotización usando el modal
     const handleEliminarCotizacion = async (cotizacionId: string) => {
-        if (confirm('¿Estás seguro de eliminar esta cotización?')) {
-            setEliminando(cotizacionId)
-            const res = await eliminarCotizacion(cotizacionId)
-            if (res) {
-                onEliminarCotizacion(cotizacionId)
-            }
-            setTimeout(() => { setEliminando(null) }, 2000);
-            if (res) {
-                onEliminarCotizacion(cotizacionId)
-            }
-            setMenuAbierto(false)
-        }
+        const datos = modalEliminacion.prepararDatosCotizacion(cotizacion)
+        modalEliminacion.abrirModal(datos)
+        setMenuAbierto(false)
     }
 
-    //! Clonar cotización
+    //! Confirmar eliminación desde el modal
+    const confirmarEliminacion = async () => {
+        if (!cotizacion.id) return
+        
+        await modalEliminacion.ejecutarEliminacion(
+            () => eliminarCotizacion(cotizacion.id!),
+            (resultado) => {
+                // Mensaje de éxito
+                const { eliminados, preservados } = resultado
+                let successMessage = 'Cotización eliminada exitosamente'
+                
+                if (eliminados) {
+                    const detalles = []
+                    if (eliminados.servicios > 0) detalles.push(`${eliminados.servicios} servicios`)
+                    if (eliminados.visitas > 0) detalles.push(`${eliminados.visitas} visitas`)
+                    if (eliminados.costos > 0) detalles.push(`${eliminados.costos} costos`)
+                    if (eliminados.nominas > 0) detalles.push(`${eliminados.nominas} nóminas`)
+                    
+                    if (detalles.length > 0) {
+                        successMessage += `\n\nEliminados: ${detalles.join(', ')}`
+                    }
+                }
+                
+                if (preservados && (preservados.pagos > 0 || preservados.agendas > 0)) {
+                    const preservadosDetalles = []
+                    if (preservados.pagos > 0) preservadosDetalles.push(`${preservados.pagos} pagos`)
+                    if (preservados.agendas > 0) preservadosDetalles.push(`${preservados.agendas} agendas`)
+                    
+                    if (preservadosDetalles.length > 0) {
+                        successMessage += `\nPreservados: ${preservadosDetalles.join(', ')}`
+                    }
+                }
+                
+                toast.success(successMessage)
+                onEliminarCotizacion(cotizacion.id!)
+            },
+            (error) => {
+                toast.error(typeof error === 'string' ? error : 'Error inesperado al eliminar la cotización')
+            }
+        )
+    }    //! Clonar cotización
     const handleClonarCotizacion = async (cotizacionId: string) => {
         if (confirm('¿Estás seguro de clonar esta cotización?')) {
             setClonando(cotizacionId)
@@ -270,11 +305,11 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                 {/* Eliminar */}
                                 <button
                                     onClick={() => cotizacion.id && handleEliminarCotizacion(cotizacion.id)}
-                                    disabled={eliminando === cotizacion.id}
+                                    disabled={modalEliminacion.isLoading}
                                     className="w-full px-3 py-2 text-left text-red-400 hover:bg-zinc-700 flex items-center gap-2 text-sm disabled:opacity-50"
                                 >
                                     <Trash2 className="w-4 h-4" />
-                                    {eliminando === cotizacion.id ? 'Eliminando...' : 'Eliminar'}
+                                    {modalEliminacion.isLoading ? 'Eliminando...' : 'Eliminar'}
                                 </button>
                             </div>
                         )}
@@ -320,6 +355,22 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                         </button>
                     </div>
                 </div>
+            )}
+            
+            {/* Modal de confirmación de eliminación */}
+            {modalEliminacion.datos && (
+                <ModalConfirmacionEliminacion
+                    isOpen={modalEliminacion.isOpen}
+                    onClose={modalEliminacion.cerrarModal}
+                    onConfirm={confirmarEliminacion}
+                    titulo="Eliminar Cotización"
+                    entidad={modalEliminacion.datos.entidad}
+                    dependencias={modalEliminacion.datos.dependencias}
+                    advertencias={modalEliminacion.datos.advertencias}
+                    bloqueos={modalEliminacion.datos.bloqueos}
+                    isLoading={modalEliminacion.isLoading}
+                    loadingText="Eliminando cotización..."
+                />
             )}
         </div>
     )

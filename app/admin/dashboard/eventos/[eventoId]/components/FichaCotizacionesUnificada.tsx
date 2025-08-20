@@ -200,8 +200,8 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                 <h3 className="text-lg font-semibold text-zinc-200">Cotizaciones</h3>
 
                 <div className="flex items-center gap-2">
-                    {/* Menú de acciones (solo si hay cotizaciones) */}
-                    {(cotizaciones.length > 0 || cotizacionesSimples.length > 0) && (
+                    {/* Menú de acciones (solo si hay múltiples cotizaciones) */}
+                    {((cotizaciones.length > 1 || cotizacionesSimples.length > 1)) && (
                         <div className="relative menu-container">
                             <button
                                 onClick={() => setMenuAbierto(!menuAbierto)}
@@ -213,33 +213,27 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
 
                             {menuAbierto && (
                                 <div className="absolute right-0 top-8 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg py-1 z-10 min-w-48">
-                                    {/* Opciones solo para múltiples cotizaciones */}
-                                    {(cotizaciones.length > 1 || cotizacionesSimples.length > 1) && (
-                                        <>
-                                            <button
-                                                onClick={handlePreview}
-                                                className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
-                                            >
-                                                <SquareArrowOutUpRight className="w-4 h-4" />
-                                                Preview
-                                            </button>
-                                            <button
-                                                onClick={handleCopiarLink}
-                                                className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
-                                            >
-                                                <Copy className="w-4 h-4" />
-                                                {copiado === 'Copiado' ? 'Copiado' : 'Copiar link'}
-                                            </button>
-                                            <button
-                                                onClick={handleCompartirWhatsApp}
-                                                className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
-                                            >
-                                                <WhatsAppIcon className="w-4 h-4" size={16} />
-                                                Compartir cotizaciones
-                                            </button>
-                                            <div className="border-t border-zinc-700 my-1"></div>
-                                        </>
-                                    )}
+                                    <button
+                                        onClick={handlePreview}
+                                        className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
+                                    >
+                                        <SquareArrowOutUpRight className="w-4 h-4" />
+                                        Preview
+                                    </button>
+                                    <button
+                                        onClick={handleCopiarLink}
+                                        className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
+                                    >
+                                        <Copy className="w-4 h-4" />
+                                        {copiado === 'Copiado' ? 'Copiado' : 'Copiar link'}
+                                    </button>
+                                    <button
+                                        onClick={handleCompartirWhatsApp}
+                                        className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
+                                    >
+                                        <WhatsAppIcon className="w-4 h-4" size={16} />
+                                        Compartir cotizaciones
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -306,10 +300,10 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                             <li
                                 key={cotizacion.id}
                                 className={`rounded-md p-4 ${cotizacion.status === 'aprobada'
-                                        ? 'bg-green-900/20 border border-green-700/50'
-                                        : cotizacion.status === 'autorizado'
-                                            ? 'bg-blue-900/20 border border-blue-700/50'
-                                            : 'bg-zinc-900 border border-zinc-800'
+                                    ? 'bg-green-900/20 border border-green-700/50'
+                                    : cotizacion.status === 'autorizado'
+                                        ? 'bg-blue-900/20 border border-blue-700/50'
+                                        : 'bg-zinc-900 border border-zinc-800'
                                     }`}
                             >
                                 <FichaCotizacionDetalle
@@ -326,10 +320,10 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                             <li
                                 key={cotizacion.id}
                                 className={`rounded-md p-4 ${cotizacion.status === 'aprobada'
-                                        ? 'bg-green-900/20 border border-green-700/50'
-                                        : cotizacion.status === 'autorizado'
-                                            ? 'bg-blue-900/20 border border-blue-700/50'
-                                            : 'bg-zinc-900 border border-zinc-800'
+                                    ? 'bg-green-900/20 border border-green-700/50'
+                                    : cotizacion.status === 'autorizado'
+                                        ? 'bg-blue-900/20 border border-blue-700/50'
+                                        : 'bg-zinc-900 border border-zinc-800'
                                     }`}
                             >
                                 <div className="flex items-center justify-between">

@@ -235,39 +235,147 @@ export async function actualizarCotizacionStatus(cotizacionId: string, status: s
 }
 
 export async function eliminarCotizacion(cotizacionId: string) {
-
     try {
-        console.log('Deleting cotizacionServicios for cotizacionId:', cotizacionId);
-        await prisma.cotizacionServicio.deleteMany({
-            where: {
-                cotizacionId
+        // 1. Verificar que la cotización existe y obtener todas las dependencias
+        const cotizacion = await prisma.cotizacion.findUnique({
+            where: { id: cotizacionId },
+            include: {
+                Servicio: {
+                    include: {
+                        NominaServicio: {
+                            include: {
+                                Nomina: {
+                                    select: {
+                                        id: true,
+                                        concepto: true,
+                                        status: true,
+                                        User: { select: { username: true } }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                CotizacionVisita: true,
+                Pago: true,
+                Costos: true,
+                Evento: {
+                    include: {
+                        Agenda: {
+                            select: {
+                                id: true,
+                                concepto: true,
+                                status: true,
+                                User: { select: { username: true } }
+                            }
+                        }
+                    }
+                }
             }
         });
 
-        console.log('Deleting cotizacionVisitas for cotizacionId:', cotizacionId);
-        await prisma.cotizacionVisita.deleteMany({
-            where: {
-                cotizacionId
-            }
+        if (!cotizacion) {
+            return { error: 'Cotización no encontrada' };
+        }
+
+        // 2. Verificar dependencias críticas
+        const serviciosCount = cotizacion.Servicio.length;
+        const visitasCount = cotizacion.CotizacionVisita.length;
+        const pagosCount = cotizacion.Pago.length;
+        const costosCount = cotizacion.Costos.length;
+        const agendasCount = cotizacion.Evento.Agenda.length;
+
+        // Contar nóminas asociadas
+        let nominasCount = 0;
+        const nominasActivas = [];
+        cotizacion.Servicio.forEach(servicio => {
+            servicio.NominaServicio.forEach(nominaServ => {
+                nominasCount++;
+                if (nominaServ.Nomina.status !== 'cancelado') {
+                    nominasActivas.push({
+                        id: nominaServ.Nomina.id,
+                        concepto: nominaServ.Nomina.concepto,
+                        status: nominaServ.Nomina.status,
+                        responsable: nominaServ.Nomina.User?.username
+                    });
+                }
+            });
         });
 
-        console.log('Deleting pagos for cotizacionId:', cotizacionId);
-        await prisma.pago.deleteMany({
-            where: {
-                cotizacionId
-            }
-        });
+        console.log(`🔍 Analizando dependencias para cotización ${cotizacionId}:`);
+        console.log(`- Cotización: "${cotizacion.nombre}" ($${cotizacion.precio.toLocaleString('es-MX')})`);
+        console.log(`- ${serviciosCount} servicios`);
+        console.log(`- ${visitasCount} visitas`);
+        console.log(`- ${pagosCount} pagos`);
+        console.log(`- ${costosCount} costos adicionales`);
+        console.log(`- ${agendasCount} agendas en el evento`);
+        console.log(`- ${nominasCount} nóminas asociadas (${nominasActivas.length} activas)`);
 
-        console.log('Deleting cotizacion with id:', cotizacionId);
+        // 3. Verificar si hay dependencias que impidan la eliminación
+        if (nominasActivas.length > 0) {
+            console.log('❌ Eliminación bloqueada por nóminas activas:');
+            nominasActivas.forEach((nomina, index) => {
+                console.log(`   ${index + 1}. ${nomina.concepto} (${nomina.status}) - ${nomina.responsable}`);
+            });
+
+            return {
+                error: `No se puede eliminar. Hay ${nominasActivas.length} nómina(s) activa(s) asociada(s). Cancela o transfiere las nóminas primero.`,
+                dependencias: {
+                    nominasActivas: nominasActivas.length,
+                    agendas: agendasCount,
+                    pagos: pagosCount
+                }
+            };
+        }
+
+        // 4. Mostrar advertencias informativas (no bloquean eliminación)
+        if (agendasCount > 0) {
+            console.log(`⚠️  Advertencia: ${agendasCount} agenda(s) en el evento (no se eliminarán)`);
+        }
+
+        if (pagosCount > 0) {
+            console.log(`💰 Info: ${pagosCount} pago(s) serán desvinculados (se preservan como registros)`);
+        }
+
+        // 5. Proceder con la eliminación
+        console.log('✅ Verificaciones pasadas. Procediendo con eliminación...');
+
+        // Actualizar pagos para desvincularlos (SetNull ya está configurado en esquema)
+        if (pagosCount > 0) {
+            console.log('🔄 Desvinculando pagos...');
+            await prisma.pago.updateMany({
+                where: { cotizacionId },
+                data: { cotizacionId: null }
+            });
+        }
+
+        // Eliminar la cotización (esto eliminará automáticamente por cascada):
+        // - CotizacionServicio (y sus NominaServicio asociados)
+        // - CotizacionVisita  
+        // - CotizacionCosto
+        console.log('🗑️  Eliminando cotización principal...');
         await prisma.cotizacion.delete({
-            where: {
-                id: cotizacionId
-            }
+            where: { id: cotizacionId }
         });
 
-        return { success: true }
-    } catch {
-        return { error: 'Error deleting cotizacion' }
+        console.log('✅ Cotización eliminada exitosamente');
+        return {
+            success: true,
+            eliminados: {
+                servicios: serviciosCount,
+                visitas: visitasCount,
+                costos: costosCount,
+                nominas: nominasCount // Se eliminaron por cascada
+            },
+            preservados: {
+                pagos: pagosCount, // Desvinculados pero preservados
+                agendas: agendasCount // Permanecen en el evento
+            }
+        };
+
+    } catch (error) {
+        console.error('❌ Error eliminando cotización:', error);
+        return { error: 'Error al eliminar la cotización. Verifique las dependencias en la consola.' };
     }
 }
 

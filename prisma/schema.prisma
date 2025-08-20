@@ -129,7 +129,7 @@ model Pago {
   clienteId                          String? //id del cliente
   Cliente                            Cliente?                          @relation(fields: [clienteId], references: [id])
   cotizacionId                       String?
-  Cotizacion                         Cotizacion?                       @relation(fields: [cotizacionId], references: [id])
+  Cotizacion                         Cotizacion?                       @relation(fields: [cotizacionId], references: [id], onDelete: SetNull)
   condicionesComercialesId           String?
   CondicionesComerciales             CondicionesComerciales?           @relation(fields: [condicionesComercialesId], references: [id])
   condicionesComercialesMetodoPagoId String?
@@ -180,7 +180,7 @@ model Cotizacion {
 model CotizacionServicio {
   id                  String            @id @default(cuid())
   cotizacionId        String
-  Cotizacion          Cotizacion        @relation(fields: [cotizacionId], references: [id])
+  Cotizacion          Cotizacion        @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
   servicioId          String?           // Opcional para servicios personalizados
   Servicio            Servicio?         @relation(fields: [servicioId], references: [id])
   servicioCategoriaId String?           // Opcional para servicios personalizados
@@ -256,7 +256,7 @@ model CotizacionCosto {
 model CotizacionVisita {
   id           String     @id @default(cuid())
   cotizacionId String
-  Cotizacion   Cotizacion @relation(fields: [cotizacionId], references: [id])
+  Cotizacion   Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
 }
 
@@ -585,7 +585,7 @@ model NominaServicio {
   nominaId              String
   Nomina                Nomina                @relation(fields: [nominaId], references: [id], onDelete: Cascade)
   cotizacionServicioId  String
-  CotizacionServicio    CotizacionServicio    @relation(fields: [cotizacionServicioId], references: [id])
+  CotizacionServicio    CotizacionServicio    @relation(fields: [cotizacionServicioId], references: [id], onDelete: Cascade)
   
   // === SNAPSHOT DEL SERVICIO AL MOMENTO DEL PAGO ===
   servicio_nombre       String                // Snapshot del nombre
