@@ -19,6 +19,27 @@ export async function obtenerPago(id: string) {
     return pago;
 }
 
+export async function obtenerPagoCompleto(pagoId: string) {
+    const pago = await prisma.pago.findUnique({
+        where: {
+            id: pagoId
+        },
+        include: {
+            Cotizacion: {
+                include: {
+                    Evento: {
+                        include: {
+                            Cliente: true,
+                            EventoTipo: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+    return pago;
+}
+
 export async function obtenerPagosCotizacion(cotizacionId: string) {
     const pagos = await prisma.pago.findMany({
         where: {

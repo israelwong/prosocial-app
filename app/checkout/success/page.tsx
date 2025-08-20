@@ -8,7 +8,7 @@ import PagoExitoso from '../components/PagoExitoso';
 export default function Page() {
     const [isClient, setIsClient] = useState(false);
     const searchParams = useSearchParams();
-    const cotizacionId = searchParams ? searchParams.get('cotizacionId') : null;
+    const pagoId = searchParams ? searchParams.get('pagoId') : null;
 
     useEffect(() => {
         setIsClient(true);
@@ -17,15 +17,15 @@ export default function Page() {
     return (
         <div>
             {/* HEADER */}
-            <Header asunto='Cotización' />
+            <Header asunto='Pago Confirmado' />
 
             {/* BODY */}
             <div className='max-w-screen-sm mx-auto'>
-                <PagoExitoso cotizacionId={cotizacionId} />
+                <PagoExitoso pagoId={pagoId} />
             </div>
 
             {/* FOOTER */}
-            {isClient && <Footer telefono='55 4454 6582' asunto='Hola, estoy en al pagina de cotización...' />}
+            {isClient && <Footer telefono='55 4454 6582' asunto='Hola, mi pago fue procesado exitosamente...' />}
         </div>
     );
 }

@@ -8,22 +8,45 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+export const config = {
+  api: {
+    bodyParser: false, // ⚠️ CRÍTICO: Deshabilitar body parsing para recibir raw body
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   console.log("🎯 WEBHOOK STRIPE - Evento recibido");
-  console.log("Headers:", req.headers);
+  console.log("🔑 Endpoint Secret disponible:", !!endpointSecret);
+  console.log("🔑 Endpoint Secret length:", endpointSecret?.length || 0);
 
   const sig = req.headers["stripe-signature"];
   let event;
 
   try {
-    // Para Next.js, usar req.body directamente si ya está parseado
-    const body =
-      typeof req.body === "string" ? req.body : JSON.stringify(req.body);
-    event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
+    // 🔧 Método correcto para leer raw body en Next.js
+    let body = "";
+
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+
+    const rawBody = await new Promise((resolve) => {
+      req.on("end", () => {
+        resolve(body);
+      });
+    });
+
+    console.log("📦 Raw body recibido:", {
+      length: rawBody.length,
+      hasSignature: !!sig,
+      bodyStart: rawBody.substring(0, 100) + "...",
+    });
+
+    event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
     console.log("✅ Webhook verified:", event.type);
   } catch (err) {
     console.error("❌ Webhook signature verification failed:", err.message);
@@ -102,8 +125,8 @@ async function obtenerEtapaContratado() {
       where: {
         OR: [
           { nombre: { contains: "Contratado", mode: "insensitive" } },
-          { nombre: { contains: "Confirmado", mode: "insensitive" } },
-          { posicion: 5 }, // Asumiendo que posición 5 es "Contratado"
+          { nombre: { contains: "Aprobado", mode: "insensitive" } },
+          { posicion: 4 }, // Asumiendo que posición 4 es "Contratado"
         ],
       },
       orderBy: { posicion: "asc" },
@@ -167,16 +190,10 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
     const pagoActualizado = await prisma.pago.update({
       where: { id: pagoExistente.id },
       data: {
-        status: "completado",
+        status: "paid",
         metodo_pago: metodoPago,
-        meses_sin_intereses: mesesSinIntereses,
-        fecha_pago: new Date(),
-        metadata: JSON.stringify({
-          payment_intent_id: paymentIntent.id,
-          amount: paymentIntent.amount,
-          currency: paymentIntent.currency,
-          charges: paymentIntent.charges?.data?.[0] || null,
-        }),
+        stripe_payment_id: paymentIntent.id,
+        updatedAt: new Date(),
       },
     });
 
@@ -366,20 +383,10 @@ async function handleChargeSucceeded(charge) {
 
   // Actualizar información adicional del cargo si está vinculado a un payment intent
   if (charge.payment_intent) {
-    try {
-      await prisma.pago.updateMany({
-        where: { stripe_payment_id: charge.payment_intent.toString() },
-        data: {
-          metadata: JSON.stringify({
-            charge_id: charge.id,
-            card_details: charge.payment_method_details?.card || null,
-            installments: installments || null,
-          }),
-        },
-      });
-    } catch (error) {
-      console.error("❌ Error al actualizar charge info:", error);
-    }
+    console.log(
+      `ℹ️ Charge ${charge.id} vinculado a Payment Intent ${charge.payment_intent}`
+    );
+    // Información adicional del charge ya está disponible en los logs
   }
 }
 
@@ -415,12 +422,3 @@ async function handleInvoicePaymentFailed(invoice) {
   console.log("❌ Invoice payment failed:", invoice.id);
   console.log("❌ Pago SPEI fallido para invoice:", invoice.id);
 }
-
-// Configuración para recibir raw body
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "1mb",
-    },
-  },
-};

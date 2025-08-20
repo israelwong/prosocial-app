@@ -127,10 +127,26 @@ export default async function handler(req, res) {
       `✅ Payment Intent creado: ${paymentIntent.id} por $${montoBase.toFixed(2)} MXN (${metodoPago || "card"})`
     );
 
-    // 5. 📤 Respuesta unificada
+    // 5. � Crear registro de pago en base de datos
+    const nuevoPago = await prisma.pago.create({
+      data: {
+        cotizacionId: cotizacion.id,
+        monto: montoBase,
+        status: "pendiente",
+        metodo_pago: metodoPago || "card",
+        descripcion: `Payment Intent para cotización ${cotizacion.id}`,
+        concepto: `Pago para cotización ${cotizacion.nombre}`,
+        stripe_payment_id: paymentIntent.id,
+      },
+    });
+
+    console.log("✅ Registro de pago creado en BD:", nuevoPago.id);
+
+    // 6. �📤 Respuesta unificada
     res.status(200).json({
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
+      pagoId: nuevoPago.id, // 🎯 NUEVO: ID del pago para redirección
       montoFinal: montoBase,
       metodoPago: metodoPago || "card",
       cotizacion: {
