@@ -92,7 +92,7 @@ export default async function EditarCotizacionPage({ params }: PageProps) {
         );
 
     } catch (error: any) {
-        console.error('Error al cargar página de edición:', error);
+        // console.error('Error al cargar página de edición:', error);
 
         return (
             <div className="min-h-screen bg-zinc-950 flex items-center justify-center">

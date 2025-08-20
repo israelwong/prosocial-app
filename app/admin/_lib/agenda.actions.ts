@@ -108,6 +108,7 @@ export async function actualizarAgendaEvento(agenda: Agenda) {
                 direccion: agenda.direccion,
                 fecha: agenda.fecha,
                 hora: agenda.hora,
+                agendaTipo: agenda.agendaTipo,
             }
         });
         return { success: true };

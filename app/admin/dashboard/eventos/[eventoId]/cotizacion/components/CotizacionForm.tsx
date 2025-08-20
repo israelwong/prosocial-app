@@ -58,11 +58,11 @@ export default function CotizacionForm({
     const router = useRouter();
 
     // Debug del eventoTipoSeleccionado
-    console.log('🔍 eventoTipoSeleccionado completo:', eventoTipoSeleccionado);
-    console.log('🔍 eventoTipoSeleccionado.id:', eventoTipoSeleccionado?.id);
-    console.log('🔍 tipo de eventoTipoSeleccionado.id:', typeof eventoTipoSeleccionado?.id);
-    console.log('🔍 Keys de eventoTipoSeleccionado:', Object.keys(eventoTipoSeleccionado || {}));
-    console.log('🔍 tiposEvento disponibles:', tiposEvento);
+    // console.log('🔍 eventoTipoSeleccionado completo:', eventoTipoSeleccionado);
+    // console.log('🔍 eventoTipoSeleccionado.id:', eventoTipoSeleccionado?.id);
+    // console.log('🔍 tipo de eventoTipoSeleccionado.id:', typeof eventoTipoSeleccionado?.id);
+    // console.log('🔍 Keys de eventoTipoSeleccionado:', Object.keys(eventoTipoSeleccionado || {}));
+    // console.log('🔍 tiposEvento disponibles:', tiposEvento);
 
     // Fallback para eventoTipoId - usar el primero disponible si no hay uno seleccionado
     const eventoTipoIdFinal = eventoTipoSeleccionado?.id || tiposEvento?.[0]?.id || '';

@@ -22,11 +22,12 @@ export default async function Page({ params }: PageProps) {
         const { eventoId } = await params;
 
         // Cargar todos los datos del evento y usuarios en el servidor
-        console.log('🔄 Cargando datos del evento en el servidor:', eventoId);
+        // console.log('🔄 Cargando datos del evento en el servidor:', eventoId);
         const [datos, usuarios] = await Promise.all([
             obtenerEventoDetalleCompleto(eventoId),
             obtenerUsuarios()
         ]);
+
 
         // Mostrar datos con componentes V3 simples
         return (

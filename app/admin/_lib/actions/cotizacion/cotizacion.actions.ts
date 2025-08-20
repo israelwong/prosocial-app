@@ -71,7 +71,7 @@ export async function obtenerDatosCotizacion(
             if (!tipoEventoSeleccionado) {
                 throw new Error(`Tipo de evento con ID ${tipoEventoId} no encontrado`);
             }
-            console.log('🔧 obtenerDatosCotizacion: tipoEventoSeleccionado encontrado:', tipoEventoSeleccionado);
+            // console.log('🔧 obtenerDatosCotizacion: tipoEventoSeleccionado encontrado:', tipoEventoSeleccionado);
         } else {
             console.log('🔧 obtenerDatosCotizacion: No se proporcionó tipoEventoId');
         }
@@ -105,9 +105,9 @@ export async function obtenerDatosCotizacion(
             }
         }
 
-        console.log('🔧 obtenerDatosCotizacion: Antes de return - tipoEventoSeleccionado:', tipoEventoSeleccionado);
-        console.log('🔧 obtenerDatosCotizacion: evento.EventoTipo:', evento.EventoTipo);
-        console.log('🔧 obtenerDatosCotizacion: tiposEvento[0]:', tiposEvento[0]);
+        // console.log('🔧 obtenerDatosCotizacion: Antes de return - tipoEventoSeleccionado:', tipoEventoSeleccionado);
+        // console.log('🔧 obtenerDatosCotizacion: evento.EventoTipo:', evento.EventoTipo);
+        // console.log('🔧 obtenerDatosCotizacion: tiposEvento[0]:', tiposEvento[0]);
 
         return {
             evento,
@@ -179,7 +179,11 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
                             }
                         }
                     },
-                    orderBy: { posicion: 'asc' }
+                    // 🔧 ORDENAMIENTO CORREGIDO: Usar posición del Servicio original, NO de CotizacionServicio
+                    orderBy: [
+                        { Servicio: { posicion: 'asc' } },     // Posición del servicio original en el catálogo
+                        { posicion: 'asc' }                    // Fallback: posición en cotización
+                    ]
                 }
             }
         });
@@ -187,6 +191,19 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
         if (!cotizacion) {
             throw new Error(`Cotización con ID ${cotizacionId} no encontrada`);
         }
+
+        // 🔍 DEBUG: Verificar ordenamiento de servicios en cotización pública
+        console.log('🔍 DEBUG Cotización Pública - Servicios ordenados:', {
+            cotizacionId: cotizacion.id,
+            totalServicios: cotizacion.Servicio.length,
+            serviciosOrden: cotizacion.Servicio.map((s: any, index: number) => ({
+                index: index + 1,
+                nombre: s.nombre_snapshot || s.Servicio?.nombre,
+                posicion_cotizacion: s.posicion,
+                posicion_servicio_original: s.Servicio?.posicion,
+                categoria: s.categoria_nombre_snapshot || s.Servicio?.ServicioCategoria?.nombre
+            }))
+        });
 
         // También obtener datos necesarios para edición
         const [tiposEvento, catalogo, configuracion, condiciones, metodosPago] = await Promise.all([

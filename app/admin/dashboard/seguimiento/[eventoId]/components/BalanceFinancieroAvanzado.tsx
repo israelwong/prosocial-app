@@ -16,7 +16,6 @@ import {
     Edit,
     Plus,
     Trash2,
-    MoreVertical,
     Download,
     Send,
     X,
@@ -64,7 +63,7 @@ interface BalanceFinancieroAvanzadoProps {
 
 const STATUS_COLORS = {
     'paid': 'bg-green-900/20 text-green-400 border border-green-800',
-    'pending': 'bg-yellow-900/20 text-yellow-400 border border-yellow-800',
+    'pending': 'bg-amber-900/20 text-amber-400 border border-amber-800',
     'failed': 'bg-red-900/20 text-red-400 border border-red-800',
     'cancelled': 'bg-zinc-800 text-zinc-400 border border-zinc-700',
     'default': 'bg-zinc-800 text-zinc-500 border border-zinc-700'
@@ -84,7 +83,6 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
     const [pagoEditando, setPagoEditando] = useState<any>(null)
     const [cargando, setCargando] = useState(false)
     const [actualizando, setActualizando] = useState(false)
-    const [menuAbierto, setMenuAbierto] = useState<string | null>(null)
     const [mensajeExito, setMensajeExito] = useState<string | null>(null)
 
     const manejarCrearPago = async (datosPago: any) => {
@@ -149,7 +147,6 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
             const resultado = await eliminarPago(pagoId)
 
             if (resultado.success) {
-                setMenuAbierto(null)
                 router.refresh()
             } else {
                 alert('Error al eliminar el pago: ' + (resultado.message || 'Error desconocido'))
@@ -172,7 +169,6 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
     const abrirFormularioEditar = (pago: any) => {
         setPagoEditando(pago)
         setMostrarFormulario(true)
-        setMenuAbierto(null)
     }
 
     const cerrarFormulario = () => {
@@ -196,15 +192,6 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
             router.push(`/admin/evento/${cotizacion.evento.id}`)
         }
     }
-
-    // Cerrar menús al hacer click fuera
-    useEffect(() => {
-        const manejarClickFuera = () => setMenuAbierto(null)
-        if (menuAbierto) {
-            document.addEventListener('click', manejarClickFuera)
-            return () => document.removeEventListener('click', manejarClickFuera)
-        }
-    }, [menuAbierto])
 
     // Cálculos financieros
     const totalCotizacion = cotizacion?.precio || 0
@@ -558,49 +545,44 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                                                         {formatearMoneda(pago.monto || pago.cantidad || 0)}
                                                     </p>
                                                     <Badge className={getStatusColor(pago.status)}>
-                                                        {pago.statusDisplay || pago.status || 'Sin status'}
+                                                        {pago.status === 'paid'
+                                                            ? 'Pagado'
+                                                            : pago.status === 'pending'
+                                                                ? 'Pendiente'
+                                                                : pago.statusDisplay || pago.status || 'Sin status'}
                                                     </Badge>
                                                 </div>
 
-                                                {/* Menú de acciones */}
+                                                {/* Botones de acción minimalistas - Paleta Ámbar */}
                                                 {pago.id && (
-                                                    <div className="relative">
+                                                    <div className="flex items-center gap-1">
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
-                                                                setMenuAbierto(menuAbierto === pago.id ? null : (pago.id || null))
+                                                                abrirFormularioEditar(pago)
                                                             }}
                                                             disabled={cargando}
-                                                            className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+                                                            className="h-14 w-10 p-0 text-amber-400 hover:text-amber-300 hover:bg-amber-950/30"
+                                                            title="Editar pago"
                                                         >
-                                                            <MoreVertical className="h-4 w-4" />
+                                                            <Edit className="h-7 w-7" />
                                                         </Button>
 
-                                                        {menuAbierto === pago.id && (
-                                                            <div className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-[100] w-36 overflow-hidden">
-                                                                <div className="py-1"
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                >
-                                                                    <button
-                                                                        onClick={() => abrirFormularioEditar(pago)}
-                                                                        className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-800 flex items-center gap-2 text-zinc-300 hover:text-zinc-100"
-                                                                    >
-                                                                        <Edit className="h-4 w-4" />
-                                                                        Editar
-                                                                    </button>
-
-                                                                    <button
-                                                                        onClick={() => manejarEliminarPago(pago.id!)}
-                                                                        className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-800 flex items-center gap-2 text-red-400 hover:text-red-300"
-                                                                    >
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                        Eliminar
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        )}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                manejarEliminarPago(pago.id!)
+                                                            }}
+                                                            disabled={cargando}
+                                                            className="h-14 w-10 p-0 text-red-500 hover:text-red-400 hover:bg-red-950/30"
+                                                            title="Eliminar pago"
+                                                        >
+                                                            <Trash2 className="h-7 w-7" />
+                                                        </Button>
                                                     </div>
                                                 )}
                                             </div>

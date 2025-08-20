@@ -265,26 +265,21 @@ export function BitacoraSimple({ eventoId }: BitacoraSimpleProps) {
                                     key={item.id}
                                     className={getItemStyle(item.importancia)}
                                 >
-                                    {/* Header del item */}
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="flex items-start gap-3 flex-1">
-                                            <MessageCircle className="w-4 h-4 text-zinc-400 mt-0.5 flex-shrink-0" />
-
-                                            <div className="flex items-center gap-2">
+                                    {/* Contenido minimalista */}
+                                    <div className="space-y-2">
+                                        {/* Primera línea: etiqueta + comentario + menú */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3 flex-1">
                                                 <span className={`px-2 py-1 rounded-md text-xs border ${getImportanciaColor(item.importancia)}`}>
                                                     {mapearImportancia(item.importancia).charAt(0).toUpperCase() + mapearImportancia(item.importancia).slice(1)}
                                                 </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex items-center gap-1 text-xs text-zinc-500">
-                                                <Clock className="h-3 w-3" />
-                                                {formatearFecha(item.createdAt)}
+                                                <p className="text-zinc-200 text-sm leading-relaxed flex-1">
+                                                    {item.comentario}
+                                                </p>
                                             </div>
 
                                             {/* Menú contextual */}
-                                            <div className="relative menu-container">
+                                            <div className="relative menu-container flex-shrink-0">
                                                 <button
                                                     onClick={() => setMenuAbierto(menuAbierto === item.id ? null : item.id)}
                                                     className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 rounded-md transition-colors"
@@ -312,13 +307,12 @@ export function BitacoraSimple({ eventoId }: BitacoraSimpleProps) {
                                                 )}
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Contenido del comentario */}
-                                    <div className="pl-7">
-                                        <p className="text-zinc-200 text-sm leading-relaxed">
-                                            {item.comentario}
-                                        </p>
+                                        {/* Segunda línea: fecha */}
+                                        <div className="flex items-center gap-1 text-xs text-zinc-500 ml-12">
+                                            <Clock className="h-3 w-3" />
+                                            {formatearFecha(item.createdAt)}
+                                        </div>
                                     </div>
                                 </div>
                             ))}

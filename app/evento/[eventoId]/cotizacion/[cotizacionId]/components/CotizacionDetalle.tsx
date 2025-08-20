@@ -314,6 +314,29 @@ export default function CotizacionDetalle({
                 agrupados[seccionNombre].categorias[categoriaNombre].servicios.push(servicioDetalle)
             })
 
+            // 🔧 ORDENAMIENTO DESHABILITADO TEMPORALMENTE PARA DIAGNÓSTICO
+            console.log('🔍 COTIZACIÓN PÚBLICA - Servicios sin ordenar frontend:');
+            Object.entries(agrupados).forEach(([seccionNombre, seccionData]) => {
+                console.log(`\n📁 Sección: ${seccionNombre} (posicion: ${seccionData.posicion})`);
+                Object.entries(seccionData.categorias).forEach(([categoriaNombre, categoriaData]) => {
+                    console.log(`  📂 Categoría: ${categoriaNombre} (posicion: ${categoriaData.posicion})`);
+                    categoriaData.servicios.forEach((servicio: any, index: number) => {
+                        const posicion = servicio.posicion || 'sin posición';
+                        const nombre = servicio.nombre;
+                        console.log(`    ${index + 1}. [${posicion}] ${nombre}`);
+                    });
+                });
+            });
+
+            // COMENTADO TEMPORALMENTE: Ordenamiento frontend
+            // Object.keys(agrupados).forEach(seccionNombre => {
+            //     Object.keys(agrupados[seccionNombre].categorias).forEach(categoriaNombre => {
+            //         agrupados[seccionNombre].categorias[categoriaNombre].servicios.sort(
+            //             (a: ServicioDetalle, b: ServicioDetalle) => (a.posicion || 0) - (b.posicion || 0)
+            //         );
+            //     });
+            // });
+
             console.log('\n=== SERVICIOS AGRUPADOS RESULTADO ===')
             console.log('Secciones encontradas:', Object.keys(agrupados))
             Object.entries(agrupados).forEach(([seccion, datos]) => {

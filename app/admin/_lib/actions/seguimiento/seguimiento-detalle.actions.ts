@@ -40,14 +40,14 @@ export async function obtenerEventoDetalleCompleto(
     cotizacionId?: string
 ): Promise<EventoDetalleCompleto> {
     try {
-        console.log('🔍 Obteniendo datos completos para evento:', eventoId);
-        console.log('🔍 CotizacionId específica:', cotizacionId);
-        console.log('🔍 Tipo de eventoId:', typeof eventoId);
-        console.log('🔍 Longitud del eventoId:', eventoId.length);
+        // console.log('🔍 Obteniendo datos completos para evento:', eventoId);
+        // console.log('🔍 CotizacionId específica:', cotizacionId);
+        // console.log('🔍 Tipo de eventoId:', typeof eventoId);
+        // console.log('🔍 Longitud del eventoId:', eventoId.length);
 
         // Validar parámetros
         const validatedParams = EventoDetalleParamsSchema.parse({ eventoId, cotizacionId });
-        console.log('🔍 Parámetros validados:', validatedParams);
+        // console.log('🔍 Parámetros validados:', validatedParams);
 
         // Consulta principal optimizada con todos los includes necesarios
         const evento = await prisma.evento.findUnique({
@@ -107,7 +107,11 @@ export async function obtenerEventoDetalleCompleto(
                                     }
                                 }
                             },
-                            orderBy: { posicion: 'asc' }
+                            // 🔧 ORDENAMIENTO CORREGIDO: Usar posición del Servicio original, NO de CotizacionServicio
+                            orderBy: [
+                                { Servicio: { posicion: 'asc' } },     // Posición del servicio original en el catálogo
+                                { posicion: 'asc' }                    // Fallback: posición en cotización
+                            ]
                         },
                         // 📋 CONDICIONES COMERCIALES
                         CondicionesComerciales: true
@@ -197,7 +201,20 @@ export async function obtenerEventoDetalleCompleto(
                 seccion: s.seccion,
                 precio: s.precio,
                 cantidad: s.cantidad,
-                subtotal: s.subtotal
+                subtotal: s.subtotal,
+                posicion: s.posicion // ✅ Agregar posición al debug
+            }))
+        });
+
+        // 🔍 DEBUG: Servicios RAW desde base de datos
+        console.log('🔍 DEBUG Servicios RAW desde DB:', {
+            totalServicios: (cotizacion?.Servicio || []).length,
+            serviciosRaw: (cotizacion?.Servicio || []).map((s: any) => ({
+                id: s.id,
+                nombre_snapshot: s.nombre_snapshot,
+                posicion_cotizacion: s.posicion,                    // Posición en CotizacionServicio
+                posicion_servicio_original: s.Servicio?.posicion,   // Posición del Servicio original
+                orden_en_array: (cotizacion?.Servicio || []).indexOf(s)
             }))
         });
 
@@ -247,7 +264,7 @@ export async function obtenerEventoDetalleCompleto(
             ultimaActualizacion: evento.updatedAt
         };
 
-        console.log('✅ Datos completos obtenidos exitosamente');
+        // console.log('✅ Datos completos obtenidos exitosamente');
         return resultado;
 
     } catch (error) {
@@ -544,20 +561,26 @@ function procesarPagosDetalle(pagos: any[]): any[] {
 function procesarServiciosDetalle(servicios: any[], usuarios: any[]): ServicioDetalle[] {
     console.log('🔍 DEBUG procesarServiciosDetalle entrada:', {
         totalServicios: servicios.length,
-        serviciosRaw: JSON.stringify(servicios, null, 2)
+        serviciosOrdenEntrada: servicios.map((s, idx) => ({
+            index: idx,
+            id: s.id,
+            nombre_snapshot: s.nombre_snapshot,
+            posicion: s.posicion
+        }))
     });
 
-    return servicios.map(cotizacionServicio => {
-        console.log('🔍 Procesando servicio:', {
-            id: cotizacionServicio.id,
-            nombre_snapshot: cotizacionServicio.nombre_snapshot,
-            categoria_nombre_snapshot: cotizacionServicio.categoria_nombre_snapshot,
-            seccion_nombre_snapshot: cotizacionServicio.seccion_nombre_snapshot,
-            precio_unitario_snapshot: cotizacionServicio.precio_unitario_snapshot,
-            cantidad: cotizacionServicio.cantidad,
-            subtotal: cotizacionServicio.subtotal,
-            objetoCompleto: JSON.stringify(cotizacionServicio, null, 2)
-        });
+    const serviciosProcesados = servicios.map(cotizacionServicio => {
+        // console.log('🔍 Procesando servicio:', {
+        //     id: cotizacionServicio.id,
+        //     nombre_snapshot: cotizacionServicio.nombre_snapshot,
+        //     categoria_nombre_snapshot: cotizacionServicio.categoria_nombre_snapshot,
+        //     seccion_nombre_snapshot: cotizacionServicio.seccion_nombre_snapshot,
+        //     precio_unitario_snapshot: cotizacionServicio.precio_unitario_snapshot,
+        //     cantidad: cotizacionServicio.cantidad,
+        //     subtotal: cotizacionServicio.subtotal,
+        //     posicion: cotizacionServicio.posicion,
+        //     objetoCompleto: JSON.stringify(cotizacionServicio, null, 2)
+        // });
         // Buscar usuario asignado
         const responsable = usuarios.find(u => u.id === cotizacionServicio.userId);
 
@@ -618,6 +641,27 @@ function procesarServiciosDetalle(servicios: any[], usuarios: any[]): ServicioDe
             updatedAt: cotizacionServicio.updatedAt
         };
     });
+
+    // 🔍 DEBUG: Servicios ANTES del ordenamiento
+    console.log('🔍 DEBUG Servicios ANTES del sort:', serviciosProcesados.map((s, idx) => ({
+        index: idx,
+        id: s.id,
+        nombre: s.nombre,
+        posicion: s.posicion
+    })));
+
+    // ✅ ORDENAR POR POSICIÓN para garantizar el orden correcto
+    const serviciosOrdenados = serviciosProcesados.sort((a, b) => (a.posicion || 0) - (b.posicion || 0));
+
+    // 🔍 DEBUG: Servicios DESPUÉS del ordenamiento
+    console.log('🔍 DEBUG Servicios DESPUÉS del sort:', serviciosOrdenados.map((s, idx) => ({
+        index: idx,
+        id: s.id,
+        nombre: s.nombre,
+        posicion: s.posicion
+    })));
+
+    return serviciosOrdenados;
 }
 
 /**

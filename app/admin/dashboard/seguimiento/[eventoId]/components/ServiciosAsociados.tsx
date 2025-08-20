@@ -81,6 +81,7 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
             id: s.id,
             nombre_snapshot: s.nombre_snapshot,
             nombre: s.nombre,
+            posicion: s.posicion,
             costo_snapshot: s.costo_snapshot,
             costo: s.costo,
             cantidad: s.cantidad,
@@ -106,27 +107,32 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
     // Calcular total a pagar (para retrocompatibilidad)
     const totalAPagar = totales.costoTotal;
 
-    // Agrupar servicios por sección y categoría usando la misma lógica exitosa de la cotización pública
+    // 🔧 NUEVA LÓGICA: Usar la misma función de agrupamiento exitosa de la cotización pública
     const serviciosAgrupados: ServiciosAgrupados = {};
 
-    servicios.forEach((servicio: any) => {
-        // Usar la misma lógica exitosa: snapshots primero, luego relaciones como fallback
-        const seccionNombre = servicio.seccion_nombre_snapshot ||
-            servicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
-            servicio.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
-            'Servicios Generales';
+    servicios.forEach((cotizacionServicio: any, index: number) => {
+        // Usar primero los snapshots, luego los datos relacionados como fallback (igual que en cotización pública)
+        const nombreServicio = cotizacionServicio.nombre_snapshot && cotizacionServicio.nombre_snapshot !== 'Servicio migrado'
+            ? cotizacionServicio.nombre_snapshot
+            : cotizacionServicio.Servicio?.nombre || 'Servicio sin nombre';
 
-        const categoriaNombre = servicio.categoria_nombre_snapshot ||
-            servicio.Servicio?.ServicioCategoria?.nombre ||
-            servicio.ServicioCategoria?.nombre ||
+        // Obtener categoría y sección usando la misma lógica exitosa
+        const categoriaNombre = cotizacionServicio.categoria_nombre_snapshot ||
+            cotizacionServicio.Servicio?.ServicioCategoria?.nombre ||
+            cotizacionServicio.ServicioCategoria?.nombre ||
             'Sin categoría';
 
-        // Obtener posiciones usando las relaciones correctas
-        const seccionPosicion = servicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
-            servicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 0;
+        const seccionNombre = cotizacionServicio.seccion_nombre_snapshot ||
+            cotizacionServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
+            cotizacionServicio.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
+            'Servicios Generales';
 
-        const categoriaPosicion = servicio.Servicio?.ServicioCategoria?.posicion ||
-            servicio.ServicioCategoria?.posicion || 0;
+        // Obtener posiciones usando relaciones correctas
+        const seccionPosicion = cotizacionServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
+            cotizacionServicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 0;
+
+        const categoriaPosicion = cotizacionServicio.Servicio?.ServicioCategoria?.posicion ||
+            cotizacionServicio.ServicioCategoria?.posicion || 0;
 
         // Inicializar sección si no existe
         if (!serviciosAgrupados[seccionNombre]) {
@@ -144,9 +150,35 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
             };
         }
 
-        // Agregar el servicio a la categoría correspondiente
-        serviciosAgrupados[seccionNombre].categorias[categoriaNombre].servicios.push(servicio);
+        // Agregar el servicio a la categoría correspondiente CON SU POSICIÓN ORIGINAL
+        serviciosAgrupados[seccionNombre].categorias[categoriaNombre].servicios.push({
+            ...cotizacionServicio,
+            posicion: cotizacionServicio.posicion || index // Mantener posición original o usar índice como fallback
+        });
     });
+
+    // 🔧 ORDENAMIENTO DESHABILITADO TEMPORALMENTE PARA DIAGNÓSTICO
+    console.log('🔍 SERVICIOS SIN ORDENAR - Revisando datos originales del backend:');
+    Object.entries(serviciosAgrupados).forEach(([seccionNombre, seccionData]) => {
+        console.log(`\n📁 Sección: ${seccionNombre} (posicion: ${seccionData.posicion})`);
+        Object.entries(seccionData.categorias).forEach(([categoriaNombre, categoriaData]) => {
+            console.log(`  📂 Categoría: ${categoriaNombre} (posicion: ${categoriaData.posicion})`);
+            categoriaData.servicios.forEach((servicio: any, index: number) => {
+                const posicion = servicio.posicion || 'sin posición';
+                const nombre = servicio.nombre_snapshot || servicio.nombre;
+                console.log(`    ${index + 1}. [${posicion}] ${nombre}`);
+            });
+        });
+    });
+
+    // COMENTADO TEMPORALMENTE: Ordenar servicios dentro de cada categoría por posición
+    // Object.keys(serviciosAgrupados).forEach(seccionNombre => {
+    //     Object.keys(serviciosAgrupados[seccionNombre].categorias).forEach(categoriaNombre => {
+    //         serviciosAgrupados[seccionNombre].categorias[categoriaNombre].servicios.sort(
+    //             (a: any, b: any) => (a.posicion || 0) - (b.posicion || 0)
+    //         );
+    //     });
+    // });
 
     // Ordenar secciones por posición
     const seccionesOrdenadas = Object.entries(serviciosAgrupados)
@@ -411,17 +443,17 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                                                         const total = costo * cantidad;
 
                                                         // 🔍 DEBUG: Log cada servicio individual
-                                                        console.log('🔍 SERVICIO INDIVIDUAL:', {
-                                                            id: servicio.id,
-                                                            nombre_snapshot: servicio.nombre_snapshot,
-                                                            nombre: servicio.nombre,
-                                                            nombre_final: servicio.nombre_snapshot || servicio.nombre || 'Servicio sin nombre',
-                                                            costo_snapshot: servicio.costo_snapshot,
-                                                            costo: servicio.costo,
-                                                            costo_final: costo,
-                                                            cantidad,
-                                                            total
-                                                        });
+                                                        // console.log('🔍 SERVICIO INDIVIDUAL:', {
+                                                        //     id: servicio.id,
+                                                        //     nombre_snapshot: servicio.nombre_snapshot,
+                                                        //     nombre: servicio.nombre,
+                                                        //     nombre_final: servicio.nombre_snapshot || servicio.nombre || 'Servicio sin nombre',
+                                                        //     costo_snapshot: servicio.costo_snapshot,
+                                                        //     costo: servicio.costo,
+                                                        //     costo_final: costo,
+                                                        //     cantidad,
+                                                        //     total
+                                                        // });
 
                                                         return (
                                                             <div key={servicio.id} className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-4 hover:bg-zinc-800 transition-colors">
