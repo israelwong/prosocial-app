@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/app/admin/_lib/prismaClient';
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ cotizacionId: string }> }
+    request: NextRequest,
+    { params }: { params: Promise<{ cotizacionId: string }> }
 ) {
-  try {
-    const { cotizacionId } = await params;
+    try {
+        const { cotizacionId } = await params;
 
-    // Buscar la cotización con el evento y cliente
+        // Buscar la cotización con el evento y cliente
         const cotizacion = await prisma.cotizacion.findUnique({
             where: {
                 id: cotizacionId,

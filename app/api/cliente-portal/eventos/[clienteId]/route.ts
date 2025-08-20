@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/app/admin/_lib/prismaClient';
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ clienteId: string }> }
+    request: NextRequest,
+    { params }: { params: Promise<{ clienteId: string }> }
 ) {
-  try {
-    const { clienteId } = await params;
+    try {
+        const { clienteId } = await params;
 
-    // Buscar eventos del cliente con cotizaciones aprobadas
+        // Buscar eventos del cliente con cotizaciones aprobadas
         const eventos = await prisma.evento.findMany({
             where: {
                 clienteId: clienteId,
