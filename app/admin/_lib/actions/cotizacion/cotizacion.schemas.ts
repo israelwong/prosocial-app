@@ -45,6 +45,7 @@ export const CotizacionNuevaSchema = z.object({
     eventoId: z.string().min(1, 'ID de evento requerido'),
     eventoTipoId: z.string().min(1, 'Tipo de evento requerido'),
     nombre: z.string().min(1, 'Nombre de cotización requerido'),
+    descripcion: z.string().optional(),
     precio: z.number().min(0, 'Precio debe ser mayor o igual a 0'),
     condicionesComercialesId: z.string().optional(),
     servicios: z.array(CotizacionServicioSchema).min(1, 'Debe incluir al menos un servicio'),
@@ -55,6 +56,7 @@ export const CotizacionNuevaSchema = z.object({
 export const CotizacionEditarSchema = z.object({
     id: z.string().min(1, 'ID de cotización requerido'),
     nombre: z.string().min(1, 'Nombre de cotización requerido'),
+    descripcion: z.string().optional(),
     precio: z.number().min(0, 'Precio debe ser mayor o igual a 0'),
     condicionesComercialesId: z.string().optional(),
     status: z.enum(['pending', 'aprobado', 'aprobada', 'rechazado']).default('pending'),
@@ -74,6 +76,7 @@ export const CotizacionParamsSchema = z.object({
 // Schema para formulario cliente (react-hook-form)
 export const CotizacionFormSchema = z.object({
     nombre: z.string().min(1, 'Nombre de cotización requerido'),
+    descripcion: z.string().optional(),
     eventoTipoId: z.string().min(1, 'Tipo de evento requerido'),
     condicionesComercialesId: z.string().optional(),
     servicios: z.array(z.object({

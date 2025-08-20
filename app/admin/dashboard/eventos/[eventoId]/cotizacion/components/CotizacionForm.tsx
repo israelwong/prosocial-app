@@ -762,7 +762,7 @@ export default function CotizacionForm({
                     nombre: data.nombre,
                     precio: precioFinal,
                     condicionesComercialesId: data.condicionesComercialesId || undefined,
-                    status: cotizacionExistente.status || 'pendiente',
+                    status: cotizacionExistente.status || 'pending',
                     visible_cliente: cotizacionExistente.visible_cliente || true,
                     servicios: serviciosCotizacion,
                     costos: data.costos?.map((costo, index) => ({
@@ -1199,6 +1199,23 @@ export default function CotizacionForm({
                                     />
                                     {errors.nombre && (
                                         <p className="text-red-400 text-xs mt-1">{errors.nombre.message}</p>
+                                    )}
+                                </div>
+
+                                {/* Descripción de cotización */}
+                                <div>
+                                    <label htmlFor="descripcion" className="block text-sm font-medium text-zinc-300 mb-1.5">
+                                        Descripción <span className="text-zinc-500 text-xs">(Opcional)</span>
+                                    </label>
+                                    <textarea
+                                        id="descripcion"
+                                        {...register('descripcion')}
+                                        rows={3}
+                                        className="flex w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-blue-500 focus:outline-none resize-none"
+                                        placeholder="Descripción detallada de la cotización (opcional)"
+                                    />
+                                    {errors.descripcion && (
+                                        <p className="text-red-400 text-xs mt-1">{errors.descripcion.message}</p>
                                     )}
                                 </div>
 

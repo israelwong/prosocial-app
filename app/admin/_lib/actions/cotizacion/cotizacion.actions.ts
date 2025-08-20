@@ -241,6 +241,7 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
                 eventoId: validatedData.eventoId,
                 eventoTipoId: validatedData.eventoTipoId,
                 nombre: validatedData.nombre,
+                descripcion: validatedData.descripcion,
                 precio: validatedData.precio,
                 condicionesComercialesId: validatedData.condicionesComercialesId,
                 status: 'pending',
@@ -348,6 +349,7 @@ export async function editarCotizacion(data: CotizacionEditar) {
             where: { id: validatedData.id },
             data: {
                 nombre: validatedData.nombre,
+                descripcion: validatedData.descripcion,
                 precio: validatedData.precio,
                 condicionesComercialesId: validatedData.condicionesComercialesId,
                 status: validatedData.status,
