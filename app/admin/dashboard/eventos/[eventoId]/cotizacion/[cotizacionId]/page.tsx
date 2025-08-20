@@ -61,8 +61,8 @@ export default async function EditarCotizacionPage({ params }: PageProps) {
                                     {eventoTipoFinal.nombre}
                                 </div>
                                 <div className="text-blue-400 text-sm">
-                                    {cotizacionExistente.cotizacion.status === 'pending' ? 'Pendiente' :
-                                        cotizacionExistente.cotizacion.status === 'aprobado' ? 'Aprobada' : 'Rechazada'}
+                                    {cotizacionExistente.cotizacion.status === 'pendiente' ? 'Pendiente' :
+                                        cotizacionExistente.cotizacion.status === 'aprobada' ? 'Aprobada' : 'Rechazada'}
                                 </div>
                             </div>
                         </div>

@@ -762,7 +762,7 @@ export default function CotizacionForm({
                     nombre: data.nombre,
                     precio: precioFinal,
                     condicionesComercialesId: data.condicionesComercialesId || undefined,
-                    status: cotizacionExistente.status || 'pending',
+                    status: cotizacionExistente.status || 'pendiente',
                     visible_cliente: cotizacionExistente.visible_cliente || true,
                     servicios: serviciosCotizacion,
                     costos: data.costos?.map((costo, index) => ({
