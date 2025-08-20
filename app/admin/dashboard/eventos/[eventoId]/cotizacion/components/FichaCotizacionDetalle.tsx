@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { Cotizacion } from '@/app/admin/_lib/types'
 import { eliminarCotizacion, clonarCotizacion, archivarCotizacion, desarchivarCotizacion } from '@/app/admin/_lib/cotizacion.actions'
 import { useRouter } from 'next/navigation'
-import { actualizarVisibilidadCotizacion } from '@/app/admin/_lib/cotizacion.actions'
 import { autorizarCotizacion } from '@/app/admin/_lib/autorizarCotizacion.actions'
 import BotonAutorizarCotizacion from './BotonAutorizarCotizacion'
 import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
@@ -23,7 +22,6 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
     const router = useRouter()
     const [clonando, setClonando] = useState<string | null>(null)
     const [copiado, setCopiado] = useState<string | null>(null)
-    const [visibleCliente, setVisibleCliente] = useState<boolean>(cotizacion?.visible_cliente ?? false)
     const [menuAbierto, setMenuAbierto] = useState(false)
     const [autorizando, setAutorizando] = useState(false)
     const [archivada, setArchivada] = useState<boolean>(cotizacion?.archivada ?? false)
@@ -133,18 +131,6 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
         setMenuAbierto(false)
     }
 
-    const handleVisibleCliente = async () => {
-        const accion = visibleCliente ? 'archivar' : 'restaurar'
-        if (confirm(`¿Estás seguro de ${accion} esta cotización?`)) {
-            const nuevaVisibilidad = !visibleCliente
-            if (cotizacion.id) {
-                await actualizarVisibilidadCotizacion(cotizacion.id, nuevaVisibilidad)
-                setVisibleCliente(nuevaVisibilidad)
-            }
-            setMenuAbierto(false)
-        }
-    }
-
     const handlePreview = () => {
         window.open(`/evento/${eventoId}/cotizacion/${cotizacion.id}?preview=true`, '_blank')
         setMenuAbierto(false)
@@ -236,14 +222,20 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                     <button
                         onClick={() => router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/${cotizacion.id}`)}
                         className="text-zinc-300 hover:text-zinc-100 transition-colors mt-1"
+                        title="Editar cotización"
                     >
                         <Pencil className="w-4 h-4" />
                     </button>
-                    <div className="text-left">
-                        <div className="font-medium text-zinc-200">
+                    <div className="text-left min-w-0">
+                        <button
+                            onClick={() => router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/${cotizacion.id}`)}
+                            className="font-medium text-zinc-200 hover:underline text-left break-words"
+                            title={cotizacion.nombre}
+                            style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}
+                        >
                             {cotizacion.nombre} - {cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                        </div>
-                        <div className="text-sm text-zinc-400">
+                        </button>
+                        <div className="text-sm text-zinc-400 truncate max-w-full">
                             {cotizacion.servicios?.length ? `${cotizacion.servicios.length} servicios incluidos` : 'Sin descripción'}
                         </div>
                     </div>
@@ -350,40 +342,20 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                     {clonando === cotizacion.id ? 'Clonando...' : 'Clonar'}
                                 </button>
 
-                                {/* Archivar/Desarchivar para cotizaciones aprobadas */}
-                                {cotizacion.status === 'aprobada' && (
-                                    <button
-                                        onClick={archivada ? handleDesarchivarCotizacion : handleArchivarCotizacion}
-                                        className="w-full px-3 py-2 text-left text-amber-400 hover:bg-zinc-700 flex items-center gap-2 text-sm"
-                                    >
-                                        {archivada ? (
-                                            <>
-                                                <ArchiveRestore className="w-4 h-4" />
-                                                Desarchivar cotización
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Archive className="w-4 h-4" />
-                                                Archivar cotización
-                                            </>
-                                        )}
-                                    </button>
-                                )}
-
-                                {/* Ocultar/Mostrar al cliente */}
+                                {/* Archivar/Desarchivar para cualquier cotización */}
                                 <button
-                                    onClick={handleVisibleCliente}
-                                    className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
+                                    onClick={archivada ? handleDesarchivarCotizacion : handleArchivarCotizacion}
+                                    className="w-full px-3 py-2 text-left text-amber-400 hover:bg-zinc-700 flex items-center gap-2 text-sm"
                                 >
-                                    {visibleCliente ? (
+                                    {archivada ? (
                                         <>
-                                            <Eye className="w-4 h-4" />
-                                            Ocultar al cliente
+                                            <ArchiveRestore className="w-4 h-4" />
+                                            Desarchivar cotización
                                         </>
                                     ) : (
                                         <>
-                                            <Eye className="w-4 h-4" />
-                                            Mostrar al cliente
+                                            <Archive className="w-4 h-4" />
+                                            Archivar cotización
                                         </>
                                     )}
                                 </button>
@@ -459,7 +431,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                     isLoading={modalEliminacion.isLoading}
                     loadingText="Eliminando cotización..."
                     onArchivar={handleArchivarCotizacion}
-                    mostrarBotonArchivar={cotizacion.status === 'aprobada'}
+                    mostrarBotonArchivar={!archivada}
                 />
             )}
         </div>
