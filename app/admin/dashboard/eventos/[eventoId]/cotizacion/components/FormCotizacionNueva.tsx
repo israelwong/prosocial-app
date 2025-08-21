@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 
 import { CondicionesComerciales, Servicio, PaqueteServicio, MetodoPago } from '@/app/admin/_lib/types'
+import { PAGO_STATUS } from '@/app/admin/_lib/constants/status'
 
 import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
 import { obtenerPaquete, obtenerServiciosPorPaquete } from '@/app/admin/_lib/paquete.actions'
@@ -354,7 +355,7 @@ export default function FormCotizacionNueva() {
                 metodo_pago: metodoPago?.metodo_pago ?? '',
                 monto: parseFloat(confirmarMonto.replace(/[^0-9.-]+/g, '')),
                 concepto: parseFloat(confirmarPorcentajeAnticipo) === 100 ? 'Pago del total del servicio' : `Pago del ${confirmarPorcentajeAnticipo}%  de anticipo`,
-                status: 'paid',
+                status: PAGO_STATUS.PAID,
             }
             await crearPago(pago);
             router.push(`/admin/dashboard/seguimiento/${eventoId}`);

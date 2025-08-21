@@ -2,6 +2,7 @@
 import { Copy, Shuffle, SquareArrowOutUpRight, User } from 'lucide-react'
 import React, { useEffect, useState, useCallback } from 'react'
 import { Servicio, MetodoPago, CondicionesComerciales } from '@/app/admin/_lib/types'
+import { COTIZACION_STATUS, PAGO_STATUS } from '@/app/admin/_lib/constants/status'
 
 import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
 import { obtenerCotizacion, obtenerCotizacionServicios, actualizarCotizacion } from '@/app/admin/_lib/cotizacion.actions';
@@ -366,7 +367,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 servicios,
                 utilidadDeVenta: parseFloat(utilidadDeVenta.toFixed(2)),
                 utilidadSistema: parseFloat(utilidadSistema.toFixed(2)),
-                status: 'aprobada'
+                status: COTIZACION_STATUS.APROBADA
             }
             await actualizarCotizacion(cotizacionActualizada);
 
@@ -385,7 +386,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 metodo_pago: metodoPago?.metodo_pago ?? '',
                 monto: parseFloat(confirmarMonto.replace(/[^0-9.-]+/g, '')),
                 concepto: parseFloat(confirmarPorcentajeAnticipo) === 100 ? 'Pago del total del servicio' : `Pago del ${confirmarPorcentajeAnticipo}%  de anticipo`,
-                status: 'paid',
+                status: PAGO_STATUS.PAID,
             }
             await crearPago(pago);
             router.push(`/admin/dashboard/seguimiento/${eventoId}`);
@@ -513,7 +514,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                 <i className="fab fa-whatsapp text-md mr-1"></i> Conversar
                             </button>
 
-                            {cotizacionStatus === 'aprobada' && (
+                            {cotizacionStatus === COTIZACION_STATUS.APROBADA && (
                                 <button
                                     className='px-4 py-2 border border-blue-800 rounded-md bg-blue-900 flex items-center'
                                     onClick={() => router.push(`/admin/dashboard/seguimiento/${eventoId}`)}
@@ -709,7 +710,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
 
                             {/* //! PAGO EN EFECTIVO */}
 
-                            {metodoPago?.metodo_pago === 'Efectivo' && cotizacionStatus !== 'aprobada' && (
+                            {metodoPago?.metodo_pago === 'Efectivo' && cotizacionStatus !== COTIZACION_STATUS.APROBADA && (
                                 <div>
                                     <button
                                         onClick={() => !pagandoEfectivo && !errorConfirmarMonto && handlePagoEfectivo()}
@@ -727,7 +728,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                                 </p>
                             )}
 
-                            {(metodoPago?.metodo_pago !== 'Efectivo' || cotizacionStatus === 'aprobada') && (
+                            {(metodoPago?.metodo_pago !== 'Efectivo' || cotizacionStatus === COTIZACION_STATUS.APROBADA) && (
                                 <button
                                     onClick={() => !actualizando && handleActualizarCotizacion()}
                                     className={`bg-blue-900 text-white px-3 py-3 rounded-md w-full mb-2 ${actualizando ? 'opacity-50 cursor-not-allowed' : ''}`}

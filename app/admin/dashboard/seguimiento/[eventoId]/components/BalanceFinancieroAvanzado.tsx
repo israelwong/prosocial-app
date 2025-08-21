@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
+import { PAGO_STATUS } from '@/app/admin/_lib/constants/status'
 import {
     DollarSign,
     TrendingUp,
@@ -62,10 +63,10 @@ interface BalanceFinancieroAvanzadoProps {
 }
 
 const STATUS_COLORS = {
-    'paid': 'bg-green-900/20 text-green-400 border border-green-800',
-    'pending': 'bg-amber-900/20 text-amber-400 border border-amber-800',
-    'failed': 'bg-red-900/20 text-red-400 border border-red-800',
-    'cancelled': 'bg-zinc-800 text-zinc-400 border border-zinc-700',
+    [PAGO_STATUS.PAID]: 'bg-green-900/20 text-green-400 border border-green-800',
+    [PAGO_STATUS.PENDING]: 'bg-amber-900/20 text-amber-400 border border-amber-800',
+    [PAGO_STATUS.FAILED]: 'bg-red-900/20 text-red-400 border border-red-800',
+    [PAGO_STATUS.CANCELLED]: 'bg-zinc-800 text-zinc-400 border border-zinc-700',
     'default': 'bg-zinc-800 text-zinc-500 border border-zinc-700'
 } as const
 
@@ -200,9 +201,9 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
     const porcentajePagado = totalCotizacion > 0 ? (totalPagado / totalCotizacion) * 100 : 0
 
     // Análisis de pagos
-    const pagosExitosos = pagos?.filter(pago => pago.status === 'paid') || []
-    const pagosPendientes = pagos?.filter(pago => pago.status === 'pending') || []
-    const pagosFallidos = pagos?.filter(pago => pago.status === 'failed') || []
+    const pagosExitosos = pagos?.filter(pago => pago.status === PAGO_STATUS.PAID) || []
+    const pagosPendientes = pagos?.filter(pago => pago.status === PAGO_STATUS.PENDING) || []
+    const pagosFallidos = pagos?.filter(pago => pago.status === PAGO_STATUS.FAILED) || []
 
     const metodosPago = pagos?.reduce((acc, pago) => {
         const metodo = pago.metodo_pago || 'otro'
@@ -545,9 +546,9 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                                                         {formatearMoneda(pago.monto || pago.cantidad || 0)}
                                                     </p>
                                                     <Badge className={getStatusColor(pago.status)}>
-                                                        {pago.status === 'paid'
+                                                        {pago.status === PAGO_STATUS.PAID
                                                             ? 'Pagado'
-                                                            : pago.status === 'pending'
+                                                            : pago.status === PAGO_STATUS.PENDING
                                                                 ? 'Pendiente'
                                                                 : pago.statusDisplay || pago.status || 'Sin status'}
                                                     </Badge>

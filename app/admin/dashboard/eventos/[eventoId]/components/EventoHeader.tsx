@@ -5,6 +5,7 @@ import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
 import { validarDisponibilidadFecha } from '@/app/admin/_lib/actions/evento/crearEventoCompleto/crearEventoCompleto.actions'
 import type { DisponibilidadFecha } from '@/app/admin/_lib/actions/evento/crearEventoCompleto/crearEventoCompleto.schemas'
+import { EVENTO_STATUS } from '@/app/admin/_lib/constants/status'
 import {
     Calendar,
     User,
@@ -70,11 +71,11 @@ export default function EventoHeader({
                 return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
             case 'cotizacion':
                 return 'bg-purple-500/20 text-purple-400 border-purple-500/30'
-            case 'aprobado':
+            case EVENTO_STATUS.APROBADO:
                 return 'bg-green-500/20 text-green-400 border-green-500/30'
-            case 'completado':
+            case EVENTO_STATUS.COMPLETADO:
                 return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-            case 'cancelado':
+            case EVENTO_STATUS.CANCELADO:
                 return 'bg-red-500/20 text-red-400 border-red-500/30'
             default:
                 return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'

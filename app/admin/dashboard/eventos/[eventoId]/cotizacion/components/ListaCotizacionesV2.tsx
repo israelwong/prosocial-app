@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback, memo } from 'react'
 import { obtenerCotizacionesPorEvento } from '@/app/admin/_lib/cotizacion.actions'
 import { obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/paquete.actions'
+import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 
 import { Cotizacion, Paquete } from '@/app/admin/_lib/types'
 import { Copy, SquareArrowOutUpRight } from 'lucide-react'
@@ -176,7 +177,7 @@ const ListaCotizaciones: React.FC<Props> = ({ eventoId, eventoTipoId, eventoAsig
                             cotizaciones.length > 0 ? (
                                 <ul>
                                     {cotizaciones.map((cotizacion, index) => (
-                                        <li key={index} className={`mb-3 ${cotizacion.status === 'pendiente' ? 'bg-zinc-900 rounded-md  p-5' : 'bg-green-900/10 border border-green-950/30 rounded-md p-5'}`}>
+                                        <li key={index} className={`mb-3 ${cotizacion.status === COTIZACION_STATUS.PENDIENTE ? 'bg-zinc-900 rounded-md  p-5' : 'bg-green-900/10 border border-green-950/30 rounded-md p-5'}`}>
                                             <FichaCotizacionDetalle
                                                 cotizacion={cotizacion}
                                                 onEliminarCotizacion={handleEliminarCotizacion}

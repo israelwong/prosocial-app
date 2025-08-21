@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import { autorizarCotizacion, verificarEstadoAutorizacion } from '@/app/admin/_lib/autorizarCotizacion.actions';
+import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
@@ -17,7 +18,7 @@ interface BotonAutorizarCotizacionProps {
 export default function BotonAutorizarCotizacion({
     cotizacionId,
     eventoId,
-    estadoInicial = 'pending',
+    estadoInicial = COTIZACION_STATUS.PENDIENTE,
     className = '',
     mostrarTexto = true,
     onAutorizado

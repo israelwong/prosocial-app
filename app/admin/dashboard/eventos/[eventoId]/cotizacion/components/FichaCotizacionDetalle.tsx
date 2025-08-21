@@ -4,6 +4,7 @@ import { clonarCotizacion, archivarCotizacion, desarchivarCotizacion } from '@/a
 import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import { useRouter } from 'next/navigation'
 import { autorizarCotizacion } from '@/app/admin/_lib/autorizarCotizacion.actions'
+import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 import BotonAutorizarCotizacion from './BotonAutorizarCotizacion'
 import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
 import ModalConfirmacionEliminacion from '@/app/components/ui/ModalConfirmacionEliminacion'
@@ -51,7 +52,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
 
         // Agregar lógica para detectar si se debe ofrecer archivado
         // Si la cotización está aprobada, sugerir archivado cuando hay bloqueos
-        if (cotizacion.status === 'aprobada') {
+        if (cotizacion.status === COTIZACION_STATUS.APROBADA) {
             // Agregar bloqueo usando la función del modal
             modalEliminacion.actualizarBloqueos(['Cotización aprobada con posibles dependencias activas'])
         }
@@ -299,7 +300,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                 </button>
 
                                 {/* Autorizar - Solo si no está autorizado */}
-                                {cotizacion.status !== 'autorizado' && cotizacion.status !== 'aprobada' && (
+                                {cotizacion.status !== 'autorizado' && cotizacion.status !== COTIZACION_STATUS.APROBADA && (
                                     <>
                                         <button
                                             onClick={handleAutorizar}
@@ -314,7 +315,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                 )}
 
                                 {/* Ir a seguimiento - Solo si está aprobada */}
-                                {cotizacion.status === 'aprobada' && (
+                                {cotizacion.status === COTIZACION_STATUS.APROBADA && (
                                     <>
                                         <button
                                             onClick={() => {
@@ -401,7 +402,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                 </div>
             )}
 
-            {cotizacion.status === 'aprobada' && (
+            {cotizacion.status === COTIZACION_STATUS.APROBADA && (
                 <div className={`mt-3 p-3 bg-green-900/30 border border-green-700 rounded-lg ${archivada ? 'opacity-30' : ''}`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-green-400 text-sm font-medium">

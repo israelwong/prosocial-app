@@ -9,6 +9,7 @@ import {
     actualizarEtapa
 } from '@/app/admin/_lib/evento.actions'
 import { obtenerEventoEtapas } from "@/app/admin/_lib/EventoEtapa.actions"
+import { EVENTO_STATUS } from '@/app/admin/_lib/constants/status'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { toast } from 'sonner'
@@ -190,9 +191,9 @@ export default function FichaEventoUnificada({ eventoId, onAsignacionEvento }: P
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'activo': return 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-            case 'aprobado': return 'bg-green-500/20 text-green-400 border-green-500/30'
-            case 'cancelado': return 'bg-red-500/20 text-red-400 border-red-500/30'
-            case 'completado': return 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+            case EVENTO_STATUS.APROBADO: return 'bg-green-500/20 text-green-400 border-green-500/30'
+            case EVENTO_STATUS.CANCELADO: return 'bg-red-500/20 text-red-400 border-red-500/30'
+            case EVENTO_STATUS.COMPLETADO: return 'bg-purple-500/20 text-purple-400 border-purple-500/30'
             default: return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
         }
     }
