@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Cotizacion } from '@/app/admin/_lib/types'
-import { eliminarCotizacion, clonarCotizacion, archivarCotizacion, desarchivarCotizacion } from '@/app/admin/_lib/cotizacion.actions'
+import { clonarCotizacion, archivarCotizacion, desarchivarCotizacion } from '@/app/admin/_lib/cotizacion.actions'
+import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import { useRouter } from 'next/navigation'
 import { autorizarCotizacion } from '@/app/admin/_lib/autorizarCotizacion.actions'
 import BotonAutorizarCotizacion from './BotonAutorizarCotizacion'

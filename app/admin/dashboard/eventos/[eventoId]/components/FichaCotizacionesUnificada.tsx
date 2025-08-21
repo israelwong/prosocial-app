@@ -6,6 +6,7 @@ import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
 import { obtenerCotizacionesPorEvento } from '@/app/admin/_lib/cotizacion.actions'
 import { obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/paquete.actions'
+import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import { Cotizacion, Paquete } from '@/app/admin/_lib/types'
 import { supabase } from '@/app/admin/_lib/supabase'
 import FichaCotizacionDetalle from '../cotizacion/components/FichaCotizacionDetalle'
@@ -18,6 +19,9 @@ interface Props {
 // Tipo para las cotizaciones de EventoCompleto
 type CotizacionSimple = EventoCompleto['Cotizacion'][0]
 
+// Cache global temporal para evitar eliminaciones duplicadas
+const eliminacionesRecientes = new Set<string>()
+
 export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsignado }: Props) {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
@@ -27,6 +31,7 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
     const [copiado, setCopiado] = useState<string | null>(null)
     const [menuAbierto, setMenuAbierto] = useState(false)
     const [menuPaquetesAbierto, setMenuPaquetesAbierto] = useState(false)
+    const [eliminandoCotizacion, setEliminandoCotizacion] = useState<string | null>(null)
 
     const eventoId = eventoCompleto.id
     const eventoTipoId = eventoCompleto.eventoTipoId
@@ -132,16 +137,65 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
     }
 
     const handleEliminarCotizacion = async (cotizacionId: string) => {
-        try {
-            const response = await fetch(`/api/cotizacion/${cotizacionId}`, {
-                method: 'DELETE'
-            })
+        // Protección global contra eliminaciones duplicadas
+        if (eliminacionesRecientes.has(cotizacionId)) {
+            console.log('🛡️ Eliminación global bloqueada - cotización ya procesada recientemente:', cotizacionId)
+            return
+        }
 
-            if (response.ok) {
+        // Protección contra llamadas duplicadas en este componente
+        if (eliminandoCotizacion === cotizacionId) {
+            console.log('⚠️ Ya se está eliminando esta cotización, ignorando llamada duplicada')
+            return
+        }
+
+        try {
+            // Marcar como en proceso de eliminación
+            setEliminandoCotizacion(cotizacionId)
+            eliminacionesRecientes.add(cotizacionId)
+
+            console.log('🗑️ Intentando eliminar cotización:', cotizacionId)
+            console.log('📋 Cotizaciones actuales:', cotizaciones.map(c => ({ id: c.id, nombre: c.nombre })))
+            console.log('📋 Cotizaciones simples:', cotizacionesSimples.map(c => ({ id: c.id, status: c.status, precio: c.precio })))
+
+            // Verificar si la cotización existe en los estados locales antes de intentar eliminar
+            const existeEnCotizaciones = cotizaciones.some(c => c.id === cotizacionId)
+            const existeEnSimples = cotizacionesSimples.some(c => c.id === cotizacionId)
+
+            if (!existeEnCotizaciones && !existeEnSimples) {
+                console.log('⚠️ La cotización ya no existe en los estados locales, saltando eliminación')
+                return
+            }
+
+            const resultado = await eliminarCotizacion(cotizacionId)
+
+            if (resultado.success) {
+                if (resultado.alreadyDeleted) {
+                    console.log('ℹ️ Cotización ya había sido eliminada:', resultado.message)
+                } else {
+                    console.log('✅ Cotización eliminada exitosamente:', resultado.message)
+                }
+                // Actualizar el estado local eliminando la cotización en ambos casos
                 setCotizaciones(prev => prev.filter(c => c.id !== cotizacionId))
+                setCotizacionesSimples(prev => prev.filter(c => c.id !== cotizacionId))
+            } else {
+                console.error('❌ Error al eliminar cotización:', resultado.error)
+
+                // Si el error es que no se encontró, actualizar los estados locales
+                if (resultado.error?.includes('no encontrada')) {
+                    console.log('🔄 Sincronizando estados locales - removiendo cotización inexistente')
+                    setCotizaciones(prev => prev.filter(c => c.id !== cotizacionId))
+                    setCotizacionesSimples(prev => prev.filter(c => c.id !== cotizacionId))
+                }
             }
         } catch (error) {
-            console.error('Error al eliminar cotización:', error)
+            console.error('💥 Error al eliminar cotización:', error)
+        } finally {
+            setEliminandoCotizacion(null)
+            // Limpiar el cache después de un tiempo para permitir futuras eliminaciones
+            setTimeout(() => {
+                eliminacionesRecientes.delete(cotizacionId)
+            }, 3000) // 3 segundos de protección
         }
     }
 

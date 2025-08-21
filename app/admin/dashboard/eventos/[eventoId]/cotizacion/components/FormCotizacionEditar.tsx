@@ -4,7 +4,8 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { Servicio, MetodoPago, CondicionesComerciales } from '@/app/admin/_lib/types'
 
 import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
-import { obtenerCotizacion, obtenerCotizacionServicios, actualizarCotizacion, eliminarCotizacion } from '@/app/admin/_lib/cotizacion.actions';
+import { obtenerCotizacion, obtenerCotizacionServicios, actualizarCotizacion } from '@/app/admin/_lib/cotizacion.actions';
+import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
 import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
 import { actualizarEventoStatus } from '@/app/admin/_lib/evento.actions';
 import { obtenerEventoPorId } from '@/app/admin/_lib/evento.actions';

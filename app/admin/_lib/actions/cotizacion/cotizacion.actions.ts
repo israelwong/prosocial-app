@@ -745,3 +745,72 @@ export async function obtenerCotizacionesParaEvento(eventoId: string) {
         }
     }
 }
+
+/**
+ * Elimina una cotización por su ID
+ */
+export async function eliminarCotizacion(cotizacionId: string) {
+    try {
+        console.log('🗑️ [SERVIDOR] Iniciando eliminación de cotización:', cotizacionId);
+
+        // Validar que el ID sea válido
+        if (!cotizacionId || typeof cotizacionId !== 'string') {
+            console.log('❌ [SERVIDOR] ID inválido:', cotizacionId);
+            return {
+                success: false,
+                error: 'ID de cotización inválido'
+            };
+        }
+
+        // Verificar que la cotización existe
+        console.log('🔍 [SERVIDOR] Buscando cotización en BD:', cotizacionId);
+        const cotizacionExistente = await prisma.cotizacion.findUnique({
+            where: { id: cotizacionId },
+            select: {
+                id: true,
+                nombre: true,
+                eventoId: true
+            }
+        });
+
+        console.log('🔍 [SERVIDOR] Resultado de búsqueda:', cotizacionExistente);
+
+        if (!cotizacionExistente) {
+            // Buscar en todas las cotizaciones para debugging
+            const todasLasCotizaciones = await prisma.cotizacion.findMany({
+                select: { id: true, nombre: true },
+                take: 10 // Solo las primeras 10 para no saturar logs
+            });
+            console.log('📋 [SERVIDOR] Primeras 10 cotizaciones en BD:', todasLasCotizaciones);
+
+            // Retornar éxito silencioso si es una eliminación duplicada
+            console.log('ℹ️ [SERVIDOR] Cotización ya eliminada - retornando éxito silencioso');
+            return {
+                success: true,
+                message: 'Cotización ya había sido eliminada previamente',
+                alreadyDeleted: true,
+                details: {
+                    cotizacionId,
+                    disponibles: todasLasCotizaciones.length
+                }
+            };
+        }        // Eliminar la cotización
+        console.log('🗑️ [SERVIDOR] Eliminando cotización:', cotizacionExistente);
+        await prisma.cotizacion.delete({
+            where: { id: cotizacionId }
+        });
+
+        console.log('✅ [SERVIDOR] Cotización eliminada exitosamente');
+        return {
+            success: true,
+            message: 'Cotización eliminada exitosamente'
+        };
+
+    } catch (error) {
+        console.error('💥 [SERVIDOR] Error al eliminar cotización:', error);
+        return {
+            success: false,
+            error: 'Error interno del servidor al eliminar la cotización'
+        };
+    }
+}
