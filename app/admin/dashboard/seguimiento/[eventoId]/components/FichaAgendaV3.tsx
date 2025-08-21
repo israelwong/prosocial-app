@@ -262,8 +262,8 @@ export default function FichaAgendaV3({ eventoId }: Props) {
                                         </span>
 
                                         {/* Estado */}
-                                        <span className={`px-2 py-1 rounded-md text-xs border ${getStatusColor(item.status || 'pendiente')}`}>
-                                            {item.status === 'completado' ? 'Completado' :
+                                        <span className={`px-2 py-1 rounded-md text-xs border ${getStatusColor(item.status || AGENDA_STATUS.PENDIENTE)}`}>
+                                            {item.status === AGENDA_STATUS.COMPLETADO ? 'Completado' :
                                                 item.status === 'cancelado' ? 'Cancelado' : 'Pendiente'}
                                         </span>
                                     </div>
@@ -283,11 +283,11 @@ export default function FichaAgendaV3({ eventoId }: Props) {
                                                 <button
                                                     onClick={() => item.id && handleStatusAgendaActividad(
                                                         item.id,
-                                                        item.status === 'pendiente' ? 'completado' : 'pendiente'
+                                                        item.status === AGENDA_STATUS.PENDIENTE ? AGENDA_STATUS.COMPLETADO : AGENDA_STATUS.PENDIENTE
                                                     )}
                                                     className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
                                                 >
-                                                    {item.status === 'pendiente' ? (
+                                                    {item.status === AGENDA_STATUS.PENDIENTE ? (
                                                         <>
                                                             <CheckCircle className="w-4 h-4" />
                                                             Marcar como completado

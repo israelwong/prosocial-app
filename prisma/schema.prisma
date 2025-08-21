@@ -76,9 +76,9 @@ model Evento {
   fecha_evento DateTime
   sede         String?
   direccion    String?
-  status       String      @default("active")
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  status       String       @default("active")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   userId String?
   User   User?   @relation(fields: [userId], references: [id])
@@ -150,7 +150,7 @@ model Pago {
   descripcion                        String?
   stripe_session_id                  String?                           @unique
   stripe_payment_id                  String?                           @unique
-  status                             String                            @default("pending") //pending, succeeded, failed
+  status                             String                            @default("pending")
   createdAt                          DateTime                          @default(now())
   updatedAt                          DateTime                          @updatedAt
   //agregadas
@@ -174,7 +174,7 @@ model Cotizacion {
   CondicionesComerciales             CondicionesComerciales?            @relation(fields: [condicionesComercialesId], references: [id])
   condicionesComercialesMetodoPagoId String?
   CondicionesComercialesMetodoPago   CondicionesComercialesMetodoPago[]
-  status                             String                             @default("pending") //pendiente, aprobado, rechazado
+  status                             String                             @default("pendiente")
   archivada                          Boolean                            @default(false)
   visible_cliente                    Boolean?                           @default(true)
   createdAt                          DateTime                           @default(now())
@@ -512,9 +512,9 @@ model Agenda {
   direccion     String?
   fecha         DateTime?
   hora          String?
-  status        String    @default("pendiente")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  status        String       @default("pendiente")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   agendaTipo    String?
 }
 

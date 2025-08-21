@@ -1,5 +1,5 @@
 'use server'
-import { AGENDA_STATUS } from './constants/status';
+import { AGENDA_STATUS, COTIZACION_STATUS, PAGO_STATUS } from './constants/status';
 import prisma from './prismaClient';
 import { Agenda } from './types';
 
@@ -20,12 +20,12 @@ export async function obtenerAgendaConEventos() {
                             }
                         },
                         Cotizacion: {
-                            where: { status: 'aprobada' },
+                            where: { status: COTIZACION_STATUS.APROBADA },
                             select: {
                                 status: true,
                                 precio: true,
                                 Pago: {
-                                    where: { status: 'paid' },
+                                    where: { status: PAGO_STATUS.PAID },
                                     select: {
                                         monto: true
                                     }

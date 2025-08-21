@@ -10,6 +10,7 @@ import {
     type EventoKanbanType,
     type EstadisticasColumnaType
 } from './gestion.schemas';
+import { COTIZACION_STATUS, PAGO_STATUS, EVENTO_STATUS } from '../../constants/status';
 
 /**
  * Obtiene todos los eventos para el kanban con información necesaria
@@ -32,7 +33,7 @@ export async function obtenerEventosKanban(data?: ObtenerEventosPorEtapasType) {
             where: {
                 ...whereClause,
                 status: {
-                    in: ['active', 'aprobado']
+                    in: [EVENTO_STATUS.ACTIVE, EVENTO_STATUS.APROBADO]
                 }
             },
             distinct: ['id'], // Asegurar que cada evento sea único
@@ -60,7 +61,7 @@ export async function obtenerEventosKanban(data?: ObtenerEventosPorEtapasType) {
                         precio: true,
                         Pago: {
                             where: {
-                                status: 'paid'
+                                status: PAGO_STATUS.PAID
                             },
                             select: {
                                 monto: true
@@ -76,7 +77,7 @@ export async function obtenerEventosKanban(data?: ObtenerEventosPorEtapasType) {
 
         // Transformar datos para el kanban
         const eventosKanban: EventoKanbanType[] = eventos.map(evento => {
-            const cotizacionAprobada = evento.Cotizacion.find(c => c.status === 'aprobada');
+            const cotizacionAprobada = evento.Cotizacion.find(c => c.status === COTIZACION_STATUS.APROBADA);
             const totalPagado = cotizacionAprobada?.Pago.reduce((sum, pago) => sum + pago.monto, 0) || 0;
             const cotizacionPrecio = cotizacionAprobada?.precio || 0;
             const totalPendiente = cotizacionPrecio - totalPagado;
@@ -134,18 +135,18 @@ export async function obtenerEstadisticasColumnas(): Promise<{ success: boolean;
             const eventos = await prisma.evento.findMany({
                 where: {
                     eventoEtapaId: etapa.id,
-                    status: 'active'
+                    status: EVENTO_STATUS.ACTIVE
                 },
                 include: {
                     Cotizacion: {
                         where: {
-                            status: 'aprobada'
+                            status: COTIZACION_STATUS.APROBADA
                         },
                         select: {
                             precio: true,
                             Pago: {
                                 where: {
-                                    status: 'succeeded'
+                                    status: PAGO_STATUS.PAID
                                 },
                                 select: {
                                     monto: true
@@ -307,7 +308,7 @@ export async function archivarEvento(eventoId: string) {
         await prisma.evento.update({
             where: { id: eventoId },
             data: {
-                status: 'archived'
+                status: EVENTO_STATUS.ARCHIVED
             }
         });
 

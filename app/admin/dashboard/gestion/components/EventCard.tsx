@@ -40,12 +40,12 @@ export default function EventCard({ evento, isDragging = false, onArchive }: Eve
 
     const normalizedStatus = (evento.status || '').toLowerCase();
     const isAprobado = [
-        EVENTO_STATUS.APROBADO.toLowerCase(), 
-        'aprobada', 
-        'autorizado', 
-        'autorizada', 
-        'autor', 
-        'authorized', 
+        EVENTO_STATUS.APROBADO.toLowerCase(),
+        'aprobada',
+        'autorizado',
+        'autorizada',
+        'autor',
+        'authorized',
         'approved'
     ].some(s => normalizedStatus.startsWith(s));
 
