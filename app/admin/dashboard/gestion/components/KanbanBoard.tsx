@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Settings } from 'lucide-react';
+import { Settings, Search, Calendar, X } from 'lucide-react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCorners, pointerWithin, getFirstCollision, CollisionDetection } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { obtenerEventosKanban, obtenerEtapasGestion, actualizarEtapaEvento, archivarEvento } from '@/app/admin/_lib/actions/gestion/gestion.actions';
@@ -20,8 +20,17 @@ export default function KanbanBoard() {
     const router = useRouter();
     const [etapas, setEtapas] = useState<EventoEtapa[]>([]);
     const [eventos, setEventos] = useState<KanbanData>({});
+    const [eventosOriginales, setEventosOriginales] = useState<KanbanData>({});
     const [loading, setLoading] = useState(true);
     const [activeEvent, setActiveEvent] = useState<EventoKanbanType | null>(null);
+
+    // Estados para filtros
+    const [filtros, setFiltros] = useState({
+        nombre: '',
+        cliente: '',
+        fechaDesde: '',
+        fechaHasta: ''
+    });
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -48,6 +57,64 @@ export default function KanbanBoard() {
     useEffect(() => {
         fetchData();
     }, []);
+
+    // Lógica de filtrado
+    const eventosFiltrados = useMemo(() => {
+        if (!filtros.nombre && !filtros.cliente && !filtros.fechaDesde && !filtros.fechaHasta) {
+            return eventosOriginales;
+        }
+
+        const eventosFiltradosPorEtapa: KanbanData = {};
+
+        // Inicializar todas las etapas
+        Object.keys(eventosOriginales).forEach(etapaId => {
+            eventosFiltradosPorEtapa[etapaId] = [];
+        });
+
+        // Aplicar filtros
+        Object.entries(eventosOriginales).forEach(([etapaId, eventosEtapa]) => {
+            const eventosFiltradosEtapa = eventosEtapa.filter(evento => {
+                // Filtro por nombre del evento
+                if (filtros.nombre && !evento.nombre?.toLowerCase().includes(filtros.nombre.toLowerCase())) {
+                    return false;
+                }
+
+                // Filtro por nombre del cliente
+                if (filtros.cliente && !evento.clienteNombre?.toLowerCase().includes(filtros.cliente.toLowerCase())) {
+                    return false;
+                }
+
+                // Filtro por fecha desde
+                if (filtros.fechaDesde) {
+                    const fechaEvento = new Date(evento.fecha_evento);
+                    const fechaDesde = new Date(filtros.fechaDesde);
+                    if (fechaEvento < fechaDesde) {
+                        return false;
+                    }
+                }
+
+                // Filtro por fecha hasta
+                if (filtros.fechaHasta) {
+                    const fechaEvento = new Date(evento.fecha_evento);
+                    const fechaHasta = new Date(filtros.fechaHasta);
+                    if (fechaEvento > fechaHasta) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            eventosFiltradosPorEtapa[etapaId] = eventosFiltradosEtapa;
+        });
+
+        return eventosFiltradosPorEtapa;
+    }, [eventosOriginales, filtros]);
+
+    // Actualizar eventos cuando cambien los filtros
+    useEffect(() => {
+        setEventos(eventosFiltrados);
+    }, [eventosFiltrados]);
 
     const fetchData = async () => {
         try {
@@ -90,7 +157,7 @@ export default function KanbanBoard() {
                     }
 
                     const etapaId = evento.etapaId || 'sin-etapa';
-                    
+
                     if (!eventosPorEtapa[etapaId]) {
                         eventosPorEtapa[etapaId] = [];
                     }
@@ -109,6 +176,8 @@ export default function KanbanBoard() {
                     eventosPorEtapa[etapaId].sort((a, b) => new Date(a.fecha_evento).getTime() - new Date(b.fecha_evento).getTime());
                 }
 
+                // Guardar eventos originales para filtrado
+                setEventosOriginales(eventosPorEtapa);
                 setEventos(eventosPorEtapa);
             }
         } catch (error) {
@@ -363,6 +432,95 @@ export default function KanbanBoard() {
                     Editar pipeline
                 </button>
 
+            </div>
+
+            {/* Panel de filtros */}
+            <div className="mb-6 bg-zinc-800 border border-zinc-700 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Filtro por nombre del evento */}
+                    <div>
+                        <label className="block text-sm font-medium text-zinc-300 mb-2">
+                            Nombre del evento
+                        </label>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
+                            <input
+                                type="text"
+                                value={filtros.nombre}
+                                onChange={(e) => setFiltros(prev => ({ ...prev, nombre: e.target.value }))}
+                                placeholder="Buscar evento..."
+                                className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Filtro por cliente */}
+                    <div>
+                        <label className="block text-sm font-medium text-zinc-300 mb-2">
+                            Cliente
+                        </label>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
+                            <input
+                                type="text"
+                                value={filtros.cliente}
+                                onChange={(e) => setFiltros(prev => ({ ...prev, cliente: e.target.value }))}
+                                placeholder="Buscar cliente..."
+                                className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Filtro fecha desde */}
+                    <div>
+                        <label className="block text-sm font-medium text-zinc-300 mb-2">
+                            Fecha desde
+                        </label>
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
+                            <input
+                                type="date"
+                                value={filtros.fechaDesde}
+                                onChange={(e) => setFiltros(prev => ({ ...prev, fechaDesde: e.target.value }))}
+                                className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Filtro fecha hasta */}
+                    <div>
+                        <label className="block text-sm font-medium text-zinc-300 mb-2">
+                            Fecha hasta
+                        </label>
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
+                            <input
+                                type="date"
+                                value={filtros.fechaHasta}
+                                onChange={(e) => setFiltros(prev => ({ ...prev, fechaHasta: e.target.value }))}
+                                className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Botón para limpiar filtros */}
+                {(filtros.nombre || filtros.cliente || filtros.fechaDesde || filtros.fechaHasta) && (
+                    <div className="mt-4 flex justify-end">
+                        <button
+                            onClick={() => setFiltros({
+                                nombre: '',
+                                cliente: '',
+                                fechaDesde: '',
+                                fechaHasta: ''
+                            })}
+                            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg transition-colors border border-zinc-600"
+                        >
+                            <X className="w-4 h-4" />
+                            Limpiar filtros
+                        </button>
+                    </div>
+                )}
             </div>
 
             <DndContext
