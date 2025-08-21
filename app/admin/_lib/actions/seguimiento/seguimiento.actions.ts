@@ -2,6 +2,7 @@
 
 'use server';
 
+import { EVENTO_STATUS, COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
 import prisma from '@/app/admin/_lib/prismaClient';
 import { revalidatePath } from 'next/cache';
 import {
@@ -108,7 +109,7 @@ export async function obtenerEventosSeguimientoPorEtapa(
 
                 // Datos de cotización
                 cotizacionId: cotizacion?.id || null,
-                cotizacionAprobada: cotizacion?.status === 'aprobado',
+                cotizacionAprobada: cotizacion?.status === COTIZACION_STATUS.APROBADA,
                 precio,
 
                 // Datos de pagos
@@ -177,7 +178,7 @@ export async function obtenerEventosSeguimientoPorEtapaListaAprobados(
                 // Solo eventos que tengan al menos una cotización aprobada
                 Cotizacion: {
                     some: {
-                        status: 'aprobada'
+                        status: COTIZACION_STATUS.APROBADA
                     }
                 }
             },
@@ -187,7 +188,7 @@ export async function obtenerEventosSeguimientoPorEtapaListaAprobados(
                 EventoEtapa: true,
                 Cotizacion: {
                     where: {
-                        status: 'aprobada' // Solo cotizaciones aprobadas
+                        status: COTIZACION_STATUS.APROBADA // Solo cotizaciones aprobadas
                     },
                     include: {
                         Pago: true
@@ -327,14 +328,14 @@ export async function obtenerEtapasSeguimiento(): Promise<EtapaSeguimiento[]> {
                 Evento: {
                     where: {
                         Cotizacion: {
-                            some: { status: 'aprobado' }
+                            some: { status: COTIZACION_STATUS.APROBADA }
                         }
                     },
                     include: {
                         Cliente: true,
                         EventoTipo: true,
                         Cotizacion: {
-                            where: { status: 'aprobado' },
+                            where: { status: COTIZACION_STATUS.APROBADA },
                             include: {
                                 Servicio: true,
                                 Pago: {

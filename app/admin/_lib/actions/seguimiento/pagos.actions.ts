@@ -1,5 +1,6 @@
 'use server'
 
+import { PAGO_STATUS, type PagoStatus } from '@/app/admin/_lib/constants/status'
 import prisma from '@/app/admin/_lib/prismaClient'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -68,7 +69,7 @@ export async function crearPago(data: PagoCreateForm) {
                 metodoPagoId,
                 concepto: validData.concepto || 'Pago registrado manualmente',
                 descripcion: validData.descripcion,
-                status: 'paid',
+                status: PAGO_STATUS.PAID,
                 tipo_transaccion: 'income',
                 categoria_transaccion: 'event_payment',
                 createdAt: validData.fechaPago ? new Date(validData.fechaPago) : new Date()
@@ -226,7 +227,7 @@ export async function eliminarPago(pagoId: string) {
     }
 }
 
-export async function cambiarStatusPago(pagoId: string, nuevoStatus: 'pending' | 'paid' | 'failed') {
+export async function cambiarStatusPago(pagoId: string, nuevoStatus: PagoStatus) {
     try {
         console.log('🔄 Cambiando status del pago:', pagoId, 'a', nuevoStatus)
 
