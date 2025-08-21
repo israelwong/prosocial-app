@@ -8,6 +8,41 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ========================================
+// ENUMS - Fuente de verdad para los status
+// ========================================
+
+enum EventoStatus {
+  active      // Evento activo
+  cancelled   // Evento cancelado
+  completed   // Evento completado
+  archived    // Evento archivado
+}
+
+enum CotizacionStatus {
+  pendiente   // Cotización pendiente de revisión
+  aprobada    // Cotización aprobada por el cliente
+  rechazada   // Cotización rechazada por el cliente
+  expirada    // Cotización expirada por tiempo
+  archivada   // Cotización archivada
+}
+
+enum PagoStatus {
+  pending     // Pago pendiente de procesamiento
+  paid        // Pago completado y confirmado
+  failed      // Pago fallido
+  cancelled   // Pago cancelado
+  refunded    // Pago reembolsado
+}
+
+enum AgendaStatus {
+  pendiente   // Cita pendiente
+  confirmado  // Cita confirmada
+  cancelado   // Cita cancelada
+  completado  // Cita completada
+  reagendado  // Cita reagendada
+}
+
 model User {
   id        String   @id @default(cuid())
   username  String?
@@ -76,9 +111,9 @@ model Evento {
   fecha_evento DateTime
   sede         String?
   direccion    String?
-  status       String      @default("active")
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  status       EventoStatus @default(active)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   userId String?
   User   User?   @relation(fields: [userId], references: [id])
@@ -150,7 +185,7 @@ model Pago {
   descripcion                        String?
   stripe_session_id                  String?                           @unique
   stripe_payment_id                  String?                           @unique
-  status                             String                            @default("pending") //pending, succeeded, failed
+  status                             PagoStatus                        @default(pending)
   createdAt                          DateTime                          @default(now())
   updatedAt                          DateTime                          @updatedAt
   //agregadas
@@ -174,7 +209,7 @@ model Cotizacion {
   CondicionesComerciales             CondicionesComerciales?            @relation(fields: [condicionesComercialesId], references: [id])
   condicionesComercialesMetodoPagoId String?
   CondicionesComercialesMetodoPago   CondicionesComercialesMetodoPago[]
-  status                             String                             @default("pending") //pendiente, aprobado, rechazado
+  status                             CotizacionStatus                   @default(pendiente)
   archivada                          Boolean                            @default(false)
   visible_cliente                    Boolean?                           @default(true)
   createdAt                          DateTime                           @default(now())
@@ -512,9 +547,9 @@ model Agenda {
   direccion     String?
   fecha         DateTime?
   hora          String?
-  status        String    @default("pendiente")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  status        AgendaStatus @default(pendiente)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   agendaTipo    String?
 }
 
