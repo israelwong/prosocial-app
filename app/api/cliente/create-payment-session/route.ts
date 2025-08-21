@@ -95,8 +95,8 @@ export async function POST(request: NextRequest) {
                 eventoNombre,
                 tipo: 'abono_cliente'
             },
-            success_url: `${request.nextUrl.origin}/cliente-portal/pago/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${request.nextUrl.origin}/cliente-portal/pago/${cotizacionId}`,
+            success_url: `${request.nextUrl.origin}/cliente/pago/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${request.nextUrl.origin}/cliente/pago/${cotizacionId}`,
         });
 
         return NextResponse.json({

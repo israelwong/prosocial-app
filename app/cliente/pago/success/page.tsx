@@ -31,7 +31,7 @@ export default function PaymentSuccess() {
             }
 
             try {
-                const response = await fetch(`/api/cliente-portal/verify-payment?session_id=${sessionId}`)
+                const response = await fetch(`/api/cliente/verify-payment?session_id=${sessionId}`)
                 const data = await response.json()
 
                 if (data.success) {
@@ -89,7 +89,7 @@ export default function PaymentSuccess() {
                         </p>
                         <div className="space-y-2">
                             <Button
-                                onClick={() => router.push('/cliente-portal/dashboard')}
+                                onClick={() => router.push('/cliente/dashboard')}
                                 className="w-full"
                             >
                                 Volver al Dashboard
@@ -151,7 +151,7 @@ export default function PaymentSuccess() {
 
                     <div className="space-y-3">
                         <Button
-                            onClick={() => router.push(`/cliente-portal/evento/${paymentInfo.cotizacionId}`)}
+                            onClick={() => router.push(`/cliente/evento/${paymentInfo.cotizacionId}`)}
                             className="w-full"
                         >
                             Ver Detalles del Evento
@@ -159,7 +159,7 @@ export default function PaymentSuccess() {
 
                         <Button
                             variant="outline"
-                            onClick={() => router.push('/cliente-portal/dashboard')}
+                            onClick={() => router.push('/cliente/dashboard')}
                             className="w-full"
                         >
                             Volver al Dashboard

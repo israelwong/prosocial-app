@@ -59,11 +59,11 @@ export default function EventoDetalle() {
             try {
                 const clienteData = sessionStorage.getItem('cliente-data')
                 if (!clienteData) {
-                    router.push('/cliente-portal/auth/login')
+                    router.push('/cliente/auth/login')
                     return
                 }
 
-                const response = await fetch(`/api/cliente-portal/evento/${eventoId}`)
+                const response = await fetch(`/api/cliente/evento/${eventoId}`)
                 if (response.ok) {
                     const data = await response.json()
                     setEvento(data.evento)
@@ -152,7 +152,7 @@ export default function EventoDetalle() {
                             No se pudo cargar la información del evento.
                         </p>
                         <Button
-                            onClick={() => router.push('/cliente-portal/dashboard')}
+                            onClick={() => router.push('/cliente/dashboard')}
                             className="bg-blue-600 hover:bg-blue-700"
                         >
                             Volver al Dashboard
@@ -170,7 +170,7 @@ export default function EventoDetalle() {
                     <div className="flex items-center py-6">
                         <Button
                             variant="ghost"
-                            onClick={() => router.push('/cliente-portal/dashboard')}
+                            onClick={() => router.push('/cliente/dashboard')}
                             className="mr-4 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800"
                         >
                             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -291,7 +291,7 @@ export default function EventoDetalle() {
                                     getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) > 0 && (
                                         <Button
                                             className="w-full mt-6 bg-blue-600 hover:bg-blue-700"
-                                            onClick={() => router.push(`/cliente-portal/pago/${evento.cotizacion.id}`)}
+                                            onClick={() => router.push(`/cliente/pago/${evento.cotizacion.id}`)}
                                         >
                                             <CreditCard className="h-4 w-4 mr-2" />
                                             Realizar Pago

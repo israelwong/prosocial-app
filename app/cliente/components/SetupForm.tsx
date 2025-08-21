@@ -22,7 +22,7 @@ export default function SetupForm() {
 
         if (!clienteSetupData) {
             console.log('❌ No hay datos de setup, redirigiendo a login') // Debug log
-            router.push('/cliente-portal/auth/login')
+            router.push('/cliente/auth/login')
             return
         }
 
@@ -33,7 +33,7 @@ export default function SetupForm() {
             setClienteNombre(cliente.nombre)
         } catch (error) {
             console.error('❌ Error al parsear datos del cliente:', error)
-            router.push('/cliente-portal/auth/login')
+            router.push('/cliente/auth/login')
         }
     }, [router])
 
@@ -88,7 +88,7 @@ export default function SetupForm() {
             // Hash de la contraseña se hará en el servidor por seguridad
 
             // Enviar al servidor
-            const response = await fetch('/api/cliente-portal/auth/setup', {
+            const response = await fetch('/api/cliente/auth/setup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -110,7 +110,7 @@ export default function SetupForm() {
             // Guardar datos del cliente y redirigir al dashboard
             sessionStorage.setItem('cliente-data', JSON.stringify(data.cliente))
             sessionStorage.removeItem('cliente-setup') // Limpiar datos de setup
-            router.push('/cliente-portal/dashboard')
+            router.push('/cliente/dashboard')
 
         } catch (error) {
             console.error('Error en setup:', error)

@@ -8,7 +8,7 @@ async function testLogin() {
 
   try {
     const response = await fetch(
-      "http://localhost:3000/api/cliente-portal/auth/login",
+      "http://localhost:3000/api/cliente/auth/login",
       {
         method: "POST",
         headers: {
@@ -32,10 +32,10 @@ async function testLogin() {
 
     if (data.success && !data.hasPassword) {
       console.log("\n✅ Cliente necesita configurar contraseña");
-      console.log("📍 Siguiente paso: Ir a /cliente-portal/auth/setup");
+      console.log("📍 Siguiente paso: Ir a /cliente/auth/setup");
     } else if (data.success && data.hasPassword) {
       console.log("\n✅ Cliente ya tiene contraseña configurada");
-      console.log("📍 Siguiente paso: Ir a /cliente-portal/dashboard");
+      console.log("📍 Siguiente paso: Ir a /cliente/dashboard");
     } else {
       console.log("\n❌ Error en login:", data.message);
     }
@@ -50,7 +50,7 @@ async function testSetup(clienteId, password) {
 
   try {
     const response = await fetch(
-      "http://localhost:3000/api/cliente-portal/auth/setup",
+      "http://localhost:3000/api/cliente/auth/setup",
       {
         method: "POST",
         headers: {
@@ -81,7 +81,7 @@ async function testEventos(clienteId) {
 
   try {
     const response = await fetch(
-      `http://localhost:3000/api/cliente-portal/eventos/${clienteId}`
+      `http://localhost:3000/api/cliente/eventos/${clienteId}`
     );
     const data = await response.json();
 

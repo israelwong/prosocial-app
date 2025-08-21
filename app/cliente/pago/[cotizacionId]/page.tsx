@@ -51,11 +51,11 @@ export default function PagoPage() {
             try {
                 const clienteData = sessionStorage.getItem('cliente-data')
                 if (!clienteData) {
-                    router.push('/cliente-portal/auth/login')
+                    router.push('/cliente/auth/login')
                     return
                 }
 
-                const response = await fetch(`/api/cliente-portal/pago/${cotizacionId}`)
+                const response = await fetch(`/api/cliente/pago/${cotizacionId}`)
                 if (response.ok) {
                     const data = await response.json()
                     setCotizacion(data.cotizacion)
@@ -129,7 +129,7 @@ export default function PagoPage() {
         setError('')
 
         try {
-            const response = await fetch('/api/cliente-portal/create-payment-session', {
+            const response = await fetch('/api/cliente/create-payment-session', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -180,7 +180,7 @@ export default function PagoPage() {
                             Error al cargar
                         </h3>
                         <p className="text-gray-600 mb-4">{error}</p>
-                        <Button onClick={() => router.push('/cliente-portal/dashboard')}>
+                        <Button onClick={() => router.push('/cliente/dashboard')}>
                             Volver al Dashboard
                         </Button>
                     </CardContent>
@@ -208,7 +208,7 @@ export default function PagoPage() {
                     <div className="flex items-center py-6">
                         <Button
                             variant="ghost"
-                            onClick={() => router.push(`/cliente-portal/evento/${cotizacion.evento.id}`)}
+                            onClick={() => router.push(`/cliente/evento/${cotizacion.evento.id}`)}
                             className="mr-4"
                         >
                             <ArrowLeft className="h-4 w-4 mr-2" />

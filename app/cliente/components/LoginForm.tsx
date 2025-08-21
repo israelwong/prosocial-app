@@ -51,7 +51,7 @@ export default function LoginForm() {
             }
 
             // Llamada a API para validar credenciales
-            const response = await fetch('/api/cliente-portal/auth/login', {
+            const response = await fetch('/api/cliente/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -75,14 +75,14 @@ export default function LoginForm() {
             if (!data.hasPassword) {
                 console.log('👤 Cliente sin contraseña, redirigiendo a setup') // Debug log
                 sessionStorage.setItem('cliente-setup', JSON.stringify(data.cliente))
-                router.push('/cliente-portal/auth/setup')
+                router.push('/cliente/auth/setup')
                 return
             }
 
             // Si ya tiene contraseña, ir al dashboard
             console.log('✅ Cliente con contraseña, redirigiendo a dashboard') // Debug log
             sessionStorage.setItem('cliente-data', JSON.stringify(data.cliente))
-            router.push('/cliente-portal/dashboard')
+            router.push('/cliente/dashboard')
 
         } catch (error) {
             console.error('Error en login:', error)
