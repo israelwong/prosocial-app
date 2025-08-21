@@ -92,6 +92,12 @@ export default function KanbanBoard() {
                     }
 
                     const etapaId = evento.etapaId || 'sin-etapa';
+
+                    // Debug específico para etapas 1 y 2
+                    if (evento.etapaNombre === 'Nuevo' || evento.etapaNombre === 'Promesa') {
+                        console.log(`📍 Evento en etapa inicial: ${evento.nombre} | Etapa: ${evento.etapaNombre} | EtapaId: ${etapaId} | Tiene cotización: ${evento.tieneCotizacionAprobada}`);
+                    }
+
                     if (!eventosPorEtapa[etapaId]) {
                         eventosPorEtapa[etapaId] = [];
                     }
@@ -108,6 +114,13 @@ export default function KanbanBoard() {
                 // Ordenar eventos por fecha en cada etapa
                 for (const etapaId in eventosPorEtapa) {
                     eventosPorEtapa[etapaId].sort((a, b) => new Date(a.fecha_evento).getTime() - new Date(b.fecha_evento).getTime());
+                }
+
+                // Debug: mostrar conteo por etapa
+                console.log('📊 Eventos por etapa:');
+                for (const [etapaId, eventosEtapa] of Object.entries(eventosPorEtapa)) {
+                    const etapa = etapasResult.data?.find(e => e.id === etapaId);
+                    console.log(`  - ${etapa?.nombre || etapaId}: ${eventosEtapa.length} eventos`);
                 }
 
                 setEventos(eventosPorEtapa);

@@ -33,7 +33,7 @@ export async function obtenerEventosKanban(data?: ObtenerEventosPorEtapasType) {
             where: {
                 ...whereClause,
                 status: {
-                    in: [EVENTO_STATUS.ACTIVE, EVENTO_STATUS.APROBADO]
+                    in: [EVENTO_STATUS.ACTIVE, EVENTO_STATUS.APROBADO, EVENTO_STATUS.PENDIENTE]
                 }
             },
             distinct: ['id'], // Asegurar que cada evento sea único
@@ -73,6 +73,17 @@ export async function obtenerEventosKanban(data?: ObtenerEventosPorEtapasType) {
             orderBy: {
                 fecha_evento: 'asc'
             }
+        });
+
+        console.log('🔍 DEBUG - Total eventos obtenidos de DB:', eventos.length);
+        console.log('🔍 DEBUG - Eventos por etapa desde DB:');
+        const eventosPorEtapaDB = eventos.reduce((acc: any, evento) => {
+            const etapaNombre = evento.EventoEtapa?.nombre || 'Sin etapa';
+            acc[etapaNombre] = (acc[etapaNombre] || 0) + 1;
+            return acc;
+        }, {});
+        Object.entries(eventosPorEtapaDB).forEach(([etapa, count]) => {
+            console.log(`  - ${etapa}: ${count} eventos`);
         });
 
         // Transformar datos para el kanban
