@@ -227,7 +227,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
 
       // Actualizar estado del evento
       const updateData = {
-        status: "contratado",
+        status: "aprobado",
       };
 
       // Solo actualizar etapa si encontramos una válida
@@ -242,7 +242,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
 
       console.log("✅ Evento actualizado:", {
         eventoId: evento.id,
-        nuevoStatus: "contratado",
+        nuevoStatus: "aprobado",
         etapaActualizada: !!etapaContratadoId,
       });
 
@@ -261,7 +261,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
             data: {
               eventoId: evento.id,
               fecha: evento.fecha_evento,
-              status: "confirmado",
+              status: "pendiente",
               descripcion: `Evento confirmado automáticamente - Pago procesado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`,
               createdAt: new Date(),
               updatedAt: new Date(),
@@ -278,7 +278,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
           await prisma.agenda.update({
             where: { id: agendaExistente.id },
             data: {
-              status: "confirmado",
+              status: "pendiente",
               descripcion: `${agendaExistente.descripcion || ""} - Pago confirmado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`,
               updatedAt: new Date(),
             },
@@ -286,7 +286,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
 
           console.log("📅 Agenda actualizada exitosamente:", {
             agendaId: agendaExistente.id,
-            nuevoStatus: "confirmado",
+            nuevoStatus: "pendiente",
           });
         }
       } catch (agendaError) {

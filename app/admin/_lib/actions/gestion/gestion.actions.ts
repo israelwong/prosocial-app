@@ -60,7 +60,7 @@ export async function obtenerEventosKanban(data?: ObtenerEventosPorEtapasType) {
                         precio: true,
                         Pago: {
                             where: {
-                                status: 'succeeded'
+                                status: 'paid'
                             },
                             select: {
                                 monto: true
