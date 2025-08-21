@@ -1,5 +1,6 @@
 'use server';
 import { Pago } from "@/app/admin/_lib/types";
+import { PAGO_STATUS } from './constants/status';
 import prisma from './prismaClient';
 import { Agenda } from './types';
 import { crearAgendaEvento } from "./agenda.actions";
@@ -67,7 +68,7 @@ export async function crearPago(data: Pago) {
                 concepto: data.concepto,
                 descripcion: data.descripcion ?? undefined,
                 stripe_payment_id: data.stripe_payment_id ?? undefined,
-                status: data.status ?? 'pending',
+                status: data.status ?? PAGO_STATUS.PENDING,
             }
         });
         return { id: pago.id, success: true, pago };
@@ -114,7 +115,7 @@ export async function actualizarPago(data: Pago) {
                 monto: data.monto ?? 0,
                 concepto: data.concepto,
                 stripe_payment_id: data.stripe_payment_id ?? undefined,
-                status: data.status ?? 'pending',
+                status: data.status ?? PAGO_STATUS.PENDING,
             }
         });
         return { success: true, pago };
@@ -160,7 +161,7 @@ export async function obtenerDetallesPago(pagoId: string) {
     const pagosCotizacion = pago.cotizacionId ? await prisma.pago.findMany({
         where: {
             cotizacionId: pago.cotizacionId,
-            status: 'paid'
+            status: PAGO_STATUS.PAID
         }
     }) : [];
 
@@ -304,7 +305,7 @@ export async function validarPagoStripe(pagoId: string) {
         // }
 
         //pago cliente nuevo
-        if (pago?.status === 'paid' && evento?.eventoEtapaId == 'cm6498zw00001gu1a67s88y5h') {
+        if (pago?.status === PAGO_STATUS.PAID && evento?.eventoEtapaId == 'cm6498zw00001gu1a67s88y5h') {
 
             // console.log('pago nuevo cliente');
 

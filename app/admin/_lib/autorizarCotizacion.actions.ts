@@ -1,4 +1,5 @@
 'use server'
+import { COTIZACION_STATUS, AGENDA_STATUS } from './constants/status';
 import prisma from './prismaClient';
 import { revalidatePath } from 'next/cache';
 
@@ -29,7 +30,7 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
             return { error: 'Cotización no encontrada' };
         }
 
-        if (cotizacion.status === 'aprobada') {
+        if (cotizacion.status === COTIZACION_STATUS.APROBADA) {
             return { error: 'La cotización ya está autorizada' };
         }
 
@@ -59,7 +60,7 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
             await tx.cotizacion.update({
                 where: { id: cotizacionId },
                 data: {
-                    status: 'aprobada',
+                    status: COTIZACION_STATUS.APROBADA,
                     updatedAt: new Date()
                 }
             });
@@ -87,7 +88,7 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
                         eventoId: evento.id,
                         fecha: evento.fecha_evento,
                         concepto: `${evento.EventoTipo?.nombre || 'Evento'} - ${evento.Cliente.nombre}`,
-                        status: 'pendiente',
+                        status: AGENDA_STATUS.PENDIENTE,
                         createdAt: new Date(),
                         updatedAt: new Date()
                     }

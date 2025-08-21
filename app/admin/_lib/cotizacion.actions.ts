@@ -1,5 +1,6 @@
 'use server'
 import { Cotizacion } from './types'
+import { COTIZACION_STATUS } from './constants/status';
 import prisma from './prismaClient';
 
 export async function obtenerCotizacionesPorEvento(eventoId: string) {
@@ -86,7 +87,7 @@ export async function crearCotizacion(data: Cotizacion) {
                 precio: data.precio,
                 condicionesComercialesId: data.condicionesComercialesId,
                 condicionesComercialesMetodoPagoId: data.condicionesComercialesMetodoPagoId,
-                status: 'pendiente',
+                status: COTIZACION_STATUS.PENDIENTE,
             }
         })
 
@@ -123,7 +124,7 @@ export async function crearCotizacionAutorizada(data: Cotizacion) {
                 precio: data.precio,
                 condicionesComercialesId: data.condicionesComercialesId,
                 condicionesComercialesMetodoPagoId: data.condicionesComercialesMetodoPagoId,
-                status: 'aprobada',
+                status: COTIZACION_STATUS.APROBADA,
             }
         })
 
@@ -399,7 +400,7 @@ export async function eliminarCotizacion(cotizacionId: string) {
         // 3. Verificar si hay dependencias críticas que bloqueen eliminación
 
         // BLOQUEO: Cotización aprobada con nóminas activas
-        if (cotizacion.status === 'aprobada' && nominasActivas.length > 0) {
+        if (cotizacion.status === COTIZACION_STATUS.APROBADA && nominasActivas.length > 0) {
             console.log('❌ Eliminación bloqueada: Cotización aprobada con nóminas activas');
             nominasActivas.forEach((nomina, index) => {
                 console.log(`   ${index + 1}. ${nomina.concepto} (${nomina.status}) - ${nomina.responsable}`);
@@ -638,7 +639,7 @@ export async function clonarCotizacion(cotizacionId: string) {
             eventoTipoId: cotizacion.eventoTipoId,
             nombre: newCotizacionNombre,
             precio: cotizacion.precio,
-            status: 'pendiente',
+            status: COTIZACION_STATUS.PENDIENTE,
         }
     });
 

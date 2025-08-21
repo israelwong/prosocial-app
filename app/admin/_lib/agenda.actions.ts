@@ -1,4 +1,5 @@
 'use server'
+import { AGENDA_STATUS } from './constants/status';
 import prisma from './prismaClient';
 import { Agenda } from './types';
 
@@ -166,7 +167,7 @@ export async function verificarDisponibilidadFecha(fecha: Date, eventoIdExcluir?
                     }
                 }),
                 status: {
-                    not: 'cancelado' // No contar eventos cancelados
+                    not: AGENDA_STATUS.CANCELADO // No contar eventos cancelados
                 }
             },
             include: {

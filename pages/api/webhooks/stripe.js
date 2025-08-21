@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import Stripe from "stripe";
+import { WEBHOOK_SUCCESS_FLOW } from "../../app/admin/_lib/constants/status.js";
 
 const prisma = new PrismaClient();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -186,11 +187,11 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
       return;
     }
 
-    // 2. Actualizar el pago existente
+    // 2. Actualizar el pago existente usando constantes de flujo
     const pagoActualizado = await prisma.pago.update({
       where: { id: pagoExistente.id },
       data: {
-        status: "paid",
+        status: WEBHOOK_SUCCESS_FLOW.PAGO, // "paid"
         metodo_pago: metodoPago,
         stripe_payment_id: paymentIntent.id,
         updatedAt: new Date(),
@@ -205,17 +206,19 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
       msi: mesesSinIntereses,
     });
 
-    // 3. Actualizar estado de cotización
+    // 3. Actualizar estado de cotización usando constantes de flujo
     await prisma.cotizacion.update({
       where: { id: pagoExistente.cotizacionId },
       data: {
-        status: "aprobada", // Usar "aprobada" para consistencia
+        status: WEBHOOK_SUCCESS_FLOW.COTIZACION, // "aprobada"
       },
     });
 
     console.log(
-      "✅ Cotización actualizada a 'aprobada':",
-      pagoExistente.cotizacionId
+      "✅ Cotización actualizada:",
+      pagoExistente.cotizacionId,
+      "->",
+      WEBHOOK_SUCCESS_FLOW.COTIZACION
     );
 
     // 4. Actualizar estado del evento y crear agenda
@@ -225,9 +228,9 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
       // Obtener ID de etapa "Contratado" dinámicamente
       const etapaContratadoId = await obtenerEtapaContratado();
 
-      // Actualizar estado del evento
+      // Actualizar estado del evento usando constantes de flujo
       const updateData = {
-        status: "aprobado",
+        status: WEBHOOK_SUCCESS_FLOW.EVENTO, // "aprobado"
       };
 
       // Solo actualizar etapa si encontramos una válida
@@ -242,7 +245,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
 
       console.log("✅ Evento actualizado:", {
         eventoId: evento.id,
-        nuevoStatus: "aprobado",
+        nuevoStatus: WEBHOOK_SUCCESS_FLOW.EVENTO,
         etapaActualizada: !!etapaContratadoId,
       });
 
@@ -261,7 +264,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
             data: {
               eventoId: evento.id,
               fecha: evento.fecha_evento,
-              status: "pendiente",
+              status: WEBHOOK_SUCCESS_FLOW.AGENDA, // "confirmado"
               descripcion: `Evento confirmado automáticamente - Pago procesado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`,
               createdAt: new Date(),
               updatedAt: new Date(),
@@ -278,7 +281,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
           await prisma.agenda.update({
             where: { id: agendaExistente.id },
             data: {
-              status: "pendiente",
+              status: WEBHOOK_SUCCESS_FLOW.AGENDA, // "confirmado"
               descripcion: `${agendaExistente.descripcion || ""} - Pago confirmado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`,
               updatedAt: new Date(),
             },
@@ -286,7 +289,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
 
           console.log("📅 Agenda actualizada exitosamente:", {
             agendaId: agendaExistente.id,
-            nuevoStatus: "pendiente",
+            nuevoStatus: WEBHOOK_SUCCESS_FLOW.AGENDA,
           });
         }
       } catch (agendaError) {
