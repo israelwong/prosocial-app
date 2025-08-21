@@ -144,6 +144,143 @@ export async function obtenerEventosSeguimientoPorEtapa(
 }
 
 /**
+ * Obtener eventos en seguimiento agrupados por etapa para ListaEventosAprobados
+ * Usa el precio de la cotización aprobada para cálculos financieros correctos
+ */
+export async function obtenerEventosSeguimientoPorEtapaListaAprobados(
+    params?: SeguimientoBusquedaForm
+): Promise<SeguimientoEtapas> {
+    try {
+        const validatedParams = SeguimientoBusquedaSchema.parse(params || {});
+
+        // PASO 1: Obtener solo las etapas específicas que necesitamos
+        const etapasEspecificas = await prisma.eventoEtapa.findMany({
+            where: {
+                OR: [
+                    { nombre: { contains: 'Aprobado', mode: 'insensitive' } },
+                    { nombre: { contains: 'edición', mode: 'insensitive' } },
+                    { nombre: { contains: 'revisión', mode: 'insensitive' } },
+                    { nombre: { contains: 'cliente', mode: 'insensitive' } }
+                ]
+            },
+            orderBy: { posicion: 'asc' }
+        });
+
+        const etapaIds = etapasEspecificas.map(etapa => etapa.id);
+
+        // PASO 2: Obtener eventos solo de las etapas específicas con cotización aprobada
+        const eventosEtapasEspecificas = await prisma.evento.findMany({
+            where: {
+                eventoEtapaId: {
+                    in: etapaIds
+                },
+                // Solo eventos que tengan al menos una cotización aprobada
+                Cotizacion: {
+                    some: {
+                        status: 'aprobada'
+                    }
+                }
+            },
+            include: {
+                Cliente: true,
+                EventoTipo: true,
+                EventoEtapa: true,
+                Cotizacion: {
+                    where: {
+                        status: 'aprobada' // Solo cotizaciones aprobadas
+                    },
+                    include: {
+                        Pago: true
+                    },
+                    orderBy: {
+                        createdAt: 'desc' // La más reciente
+                    },
+                    take: 1 // Solo la primera (más reciente)
+                }
+            },
+            orderBy: { fecha_evento: 'asc' }
+        });
+
+        console.log('=== DEBUG ETAPAS ESPECÍFICAS LISTA APROBADOS ===');
+        console.log('Etapas encontradas:', etapasEspecificas.length);
+        etapasEspecificas.forEach(etapa => {
+            console.log(`- ${etapa.nombre} (pos: ${etapa.posicion})`);
+        });
+        console.log('Eventos en etapas específicas:', eventosEtapasEspecificas.length);
+
+        // PASO 3: Procesar y transformar datos
+        const eventosTransformados: EventoSeguimiento[] = eventosEtapasEspecificas.map(evento => {
+            const cotizacionAprobada = evento.Cotizacion[0]; // Primera cotización aprobada
+            const totalPagado = cotizacionAprobada?.Pago.reduce((sum: number, pago: { monto: number }) => sum + pago.monto, 0) || 0;
+
+            // CORREGIDO: Usar únicamente el precio de la cotización aprobada
+            const precio = cotizacionAprobada?.precio || 0;
+            const balance = precio - totalPagado;
+
+            // Calcular días restantes hasta el evento
+            const hoy = new Date();
+            const fechaEvento = new Date(evento.fecha_evento);
+            const diasRestantes = Math.ceil((fechaEvento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+
+            return {
+                id: evento.id,
+                nombre: evento.nombre,
+                fecha_evento: evento.fecha_evento,
+                status: evento.status,
+                createdAt: evento.createdAt,
+                updatedAt: evento.updatedAt,
+
+                // Datos del cliente
+                clienteId: evento.clienteId,
+                clienteNombre: evento.Cliente.nombre,
+
+                // Datos del tipo de evento
+                eventoTipoId: evento.eventoTipoId,
+                tipoEventoNombre: evento.EventoTipo?.nombre || 'Sin tipo',
+
+                // Datos de la etapa
+                eventoEtapaId: evento.eventoEtapaId,
+                etapaNombre: evento.EventoEtapa?.nombre || 'Sin etapa',
+                etapaPosicion: evento.EventoEtapa?.posicion || 0,
+
+                // Datos de cotización
+                cotizacionId: cotizacionAprobada?.id || null,
+                cotizacionAprobada: true, // Siempre true ya que filtramos por aprobadas
+                precio, // Precio de la cotización aprobada
+
+                // Datos de pagos
+                totalPagado,
+                balance,
+
+                // Campos calculados
+                diasRestantes,
+                statusPago: balance === 0 ? 'pagado' : balance > 0 ? 'pendiente' : 'sobregiro'
+            };
+        });
+
+        console.log('Eventos transformados LISTA APROBADOS:', eventosTransformados.length);
+        eventosTransformados.forEach(evento => {
+            console.log(`- ${evento.nombre} | Cliente: ${evento.clienteNombre} | Etapa: ${evento.etapaNombre} | Precio Cotización: $${evento.precio} | Balance: $${evento.balance}`);
+        });
+
+        // PASO 4: Agrupar por etapa (solo etapas específicas)
+        const resultado: SeguimientoEtapas = {};
+
+        etapasEspecificas.forEach(etapa => {
+            const eventosEtapa = eventosTransformados.filter(evento => evento.eventoEtapaId === etapa.id);
+            resultado[etapa.nombre] = eventosEtapa;
+            console.log(`Etapa "${etapa.nombre}": ${eventosEtapa.length} eventos`);
+        });
+
+        return resultado;
+
+    } catch (error) {
+        console.error('Error al obtener eventos seguimiento lista aprobados:', error);
+        throw new Error('Error al obtener eventos de seguimiento para lista aprobados');
+    }
+}
+
+/**
  * Obtener eventos de seguimiento en formato de lista simple
  */
 export async function obtenerEventosSeguimiento(

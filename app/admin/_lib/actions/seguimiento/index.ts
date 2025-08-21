@@ -3,6 +3,7 @@
 // Exports del módulo principal de seguimiento
 export {
     obtenerEventosSeguimientoPorEtapa,
+    obtenerEventosSeguimientoPorEtapaListaAprobados,
     obtenerEventosSeguimiento,
     obtenerEtapasSeguimiento,
     actualizarEtapaEvento,
