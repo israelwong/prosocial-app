@@ -102,3 +102,26 @@ export async function obtenerEtapasEvento(): Promise<EventoEtapa[]> {
 
     return etapas
 }
+
+/**
+ * Obtener etapas filtradas por posición
+ */
+export async function obtenerEtapasPorPosicion(posiciones: number[]): Promise<EventoEtapa[]> {
+    const etapas = await prisma.eventoEtapa.findMany({
+        where: {
+            posicion: {
+                in: posiciones
+            }
+        },
+        orderBy: {
+            posicion: 'asc'
+        },
+        select: {
+            id: true,
+            nombre: true,
+            posicion: true
+        }
+    })
+
+    return etapas
+}

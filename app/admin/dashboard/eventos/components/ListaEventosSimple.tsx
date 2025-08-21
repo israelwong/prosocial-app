@@ -1,21 +1,22 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, User, Calendar, MapPin, Clock } from 'lucide-react'
+import { Search, Plus, User, Calendar, MapPin, Clock, FileText } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
-import { EventosPorEtapa, EventoEtapa } from '@/app/admin/_lib/types'
+import { EventoPorEtapa } from '@/app/admin/_lib/schemas/evento.schemas'
+import { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.schemas'
 import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
 
-interface Props {
-    eventosIniciales: EventosPorEtapa[]
-    etapasIniciales: EventoEtapa[]
+interface ListaEventosSimpleProps {
+    eventosIniciales: EventoPorEtapa[]
+    etapas: EventoEtapa[]
 }
 
-export default function ListaEventosSimple({ eventosIniciales, etapasIniciales }: Props) {
+export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEventosSimpleProps) {
     const router = useRouter()
 
     // Estados principales
-    const [eventos, setEventos] = useState<EventosPorEtapa[]>(eventosIniciales)
+    const [eventos, setEventos] = useState<EventoPorEtapa[]>(eventosIniciales)
     const [busqueda, setBusqueda] = useState<string>('')
     const [filtroEtapa, setFiltroEtapa] = useState<string>('')
     const [creandoEvento, setCreandoEvento] = useState(false)
@@ -32,7 +33,7 @@ export default function ListaEventosSimple({ eventosIniciales, etapasIniciales }
     })
 
     // Agrupar eventos por etapa
-    const eventosPorEtapa = etapasIniciales.map(etapa => ({
+    const eventosPorEtapa = etapas.map(etapa => ({
         etapa,
         eventos: eventosFiltrados.filter(evento => evento.eventoEtapaId === etapa.id)
     }))
@@ -47,8 +48,8 @@ export default function ListaEventosSimple({ eventosIniciales, etapasIniciales }
     }
 
     const totalEventos = eventosFiltrados.length
-    const eventosAsignados = eventosFiltrados.filter(e => e.userId).length
-    const eventosSinAsignar = eventosFiltrados.filter(e => !e.userId).length
+    const eventosConCotizaciones = eventosFiltrados.filter(e => e.Cotizacion && e.Cotizacion.length > 0).length
+    const eventosSinCotizaciones = eventosFiltrados.filter(e => !e.Cotizacion || e.Cotizacion.length === 0).length
 
     return (
         <div className="min-h-screen bg-zinc-950 p-6">
@@ -77,12 +78,12 @@ export default function ListaEventosSimple({ eventosIniciales, etapasIniciales }
                             <div className="text-sm text-zinc-400">Total Eventos</div>
                         </div>
                         <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
-                            <div className="text-2xl font-bold text-green-400">{eventosAsignados}</div>
-                            <div className="text-sm text-zinc-400">Asignados</div>
+                            <div className="text-2xl font-bold text-green-400">{eventosConCotizaciones}</div>
+                            <div className="text-sm text-zinc-400">Con Cotizaciones</div>
                         </div>
                         <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
-                            <div className="text-2xl font-bold text-yellow-400">{eventosSinAsignar}</div>
-                            <div className="text-sm text-zinc-400">Sin Asignar</div>
+                            <div className="text-2xl font-bold text-yellow-400">{eventosSinCotizaciones}</div>
+                            <div className="text-sm text-zinc-400">Sin Cotizaciones</div>
                         </div>
                     </div>
 
@@ -104,7 +105,7 @@ export default function ListaEventosSimple({ eventosIniciales, etapasIniciales }
                             className="px-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">Todas las etapas</option>
-                            {etapasIniciales.map((etapa) => (
+                            {etapas.map((etapa) => (
                                 <option key={etapa.id} value={etapa.id}>
                                     {etapa.nombre}
                                 </option>
@@ -172,12 +173,10 @@ export default function ListaEventosSimple({ eventosIniciales, etapasIniciales }
                                                             year: 'numeric'
                                                         })}</span>
                                                     </div>
-                                                    {evento.userId && (
-                                                        <div className="flex items-center gap-1 text-green-400">
-                                                            <User className="h-3 w-3" />
-                                                            <span>Asignado</span>
-                                                        </div>
-                                                    )}
+                                                    <div className="flex items-center gap-1 text-blue-400">
+                                                        <FileText className="h-3 w-3" />
+                                                        <span>{evento.Cotizacion?.length || 0} cotizaciones</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}

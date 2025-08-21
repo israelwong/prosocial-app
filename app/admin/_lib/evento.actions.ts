@@ -511,9 +511,6 @@ export async function obtenerEventosPorEtapa(etapas: number[]) {
                 }
             },
             Cotizacion: {
-                where: {
-                    status: 'aprobada',
-                },
                 select: {
                     id: true,
                     precio: true,

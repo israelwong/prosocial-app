@@ -1,8 +1,8 @@
 import React from 'react'
 import { Metadata } from 'next';
 import ListaEventosSimple from './components/ListaEventosSimple';
-import { obtenerEventosPorEtapa } from '@/app/admin/_lib/evento.actions';
-import { obtenerEtapasFiltradas } from '@/app/admin/_lib/EventoEtapa.actions';
+import { getEventosPorEtapaConCotizaciones } from '@/app/admin/_lib/actions/eventos/eventos.actions';
+import { obtenerEtapasPorPosicion } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.actions';
 
 export const metadata: Metadata = {
     title: 'Eventos - Lista',
@@ -13,14 +13,14 @@ export default async function page() {
     const filtroEtapas = [1, 2] // Nuevo y Seguimiento por defecto
 
     const [etapas, eventos] = await Promise.all([
-        obtenerEtapasFiltradas(filtroEtapas),
-        obtenerEventosPorEtapa(filtroEtapas)
+        obtenerEtapasPorPosicion(filtroEtapas),
+        getEventosPorEtapaConCotizaciones(filtroEtapas)
     ])
 
     return (
         <ListaEventosSimple
             eventosIniciales={eventos}
-            etapasIniciales={etapas}
+            etapas={etapas}
         />
     )
 }
