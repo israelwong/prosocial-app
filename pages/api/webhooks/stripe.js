@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import Stripe from "stripe";
-import { WEBHOOK_SUCCESS_FLOW } from "../../app/admin/_lib/constants/status.ts";
+import { WEBHOOK_SUCCESS_FLOW } from "./constants.js";
 
 const prisma = new PrismaClient();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
