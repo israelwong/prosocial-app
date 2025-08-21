@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
 import { CalendarDays, MapPin, Users, Clock, CreditCard, Eye } from 'lucide-react'
+import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 
 interface Evento {
     id: string
@@ -83,7 +84,7 @@ export default function ClienteDashboard() {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'aprobada':
+            case COTIZACION_STATUS.APROBADA:
                 return 'bg-blue-900/20 text-blue-300 border-blue-800'
             case 'enviada':
                 return 'bg-yellow-900/20 text-yellow-300 border-yellow-800'
@@ -96,7 +97,7 @@ export default function ClienteDashboard() {
 
     const getStatusText = (status: string) => {
         switch (status) {
-            case 'aprobada':
+            case COTIZACION_STATUS.APROBADA:
                 return 'Aprobada'
             case 'enviada':
                 return 'Pendiente'
@@ -197,7 +198,7 @@ export default function ClienteDashboard() {
                                         </div>
                                     </div>
 
-                                    {evento.cotizacion.status === 'aprobada' && (
+                                    {evento.cotizacion.status === COTIZACION_STATUS.APROBADA && (
                                         <div className="border-t border-zinc-800 pt-4">
                                             <div className="space-y-2">
                                                 <div className="flex justify-between text-sm">
@@ -235,7 +236,7 @@ export default function ClienteDashboard() {
                                             Ver Detalles
                                         </Button>
 
-                                        {evento.cotizacion.status === 'aprobada' &&
+                                        {evento.cotizacion.status === COTIZACION_STATUS.APROBADA &&
                                             getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) > 0 && (
                                                 <Button
                                                     size="sm"

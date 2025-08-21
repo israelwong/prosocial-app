@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
 import ServiciosPortalCliente from '../../components/ServiciosPortalCliente'
+import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 import {
     CalendarDays,
     MapPin,
@@ -100,7 +101,7 @@ export default function EventoDetalle() {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'aprobada':
+            case COTIZACION_STATUS.APROBADA:
                 return 'bg-green-900/20 text-green-300 border-green-800'
             case 'enviada':
                 return 'bg-amber-900/20 text-amber-300 border-amber-800'
@@ -113,7 +114,7 @@ export default function EventoDetalle() {
 
     const getStatusText = (status: string) => {
         switch (status) {
-            case 'aprobada':
+            case COTIZACION_STATUS.APROBADA:
                 return 'Cotización Aprobada'
             case 'enviada':
                 return 'Cotización Pendiente'
@@ -287,7 +288,7 @@ export default function EventoDetalle() {
                                     </div>
                                 </div>
 
-                                {evento.cotizacion.status === 'aprobada' &&
+                                {evento.cotizacion.status === COTIZACION_STATUS.APROBADA &&
                                     getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) > 0 && (
                                         <Button
                                             className="w-full mt-6 bg-blue-600 hover:bg-blue-700"

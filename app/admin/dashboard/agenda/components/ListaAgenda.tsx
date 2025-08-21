@@ -5,6 +5,7 @@ import { Agenda } from '@/app/admin/_lib/types'
 import { useRouter } from 'next/navigation'
 import { Calendar, Clock, Search, ChevronRight, User } from 'lucide-react'
 import { formatearFecha, crearFechaLocal, compararFechas } from '@/app/admin/_lib/utils/fechas'
+import { COTIZACION_STATUS, AGENDA_STATUS } from '@/app/admin/_lib/constants/status'
 
 interface AgendaEvento extends Agenda {
     Evento: {
@@ -121,7 +122,7 @@ export default function ListaAgenda() {
                     let totalPendiente = 0;
 
                     if (agenda.agendaTipo?.toLowerCase() === 'evento') {
-                        const cotizacionAprobada = agenda.Evento?.Cotizacion?.find((c: any) => c.status === 'aprobada');
+                        const cotizacionAprobada = agenda.Evento?.Cotizacion?.find((c: any) => c.status === COTIZACION_STATUS.APROBADA);
                         if (cotizacionAprobada) {
                             cotizacionPrecio = cotizacionAprobada.precio;
                             totalPagado = cotizacionAprobada.Pago.reduce((sum: number, pago: any) => sum + pago.monto, 0);
@@ -162,7 +163,7 @@ export default function ListaAgenda() {
 
     const { grouped, sortedMonths, monthlyTotals, totalGeneralPendiente } = useMemo(() => {
         const filtered = agenda.filter(item => {
-            if (item.status !== 'pendiente') return false;
+            if (item.status !== AGENDA_STATUS.PENDIENTE) return false;
             const lowerCaseSearchTerm = searchTerm.toLowerCase()
             return (
                 item.Evento.nombre.toLowerCase().includes(lowerCaseSearchTerm) ||
@@ -252,7 +253,7 @@ export default function ListaAgenda() {
                 <div>
                     <h1 className="text-xl font-medium text-zinc-200">Agenda</h1>
                     <p className="text-sm text-zinc-500 mt-1">
-                        {agenda.filter(a => a.status === 'pendiente').length} eventos pendientes en total
+                        {agenda.filter(a => a.status === AGENDA_STATUS.PENDIENTE).length} eventos pendientes en total
                     </p>
                 </div>
                 <div className="text-right">

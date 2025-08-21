@@ -6,6 +6,7 @@ import AsignarUsuarioModal from './AsignarUsuarioModal';
 import CrearNominaModal from './CrearNominaModal';
 import { asignarUsuarioAServicio, removerUsuarioDeServicio } from '@/app/admin/_lib/actions/seguimiento/servicios.actions';
 import { crearNominaIndividual, cancelarPago } from '@/app/admin/_lib/actions/seguimiento/nomina.actions';
+import { NOMINA_STATUS } from '@/app/admin/_lib/constants/status';
 
 // Tipos para los datos
 interface UserData {
@@ -193,7 +194,7 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
         const infoNomina = obtenerInfoNomina(servicio);
 
         // Si hay una nómina pendiente, preguntar si quiere cancelar el pago también
-        if (infoNomina && infoNomina.status === 'pendiente') {
+        if (infoNomina && infoNomina.status === NOMINA_STATUS.PENDIENTE) {
             const confirmar = confirm(
                 'Este usuario tiene un pago pendiente programado.\n\n' +
                 '¿Deseas cancelar el pago y remover al usuario del servicio?'

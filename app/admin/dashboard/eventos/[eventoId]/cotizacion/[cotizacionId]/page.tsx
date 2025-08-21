@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { obtenerCotizacionCompleta, obtenerDatosCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
 import CotizacionForm from '../components/CotizacionForm';
+import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
 
 export const metadata: Metadata = {
     title: 'Editar Cotización',
@@ -61,8 +62,8 @@ export default async function EditarCotizacionPage({ params }: PageProps) {
                                     {eventoTipoFinal.nombre}
                                 </div>
                                 <div className="text-blue-400 text-sm">
-                                    {cotizacionExistente.cotizacion.status === 'pendiente' ? 'Pendiente' :
-                                        cotizacionExistente.cotizacion.status === 'aprobada' ? 'Aprobada' : 'Rechazada'}
+                                    {cotizacionExistente.cotizacion.status === COTIZACION_STATUS.PENDIENTE ? 'Pendiente' :
+                                        cotizacionExistente.cotizacion.status === COTIZACION_STATUS.APROBADA ? 'Aprobada' : 'Rechazada'}
                                 </div>
                             </div>
                         </div>

@@ -5,6 +5,7 @@ import { obtenerAgendaDeEvento, eliminarAgendaEvento, actualzarStatusAgendaActiv
 import { obtenerAgendaTipos } from '@/app/admin/_lib/agendaTipos.actions'
 import { Edit, Trash, Calendar, Clock, MessageCircle, MapPin, Link, Plus, MoreVertical, CheckCircle, XCircle, X } from 'lucide-react'
 import Cookies from 'js-cookie'
+import { AGENDA_STATUS } from '@/app/admin/_lib/constants/status'
 
 interface Props {
     eventoId: string
@@ -156,7 +157,7 @@ export default function FichaAgendaV3({ eventoId }: Props) {
                 agendaTipo: formData.agendaTipo,
                 eventoId: eventoId,
                 userId: userId || '',
-                status: 'pendiente'
+                status: AGENDA_STATUS.PENDIENTE
             }
 
             if (isModalAgendaEditarOpen && agendaId) {
@@ -178,9 +179,9 @@ export default function FichaAgendaV3({ eventoId }: Props) {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'completado':
+            case AGENDA_STATUS.COMPLETADO:
                 return 'text-green-400 bg-green-500/20 border-green-500/30'
-            case 'pendiente':
+            case AGENDA_STATUS.PENDIENTE:
                 return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30'
             case 'cancelado':
                 return 'text-red-400 bg-red-500/20 border-red-500/30'

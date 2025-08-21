@@ -10,6 +10,7 @@ import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizaci
 import { Cotizacion, Paquete } from '@/app/admin/_lib/types'
 import { supabase } from '@/app/admin/_lib/supabase'
 import FichaCotizacionDetalle from '../cotizacion/components/FichaCotizacionDetalle'
+import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 
 interface Props {
     eventoCompleto: EventoCompleto
@@ -353,7 +354,7 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                         {cotizaciones.map((cotizacion, index) => (
                             <li
                                 key={cotizacion.id}
-                                className={`rounded-md p-4 ${cotizacion.status === 'aprobada'
+                                className={`rounded-md p-4 ${cotizacion.status === COTIZACION_STATUS.APROBADA
                                     ? 'bg-green-900/20 border border-green-700/50'
                                     : cotizacion.status === 'autorizado'
                                         ? 'bg-blue-900/20 border border-blue-700/50'
@@ -373,7 +374,7 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                         {cotizacionesSimples.map((cotizacion, index) => (
                             <li
                                 key={cotizacion.id}
-                                className={`rounded-md p-4 ${cotizacion.status === 'aprobada'
+                                className={`rounded-md p-4 ${cotizacion.status === COTIZACION_STATUS.APROBADA
                                     ? 'bg-green-900/20 border border-green-700/50'
                                     : cotizacion.status === 'autorizado'
                                         ? 'bg-blue-900/20 border border-blue-700/50'

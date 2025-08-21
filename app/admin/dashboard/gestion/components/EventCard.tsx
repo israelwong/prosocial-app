@@ -7,6 +7,7 @@ import { Calendar, User, MapPin, DollarSign, GripVertical, Archive } from 'lucid
 import { useRouter } from 'next/navigation';
 import { EventoKanbanType } from '@/app/admin/_lib/actions/gestion/gestion.schemas';
 import { crearFechaLocal, formatearFecha } from '@/app/admin/_lib/utils/fechas';
+import { EVENTO_STATUS } from '@/app/admin/_lib/constants/status';
 
 interface EventCardProps {
     evento: EventoKanbanType;
@@ -38,7 +39,15 @@ export default function EventCard({ evento, isDragging = false, onArchive }: Eve
     };
 
     const normalizedStatus = (evento.status || '').toLowerCase();
-    const isAprobado = ['aprobado', 'aprobada', 'autorizado', 'autorizada', 'autor', 'authorized', 'approved'].some(s => normalizedStatus.startsWith(s));
+    const isAprobado = [
+        EVENTO_STATUS.APROBADO.toLowerCase(), 
+        'aprobada', 
+        'autorizado', 
+        'autorizada', 
+        'autor', 
+        'authorized', 
+        'approved'
+    ].some(s => normalizedStatus.startsWith(s));
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault(); // Previene el enrutamiento para depuración
