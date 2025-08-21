@@ -64,8 +64,6 @@ export async function getEventosConDetallesPorEtapa(etapaIds: string[]): Promise
  */
 export async function getEventosPendientesPorEtapa(etapas: number[], incluirArchivados: boolean = false): Promise<EventoPorEtapa[]> {
     try {
-        console.log('🔍 getEventosPendientesPorEtapa - Buscando etapas:', etapas, 'incluirArchivados:', incluirArchivados);
-
         const whereConditions: any = {
             EventoEtapa: {
                 posicion: {
@@ -131,8 +129,6 @@ export async function getEventosPendientesPorEtapa(etapas: number[], incluirArch
             }
         });
 
-        console.log('🔍 Eventos pendientes encontrados desde DB:', eventos.length);
-
         const eventosConTotalPagado = eventos.map(evento => {
             const totalPagado = evento.Cotizacion.reduce((acc, cotizacion) => {
                 const totalPagos = cotizacion.Pago.reduce((sum, pago) => sum + pago.monto, 0);
@@ -144,8 +140,6 @@ export async function getEventosPendientesPorEtapa(etapas: number[], incluirArch
                 total_pagado: totalPagado
             };
         });
-
-        console.log('🔍 Eventos procesados:', eventosConTotalPagado.length);
 
         // Validar los datos con Zod antes de retornarlos
         const validatedEventos = EventosPorEtapaArraySchema.safeParse(eventosConTotalPagado);

@@ -62,8 +62,6 @@ export default function KanbanBoard() {
             // Obtener eventos
             const eventosResult = await obtenerEventosKanban({ incluirTodos: true });
             if (eventosResult.success && eventosResult.data) {
-                console.log('Eventos obtenidos:', eventosResult.data.length);
-
                 // Verificar duplicados en los datos recibidos
                 const idsEventos = eventosResult.data.map(e => e.id);
                 const duplicados = idsEventos.filter((id, index) => idsEventos.indexOf(id) !== index);
@@ -92,12 +90,7 @@ export default function KanbanBoard() {
                     }
 
                     const etapaId = evento.etapaId || 'sin-etapa';
-
-                    // Debug específico para etapas 1 y 2
-                    if (evento.etapaNombre === 'Nuevo' || evento.etapaNombre === 'Promesa') {
-                        console.log(`📍 Evento en etapa inicial: ${evento.nombre} | Etapa: ${evento.etapaNombre} | EtapaId: ${etapaId} | Tiene cotización: ${evento.tieneCotizacionAprobada}`);
-                    }
-
+                    
                     if (!eventosPorEtapa[etapaId]) {
                         eventosPorEtapa[etapaId] = [];
                     }
@@ -114,13 +107,6 @@ export default function KanbanBoard() {
                 // Ordenar eventos por fecha en cada etapa
                 for (const etapaId in eventosPorEtapa) {
                     eventosPorEtapa[etapaId].sort((a, b) => new Date(a.fecha_evento).getTime() - new Date(b.fecha_evento).getTime());
-                }
-
-                // Debug: mostrar conteo por etapa
-                console.log('📊 Eventos por etapa:');
-                for (const [etapaId, eventosEtapa] of Object.entries(eventosPorEtapa)) {
-                    const etapa = etapasResult.data?.find(e => e.id === etapaId);
-                    console.log(`  - ${etapa?.nombre || etapaId}: ${eventosEtapa.length} eventos`);
                 }
 
                 setEventos(eventosPorEtapa);
@@ -186,10 +172,8 @@ export default function KanbanBoard() {
         // Determinar el contenedor de destino usando la información de data si está disponible
         if (over.data?.current?.type === 'column') {
             overContainer = over.data.current.etapaId;
-            console.log('Debug - Detectada columna directamente:', overContainer);
         } else {
             overContainer = findContainer(overId);
-            console.log('Debug - Usando findContainer:', overContainer);
         }
 
         // Si no se encontró contenedor, verificar si overId es directamente una etapa
@@ -197,7 +181,6 @@ export default function KanbanBoard() {
             const esEtapaValida = etapas.some(etapa => etapa.id === overId);
             if (esEtapaValida) {
                 overContainer = overId;
-                console.log('Debug - Etapa válida encontrada:', overContainer);
                 // Asegurar que la etapa esté inicializada en eventos
                 if (!eventos[overId]) {
                     setEventos(prev => ({
@@ -209,8 +192,6 @@ export default function KanbanBoard() {
         }
 
         if (!activeContainer || !overContainer) {
-            console.log('Debug - activeContainer:', activeContainer, 'overContainer:', overContainer);
-            console.log('Debug - activeId:', activeId, 'overId:', overId);
             return;
         }
 

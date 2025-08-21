@@ -75,17 +75,6 @@ export async function obtenerEventosKanban(data?: ObtenerEventosPorEtapasType) {
             }
         });
 
-        console.log('🔍 DEBUG - Total eventos obtenidos de DB:', eventos.length);
-        console.log('🔍 DEBUG - Eventos por etapa desde DB:');
-        const eventosPorEtapaDB = eventos.reduce((acc: any, evento) => {
-            const etapaNombre = evento.EventoEtapa?.nombre || 'Sin etapa';
-            acc[etapaNombre] = (acc[etapaNombre] || 0) + 1;
-            return acc;
-        }, {});
-        Object.entries(eventosPorEtapaDB).forEach(([etapa, count]) => {
-            console.log(`  - ${etapa}: ${count} eventos`);
-        });
-
         // Transformar datos para el kanban
         const eventosKanban: EventoKanbanType[] = eventos.map(evento => {
             const cotizacionAprobada = evento.Cotizacion.find(c => c.status === COTIZACION_STATUS.APROBADA);
