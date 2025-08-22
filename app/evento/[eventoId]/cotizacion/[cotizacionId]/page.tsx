@@ -43,9 +43,10 @@ export default async function CotizacionDetallePage({ params, searchParams }: Pa
             redirect('/404')
         }
 
-        // Verificar si el evento ya está contratado
-        if (datosCotizacion.cotizacion.Evento.status === 'contratado') {
-            redirect('/cliente/login')
+        // 🎯 VALIDACIÓN MEJORADA: Verificar si el evento ya está aprobado
+        if (datosCotizacion.cotizacion.Evento.status === 'aprobado' || datosCotizacion.cotizacion.Evento.status === 'contratado') {
+            console.log('🔄 Evento aprobado/contratado, redirigiendo al panel del cliente');
+            redirect('/cliente/login?message=evento-aprobado&redirect=/cliente/dashboard');
         }
 
         // Verificar si la cotización está expirada

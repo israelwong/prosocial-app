@@ -9,6 +9,8 @@ export default function Page() {
     const [isClient, setIsClient] = useState(false);
     const searchParams = useSearchParams();
     const pagoId = searchParams ? searchParams.get('pagoId') : null;
+    const cotizacionId = searchParams ? searchParams.get('cotizacion') : null;
+    const paymentIntentId = searchParams ? searchParams.get('payment_intent') : null;
 
     useEffect(() => {
         setIsClient(true);
@@ -21,7 +23,11 @@ export default function Page() {
 
             {/* BODY */}
             <div className='max-w-screen-sm mx-auto'>
-                <PagoExitoso pagoId={pagoId} />
+                <PagoExitoso 
+                    pagoId={pagoId} 
+                    cotizacionId={cotizacionId}
+                    paymentIntentId={paymentIntentId}
+                />
             </div>
 
             {/* FOOTER */}

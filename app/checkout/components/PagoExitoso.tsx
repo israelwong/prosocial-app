@@ -6,9 +6,11 @@ import Skeleton from '@/app/components/ui/Skeleton'
 
 interface Props {
     pagoId?: string | null
+    cotizacionId?: string | null
+    paymentIntentId?: string | null
 }
 
-export default function PagoExitoso({ pagoId }: Props) {
+export default function PagoExitoso({ pagoId, cotizacionId, paymentIntentId }: Props) {
     const router = useRouter()
     const [pago, setPago] = useState<any>(null)
     const [evento, setEvento] = useState<any>(null)
@@ -17,29 +19,68 @@ export default function PagoExitoso({ pagoId }: Props) {
 
     useEffect(() => {
         const obtenerDatosPago = async () => {
-            if (pagoId) {
-                try {
-                    const pagoCompleto = await obtenerPagoCompleto(pagoId);
+            try {
+                let pagoCompleto = null;
+
+                // Intentar obtener pago por pagoId
+                if (pagoId) {
+                    console.log('🔍 Obteniendo pago por pagoId:', pagoId);
+                    pagoCompleto = await obtenerPagoCompleto(pagoId);
+                }
+
+                // Si no hay pagoId, intentar por paymentIntentId
+                if (!pagoCompleto && paymentIntentId) {
+                    console.log('🔍 Buscando pago por paymentIntentId:', paymentIntentId);
+                    // Aquí necesitaríamos una función para buscar por payment_intent_id
+                    // Por ahora, buscaremos por cotizacionId
+                }
+
+                // Si no hay pagoCompleto pero hay cotizacionId, obtener el pago más reciente de esa cotización
+                if (!pagoCompleto && cotizacionId) {
+                    console.log('🔍 Buscando pago más reciente por cotizacionId:', cotizacionId);
+                    // Aquí necesitaríamos buscar el pago más reciente de la cotización
+                    const response = await fetch(`/api/pago/buscar-por-cotizacion?cotizacionId=${cotizacionId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.pago) {
+                            pagoCompleto = await obtenerPagoCompleto(data.pago.id);
+                        }
+                    }
+                }
+
+                if (pagoCompleto) {
                     setPago(pagoCompleto);
                     setEvento(pagoCompleto?.Cotizacion?.Evento || null);
                     setCliente(pagoCompleto?.Cotizacion?.Evento?.Cliente || null);
-                    setLoading(false);
-                } catch (error) {
-                    console.error('Error obteniendo datos del pago:', error);
-                    setLoading(false);
+                } else {
+                    console.error('❌ No se pudo obtener información del pago');
                 }
-            } else {
+            } catch (error) {
+                console.error('❌ Error obteniendo datos del pago:', error);
+            } finally {
                 setLoading(false);
             }
         };
 
-        obtenerDatosPago();
-    }, [pagoId]);
+        if (pagoId || cotizacionId || paymentIntentId) {
+            obtenerDatosPago();
+        } else {
+            setLoading(false);
+        }
+    }, [pagoId, cotizacionId, paymentIntentId]);
 
     const handleIniciarSesion = () => {
-        if (cliente?.email && evento?.eventoId) {
-            // Redirigir al login con email del cliente y redirección al evento
-            window.location.href = `/cliente/login?email=${encodeURIComponent(cliente.email)}&redirect=/evento/${evento.eventoId}`;
+        // Verificar si el evento está aprobado para redirigir al panel del cliente
+        if (evento?.status === 'aprobado' && evento?.id) {
+            // Si el evento está aprobado, redirigir al panel del cliente
+            if (cliente?.email) {
+                window.location.href = `/cliente/login?email=${encodeURIComponent(cliente.email)}&redirect=/cliente/dashboard`;
+            } else {
+                window.location.href = '/cliente/login?redirect=/cliente/dashboard';
+            }
+        } else if (cliente?.email && evento?.id) {
+            // Si el evento no está aprobado, redirigir al evento público
+            window.location.href = `/cliente/login?email=${encodeURIComponent(cliente.email)}&redirect=/evento/${evento.id}`;
         } else {
             // Redirigir al login general si no tenemos datos completos
             window.location.href = '/cliente/login';

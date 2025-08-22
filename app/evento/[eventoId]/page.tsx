@@ -46,6 +46,12 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
         redirect('/404')
     }
 
+    // 🎯 NUEVA VALIDACIÓN: Si el evento está aprobado, redirigir al panel del cliente
+    if (evento.status === 'aprobado') {
+        console.log('🔄 Evento aprobado, redirigiendo al panel del cliente');
+        redirect('/cliente/login?message=evento-aprobado&redirect=/cliente/dashboard');
+    }
+
     // Si hay error en la validación de cotizaciones
     if ('error' in resultadoCotizaciones) {
         redirect('/404')

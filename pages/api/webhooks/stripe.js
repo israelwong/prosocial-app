@@ -79,9 +79,10 @@ export default async function handler(req, res) {
         await handlePaymentIntentProcessing(event.data.object);
         break;
 
-      // 💳 CHARGE EVENTS
+      // 💳 CHARGE EVENTS - Solo para información, no procesamos pagos aquí
       case "charge.succeeded":
-        await handleChargeSucceeded(event.data.object);
+        console.log("ℹ️ Charge succeeded (información):", event.data.object.id);
+        // NO ejecutamos handleChargeSucceeded para evitar duplicación
         break;
 
       case "charge.failed":

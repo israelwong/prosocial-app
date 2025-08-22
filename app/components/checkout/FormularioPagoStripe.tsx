@@ -53,7 +53,7 @@ export default function FormularioPagoStripe({
         });
 
         const confirmParams: any = {
-            return_url: `${window.location.origin}/checkout/success?cotizacion=${cotizacionId}`,
+            return_url: `${window.location.origin}/checkout/success?cotizacion=${cotizacionId}&payment_intent={PAYMENT_INTENT_ID}`,
         };
 
         // 🎯 MSI: Configurar plan específico durante confirmación
