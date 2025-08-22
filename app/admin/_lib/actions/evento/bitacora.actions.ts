@@ -118,7 +118,97 @@ export async function fichaBitacoraUnificadaEliminarBitacora(bitacoraId: string)
 // =============================================================================
 
 /**
+ * Obtener todas las entradas de bitácora de un evento
+ * MIGRADA desde @/app/admin/_lib/EventoBitacora.actions
+ * Utilizada por: BitacoraSimple.tsx
+ */
+export async function obtenerEventoBitacora(eventoId: string) {
+    try {
+        const bitacora = await prisma.eventoBitacora.findMany({
+            where: {
+                eventoId
+            },
+            orderBy: {
+                createdAt: 'asc'
+            }
+        });
+        return bitacora;
+    } catch (error) {
+        console.error('Error obteniendo bitácora:', error);
+        throw new Error('No se pudo obtener la bitácora del evento');
+    }
+}
+
+/**
  * Crear bitácora evento - MIGRADA desde @/app/admin/_lib/EventoBitacora.actions
+ * Función simple para crear entrada de bitácora con parámetros básicos
+ * Utilizada por: BitacoraSimple.tsx
+ */
+export async function crearBitacoraEvento(eventoId: string, anotacion: string, importancia: string = 'informativo') {
+    try {
+        const bitacora = await prisma.eventoBitacora.create({
+            data: {
+                eventoId,
+                comentario: anotacion,
+                importancia: importancia
+            }
+        });
+        return bitacora;
+    } catch (error) {
+        console.error('Error creando bitácora:', error);
+        throw new Error('No se pudo crear la entrada de bitácora');
+    }
+}
+
+/**
+ * Eliminar entrada de bitácora por ID
+ * MIGRADA desde @/app/admin/_lib/EventoBitacora.actions
+ * Utilizada por: BitacoraSimple.tsx
+ */
+export async function eliminarBitacoraEvento(bitacoraId: string) {
+    try {
+        const bitacora = await prisma.eventoBitacora.delete({
+            where: {
+                id: bitacoraId
+            }
+        });
+        return bitacora;
+    } catch (error) {
+        console.error('Error eliminando bitácora:', error);
+        throw new Error('No se pudo eliminar la entrada de bitácora');
+    }
+}
+
+/**
+ * Actualizar entrada de bitácora
+ * MIGRADA desde @/app/admin/_lib/EventoBitacora.actions
+ * Utilizada por: BitacoraSimple.tsx
+ */
+export async function actualizarBitacoraEvento(bitacoraId: string, anotacion: string, importancia?: string) {
+    try {
+        const updateData: any = {
+            comentario: anotacion
+        };
+
+        if (importancia) {
+            updateData.importancia = importancia;
+        }
+
+        const bitacora = await prisma.eventoBitacora.update({
+            where: {
+                id: bitacoraId
+            },
+            data: updateData
+        });
+        return bitacora;
+    } catch (error) {
+        console.error('Error actualizando bitácora:', error);
+        throw new Error('No se pudo actualizar la entrada de bitácora');
+    }
+}
+
+/**
+ * Crear bitácora evento - FUNCIÓN LEGACY
  * Función simple para crear entrada de bitácora con parámetros básicos
  * Utilizada por: FormEventoNuevoFinal
  */

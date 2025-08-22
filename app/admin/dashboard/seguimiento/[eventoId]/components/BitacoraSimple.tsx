@@ -1,9 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { obtenerEventoBitacora, crearBitacoraEvento, eliminarBitacoraEvento, actualizarBitacoraEvento } from '@/app/admin/_lib/EventoBitacora.actions'
+import { obtenerEventoBitacora, crearBitacoraEvento, eliminarBitacoraEvento, actualizarBitacoraEvento } from '@/app/admin/_lib/actions/evento/bitacora.actions'
 import { Clock, FileText, AlertCircle, Plus, MoreVertical, Edit, Trash, X, MessageCircle } from 'lucide-react'
-import { formatearFecha as formatearFechaLib, esFechaValida } from '@/app/admin/_lib/utils/fechas'
 
 interface BitacoraItem {
     id: string
@@ -73,15 +72,24 @@ export function BitacoraSimple({ eventoId }: BitacoraSimpleProps) {
     }
 
     const formatearFecha = (fecha: Date) => {
-        if (!esFechaValida(fecha)) return 'Fecha no válida'
+        try {
+            // Verificar que sea una fecha válida
+            if (!fecha || !(fecha instanceof Date) || isNaN(fecha.getTime())) {
+                return 'Fecha no válida'
+            }
 
-        return formatearFechaLib(fecha, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        })
+            // Formatear directamente sin conversiones adicionales
+            return fecha.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+        } catch (error) {
+            console.error('Error formateando fecha:', error, fecha)
+            return 'Error en fecha'
+        }
     }
 
     const getImportanciaColor = (importancia: string) => {
