@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash } from 'lucide-react'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
-import { eliminarBitacora } from '@/app/admin/_lib/actions/evento/bitacora.actions'
+import { fichaBitacoraUnificadaEliminarBitacora } from '@/app/admin/_lib/actions/evento/bitacora.actions'
 import ModalBitacoraNuevo from '../../components/ModalBitacoraNuevo'
 import ModalBitacoraEditar from '../../components/ModalBitacoraEditar'
 
@@ -47,7 +47,7 @@ export default function FichaBitacoraUnificada({ eventoCompleto }: Props) {
 
         setLoading(true)
         try {
-            await eliminarBitacora(bitacoraId)
+            await fichaBitacoraUnificadaEliminarBitacora(bitacoraId)
             // Refrescar la página para mostrar los cambios
             router.refresh()
         } catch (error) {
