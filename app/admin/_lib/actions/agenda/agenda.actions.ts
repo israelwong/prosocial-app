@@ -2,7 +2,7 @@
 
 'use server'
 
-import prisma from '@/app/admin/_lib/prismaClient';
+import prisma from '../../prismaClient';
 import {
     AgendaCreateSchema,
     AgendaUpdateSchema,
@@ -350,5 +350,31 @@ export async function obtenerAgendasPendientes() {
             message: 'Error al obtener agendas pendientes',
             error: error instanceof Error ? error.message : 'Error desconocido'
         };
+    }
+}
+
+// =====================================
+// CREAR AGENDA PARA EVENTO (Compatibilidad)
+// =====================================
+
+export async function crearAgendaEvento(agenda: any) {
+    try {
+        await prisma.agenda.create({
+            data: {
+                concepto: agenda.concepto,
+                descripcion: agenda.descripcion,
+                googleMapsUrl: agenda.googleMapsUrl,
+                direccion: agenda.direccion,
+                fecha: agenda.fecha,
+                hora: agenda.hora,
+                eventoId: agenda.eventoId ?? '',
+                userId: agenda.userId ?? '',
+                agendaTipo: agenda.agendaTipo,
+            }
+        });
+        return { success: true };
+    } catch (error) {
+        console.error('Error al crear la agenda del evento:', (error as Error).message);
+        throw error;
     }
 }

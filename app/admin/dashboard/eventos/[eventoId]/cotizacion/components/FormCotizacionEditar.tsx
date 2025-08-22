@@ -13,7 +13,7 @@ import { obtenerEventoPorId } from '@/app/admin/_lib/evento.actions';
 import { obtenerCliente } from '@/app/admin/_lib/cliente.actions';
 import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
 import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
-import { crearPago } from '@/app/admin/_lib/pago.actions';
+import { crearPago } from '@/app/admin/_lib/actions/pagos';
 import { obtenerConteoCotizacionVisitas } from '@/app/admin/_lib/cotizacionVisita.actions'
 
 // import ListaServicios from './ListaServicios' // Componente eliminado en refactoring

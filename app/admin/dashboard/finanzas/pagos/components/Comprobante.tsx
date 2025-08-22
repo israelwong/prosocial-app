@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useRef } from 'react'
 import { Pago, Cliente, Evento, Cotizacion } from '@/app/admin/_lib/types'
-import { obtenerPago, obtenerPagosCotizacion } from '@/app/admin/_lib/pago.actions'
+import { obtenerPago, obtenerPagosCotizacion } from '@/app/admin/_lib/actions/pagos'
 import { obtenerCliente } from '@/app/admin/_lib/cliente.actions'
 import { obtenerEventoPorId } from '@/app/admin/_lib/evento.actions'
 import { obtenerCotizacion } from '@/app/admin/_lib/cotizacion.actions'

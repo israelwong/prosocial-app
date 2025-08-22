@@ -27,13 +27,14 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
     // Para compatibilidad con FichaClienteUnificadaV2, necesitamos un cliente con más propiedades
     const clienteExtendido = {
         ...eventoCompleto.Cliente,
-        direccion: null,
-        status: 'prospecto',
-        canalId: null,
-        userId: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        Canal: null
+        // Solo usar valores por defecto si los campos no existen en los datos reales
+        direccion: eventoCompleto.Cliente.direccion || null,
+        status: eventoCompleto.Cliente.status || 'prospecto',
+        canalId: eventoCompleto.Cliente.canalId || null,
+        userId: eventoCompleto.Cliente.userId || null,
+        createdAt: eventoCompleto.Cliente.createdAt || new Date(),
+        updatedAt: eventoCompleto.Cliente.updatedAt || new Date(),
+        Canal: eventoCompleto.Cliente.Canal || null
     }
 
     const eventoCompletoExtendido = {

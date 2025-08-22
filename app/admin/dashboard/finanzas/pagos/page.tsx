@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { obtenerPagosEntrantes } from '@/app/admin/_lib/actions/finanzas';
-import { eliminarPago } from '@/app/admin/_lib/pago.actions';
+import { eliminarPago } from '@/app/admin/_lib/actions/pagos';
 
 interface PagoEntrante {
     id: string;

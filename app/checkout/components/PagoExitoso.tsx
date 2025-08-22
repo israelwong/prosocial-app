@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { obtenerPagoCompleto } from '@/app/admin/_lib/pago.actions'
+import { obtenerPagoCompleto } from '@/app/admin/_lib/actions/pagos'
 import Skeleton from '@/app/components/ui/Skeleton'
 
 interface Props {

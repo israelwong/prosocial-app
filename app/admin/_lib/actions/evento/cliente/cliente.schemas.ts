@@ -22,7 +22,13 @@ export const ActualizarClienteSchema = z.object({
     email: z.string().email('Email inválido').or(z.literal('')).nullable(),
     direccion: z.string().nullable(),
     status: z.string(),
-    canalId: z.string().nullable()
+    canalId: z.string().nullable().transform(val => {
+        // Convertir cadenas vacías, espacios en blanco, o valores inválidos a null
+        if (!val || val.trim() === '' || val === 'null' || val === 'undefined') {
+            return null;
+        }
+        return val.trim();
+    })
 })
 
 // Schema para cliente completo

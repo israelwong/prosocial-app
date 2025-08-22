@@ -4,6 +4,49 @@ import { clonarCotizacion, archivarCotizacion, desarchivarCotizacion, eliminarCo
 import { useRouter } from 'next/navigation'
 import BotonAutorizarCotizacion from '@/app/admin/dashboard/eventos/[eventoId]/cotizacion/components/BotonAutorizarCotizacion'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
+
+// Funciones helper para el badge de estado
+const getStatusBadgeStyles = (status: string | undefined) => {
+    if (!status) return 'bg-zinc-900/50 text-zinc-300 border-zinc-700'
+
+    switch (status) {
+        case COTIZACION_STATUS.PENDIENTE:
+            return 'bg-zinc-800/50 text-zinc-400 border-zinc-600'
+        case COTIZACION_STATUS.APROBADA:
+            return 'bg-green-900/50 text-green-300 border-green-700'
+        case COTIZACION_STATUS.AUTORIZADO:
+            return 'bg-blue-900/50 text-blue-300 border-blue-700'
+        case COTIZACION_STATUS.RECHAZADA:
+            return 'bg-red-900/50 text-red-300 border-red-700'
+        case COTIZACION_STATUS.EXPIRADA:
+            return 'bg-gray-900/50 text-gray-300 border-gray-700'
+        case COTIZACION_STATUS.ARCHIVADA:
+            return 'bg-amber-900/50 text-amber-300 border-amber-700'
+        default:
+            return 'bg-zinc-900/50 text-zinc-300 border-zinc-700'
+    }
+}
+
+const getStatusDisplayName = (status: string | undefined) => {
+    if (!status) return 'Sin estado'
+
+    switch (status) {
+        case COTIZACION_STATUS.PENDIENTE:
+            return 'Pendiente'
+        case COTIZACION_STATUS.APROBADA:
+            return 'Aprobada'
+        case COTIZACION_STATUS.AUTORIZADO:
+            return 'Autorizado'
+        case COTIZACION_STATUS.RECHAZADA:
+            return 'Rechazada'
+        case COTIZACION_STATUS.EXPIRADA:
+            return 'Expirada'
+        case COTIZACION_STATUS.ARCHIVADA:
+            return 'Archivada'
+        default:
+            return status || 'Sin estado'
+    }
+}
 import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
 import ModalConfirmacionEliminacion from '@/app/components/ui/ModalConfirmacionEliminacion'
 import { useEliminacionCotizacion } from '@/app/hooks/useModalEliminacion'
@@ -233,14 +276,20 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                         <Pencil className="w-4 h-4" />
                     </button>
                     <div className="text-left min-w-0">
-                        <button
-                            onClick={() => router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/${cotizacion.id}`)}
-                            className="font-medium text-zinc-200 hover:underline text-left break-words"
-                            title={cotizacion.nombre}
-                            style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}
-                        >
-                            {cotizacion.nombre} - {cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                        </button>
+                        <div className="flex items-center gap-2 mb-1">
+                            <button
+                                onClick={() => router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/${cotizacion.id}`)}
+                                className="font-medium text-zinc-200 hover:underline text-left break-words"
+                                title={cotizacion.nombre}
+                                style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}
+                            >
+                                {cotizacion.nombre} - {cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                            </button>
+                            {/* Badge de estado */}
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${getStatusBadgeStyles(cotizacion.status)} flex-shrink-0`}>
+                                {getStatusDisplayName(cotizacion.status)}
+                            </span>
+                        </div>
                         <div className="text-sm text-zinc-400 truncate max-w-full">
                             {cotizacion.descripcion || (cotizacion.servicios?.length ? `${cotizacion.servicios.length} servicios incluidos` : 'Sin descripción')}
                         </div>

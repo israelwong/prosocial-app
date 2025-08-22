@@ -1,7 +1,7 @@
 'use server';
 import { Evento } from "./types";
 import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
-import { obtenerBalancePagosEvento } from '@/app/admin/_lib/pago.actions'
+import { obtenerBalancePagosEvento } from '@/app/admin/_lib/actions/pagos'
 import { obtenerCliente } from '@/app/admin/_lib/cliente.actions'
 import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions'
 import { EVENTO_STATUS, COTIZACION_STATUS } from './constants/status';

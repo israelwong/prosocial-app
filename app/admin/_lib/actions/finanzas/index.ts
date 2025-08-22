@@ -5,6 +5,9 @@
 // Schemas y tipos
 export * from './finanzas.schemas';
 
+// Actions de pagos
+export * from '../pagos';
+
 // Actions de gastos
 export {
     crearGasto,

@@ -55,7 +55,7 @@ export default async function CotizacionPage({ params, searchParams }: PageProps
                                     Nueva Cotización
                                 </h1>
                                 <p className="text-zinc-400 mt-1">
-                                    {datos.evento.Cliente.nombre} • {datos.evento.nombre || 'Evento sin nombre'}
+                                    {datos.evento.Cliente?.nombre} • {datos.evento.nombre || 'Evento sin nombre'}
                                 </p>
                             </div>
                             <div className="text-right text-sm">

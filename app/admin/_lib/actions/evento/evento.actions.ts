@@ -22,7 +22,7 @@ import { revalidatePath } from 'next/cache';
 
 // Importamos las funciones auxiliares existentes
 import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions';
-import { obtenerBalancePagosEvento } from '@/app/admin/_lib/pago.actions';
+import { obtenerBalancePagosEvento } from '@/app/admin/_lib/actions/pagos';
 import { obtenerCliente } from '@/app/admin/_lib/cliente.actions';
 import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
 
@@ -65,6 +65,18 @@ export async function obtenerEventoCompleto(eventoId: string): Promise<EventoCom
                         nombre: true,
                         telefono: true,
                         email: true,
+                        direccion: true,
+                        status: true,
+                        canalId: true,
+                        userId: true,
+                        createdAt: true,
+                        updatedAt: true,
+                        Canal: {
+                            select: {
+                                id: true,
+                                nombre: true
+                            }
+                        }
                     }
                 },
                 EventoEtapa: {

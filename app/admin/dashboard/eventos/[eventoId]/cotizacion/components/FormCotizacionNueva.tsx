@@ -13,7 +13,7 @@ import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
 import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
 import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
 import { crearCotizacion, crearCotizacionAutorizada } from '@/app/admin/_lib/cotizacion.actions';
-import { crearPago } from '@/app/admin/_lib/pago.actions';
+import { crearPago } from '@/app/admin/_lib/actions/pagos';
 
 // import Wishlist from './Wishlist'
 // import ListaServicios from './ListaServicios'

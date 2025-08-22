@@ -98,6 +98,16 @@ export interface EventoCompleto {
         nombre: string;
         telefono: string | null;
         email: string | null;
+        direccion: string | null;
+        status: string;
+        canalId: string | null;
+        userId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        Canal?: {
+            id: string;
+            nombre: string;
+        } | null;
     } | null;
     EventoEtapa?: {
         id: string;
