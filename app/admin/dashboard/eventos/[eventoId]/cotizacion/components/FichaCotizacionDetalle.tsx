@@ -5,7 +5,6 @@ import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizaci
 import { useRouter } from 'next/navigation'
 import { autorizarCotizacion } from '@/app/admin/_lib/autorizarCotizacion.actions'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
-import BotonAutorizarCotizacion from './BotonAutorizarCotizacion'
 import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
 import ModalConfirmacionEliminacion from '@/app/components/ui/ModalConfirmacionEliminacion'
 import { useEliminacionCotizacion } from '@/app/hooks/useModalEliminacion'

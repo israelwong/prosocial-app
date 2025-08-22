@@ -144,3 +144,20 @@ export async function actualizarPosicionTipoEvento(items: unknown) {
         return { success: false, message: "No se pudieron actualizar las posiciones." };
     }
 }
+
+// =============================================================================
+// FUNCIONES MIGRADAS DESDE ARCHIVOS LEGACY
+// =============================================================================
+
+/**
+ * Obtener tipos de evento - MIGRADA desde @/app/admin/_lib/eventoTipo.actions
+ * Función simple para obtener tipos de evento ordenados por posición
+ * Utilizada por: FormEventoNuevoFinal
+ */
+export async function obtenerTiposEventoLegacy() {
+    return await prisma.eventoTipo.findMany({
+        orderBy: {
+            posicion: 'asc'
+        }
+    });
+}

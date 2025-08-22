@@ -112,3 +112,28 @@ export async function fichaBitacoraUnificadaEliminarBitacora(bitacoraId: string)
         };
     }
 }
+
+// =============================================================================
+// FUNCIONES MIGRADAS DESDE ARCHIVOS LEGACY
+// =============================================================================
+
+/**
+ * Crear bitácora evento - MIGRADA desde @/app/admin/_lib/EventoBitacora.actions
+ * Función simple para crear entrada de bitácora con parámetros básicos
+ * Utilizada por: FormEventoNuevoFinal
+ */
+export async function crearBitacoraEventoLegacy(eventoId: string, anotacion: string, importancia: string = 'informativo') {
+    try {
+        const bitacora = await prisma.eventoBitacora.create({
+            data: {
+                eventoId,
+                comentario: anotacion,
+                importancia: importancia
+            }
+        });
+        return bitacora;
+    } catch (error) {
+        console.error('Error creando bitácora:', error);
+        throw new Error('No se pudo crear la entrada de bitácora');
+    }
+}

@@ -3,31 +3,31 @@ import { Cotizacion } from './types'
 import { COTIZACION_STATUS } from './constants/status';
 import prisma from './prismaClient';
 
-export async function obtenerCotizacionesPorEvento(eventoId: string) {
-
-    const cotizaciones = await prisma.cotizacion.findMany({
-        where: {
-            eventoId,
-        },
-        orderBy: {
-            createdAt: 'asc'
-        }
-    });
-
-    const cotizacionesWithVisitaCount = await Promise.all(cotizaciones.map(async (cotizacion) => {
-        const visitas = await prisma.cotizacionVisita.count({
-            where: {
-                cotizacionId: cotizacion.id
-            }
-        });
-        return {
-            ...cotizacion,
-            visitas
-        };
-    }));
-
-    return cotizacionesWithVisitaCount;
-}
+// FUNCIÓN MIGRADA A: @/app/admin/_lib/actions/cotizacion/cotizacion.actions.ts
+// export async function obtenerCotizacionesPorEvento(eventoId: string) {
+//     const cotizaciones = await prisma.cotizacion.findMany({
+//         where: {
+//             eventoId,
+//         },
+//         orderBy: {
+//             createdAt: 'asc'
+//         }
+//     });
+// 
+//     const cotizacionesWithVisitaCount = await Promise.all(cotizaciones.map(async (cotizacion) => {
+//         const visitas = await prisma.cotizacionVisita.count({
+//             where: {
+//                 cotizacionId: cotizacion.id
+//             }
+//         });
+//         return {
+//             ...cotizacion,
+//             visitas
+//         };
+//     }));
+// 
+//     return cotizacionesWithVisitaCount;
+// }
 
 export async function obtenerCotizacion(cotizacionId: string) {
     const cotizacion = await prisma.cotizacion.findUnique({

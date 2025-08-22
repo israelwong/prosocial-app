@@ -2,14 +2,15 @@
 import { Paquete, PaqueteServicio } from "./types";
 import prisma from './prismaClient';
 
-export async function obtenerPaquetesPorTipoEvento(eventoTipoId: string) {
-    return await prisma.paquete.findMany({
-        where: { eventoTipoId },
-        orderBy: {
-            posicion: 'asc'
-        }
-    });
-}
+// FUNCIÓN MIGRADA A: @/app/admin/_lib/actions/paquete/paquete.actions.ts
+// export async function obtenerPaquetesPorTipoEvento(eventoTipoId: string) {
+//     return await prisma.paquete.findMany({
+//         where: { eventoTipoId },
+//         orderBy: {
+//             posicion: 'asc'
+//         }
+//     });
+// }
 
 export async function obtenerPaquete(id: string) {
     return await prisma.paquete.findUnique({

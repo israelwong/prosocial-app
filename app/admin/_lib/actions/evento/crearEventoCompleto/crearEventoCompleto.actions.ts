@@ -3,6 +3,7 @@
 import prisma from '../../../prismaClient'
 import { validarCondigoAutorizacion } from '../../../configuracion.actions'
 import { obtenerEtapa1 } from '../../../EventoEtapa.actions'
+import { EVENTO_STATUS, CLIENTE_STATUS, MANUAL_CREATION_FLOW } from '../../../constants/status'
 import {
     BuscarClienteSchema,
     CrearClienteInlineSchema,
@@ -114,7 +115,7 @@ export async function crearClienteInline(data: CrearClienteInline) {
             telefono: validatedData.telefono,
             email: validatedData.email,
             direccion: validatedData.direccion,
-            status: 'prospecto', // Status por defecto
+            status: MANUAL_CREATION_FLOW.CLIENTE, // prospecto - usando constante
             canalId: validatedData.canalId
         }
     })
@@ -255,7 +256,7 @@ export async function crearEventoCompleto(data: CrearEventoCompleto): Promise<Re
                 eventoTipoId: validatedData.eventoTipoId,
                 nombre: validatedData.nombre.toLowerCase().replace(/\b\w/g, char => char.toUpperCase()),
                 fecha_evento: validatedData.fecha_evento,
-                status: 'active',
+                status: MANUAL_CREATION_FLOW.EVENTO, // pendiente - usando constante de flujo manual
                 eventoEtapaId,
                 userId: validatedData.userId || null
             }

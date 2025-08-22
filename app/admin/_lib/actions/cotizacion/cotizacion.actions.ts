@@ -7,6 +7,7 @@ import { obtenerCatalogoCompleto } from '@/app/admin/_lib/actions/catalogo/catal
 import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
 import { obtenerMetodosPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions';
 import { obtenerPaquete } from '@/app/admin/_lib/actions/paquetes/paquetes.actions';
+import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
 import {
     CotizacionNuevaSchema,
     CotizacionEditarSchema,
@@ -261,7 +262,7 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
                 descripcion: validatedData.descripcion,
                 precio: validatedData.precio,
                 condicionesComercialesId: validatedData.condicionesComercialesId,
-                status: 'pending',
+                status: COTIZACION_STATUS.PENDIENTE,
                 visible_cliente: true
             }
         });
@@ -281,7 +282,7 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
                     precioUnitario: servicio.precioUnitario,
                     subtotal: servicio.precioUnitario * servicio.cantidad,
                     posicion: servicio.posicion,
-                    status: 'pendiente',
+                    status: COTIZACION_STATUS.PENDIENTE,
                     // Campos snapshot para trazabilidad
                     nombre_snapshot: servicio.nombre_snapshot,
                     descripcion_snapshot: servicio.descripcion_snapshot,
@@ -381,7 +382,7 @@ export async function editarCotizacion(data: CotizacionEditar) {
                         precioUnitario: servicio.precioUnitario,
                         subtotal: servicio.precioUnitario * servicio.cantidad,
                         posicion: servicio.posicion,
-                        status: 'pendiente',
+                        status: COTIZACION_STATUS.PENDIENTE,
                         // Campos snapshot para trazabilidad
                         nombre_snapshot: servicio.nombre_snapshot,
                         descripcion_snapshot: servicio.descripcion_snapshot,
@@ -653,7 +654,12 @@ export async function obtenerCotizacionesParaEvento(eventoId: string) {
                 eventoId,
                 visible_cliente: true,
                 status: {
-                    in: ['pending', 'pendiente', 'aprobada', 'approved'] // Incluir ambas variantes
+                    in: [
+                        'pending', // Valor legacy a migrar
+                        COTIZACION_STATUS.PENDIENTE,
+                        COTIZACION_STATUS.APROBADA,
+                        'approved' // Valor legacy a migrar
+                    ]
                 }
             },
             select: {
@@ -685,7 +691,7 @@ export async function obtenerCotizacionesParaEvento(eventoId: string) {
 
         // 6. Verificar si hay cotizaciones aprobadas (requiere login)
         const cotizacionesAprobadas = cotizaciones.filter(cot =>
-            ['aprobada', 'approved'].includes(cot.status)
+            [COTIZACION_STATUS.APROBADA, 'approved'].includes(cot.status as any) // Incluir valor legacy
         )
         const requiereClienteLogin = cotizacionesAprobadas.length > 0 || eventoContratado
 
@@ -813,4 +819,38 @@ export async function eliminarCotizacion(cotizacionId: string) {
             error: 'Error interno del servidor al eliminar la cotización'
         };
     }
+}
+
+// =============================================================================
+// FUNCIONES MIGRADAS DESDE ARCHIVOS LEGACY
+// =============================================================================
+
+/**
+ * Obtener cotizaciones por evento - MIGRADA desde @/app/admin/_lib/cotizacion.actions
+ * Función para obtener cotizaciones con conteo de visitas
+ * Utilizada por: FichaCotizacionesUnificada
+ */
+export async function obtenerCotizacionesPorEventoLegacy(eventoId: string) {
+    const cotizaciones = await prisma.cotizacion.findMany({
+        where: {
+            eventoId,
+        },
+        orderBy: {
+            createdAt: 'asc'
+        }
+    });
+
+    const cotizacionesWithVisitaCount = await Promise.all(cotizaciones.map(async (cotizacion) => {
+        const visitas = await prisma.cotizacionVisita.count({
+            where: {
+                cotizacionId: cotizacion.id
+            }
+        });
+        return {
+            ...cotizacion,
+            visitas
+        };
+    }));
+
+    return cotizacionesWithVisitaCount;
 }

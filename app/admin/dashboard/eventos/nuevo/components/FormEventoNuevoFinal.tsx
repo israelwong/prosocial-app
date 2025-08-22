@@ -16,9 +16,9 @@ import {
 } from 'lucide-react'
 
 // Actions y tipos
-import { obtenerTiposEvento } from '@/app/admin/_lib/eventoTipo.actions'
-import { obtenerCanales } from '@/app/admin/_lib/canal.actions'
-import { crearBitacoraEvento } from '@/app/admin/_lib/EventoBitacora.actions'
+import { obtenerTiposEventoLegacy as obtenerTiposEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions'
+import { obtenerCanalesLegacy as obtenerCanales } from '@/app/admin/_lib/actions/canal/canal.actions'
+import { crearBitacoraEventoLegacy as crearBitacoraEvento } from '@/app/admin/_lib/actions/evento/bitacora.actions'
 import {
     buscarClientes,
     crearEventoCompleto,

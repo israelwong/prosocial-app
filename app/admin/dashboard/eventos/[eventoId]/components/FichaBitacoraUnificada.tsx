@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Trash } from 'lucide-react'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
 import { fichaBitacoraUnificadaEliminarBitacora } from '@/app/admin/_lib/actions/evento/bitacora.actions'
-import ModalBitacoraNuevo from '../../components/ModalBitacoraNuevo'
-import ModalBitacoraEditar from '../../components/ModalBitacoraEditar'
+import ModalBitacoraNuevo from './ModalBitacoraNuevo'
+import ModalBitacoraEditar from './ModalBitacoraEditar'
 
 interface Props {
     eventoCompleto: EventoCompleto

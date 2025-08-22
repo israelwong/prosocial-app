@@ -3,14 +3,9 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
 
-// Componentes existentes (mantenemos la funcionalidad)
-import ListaCotizaciones from '../cotizacion/components/ListaCotizacionesV2'
-
 // Nuevos componentes unificados
 import EventoHeader from './EventoHeader'
-import FichaClienteUnificada from './FichaClienteUnificada'
 import FichaClienteUnificadaV2 from './FichaClienteUnificadaV2'
-import FichaEventoUnificada from './FichaEventoUnificada'
 import FichaEventoUnificadaV2 from './FichaEventoUnificadaV2'
 import FichaBitacoraUnificada from './FichaBitacoraUnificada'
 import FichaCotizacionesUnificada from './FichaCotizacionesUnificada'

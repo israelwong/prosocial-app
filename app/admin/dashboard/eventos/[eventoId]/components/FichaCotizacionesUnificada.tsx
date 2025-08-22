@@ -1,16 +1,20 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Copy, SquareArrowOutUpRight, Plus, MoreVertical, Share, Package } from 'lucide-react'
-import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
+import { Copy, SquareArrowOutUpRight, Plus, MoreVertical, Package } from 'lucide-react'
+
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
-import { obtenerCotizacionesPorEvento } from '@/app/admin/_lib/cotizacion.actions'
-import { obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/paquete.actions'
 import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
-import { Cotizacion, Paquete } from '@/app/admin/_lib/types'
-import { supabase } from '@/app/admin/_lib/supabase'
+
+import { obtenerCotizacionesPorEventoLegacy as obtenerCotizacionesPorEvento } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
+import { obtenerPaquetesPorTipoEventoLegacy as obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/actions/paquete/paquete.actions'
+
 import FichaCotizacionDetalle from '../cotizacion/components/FichaCotizacionDetalle'
+
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
+import { Cotizacion, Paquete } from '@/app/admin/_lib/types'
+import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
+import { supabase } from '@/app/admin/_lib/supabase'
 
 interface Props {
     eventoCompleto: EventoCompleto

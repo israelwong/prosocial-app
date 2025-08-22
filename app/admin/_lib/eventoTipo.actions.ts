@@ -2,13 +2,14 @@
 import { EventoTipo } from "@/app/admin/_lib/types";
 import prisma from './prismaClient';
 
-export async function obtenerTiposEvento() {
-    return await prisma.eventoTipo.findMany({
-        orderBy: {
-            posicion: 'asc'
-        }
-    });
-}
+// FUNCIÓN MIGRADA A: @/app/admin/_lib/actions/eventoTipo/eventoTipo.actions.ts
+// export async function obtenerTiposEvento() {
+//     return await prisma.eventoTipo.findMany({
+//         orderBy: {
+//             posicion: 'asc'
+//         }
+//     });
+// }
 
 export async function obtenerTipoEvento(id: string) {
     return await prisma.eventoTipo.findUnique({

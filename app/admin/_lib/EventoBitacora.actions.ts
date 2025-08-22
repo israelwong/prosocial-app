@@ -60,21 +60,22 @@ export async function obtenerBitacora(bitacoraId: string) {
     return bitacora;
 }
 
-export async function crearBitacoraEvento(eventoId: string, anotacion: string, importancia: string = 'informativo') {
-    try {
-        const bitacora = await prisma.eventoBitacora.create({
-            data: {
-                eventoId,
-                comentario: anotacion,
-                importancia: importancia
-            }
-        });
-        return bitacora;
-    } catch (error) {
-        console.error('Error creando bitácora:', error);
-        throw new Error('No se pudo crear la entrada de bitácora');
-    }
-}
+// FUNCIÓN MIGRADA A: @/app/admin/_lib/actions/evento/bitacora.actions.ts
+// export async function crearBitacoraEvento(eventoId: string, anotacion: string, importancia: string = 'informativo') {
+//     try {
+//         const bitacora = await prisma.eventoBitacora.create({
+//             data: {
+//                 eventoId,
+//                 comentario: anotacion,
+//                 importancia: importancia
+//             }
+//         });
+//         return bitacora;
+//     } catch (error) {
+//         console.error('Error creando bitácora:', error);
+//         throw new Error('No se pudo crear la entrada de bitácora');
+//     }
+// }
 
 export async function eliminarBitacoraEvento(bitacoraId: string) {
     try {
