@@ -2,6 +2,9 @@
 
 import { z } from 'zod';
 
+// Importar tipos necesarios
+import type { EventoBitacora } from '../../types';
+
 // Schema para búsqueda y filtros de eventos
 export const EventoBusquedaSchema = z.object({
     search: z.string().optional(),
@@ -115,5 +118,5 @@ export interface EventoCompleto {
     } | null;
     Cotizacion?: any[];
     Agenda?: any[];
-    EventoBitacora?: any[];
+    EventoBitacora?: EventoBitacora[];
 }

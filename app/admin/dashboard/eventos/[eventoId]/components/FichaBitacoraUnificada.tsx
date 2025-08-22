@@ -3,7 +3,8 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash } from 'lucide-react'
-import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
+import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
+import type { EventoBitacora } from '@/app/admin/_lib/types'
 import { fichaBitacoraUnificadaEliminarBitacora } from '@/app/admin/_lib/actions/evento/bitacora.actions'
 import ModalBitacoraNuevo from './ModalBitacoraNuevo'
 import ModalBitacoraEditar from './ModalBitacoraEditar'
@@ -79,25 +80,25 @@ export default function FichaBitacoraUnificada({ eventoCompleto }: Props) {
             {/* Contenido */}
             <div>
                 {bitacora && bitacora.length > 0 ? (
-                    bitacora.map((entrada, index) => (
+                    bitacora.map((entrada: EventoBitacora, index: number) => (
                         <div key={entrada.id} className="py-3 mb-3 flex justify-between items-center bg-zinc-900 p-5">
                             <div className="pr-5">
                                 <button
                                     className="text-zinc-200 text-left flex items-start"
-                                    onClick={() => handleEditarBitacora(entrada.id)}
+                                    onClick={() => handleEditarBitacora(entrada.id!)}
                                     disabled={loading}
                                 >
                                     <span className="flex-shrink">{entrada.comentario}</span>
                                 </button>
                                 <p className="text-sm text-zinc-400 italic">
-                                    {new Date(entrada.updatedAt).toLocaleString('es-ES', {
+                                    {entrada.updatedAt && new Date(entrada.updatedAt).toLocaleString('es-ES', {
                                         dateStyle: 'full',
                                         timeStyle: 'long'
                                     }).replace(/ GMT[+-]\d{1,2}/, '')}
                                 </p>
                             </div>
                             <button
-                                onClick={() => handleDeleteBitacora(entrada.id)}
+                                onClick={() => handleDeleteBitacora(entrada.id!)}
                                 className="text-red-500 hover:text-red-400 disabled:opacity-50"
                                 disabled={loading}
                             >

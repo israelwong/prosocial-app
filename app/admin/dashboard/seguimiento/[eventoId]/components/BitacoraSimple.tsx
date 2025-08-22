@@ -3,23 +3,14 @@
 import React, { useState, useEffect } from 'react'
 import { obtenerEventoBitacora, crearBitacoraEvento, eliminarBitacoraEvento, actualizarBitacoraEvento } from '@/app/admin/_lib/actions/evento/bitacora.actions'
 import { Clock, FileText, AlertCircle, Plus, MoreVertical, Edit, Trash, X, MessageCircle } from 'lucide-react'
-
-interface BitacoraItem {
-    id: string
-    eventoId: string
-    comentario: string
-    importancia: string
-    status: string
-    createdAt: Date
-    updatedAt: Date
-}
+import type { EventoBitacora } from '@/app/admin/_lib/types'
 
 interface BitacoraSimpleProps {
     eventoId: string
 }
 
 export function BitacoraSimple({ eventoId }: BitacoraSimpleProps) {
-    const [bitacora, setBitacora] = useState<BitacoraItem[]>([])
+    const [bitacora, setBitacora] = useState<EventoBitacora[]>([])
     const [loading, setLoading] = useState(true)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [menuAbierto, setMenuAbierto] = useState<string | null>(null)
@@ -153,12 +144,12 @@ export function BitacoraSimple({ eventoId }: BitacoraSimpleProps) {
         setIsModalOpen(true)
     }
 
-    const handleEditarNota = (item: BitacoraItem) => {
+    const handleEditarNota = (item: EventoBitacora) => {
         setFormData({
             comentario: item.comentario,
-            importancia: mapearImportancia(item.importancia) // Usar la versión mapeada
+            importancia: mapearImportancia(item.importancia || 'informativo') // Usar la versión mapeada
         })
-        setEditandoId(item.id)
+        setEditandoId(item.id || null)
         setIsModalOpen(true)
         setMenuAbierto(null)
     }
@@ -258,28 +249,30 @@ export function BitacoraSimple({ eventoId }: BitacoraSimpleProps) {
                         {bitacora
                             .sort((a, b) => {
                                 // Primero ordenar por importancia, luego por fecha (más reciente primero)
-                                const orderA = getImportanciaOrder(a.importancia)
-                                const orderB = getImportanciaOrder(b.importancia)
+                                const orderA = getImportanciaOrder(a.importancia || 'informativo')
+                                const orderB = getImportanciaOrder(b.importancia || 'informativo')
 
                                 if (orderA !== orderB) {
                                     return orderA - orderB
                                 }
 
-                                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                                const fechaA = a.createdAt || new Date(0)
+                                const fechaB = b.createdAt || new Date(0)
+                                return new Date(fechaB).getTime() - new Date(fechaA).getTime()
                             })
                             .slice(0, 10)
                             .map((item) => (
                                 <div
-                                    key={item.id}
-                                    className={getItemStyle(item.importancia)}
+                                    key={item.id || Math.random()}
+                                    className={getItemStyle(item.importancia || 'informativo')}
                                 >
                                     {/* Contenido minimalista */}
                                     <div className="space-y-2">
                                         {/* Primera línea: etiqueta + comentario + menú */}
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3 flex-1">
-                                                <span className={`px-2 py-1 rounded-md text-xs border ${getImportanciaColor(item.importancia)}`}>
-                                                    {mapearImportancia(item.importancia).charAt(0).toUpperCase() + mapearImportancia(item.importancia).slice(1)}
+                                                <span className={`px-2 py-1 rounded-md text-xs border ${getImportanciaColor(item.importancia || 'informativo')}`}>
+                                                    {mapearImportancia(item.importancia || 'informativo').charAt(0).toUpperCase() + mapearImportancia(item.importancia || 'informativo').slice(1)}
                                                 </span>
                                                 <p className="text-zinc-200 text-sm leading-relaxed flex-1">
                                                     {item.comentario}
@@ -289,7 +282,7 @@ export function BitacoraSimple({ eventoId }: BitacoraSimpleProps) {
                                             {/* Menú contextual */}
                                             <div className="relative menu-container flex-shrink-0">
                                                 <button
-                                                    onClick={() => setMenuAbierto(menuAbierto === item.id ? null : item.id)}
+                                                    onClick={() => setMenuAbierto(menuAbierto === item.id ? null : item.id || '')}
                                                     className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 rounded-md transition-colors"
                                                 >
                                                     <MoreVertical className="w-3 h-3" />
@@ -305,7 +298,7 @@ export function BitacoraSimple({ eventoId }: BitacoraSimpleProps) {
                                                             Editar
                                                         </button>
                                                         <button
-                                                            onClick={() => handleEliminarNota(item.id)}
+                                                            onClick={() => item.id && handleEliminarNota(item.id)}
                                                             className="w-full px-3 py-2 text-left text-red-400 hover:bg-zinc-700 flex items-center gap-2 text-sm"
                                                         >
                                                             <Trash className="w-3 h-3" />
@@ -319,13 +312,11 @@ export function BitacoraSimple({ eventoId }: BitacoraSimpleProps) {
                                         {/* Segunda línea: fecha */}
                                         <div className="flex items-center gap-1 text-xs text-zinc-500 ml-12">
                                             <Clock className="h-3 w-3" />
-                                            {formatearFecha(item.createdAt)}
+                                            {item.createdAt ? formatearFecha(item.createdAt) : 'Sin fecha'}
                                         </div>
                                     </div>
                                 </div>
-                            ))}
-
-                        {bitacora.length > 10 && (
+                            ))}                        {bitacora.length > 10 && (
                             <div className="text-center pt-4 border-t border-zinc-700">
                                 <p className="text-sm text-zinc-500">
                                     Se muestran los últimos 10 registros de {bitacora.length} total
