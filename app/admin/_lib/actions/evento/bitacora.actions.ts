@@ -80,3 +80,35 @@ export async function obtenerBitacoraPorId(bitacoraId: string): Promise<Bitacora
         updatedAt: bitacora.updatedAt
     }
 }
+
+/**
+ * Eliminar entrada de bitácora con validación para FichaBitacoraUnificada
+ */
+export async function fichaBitacoraUnificadaEliminarBitacora(bitacoraId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        // Verificar primero si existe el registro
+        const existingBitacora = await prisma.eventoBitacora.findUnique({
+            where: { id: bitacoraId }
+        });
+
+        if (!existingBitacora) {
+            return {
+                success: false,
+                error: 'La entrada de bitácora no existe o ya fue eliminada'
+            };
+        }
+
+        // Proceder con la eliminación
+        await prisma.eventoBitacora.delete({
+            where: { id: bitacoraId }
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error al eliminar bitácora:', error);
+        return {
+            success: false,
+            error: 'Error interno al eliminar la entrada de bitácora'
+        };
+    }
+}
