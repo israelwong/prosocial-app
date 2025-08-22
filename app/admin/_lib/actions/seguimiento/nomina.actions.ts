@@ -184,3 +184,43 @@ export async function cancelarPago(nominaId: string, eventoId: string) {
         throw new Error('Error al cancelar pago');
     }
 }
+
+// =====================================
+// ELIMINAR NÓMINA
+// =====================================
+export async function eliminarNomina(nominaId: string) {
+    try {
+        console.log('🔄 Eliminando nómina:', nominaId);
+
+        // Verificar que la nómina existe
+        const nomina = await prisma.nomina.findUnique({
+            where: { id: nominaId }
+        });
+
+        if (!nomina) {
+            throw new Error('Nómina no encontrada');
+        }
+
+        // Solo permitir eliminar nóminas pendientes
+        if (nomina.status !== 'pendiente') {
+            throw new Error('Solo se pueden eliminar nóminas en estado pendiente');
+        }
+
+        // Eliminar la nómina
+        await prisma.nomina.delete({
+            where: { id: nominaId }
+        });
+
+        console.log('✅ Nómina eliminada exitosamente');
+
+        // Revalidar rutas relacionadas
+        revalidatePath('/admin/dashboard/finanzas/nomina');
+        revalidatePath('/admin/dashboard/seguimiento');
+
+        return { success: true };
+
+    } catch (error) {
+        console.error('❌ Error al eliminar nómina:', error);
+        throw new Error('Error al eliminar nómina');
+    }
+}

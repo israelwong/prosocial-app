@@ -29,6 +29,9 @@ model User {
   Nomina              Nomina[]              @relation("NominaUsuario")
   NominaAutorizada    Nomina[]              @relation("AutorizadoPor")
   NominaPagada        Nomina[]              @relation("PagadoPor")
+  
+  // === RELACIONES GASTOS ===
+  Gasto               Gasto[]
   // Notificacion Notificacion[]
 }
 
@@ -90,6 +93,7 @@ model Evento {
   Cotizacion     Cotizacion[]
   Agenda         Agenda[]
   Nomina         Nomina[]
+  Gasto          Gasto[]
 }
 
 model EventoBitacora {
@@ -625,5 +629,36 @@ model Suscripcion {
   cliente           Cliente  @relation(fields: [clienteId], references: [id])
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+// === MODELO GASTO INDEPENDIENTE ===
+model Gasto {
+  id              String   @id @default(cuid())
+  concepto        String
+  descripcion     String?
+  monto           Float
+  categoria       String   // oficina, transporte, marketing, servicios, equipamiento, otros
+  subcategoria    String?  // detalle específico
+  fecha           DateTime @default(now())
+  fechaFactura    DateTime? // fecha real del gasto
+  status          String   @default("activo") // activo, cancelado
+  metodoPago      String?  // efectivo, transferencia, tarjeta, cheque
+  numeroFactura   String?
+  proveedor       String?
+  
+  // Relaciones
+  eventoId        String?  // Si está asociado a un evento específico
+  Evento          Evento?  @relation(fields: [eventoId], references: [id])
+  usuarioId       String
+  Usuario         User     @relation(fields: [usuarioId], references: [id])
+  
+  // Archivos
+  comprobanteUrl  String?  // URL del comprobante
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([fecha, categoria])
+  @@index([eventoId])
 }
 
