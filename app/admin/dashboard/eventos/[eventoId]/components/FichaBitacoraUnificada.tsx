@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash } from 'lucide-react'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
 import type { EventoBitacora } from '@/app/admin/_lib/types'
-import { fichaBitacoraUnificadaEliminarBitacora } from '@/app/admin/_lib/actions/evento/bitacora.actions'
+import { fichaBitacoraUnificadaEliminarBitacora, obtenerEventoBitacora } from '@/app/admin/_lib/actions/evento/bitacora.actions'
 import ModalBitacoraNuevo from './ModalBitacoraNuevo'
 import ModalBitacoraEditar from './ModalBitacoraEditar'
 
@@ -18,15 +18,44 @@ export default function FichaBitacoraUnificada({ eventoCompleto }: Props) {
     const [isModalBitacoraEditarOpen, setIsModalBitacoraEditarOpen] = useState(false)
     const [bitacoraId, setBitacoraId] = useState('')
     const [loading, setLoading] = useState(false)
+    const [bitacora, setBitacora] = useState<EventoBitacora[]>(eventoCompleto.EventoBitacora || [])
     const router = useRouter()
 
-    const bitacora = eventoCompleto.EventoBitacora || []
+    // Función para recargar solo la bitácora
+    const recargarBitacora = async () => {
+        try {
+            const bitacoraActualizada = await obtenerEventoBitacora(eventoCompleto.id)
+            setBitacora(bitacoraActualizada)
+        } catch (error) {
+            console.error('Error recargando bitácora:', error)
+        }
+    }
+
+    const formatearFecha = (fecha: Date) => {
+        try {
+            // Verificar que sea una fecha válida
+            if (!fecha || !(fecha instanceof Date) || isNaN(fecha.getTime())) {
+                return 'Fecha no válida'
+            }
+
+            // Formatear en español con formato completo: "sábado 3 de enero 2025"
+            return fecha.toLocaleDateString('es-ES', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            })
+        } catch (error) {
+            console.error('Error formateando fecha:', error, fecha)
+            return 'Error en fecha'
+        }
+    }
 
     const handleSubimtBitacoraNuevo = async () => {
         setLoading(true)
         setIsModalBitacoraNuevoOpen(false)
-        // Refrescar la página para mostrar los nuevos datos
-        router.refresh()
+        // Recargar solo la bitácora en lugar de toda la página
+        await recargarBitacora()
         setLoading(false)
     }
 
@@ -38,8 +67,8 @@ export default function FichaBitacoraUnificada({ eventoCompleto }: Props) {
     const handleSubimtBitacoraActualizar = async () => {
         setLoading(true)
         setIsModalBitacoraEditarOpen(false)
-        // Refrescar la página para mostrar los datos actualizados
-        router.refresh()
+        // Recargar solo la bitácora en lugar de toda la página
+        await recargarBitacora()
         setLoading(false)
     }
 
@@ -49,8 +78,8 @@ export default function FichaBitacoraUnificada({ eventoCompleto }: Props) {
         setLoading(true)
         try {
             await fichaBitacoraUnificadaEliminarBitacora(bitacoraId)
-            // Refrescar la página para mostrar los cambios
-            router.refresh()
+            // Actualizar estado local directamente (más eficiente que recargar)
+            setBitacora(prevBitacora => prevBitacora.filter(item => item.id !== bitacoraId))
         } catch (error) {
             console.error('Error al eliminar bitácora:', error)
             alert('Error al eliminar la nota')
@@ -91,10 +120,9 @@ export default function FichaBitacoraUnificada({ eventoCompleto }: Props) {
                                     <span className="flex-shrink">{entrada.comentario}</span>
                                 </button>
                                 <p className="text-sm text-zinc-400 italic">
-                                    {entrada.updatedAt && new Date(entrada.updatedAt).toLocaleString('es-ES', {
-                                        dateStyle: 'full',
-                                        timeStyle: 'long'
-                                    }).replace(/ GMT[+-]\d{1,2}/, '')}
+                                    {(entrada.updatedAt || entrada.createdAt) ?
+                                        formatearFecha(entrada.updatedAt || entrada.createdAt!) :
+                                        'Sin fecha'}
                                 </p>
                             </div>
                             <button

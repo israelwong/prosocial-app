@@ -317,12 +317,12 @@ export function BitacoraSimple({ eventoId }: BitacoraSimpleProps) {
                                     </div>
                                 </div>
                             ))}                        {bitacora.length > 10 && (
-                            <div className="text-center pt-4 border-t border-zinc-700">
-                                <p className="text-sm text-zinc-500">
-                                    Se muestran los últimos 10 registros de {bitacora.length} total
-                                </p>
-                            </div>
-                        )}
+                                <div className="text-center pt-4 border-t border-zinc-700">
+                                    <p className="text-sm text-zinc-500">
+                                        Se muestran los últimos 10 registros de {bitacora.length} total
+                                    </p>
+                                </div>
+                            )}
                     </div>
                 )}
             </div>

@@ -130,6 +130,7 @@ export async function obtenerEventoCompleto(eventoId: string): Promise<EventoCom
                         id: true,
                         comentario: true,
                         createdAt: true,
+                        updatedAt: true,
                         importancia: true,
                         status: true,
                     },
