@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Agenda, AgendaTipo } from '@/app/admin/_lib/types'
 import { obtenerAgendaDeEvento, eliminarAgendaEvento, actualzarStatusAgendaActividad, crearAgendaEvento, actualizarAgendaEvento } from '@/app/admin/_lib/agenda.actions'
 import { obtenerAgendaTipos } from '@/app/admin/_lib/agendaTipos.actions'
-import { Edit, Trash, Calendar, Clock, MessageCircle, MapPin, Link, Plus, MoreVertical, CheckCircle, XCircle, X } from 'lucide-react'
+import { Edit, Trash, Calendar, Clock, MessageCircle, MapPin, Link, Plus, MoreVertical, CheckCircle, XCircle, X, Clock4, RotateCcw, AlertCircle } from 'lucide-react'
 import Cookies from 'js-cookie'
 import { AGENDA_STATUS } from '@/app/admin/_lib/constants/status'
 
@@ -124,6 +124,11 @@ export default function FichaAgendaV3({ eventoId }: Props) {
         // Buscar el agendamiento en la lista actual
         const agendamiento = agenda.find(a => a.id === id)
         if (agendamiento) {
+            // Buscar el tipo de agenda que coincida (case-insensitive)
+            const tipoCorrespondiente = agendaTipos?.find(tipo =>
+                tipo.nombre.toLowerCase() === (agendamiento.agendaTipo || '').toLowerCase()
+            )
+
             setFormData({
                 concepto: agendamiento.concepto || '',
                 descripcion: agendamiento.descripcion || '',
@@ -131,7 +136,7 @@ export default function FichaAgendaV3({ eventoId }: Props) {
                 hora: agendamiento.hora || '',
                 direccion: agendamiento.direccion || '',
                 googleMapsUrl: agendamiento.googleMapsUrl || '',
-                agendaTipo: agendamiento.agendaTipo || ''
+                agendaTipo: tipoCorrespondiente?.nombre || agendamiento.agendaTipo || ''
             })
             setAgendaId(id)
             setIsModalAgendaEditarOpen(true)
@@ -192,6 +197,59 @@ export default function FichaAgendaV3({ eventoId }: Props) {
             default:
                 return 'text-zinc-400 bg-zinc-500/20 border-zinc-500/30'
         }
+    }
+
+    // Función helper para obtener opciones de cambio de estado
+    const getStatusChangeOptions = (currentStatus: string) => {
+        const options = []
+
+        // Desde cualquier estado se puede marcar como:
+        if (currentStatus !== AGENDA_STATUS.PENDIENTE) {
+            options.push({
+                status: AGENDA_STATUS.PENDIENTE,
+                label: 'Marcar como pendiente',
+                icon: Clock4,
+                color: 'text-yellow-400'
+            })
+        }
+
+        if (currentStatus !== AGENDA_STATUS.CONFIRMADO) {
+            options.push({
+                status: AGENDA_STATUS.CONFIRMADO,
+                label: 'Marcar como confirmado',
+                icon: CheckCircle,
+                color: 'text-blue-400'
+            })
+        }
+
+        if (currentStatus !== AGENDA_STATUS.COMPLETADO) {
+            options.push({
+                status: AGENDA_STATUS.COMPLETADO,
+                label: 'Marcar como completado',
+                icon: CheckCircle,
+                color: 'text-green-400'
+            })
+        }
+
+        if (currentStatus !== AGENDA_STATUS.REAGENDADO) {
+            options.push({
+                status: AGENDA_STATUS.REAGENDADO,
+                label: 'Marcar como reagendado',
+                icon: RotateCcw,
+                color: 'text-purple-400'
+            })
+        }
+
+        if (currentStatus !== AGENDA_STATUS.CANCELADO) {
+            options.push({
+                status: AGENDA_STATUS.CANCELADO,
+                label: 'Marcar como cancelado',
+                icon: XCircle,
+                color: 'text-red-400'
+            })
+        }
+
+        return options
     }
 
     const getTipoAgendaColor = (tipo: string) => {
@@ -285,26 +343,25 @@ export default function FichaAgendaV3({ eventoId }: Props) {
 
                                         {menuAbierto === item.id && (
                                             <div className="absolute right-0 top-8 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg py-1 z-10 min-w-48">
-                                                {/* Cambiar estado */}
-                                                <button
-                                                    onClick={() => item.id && handleStatusAgendaActividad(
-                                                        item.id,
-                                                        item.status === AGENDA_STATUS.PENDIENTE ? AGENDA_STATUS.COMPLETADO : AGENDA_STATUS.PENDIENTE
-                                                    )}
-                                                    className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
-                                                >
-                                                    {item.status === AGENDA_STATUS.PENDIENTE ? (
-                                                        <>
-                                                            <CheckCircle className="w-4 h-4" />
-                                                            Marcar como completado
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <XCircle className="w-4 h-4" />
-                                                            Marcar como pendiente
-                                                        </>
-                                                    )}
-                                                </button>
+                                                {/* Opciones de cambio de estado */}
+                                                {getStatusChangeOptions(item.status || AGENDA_STATUS.PENDIENTE).map((option) => {
+                                                    const IconComponent = option.icon
+                                                    return (
+                                                        <button
+                                                            key={option.status}
+                                                            onClick={() => item.id && handleStatusAgendaActividad(item.id, option.status)}
+                                                            className={`w-full px-3 py-2 text-left hover:bg-zinc-700 flex items-center gap-2 text-sm ${option.color}`}
+                                                        >
+                                                            <IconComponent className="w-4 h-4" />
+                                                            {option.label}
+                                                        </button>
+                                                    )
+                                                })}
+
+                                                {/* Separador solo si hay opciones de estado */}
+                                                {getStatusChangeOptions(item.status || AGENDA_STATUS.PENDIENTE).length > 0 && (
+                                                    <div className="border-t border-zinc-700 my-1"></div>
+                                                )}
 
                                                 {/* Editar */}
                                                 <button
