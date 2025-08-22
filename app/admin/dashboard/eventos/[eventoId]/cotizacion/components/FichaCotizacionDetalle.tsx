@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Cotizacion } from '@/app/admin/_lib/types'
-import { clonarCotizacion, archivarCotizacion, desarchivarCotizacion, eliminarCotizacion, autorizarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
+import { clonarCotizacion, archivarCotizacion, desarchivarCotizacion, eliminarCotizacion, autorizarCotizacion, cancelarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import { useRouter } from 'next/navigation'
 import BotonAutorizarCotizacion from '@/app/admin/dashboard/eventos/[eventoId]/cotizacion/components/BotonAutorizarCotizacion'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
@@ -52,7 +52,7 @@ import ModalConfirmacionEliminacion from '@/app/components/ui/ModalConfirmacionE
 import { useEliminacionCotizacion } from '@/app/hooks/useModalEliminacion'
 import { toast } from 'sonner'
 
-import { Pencil, Eye, Layers2, ArrowUpRight, Trash2, Archive, ArchiveRestore, Copy, Check, MoreVertical, CheckCircle, Calendar } from 'lucide-react'
+import { Pencil, Eye, Layers2, ArrowUpRight, Trash2, Archive, ArchiveRestore, Copy, Check, MoreVertical, CheckCircle, Calendar, XCircle } from 'lucide-react'
 
 interface Props {
     cotizacion: Cotizacion
@@ -67,6 +67,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
     const [copiado, setCopiado] = useState<string | null>(null)
     const [menuAbierto, setMenuAbierto] = useState(false)
     const [autorizando, setAutorizando] = useState(false)
+    const [cancelando, setCancelando] = useState(false)
     const [archivada, setArchivada] = useState<boolean>(cotizacion?.archivada ?? false)
 
     // Hook para modal de eliminación
@@ -244,6 +245,56 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
         setMenuAbierto(false)
     }
 
+    //! Cancelar cotización aprobada
+    const handleCancelarCotizacion = async () => {
+        if (!cotizacion.id) return
+
+        const confirmacion = confirm(
+            '⚠️ ¿Estás seguro de cancelar esta cotización?\n\n' +
+            'Esta acción:\n' +
+            '• Cambiará el status de la cotización a PENDIENTE\n' +
+            '• Cambiará el status del evento a PENDIENTE\n' +
+            '• Cancelará todos los pagos realizados\n' +
+            '• Eliminará el evento de la agenda si existe\n\n' +
+            '¿Continuar con la cancelación?'
+        )
+
+        if (!confirmacion) return
+
+        setCancelando(true)
+        try {
+            const resultado = await cancelarCotizacion(cotizacion.id)
+            if (resultado.success) {
+                let mensaje = 'Cotización cancelada exitosamente'
+
+                if (resultado.detalles) {
+                    const detalles = []
+                    if (resultado.detalles.pagosAfectados > 0) {
+                        detalles.push(`${resultado.detalles.pagosAfectados} pago(s) cancelado(s)`)
+                    }
+                    if (resultado.detalles.agendaEliminada) {
+                        detalles.push('Evento eliminado de agenda')
+                    }
+
+                    if (detalles.length > 0) {
+                        mensaje += `\n\n${detalles.join(', ')}`
+                    }
+                }
+
+                toast.success(mensaje)
+                router.refresh()
+            } else {
+                toast.error(resultado.message || 'Error al cancelar cotización')
+            }
+        } catch (error) {
+            console.error('Error cancelando cotización:', error)
+            toast.error('Error al cancelar cotización')
+        } finally {
+            setCancelando(false)
+            setMenuAbierto(false)
+        }
+    }
+
     return (
         <div className={`space-y-4 ${archivada ? 'bg-amber-900/30 border-2 border-amber-600/60 rounded-lg p-4' : ''}`}>
             {/* Indicador de archivado */}
@@ -380,6 +431,17 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                             <Calendar className="w-4 h-4" />
                                             Ir a seguimiento
                                         </button>
+
+                                        {/* Cancelar cotización - Solo si está aprobada */}
+                                        <button
+                                            onClick={handleCancelarCotizacion}
+                                            disabled={cancelando}
+                                            className="w-full px-3 py-2 text-left text-orange-400 hover:bg-zinc-700 flex items-center gap-2 text-sm disabled:opacity-50"
+                                        >
+                                            <XCircle className="w-4 h-4" />
+                                            {cancelando ? 'Cancelando...' : 'Cancelar cotización'}
+                                        </button>
+
                                         <div className="border-t border-zinc-700 my-1"></div>
                                     </>
                                 )}

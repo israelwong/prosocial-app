@@ -1269,3 +1269,131 @@ export async function verificarEstadoAutorizacion(cotizacionId: string) {
         return { error: 'Error verificando estado' };
     }
 }
+
+/**
+ * Cancela una cotización aprobada y revierte el evento a pendiente
+ * Incluye cancelación de pagos y eliminación de agenda si existe
+ */
+export async function cancelarCotizacion(cotizacionId: string) {
+    try {
+        console.log('🔄 Iniciando cancelación de cotización:', cotizacionId);
+
+        // Obtener datos completos de la cotización
+        const cotizacion = await prisma.cotizacion.findUnique({
+            where: { id: cotizacionId },
+            include: {
+                Evento: {
+                    include: {
+                        Cliente: true,
+                        EventoTipo: true
+                    }
+                },
+                Pago: {
+                    where: {
+                        status: {
+                            in: ['paid', 'completado', 'pending']
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!cotizacion) {
+            return { success: false, message: 'Cotización no encontrada' };
+        }
+
+        // Verificar que la cotización esté aprobada
+        if (cotizacion.status !== COTIZACION_STATUS.APROBADA) {
+            return {
+                success: false,
+                message: 'Solo se pueden cancelar cotizaciones aprobadas'
+            };
+        }
+
+        const eventoId = cotizacion.Evento.id;
+        let pagosAfectados = 0;
+        let agendaEliminada = false;
+
+        // Usar transacción para garantizar consistencia
+        await prisma.$transaction(async (tx) => {
+            // 1. Actualizar status de la cotización a pendiente
+            await tx.cotizacion.update({
+                where: { id: cotizacionId },
+                data: {
+                    status: COTIZACION_STATUS.PENDIENTE,
+                    updatedAt: new Date()
+                }
+            });
+
+            // 2. Actualizar status del evento a pendiente
+            await tx.evento.update({
+                where: { id: eventoId },
+                data: {
+                    status: 'pendiente',
+                    updatedAt: new Date()
+                }
+            });
+
+            // 3. Cancelar pagos realizados
+            if (cotizacion.Pago.length > 0) {
+                await tx.pago.updateMany({
+                    where: {
+                        cotizacionId: cotizacionId,
+                        status: {
+                            in: ['paid', 'completado', 'pending']
+                        }
+                    },
+                    data: {
+                        status: 'cancelado',
+                        updatedAt: new Date()
+                    }
+                });
+                pagosAfectados = cotizacion.Pago.length;
+            }
+
+            // 4. Eliminar de agenda si existe
+            const agendaExistente = await tx.agenda.findFirst({
+                where: { eventoId: eventoId }
+            });
+
+            if (agendaExistente) {
+                await tx.agenda.delete({
+                    where: { id: agendaExistente.id }
+                });
+                agendaEliminada = true;
+            }
+        });
+
+        // Revalidar paths
+        revalidatePath(`/admin/dashboard/eventos/${eventoId}`);
+        revalidatePath(`/admin/dashboard/eventos/${eventoId}/cotizacion`);
+        revalidatePath(`/admin/dashboard/seguimiento/${eventoId}`);
+        revalidatePath('/admin/dashboard/agenda');
+
+        console.log('✅ Cotización cancelada exitosamente:', {
+            cotizacionId,
+            eventoId,
+            pagosAfectados,
+            agendaEliminada
+        });
+
+        return {
+            success: true,
+            message: 'Cotización cancelada exitosamente',
+            detalles: {
+                cotizacionId,
+                eventoId,
+                pagosAfectados,
+                agendaEliminada
+            }
+        };
+
+    } catch (error) {
+        console.error('❌ Error cancelando cotización:', error);
+        return {
+            success: false,
+            message: 'Error interno al cancelar cotización',
+            error: error instanceof Error ? error.message : 'Error desconocido'
+        };
+    }
+}

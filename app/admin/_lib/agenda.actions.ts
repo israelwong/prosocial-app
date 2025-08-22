@@ -10,6 +10,9 @@ export async function obtenerAgenda() {
 export async function obtenerAgendaConEventos() {
     try {
         return await prisma.agenda.findMany({
+            where: {
+                status: AGENDA_STATUS.CONFIRMADO
+            },
             include: {
                 Evento: {
                     select: {
@@ -20,16 +23,27 @@ export async function obtenerAgendaConEventos() {
                             }
                         },
                         Cotizacion: {
-                            where: { status: COTIZACION_STATUS.APROBADA },
+                            where: {
+                                OR: [
+                                    { status: COTIZACION_STATUS.APROBADA },
+                                    { status: COTIZACION_STATUS.PENDIENTE }
+                                ]
+                            },
                             select: {
                                 status: true,
                                 precio: true,
                                 Pago: {
-                                    where: { status: PAGO_STATUS.PAID },
+                                    where: {
+                                        status: PAGO_STATUS.PAID
+                                    },
                                     select: {
-                                        monto: true
+                                        monto: true,
+                                        status: true
                                     }
                                 }
+                            },
+                            orderBy: {
+                                createdAt: 'desc'
                             }
                         }
                     }
@@ -89,6 +103,7 @@ export async function crearAgendaEvento(agenda: Agenda) {
                 eventoId: agenda.eventoId ?? '',
                 userId: agenda.userId ?? '',
                 agendaTipo: agenda.agendaTipo,
+                status: agenda.status || AGENDA_STATUS.PENDIENTE, // Incluir status con valor por defecto
             }
         });
         return { success: true };
@@ -110,6 +125,7 @@ export async function actualizarAgendaEvento(agenda: Agenda) {
                 fecha: agenda.fecha,
                 hora: agenda.hora,
                 agendaTipo: agenda.agendaTipo,
+                status: agenda.status || AGENDA_STATUS.PENDIENTE, // Incluir status con fallback
             }
         });
         return { success: true };

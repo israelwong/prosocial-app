@@ -6,7 +6,7 @@ export const WEBHOOK_SUCCESS_FLOW = {
   EVENTO: "aprobado", // evento -> aprobado
   COTIZACION: "aprobada", // cotización -> aprobada
   PAGO: "paid", // pago -> paid
-  AGENDA: "confirmado", // agenda -> confirmado
+  AGENDA: "confirmado", // agenda -> confirmado (corregido para usar forma masculina según constantes)
   CLIENTE: "cliente", // prospecto -> cliente
 };
 

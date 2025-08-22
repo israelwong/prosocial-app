@@ -54,7 +54,7 @@ export default async function EditarCotizacionPage({ params }: PageProps) {
                                     Editar Cotización
                                 </h1>
                                 <p className="text-zinc-400 mt-1">
-                                    {datosCotizacion.evento.Cliente.nombre} • {cotizacionExistente.cotizacion.nombre}
+                                    {datosCotizacion.evento.Cliente?.nombre ?? 'Sin cliente'} • {cotizacionExistente.cotizacion.nombre}
                                 </p>
                             </div>
                             <div className="text-right text-sm">

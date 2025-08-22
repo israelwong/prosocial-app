@@ -250,7 +250,7 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
         etapaActualizada: !!etapaContratadoId,
       });
 
-      // 5. Crear entrada en agenda
+      // 5. Crear entrada en agenda con información completa del evento
       try {
         // Verificar si ya existe entrada en agenda para este evento
         const agendaExistente = await prisma.agenda.findFirst({
@@ -261,12 +261,19 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
         });
 
         if (!agendaExistente) {
+          // Obtener el tipo de evento para el concepto
+          const eventoTipo = pagoExistente.Cotizacion.Evento.EventoTipo;
+          const cliente = pagoExistente.Cotizacion.Evento.Cliente;
+
           const nuevaAgenda = await prisma.agenda.create({
             data: {
               eventoId: evento.id,
+              agendaTipo: eventoTipo?.nombre || "Evento", // Tipo debe ser el tipo de evento con el que fue creada la cotización
+              concepto: `${eventoTipo?.nombre || "Evento"} - ${cliente?.nombre || "Cliente"}`, // Concepto debe ser el nombre del evento
               fecha: evento.fecha_evento,
-              status: WEBHOOK_SUCCESS_FLOW.AGENDA, // "confirmado"
-              descripcion: `Evento confirmado automáticamente - Pago procesado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`,
+              status: "confirmado", // Estatus: confirmado (usando constante correcta)
+              descripcion:
+                "Evento agendado automáticamente por pago exitoso stripe", // Descripción requerida
               createdAt: new Date(),
               updatedAt: new Date(),
             },
@@ -275,22 +282,27 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
           console.log("📅 Agenda creada exitosamente:", {
             agendaId: nuevaAgenda.id,
             eventoId: evento.id,
+            agendaTipo: nuevaAgenda.agendaTipo,
+            concepto: nuevaAgenda.concepto,
             fecha: evento.fecha_evento,
+            status: nuevaAgenda.status,
           });
         } else {
-          // Si ya existe, actualizar su status
+          // Si ya existe, actualizar su status y descripción
           await prisma.agenda.update({
             where: { id: agendaExistente.id },
             data: {
-              status: WEBHOOK_SUCCESS_FLOW.AGENDA, // "confirmado"
-              descripcion: `${agendaExistente.descripcion || ""} - Pago confirmado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`,
+              status: "confirmado", // Usar constante correcta
+              descripcion: agendaExistente.descripcion
+                ? `${agendaExistente.descripcion} - Pago confirmado: ${pagoActualizado.monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}`
+                : "Evento agendado automáticamente por pago exitoso stripe",
               updatedAt: new Date(),
             },
           });
 
           console.log("📅 Agenda actualizada exitosamente:", {
             agendaId: agendaExistente.id,
-            nuevoStatus: WEBHOOK_SUCCESS_FLOW.AGENDA,
+            nuevoStatus: "confirmado",
           });
         }
       } catch (agendaError) {

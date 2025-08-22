@@ -5,7 +5,7 @@ import { Agenda } from '@/app/admin/_lib/types'
 import { useRouter } from 'next/navigation'
 import { Calendar, Clock, Search, ChevronRight, User } from 'lucide-react'
 import { formatearFecha, crearFechaLocal, compararFechas } from '@/app/admin/_lib/utils/fechas'
-import { COTIZACION_STATUS, AGENDA_STATUS } from '@/app/admin/_lib/constants/status'
+import { COTIZACION_STATUS, AGENDA_STATUS, PAGO_STATUS } from '@/app/admin/_lib/constants/status'
 
 interface AgendaEvento extends Agenda {
     Evento: {
@@ -80,13 +80,13 @@ const AgendaCard = ({ agenda, color, onClick }: { agenda: AgendaEvento, color: s
                     </div>
                 </div>
 
-                {agenda.agendaTipo?.toLowerCase() === 'evento' && (
+                {agenda.cotizacionPrecio && agenda.cotizacionPrecio > 0 && (
                     <div className="mt-4 pt-3 border-t border-zinc-800">
                         <div className="flex justify-between items-center text-xs">
                             <div className="text-left px-1">
                                 <span className="text-zinc-400 block text-xs">Total</span>
                                 <span className="font-medium text-zinc-200 text-sm">
-                                    ${agenda.cotizacionPrecio !== undefined ? agenda.cotizacionPrecio.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '0'}
+                                    ${agenda.cotizacionPrecio.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                 </span>
                             </div>
                             <div className="text-left px-1">
@@ -97,6 +97,14 @@ const AgendaCard = ({ agenda, color, onClick }: { agenda: AgendaEvento, color: s
                                 <span className="text-amber-400 block text-xs">Pendiente</span>
                                 <span className="font-medium text-amber-400 text-sm">${agenda.totalPendiente?.toLocaleString('es-MX') || 0}</span>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {agenda.Evento?.Cotizacion?.length > 0 && (!agenda.cotizacionPrecio || agenda.cotizacionPrecio === 0) && (
+                    <div className="mt-4 pt-3 border-t border-zinc-800">
+                        <div className="text-center">
+                            <span className="text-xs text-zinc-500">Cotización sin precio definido</span>
                         </div>
                     </div>
                 )}
@@ -121,23 +129,35 @@ export default function ListaAgenda() {
                     let totalPagado = 0;
                     let totalPendiente = 0;
 
-                    if (agenda.agendaTipo?.toLowerCase() === 'evento') {
-                        const cotizacionAprobada = agenda.Evento?.Cotizacion?.find((c: any) => c.status === COTIZACION_STATUS.APROBADA);
-                        if (cotizacionAprobada) {
-                            cotizacionPrecio = cotizacionAprobada.precio;
-                            totalPagado = cotizacionAprobada.Pago.reduce((sum: number, pago: any) => sum + pago.monto, 0);
-                            totalPendiente = cotizacionPrecio - totalPagado;
-                        }
-                    }
+                    // Solo calcular precios si NO es una sesión
+                    // Las sesiones están incluidas en el precio del evento principal
+                    if (agenda.Evento?.Cotizacion?.length > 0 &&
+                        agenda.agendaTipo?.toLowerCase() !== 'sesion' &&
+                        agenda.agendaTipo?.toLowerCase() !== 'sesión') {
 
-                    return {
+                        // Buscar primero cotización aprobada, luego pendiente
+                        const cotizacionAprobada = agenda.Evento.Cotizacion.find((c: any) => c.status === COTIZACION_STATUS.APROBADA);
+                        const cotizacionPendiente = agenda.Evento.Cotizacion.find((c: any) => c.status === COTIZACION_STATUS.PENDIENTE);
+
+                        const cotizacionActiva = cotizacionAprobada || cotizacionPendiente;
+
+                        if (cotizacionActiva) {
+                            cotizacionPrecio = cotizacionActiva.precio || 0;
+                            // Sumar todos los pagos PAID
+                            totalPagado = cotizacionActiva.Pago?.reduce((sum: number, pago: any) => {
+                                return pago.status === PAGO_STATUS.PAID ? sum + (pago.monto || 0) : sum;
+                            }, 0) || 0;
+                            totalPendiente = Math.max(0, cotizacionPrecio - totalPagado);
+                        }
+                    } return {
                         ...agenda,
                         Evento: {
                             ...agenda.Evento,
                             nombre: agenda.Evento?.nombre ?? 'Sin nombre de evento',
                             EventoTipo: {
                                 nombre: agenda.Evento?.EventoTipo?.nombre ?? 'Sin tipo'
-                            }
+                            },
+                            Cotizacion: agenda.Evento?.Cotizacion || []
                         },
                         User: {
                             username: agenda.User?.username ?? 'Sin asignar'
@@ -149,6 +169,9 @@ export default function ListaAgenda() {
                 })
             )
             setLoading(false)
+        }).catch((error) => {
+            console.error('Error al cargar agenda:', error);
+            setLoading(false);
         })
     }, [])
 
@@ -163,7 +186,7 @@ export default function ListaAgenda() {
 
     const { grouped, sortedMonths, monthlyTotals, totalGeneralPendiente } = useMemo(() => {
         const filtered = agenda.filter(item => {
-            if (item.status !== AGENDA_STATUS.PENDIENTE) return false;
+            if (item.status !== AGENDA_STATUS.CONFIRMADO) return false; // Mostrar agenda confirmada
             const lowerCaseSearchTerm = searchTerm.toLowerCase()
             return (
                 item.Evento.nombre.toLowerCase().includes(lowerCaseSearchTerm) ||
@@ -189,7 +212,10 @@ export default function ListaAgenda() {
 
         const monthlyTotals = Object.keys(grouped).reduce((acc, month) => {
             acc[month] = grouped[month].reduce((sum, item) => {
-                if (item.agendaTipo?.toLowerCase() === 'evento') {
+                // Incluir solo items que tengan cotizaciones con precio Y NO sean sesiones
+                if (item.cotizacionPrecio && item.cotizacionPrecio > 0 &&
+                    item.agendaTipo?.toLowerCase() !== 'sesion' &&
+                    item.agendaTipo?.toLowerCase() !== 'sesión') {
                     return sum + (item.totalPendiente || 0);
                 }
                 return sum;
@@ -298,7 +324,7 @@ export default function ListaAgenda() {
                                                 key={item.id}
                                                 agenda={item}
                                                 color={getTipoAgendaColor(item.agendaTipo)}
-                                                onClick={() => router.push(`/admin/dashboard/eventos/${item.eventoId}`)}
+                                                onClick={() => router.push(`/admin/dashboard/seguimiento/${item.eventoId}/`)}
                                             />
                                         ))}
                                     </div>
