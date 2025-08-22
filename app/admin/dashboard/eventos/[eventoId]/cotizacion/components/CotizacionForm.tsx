@@ -10,6 +10,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { calcularPaquete, calcularServicioDesdeBase, type ServicioCantidad } from '@/app/admin/_lib/pricing/calculos';
 import toast from 'react-hot-toast';
 import BotonAutorizarCotizacion from './BotonAutorizarCotizacion';
+import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
 
 // Tipos de datos basados en las estructuras existentes
 interface CatalogoSeccion {
@@ -768,7 +769,7 @@ export default function CotizacionForm({
                     descripcion: data.descripcion,
                     precio: precioFinal,
                     condicionesComercialesId: data.condicionesComercialesId || undefined,
-                    status: cotizacionExistente.status || 'pendiente',
+                    status: cotizacionExistente.status || COTIZACION_STATUS.PENDIENTE,
                     visible_cliente: cotizacionExistente.visible_cliente || true,
                     servicios: serviciosCotizacion,
                     costos: data.costos?.map((costo, index) => ({

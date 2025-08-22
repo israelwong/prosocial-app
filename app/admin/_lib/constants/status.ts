@@ -23,6 +23,7 @@ export type EventoStatus = typeof EVENTO_STATUS[keyof typeof EVENTO_STATUS];
 export const COTIZACION_STATUS = {
     PENDIENTE: 'pendiente',
     APROBADA: 'aprobada',
+    AUTORIZADO: 'autorizado',
     RECHAZADA: 'rechazada',
     EXPIRADA: 'expirada',
     ARCHIVADA: 'archivada'
@@ -94,6 +95,7 @@ export const COTIZACION_STATUS_MAP: Record<string, CotizacionStatus> = {
     'pendiente': COTIZACION_STATUS.PENDIENTE,
     'aprobada': COTIZACION_STATUS.APROBADA,
     'aprobado': COTIZACION_STATUS.APROBADA,  // aprobado -> aprobada
+    'autorizado': COTIZACION_STATUS.AUTORIZADO,
     'rechazada': COTIZACION_STATUS.RECHAZADA,
     'rechazado': COTIZACION_STATUS.RECHAZADA, // rechazado -> rechazada
     'expirada': COTIZACION_STATUS.EXPIRADA,

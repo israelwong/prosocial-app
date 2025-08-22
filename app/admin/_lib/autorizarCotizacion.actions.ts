@@ -1,3 +1,15 @@
+/**
+ * @deprecated Este archivo está obsoleto. Utiliza '/app/admin/_lib/actions/cotizacion/cotizacion.actions.ts' en su lugar.
+ * 
+ * Las funciones han sido migradas a la nueva estructura organizacional:
+ * - autorizarCotizacion → /app/admin/_lib/actions/cotizacion/cotizacion.actions.ts
+ * - verificarEstadoAutorizacion → /app/admin/_lib/actions/cotizacion/cotizacion.actions.ts
+ * 
+ * Este archivo será eliminado en una versión futura.
+ * Actualiza tus imports para usar la nueva ubicación:
+ * import { autorizarCotizacion, verificarEstadoAutorizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
+ */
+
 'use server'
 import { COTIZACION_STATUS, AGENDA_STATUS } from './constants/status';
 import prisma from './prismaClient';
@@ -7,8 +19,14 @@ interface AutorizarCotizacionResult {
     success?: boolean;
     error?: string;
     message?: string;
+    cotizacionesArchivadas?: number;
 }
 
+/**
+ * @deprecated Esta función ha sido migrada a /app/admin/_lib/actions/cotizacion/cotizacion.actions.ts
+ * Utiliza la nueva ubicación: 
+ * import { autorizarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
+ */
 export async function autorizarCotizacion(cotizacionId: string): Promise<AutorizarCotizacionResult> {
     try {
         console.log('🔥 Iniciando autorización de cotización:', cotizacionId);
@@ -30,7 +48,7 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
             return { error: 'Cotización no encontrada' };
         }
 
-        if (cotizacion.status === COTIZACION_STATUS.APROBADA) {
+        if (cotizacion.status === COTIZACION_STATUS.AUTORIZADO) {
             return { error: 'La cotización ya está autorizada' };
         }
 
@@ -56,14 +74,39 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
 
         // 3. Realizar las actualizaciones en una transacción
         const result = await prisma.$transaction(async (tx) => {
-            // Actualizar status de la cotización
+            // Actualizar status de la cotización autorizada
             await tx.cotizacion.update({
                 where: { id: cotizacionId },
                 data: {
-                    status: COTIZACION_STATUS.APROBADA,
+                    status: COTIZACION_STATUS.AUTORIZADO,
                     updatedAt: new Date()
                 }
             });
+
+            // Contar y archivar todas las demás cotizaciones del mismo evento que no estén autorizadas
+            const cotizacionesParaArchivar = await tx.cotizacion.count({
+                where: {
+                    eventoId: evento.id,
+                    id: { not: cotizacionId }, // Excluir la cotización que se está autorizando
+                    status: { not: COTIZACION_STATUS.AUTORIZADO }, // Solo contar las no autorizadas
+                    archivada: false // Solo las que no estén ya archivadas
+                }
+            });
+
+            const archivadas = await tx.cotizacion.updateMany({
+                where: {
+                    eventoId: evento.id,
+                    id: { not: cotizacionId }, // Excluir la cotización que se está autorizando
+                    status: { not: COTIZACION_STATUS.AUTORIZADO }, // Solo archivar las no autorizadas
+                    archivada: false // Solo las que no estén ya archivadas
+                },
+                data: {
+                    archivada: true,
+                    updatedAt: new Date()
+                }
+            });
+
+            console.log(`🗃️ ${archivadas.count} cotizaciones del evento archivadas automáticamente`);
 
             // Actualizar etapa del evento
             await tx.evento.update({
@@ -99,10 +142,13 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
             }
 
             // Crear entrada en bitácora del evento
+            const comentarioBitacora = `Cotización "${cotizacion.nombre}" autorizada. Evento movido a etapa: ${etapaAutorizado.nombre}` +
+                (archivadas.count > 0 ? `. ${archivadas.count} cotización(es) adicional(es) archivadas automáticamente.` : '');
+
             await tx.eventoBitacora.create({
                 data: {
                     eventoId: evento.id,
-                    comentario: `Cotización "${cotizacion.nombre}" aprobada. Evento movido a etapa: ${etapaAutorizado.nombre}`,
+                    comentario: comentarioBitacora,
                     importancia: '2',
                     status: 'active',
                     createdAt: new Date(),
@@ -114,7 +160,8 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
                 cotizacionId,
                 eventoId: evento.id,
                 etapaId: etapaAutorizado.id,
-                etapaNombre: etapaAutorizado.nombre
+                etapaNombre: etapaAutorizado.nombre,
+                cotizacionesArchivadas: archivadas.count
             };
         });
 
@@ -127,12 +174,17 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
         console.log('✅ Cotización autorizada exitosamente:', {
             cotizacion: cotizacionId,
             evento: evento.id,
-            etapa: result.etapaNombre
+            etapa: result.etapaNombre,
+            archivadas: result.cotizacionesArchivadas
         });
+
+        const mensaje = `Cotización autorizada exitosamente. El evento fue movido a la etapa: ${result.etapaNombre}` +
+            (result.cotizacionesArchivadas > 0 ? `. ${result.cotizacionesArchivadas} cotización(es) adicional(es) fueron archivadas automáticamente.` : '');
 
         return {
             success: true,
-            message: `Cotización autorizada exitosamente. El evento fue movido a la etapa: ${result.etapaNombre}`
+            message: mensaje,
+            cotizacionesArchivadas: result.cotizacionesArchivadas
         };
 
     } catch (error: unknown) {
@@ -146,6 +198,11 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
     }
 }
 
+/**
+ * @deprecated Esta función ha sido migrada a /app/admin/_lib/actions/cotizacion/cotizacion.actions.ts
+ * Utiliza la nueva ubicación: 
+ * import { verificarEstadoAutorizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
+ */
 export async function verificarEstadoAutorizacion(cotizacionId: string) {
     try {
         const cotizacion = await prisma.cotizacion.findUnique({
@@ -169,7 +226,7 @@ export async function verificarEstadoAutorizacion(cotizacionId: string) {
         return {
             cotizacionStatus: cotizacion?.status,
             eventoEtapa: cotizacion?.Evento.EventoEtapa?.nombre,
-            estaAutorizado: cotizacion?.status === 'autorizado'
+            estaAutorizado: cotizacion?.status === COTIZACION_STATUS.AUTORIZADO
         };
 
     } catch (error) {

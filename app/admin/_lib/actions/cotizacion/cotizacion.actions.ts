@@ -1,13 +1,14 @@
 'use server';
 
 import prisma from '@/app/admin/_lib/prismaClient';
-import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.actions';
+import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento.actions';
 import { obtenerTiposEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
 import { obtenerCatalogoCompleto } from '@/app/admin/_lib/actions/catalogo/catalogo.actions';
 import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
 import { obtenerMetodosPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions';
 import { obtenerPaquete } from '@/app/admin/_lib/actions/paquetes/paquetes.actions';
-import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
+import { COTIZACION_STATUS, AGENDA_STATUS } from '@/app/admin/_lib/constants/status';
+import { revalidatePath } from 'next/cache';
 import {
     CotizacionNuevaSchema,
     CotizacionEditarSchema,
@@ -853,4 +854,418 @@ export async function obtenerCotizacionesPorEventoLegacy(eventoId: string) {
     }));
 
     return cotizacionesWithVisitaCount;
+}
+
+/**
+ * Archivar cotización - MIGRADA desde @/app/admin/_lib/cotizacion.actions
+ * Función para archivar una cotización sin eliminarla
+ */
+export async function archivarCotizacion(cotizacionId: string) {
+    try {
+        console.log(`📁 Archivando cotización ${cotizacionId}...`);
+
+        // Verificar que la cotización existe
+        const cotizacion = await prisma.cotizacion.findUnique({
+            where: { id: cotizacionId },
+            select: {
+                id: true,
+                nombre: true,
+                status: true,
+                archivada: true
+            }
+        });
+
+        if (!cotizacion) {
+            return { error: 'Cotización no encontrada' };
+        }
+
+        if (cotizacion.archivada) {
+            return { error: 'La cotización ya está archivada' };
+        }
+
+        // Archivar la cotización
+        await prisma.cotizacion.update({
+            where: { id: cotizacionId },
+            data: { archivada: true }
+        });
+
+        console.log(`✅ Cotización "${cotizacion.nombre}" archivada exitosamente`);
+        return {
+            success: true,
+            message: `Cotización "${cotizacion.nombre}" archivada exitosamente`
+        };
+
+    } catch (error) {
+        console.error('Error al archivar cotización:', error);
+        return { error: 'Error al archivar cotización' };
+    }
+}
+
+/**
+ * Desarchivar cotización - MIGRADA desde @/app/admin/_lib/cotizacion.actions
+ * Función para desarchivar una cotización previamente archivada
+ */
+export async function desarchivarCotizacion(cotizacionId: string) {
+    try {
+        console.log(`📂 Desarchivando cotización ${cotizacionId}...`);
+
+        const cotizacion = await prisma.cotizacion.findUnique({
+            where: { id: cotizacionId },
+            select: {
+                id: true,
+                nombre: true,
+                archivada: true
+            }
+        });
+
+        if (!cotizacion) {
+            return { error: 'Cotización no encontrada' };
+        }
+
+        if (!cotizacion.archivada) {
+            return { error: 'La cotización no está archivada' };
+        }
+
+        // Desarchivar la cotización
+        await prisma.cotizacion.update({
+            where: { id: cotizacionId },
+            data: { archivada: false }
+        });
+
+        console.log(`✅ Cotización "${cotizacion.nombre}" desarchivada exitosamente`);
+        return {
+            success: true,
+            message: `Cotización "${cotizacion.nombre}" desarchivada exitosamente`
+        };
+
+    } catch (error) {
+        console.error('Error al desarchivar cotización:', error);
+        return { error: 'Error al desarchivar cotización' };
+    }
+}
+
+/**
+ * Clonar cotización - MIGRADA desde @/app/admin/_lib/cotizacion.actions
+ * Función para crear una copia de una cotización existente
+ */
+export async function clonarCotizacion(cotizacionId: string) {
+    try {
+        console.log(`📋 Clonando cotización ${cotizacionId}...`);
+
+        const cotizacion = await prisma.cotizacion.findUnique({
+            where: { id: cotizacionId }
+        });
+
+        if (!cotizacion) {
+            return { error: 'Cotización no encontrada' };
+        }
+
+        const cotizacionServicios = await prisma.cotizacionServicio.findMany({
+            where: { cotizacionId }
+        });
+
+        const existingCotizaciones = await prisma.cotizacion.findMany({
+            where: {
+                nombre: {
+                    startsWith: cotizacion.nombre
+                }
+            }
+        });
+
+        const copyNumber = existingCotizaciones.length + 1;
+        const newCotizacionNombre = `${cotizacion.nombre} - (copia ${copyNumber})`;
+
+        const newCotizacion = await prisma.cotizacion.create({
+            data: {
+                eventoId: cotizacion.eventoId,
+                eventoTipoId: cotizacion.eventoTipoId,
+                nombre: newCotizacionNombre,
+                descripcion: cotizacion.descripcion,
+                precio: cotizacion.precio,
+                condicionesComercialesId: cotizacion.condicionesComercialesId,
+                status: COTIZACION_STATUS.PENDIENTE,
+                visible_cliente: true,
+                archivada: false
+            }
+        });
+
+        for (const cotizacionServicio of cotizacionServicios) {
+            await prisma.cotizacionServicio.create({
+                data: {
+                    cotizacionId: newCotizacion.id,
+                    servicioId: cotizacionServicio.servicioId,
+                    cantidad: cotizacionServicio.cantidad,
+                    posicion: cotizacionServicio.posicion,
+                    servicioCategoriaId: cotizacionServicio.servicioCategoriaId,
+                    precioUnitario: cotizacionServicio.precioUnitario,
+                    subtotal: cotizacionServicio.subtotal,
+                    status: COTIZACION_STATUS.PENDIENTE,
+                    // Copiar campos snapshot
+                    nombre_snapshot: cotizacionServicio.nombre_snapshot,
+                    descripcion_snapshot: cotizacionServicio.descripcion_snapshot,
+                    precio_unitario_snapshot: cotizacionServicio.precio_unitario_snapshot,
+                    costo_snapshot: cotizacionServicio.costo_snapshot,
+                    gasto_snapshot: cotizacionServicio.gasto_snapshot,
+                    utilidad_snapshot: cotizacionServicio.utilidad_snapshot,
+                    precio_publico_snapshot: cotizacionServicio.precio_publico_snapshot,
+                    tipo_utilidad_snapshot: cotizacionServicio.tipo_utilidad_snapshot,
+                    categoria_nombre_snapshot: cotizacionServicio.categoria_nombre_snapshot,
+                    seccion_nombre_snapshot: cotizacionServicio.seccion_nombre_snapshot,
+                    es_personalizado: cotizacionServicio.es_personalizado,
+                    servicio_original_id: cotizacionServicio.servicio_original_id
+                }
+            });
+        }
+
+        // Copiar costos si existen
+        const cotizacionCostos = await prisma.cotizacionCosto.findMany({
+            where: { cotizacionId }
+        });
+
+        for (const costo of cotizacionCostos) {
+            await prisma.cotizacionCosto.create({
+                data: {
+                    cotizacionId: newCotizacion.id,
+                    nombre: costo.nombre,
+                    descripcion: costo.descripcion,
+                    costo: costo.costo,
+                    tipo: costo.tipo,
+                    posicion: costo.posicion
+                }
+            });
+        }
+
+        console.log(`✅ Cotización clonada exitosamente: ${newCotizacionNombre}`);
+        return {
+            success: true,
+            cotizacionId: newCotizacion.id,
+            message: `Cotización clonada como: ${newCotizacionNombre}`
+        };
+
+    } catch (error) {
+        console.error('Error al clonar cotización:', error);
+        return { error: 'Error al clonar cotización' };
+    }
+}
+
+// =============================================================================
+// FUNCIONES DE AUTORIZACIÓN - MIGRADAS desde @/app/admin/_lib/autorizarCotizacion.actions
+// =============================================================================
+
+interface AutorizarCotizacionResult {
+    success?: boolean;
+    error?: string;
+    message?: string;
+    cotizacionesArchivadas?: number;
+}
+
+/**
+ * Autorizar cotización - MIGRADA desde @/app/admin/_lib/autorizarCotizacion.actions
+ * Función principal para autorizar una cotización y mover el evento al pipeline de seguimiento
+ */
+export async function autorizarCotizacion(cotizacionId: string): Promise<AutorizarCotizacionResult> {
+    try {
+        console.log('🔥 Iniciando autorización de cotización:', cotizacionId);
+
+        // 1. Obtener la cotización completa
+        const cotizacion = await prisma.cotizacion.findUnique({
+            where: { id: cotizacionId },
+            include: {
+                Evento: {
+                    include: {
+                        Cliente: true,
+                        EventoTipo: true
+                    }
+                }
+            }
+        });
+
+        if (!cotizacion) {
+            return { error: 'Cotización no encontrada' };
+        }
+
+        if (cotizacion.status === COTIZACION_STATUS.AUTORIZADO) {
+            return { error: 'La cotización ya está autorizada' };
+        }
+
+        const evento = cotizacion.Evento;
+
+        // 2. Buscar la etapa "Autorizado" (posición 2 típicamente)
+        const etapaAutorizado = await prisma.eventoEtapa.findFirst({
+            where: {
+                OR: [
+                    { nombre: { contains: 'autorizado', mode: 'insensitive' } },
+                    { nombre: { contains: 'aprobado', mode: 'insensitive' } },
+                    { posicion: 2 }
+                ]
+            },
+            orderBy: { posicion: 'asc' }
+        });
+
+        if (!etapaAutorizado) {
+            return { error: 'No se encontró la etapa de autorización en el sistema' };
+        }
+
+        console.log('📋 Etapa de autorización encontrada:', etapaAutorizado.nombre);
+
+        // 3. Realizar las actualizaciones en una transacción
+        const result = await prisma.$transaction(async (tx) => {
+            // Actualizar status de la cotización autorizada
+            await tx.cotizacion.update({
+                where: { id: cotizacionId },
+                data: {
+                    status: COTIZACION_STATUS.AUTORIZADO,
+                    updatedAt: new Date()
+                }
+            });
+
+            // Contar y archivar todas las demás cotizaciones del mismo evento que no estén autorizadas
+            const cotizacionesParaArchivar = await tx.cotizacion.count({
+                where: {
+                    eventoId: evento.id,
+                    id: { not: cotizacionId }, // Excluir la cotización que se está autorizando
+                    status: { not: COTIZACION_STATUS.AUTORIZADO }, // Solo contar las no autorizadas
+                    archivada: false // Solo las que no estén ya archivadas
+                }
+            });
+
+            const archivadas = await tx.cotizacion.updateMany({
+                where: {
+                    eventoId: evento.id,
+                    id: { not: cotizacionId }, // Excluir la cotización que se está autorizando
+                    status: { not: COTIZACION_STATUS.AUTORIZADO }, // Solo archivar las no autorizadas
+                    archivada: false // Solo las que no estén ya archivadas
+                },
+                data: {
+                    archivada: true,
+                    updatedAt: new Date()
+                }
+            });
+
+            console.log(`🗃️ ${archivadas.count} cotizaciones del evento archivadas automáticamente`);
+
+            // Actualizar etapa del evento
+            await tx.evento.update({
+                where: { id: evento.id },
+                data: {
+                    eventoEtapaId: etapaAutorizado.id,
+                    updatedAt: new Date()
+                }
+            });
+
+            // Crear entrada en la agenda si no existe
+            const agendaExistente = await tx.agenda.findFirst({
+                where: {
+                    eventoId: evento.id,
+                    fecha: evento.fecha_evento
+                }
+            });
+
+            if (!agendaExistente) {
+                await tx.agenda.create({
+                    data: {
+                        eventoId: evento.id,
+                        fecha: evento.fecha_evento,
+                        concepto: `${evento.EventoTipo?.nombre || 'Evento'} - ${evento.Cliente.nombre}`,
+                        status: AGENDA_STATUS.PENDIENTE,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    }
+                });
+                console.log('📅 Evento agregado a la agenda');
+            } else {
+                console.log('📅 Evento ya existe en la agenda');
+            }
+
+            // Crear entrada en bitácora del evento
+            const comentarioBitacora = `Cotización "${cotizacion.nombre}" autorizada. Evento movido a etapa: ${etapaAutorizado.nombre}` +
+                (archivadas.count > 0 ? `. ${archivadas.count} cotización(es) adicional(es) archivadas automáticamente.` : '');
+
+            await tx.eventoBitacora.create({
+                data: {
+                    eventoId: evento.id,
+                    comentario: comentarioBitacora,
+                    importancia: '2',
+                    status: 'active',
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                }
+            });
+
+            return {
+                cotizacionId,
+                eventoId: evento.id,
+                etapaId: etapaAutorizado.id,
+                etapaNombre: etapaAutorizado.nombre,
+                cotizacionesArchivadas: archivadas.count
+            };
+        });
+
+        // 4. Revalidar caches
+        revalidatePath('/admin/dashboard/eventos');
+        revalidatePath('/admin/dashboard/seguimiento');
+        revalidatePath(`/admin/dashboard/eventos/${evento.id}`);
+        revalidatePath(`/admin/dashboard/eventos/${evento.id}/cotizacion`);
+
+        console.log('✅ Cotización autorizada exitosamente:', {
+            cotizacion: cotizacionId,
+            evento: evento.id,
+            etapa: result.etapaNombre,
+            archivadas: result.cotizacionesArchivadas
+        });
+
+        const mensaje = `Cotización autorizada exitosamente. El evento fue movido a la etapa: ${result.etapaNombre}` +
+            (result.cotizacionesArchivadas > 0 ? `. ${result.cotizacionesArchivadas} cotización(es) adicional(es) fueron archivadas automáticamente.` : '');
+
+        return {
+            success: true,
+            message: mensaje,
+            cotizacionesArchivadas: result.cotizacionesArchivadas
+        };
+
+    } catch (error: unknown) {
+        console.error('❌ Error al autorizar cotización:', error);
+
+        if (error instanceof Error) {
+            return { error: `Error al autorizar cotización: ${error.message}` };
+        }
+
+        return { error: 'Error desconocido al autorizar cotización' };
+    }
+}
+
+/**
+ * Verificar estado de autorización - MIGRADA desde @/app/admin/_lib/autorizarCotizacion.actions
+ * Función para verificar el estado actual de autorización de una cotización
+ */
+export async function verificarEstadoAutorizacion(cotizacionId: string) {
+    try {
+        const cotizacion = await prisma.cotizacion.findUnique({
+            where: { id: cotizacionId },
+            select: {
+                status: true,
+                Evento: {
+                    select: {
+                        eventoEtapaId: true,
+                        EventoEtapa: {
+                            select: {
+                                nombre: true,
+                                posicion: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        return {
+            cotizacionStatus: cotizacion?.status,
+            eventoEtapa: cotizacion?.Evento.EventoEtapa?.nombre,
+            estaAutorizado: cotizacion?.status === COTIZACION_STATUS.AUTORIZADO
+        };
+
+    } catch (error) {
+        console.error('Error verificando estado de autorización:', error);
+        return { error: 'Error verificando estado' };
+    }
 }

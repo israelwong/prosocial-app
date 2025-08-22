@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState, useCallback, memo } from 'react'
-import { obtenerCotizacionesPorEvento } from '@/app/admin/_lib/cotizacion.actions'
-import { obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/paquete.actions'
+import { obtenerCotizacionesPorEventoLegacy as obtenerCotizacionesPorEvento } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
+import { obtenerPaquetesPorTipoEventoLegacy as obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/actions/paquete/paquete.actions'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 
 import { Cotizacion, Paquete } from '@/app/admin/_lib/types'
@@ -61,9 +61,8 @@ const ListaCotizaciones: React.FC<Props> = ({ eventoId, eventoTipoId, eventoAsig
             const cotizacionesData = await obtenerCotizacionesPorEvento(eventoId)
             setCotizaciones(cotizacionesData)
 
-            obtenerPaquetesPorTipoEvento(eventoTipoId).then(paquetesData => (
-                setPaquetes(paquetesData)
-            ))
+            const paquetesData = await obtenerPaquetesPorTipoEvento(eventoTipoId)
+            setPaquetes(paquetesData)
 
             setLoading(false)
         }

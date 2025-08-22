@@ -14,7 +14,7 @@ import {
     crearContacto,
     verificarTelefonoUnico
 } from '@/app/admin/_lib/actions/contactos/contactos.actions';
-import { obtenerCanales } from '@/app/admin/_lib/canal.actions';
+import { obtenerCanalesLegacy as obtenerCanales } from '@/app/admin/_lib/actions/canal/canal.actions';
 import { type Canal } from '@/app/admin/_lib/types';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';

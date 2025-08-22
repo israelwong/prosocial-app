@@ -4,7 +4,7 @@ import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
 import { obtenerBalancePagosEvento } from '@/app/admin/_lib/pago.actions'
 import { obtenerCliente } from '@/app/admin/_lib/cliente.actions'
 import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions'
-import { EVENTO_STATUS } from './constants/status';
+import { EVENTO_STATUS, COTIZACION_STATUS } from './constants/status';
 
 import prisma from './prismaClient';
 
@@ -283,7 +283,7 @@ export async function obtenerEventoSeguimiento(eventoId: string) {
     const cotizacion = await prisma.cotizacion.findFirst({
         where: {
             eventoId,
-            status: 'aprobada'
+            status: COTIZACION_STATUS.APROBADA
         }
     });
 
@@ -330,7 +330,7 @@ export async function obtenerEventoContrato(eventoId: string) {
     const cotizacion = await prisma.cotizacion.findFirst({
         where: {
             eventoId,
-            status: 'aprobada'
+            status: COTIZACION_STATUS.APROBADA
         }
     });
 

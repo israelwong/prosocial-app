@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react';
 import { CheckCircle, Loader2 } from 'lucide-react';
-import { autorizarCotizacion, verificarEstadoAutorizacion } from '@/app/admin/_lib/autorizarCotizacion.actions';
+import { autorizarCotizacion, verificarEstadoAutorizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -24,7 +24,7 @@ export default function BotonAutorizarCotizacion({
     onAutorizado
 }: BotonAutorizarCotizacionProps) {
     const [procesando, setProcesando] = useState(false);
-    const [estaAutorizado, setEstaAutorizado] = useState(estadoInicial === 'autorizado');
+    const [estaAutorizado, setEstaAutorizado] = useState(estadoInicial === COTIZACION_STATUS.AUTORIZADO);
     const router = useRouter();
 
     const manejarAutorizacion = async () => {

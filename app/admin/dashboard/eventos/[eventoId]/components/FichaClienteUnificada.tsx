@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { Cliente } from '@/app/admin/_lib/types'
 import { obtenerCliente, actualizarCliente } from '@/app/admin/_lib/cliente.actions'
-import { obtenerCanales } from '@/app/admin/_lib/canal.actions'
+import { obtenerCanalesLegacy as obtenerCanales } from '@/app/admin/_lib/actions/canal/canal.actions'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { toast } from 'sonner'

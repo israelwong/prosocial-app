@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { obtenerContactos } from '@/app/admin/_lib/actions/contactos/contactos.actions';
-import { obtenerCanales } from '@/app/admin/_lib/canal.actions';
+import { obtenerCanalesLegacy as obtenerCanales } from '@/app/admin/_lib/actions/canal/canal.actions';
 import {
     Search,
     Plus,

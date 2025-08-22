@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Copy, SquareArrowOutUpRight, Plus, MoreVertical, Package } from 'lucide-react'
 
-import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
+import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
 import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 
 import { obtenerCotizacionesPorEventoLegacy as obtenerCotizacionesPorEvento } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
@@ -22,7 +22,7 @@ interface Props {
 }
 
 // Tipo para las cotizaciones de EventoCompleto
-type CotizacionSimple = EventoCompleto['Cotizacion'][0]
+type CotizacionSimple = NonNullable<EventoCompleto['Cotizacion']>[0]
 
 // Cache global temporal para evitar eliminaciones duplicadas
 const eliminacionesRecientes = new Set<string>()
@@ -220,9 +220,9 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
     const handleCompartirWhatsApp = () => {
         const cliente = eventoCompleto.Cliente
         const link = `${window.location.origin}/evento/${eventoId}`
-        const mensaje = `¡Hola ${cliente.nombre}! Te comparto las cotizaciones para tu evento: ${link}`
+        const mensaje = `¡Hola ${cliente?.nombre || 'Cliente'}! Te comparto las cotizaciones para tu evento: ${link}`
 
-        if (cliente.telefono) {
+        if (cliente?.telefono) {
             // Limpiar el número de caracteres no numéricos
             const numeroLimpio = cliente.telefono.replace(/\D/g, '')
 
@@ -360,7 +360,7 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                                 key={cotizacion.id}
                                 className={`rounded-md p-4 ${cotizacion.status === COTIZACION_STATUS.APROBADA
                                     ? 'bg-green-900/20 border border-green-700/50'
-                                    : cotizacion.status === 'autorizado'
+                                    : cotizacion.status === COTIZACION_STATUS.AUTORIZADO
                                         ? 'bg-blue-900/20 border border-blue-700/50'
                                         : 'bg-zinc-900 border border-zinc-800'
                                     }`}
@@ -380,7 +380,7 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                                 key={cotizacion.id}
                                 className={`rounded-md p-4 ${cotizacion.status === COTIZACION_STATUS.APROBADA
                                     ? 'bg-green-900/20 border border-green-700/50'
-                                    : cotizacion.status === 'autorizado'
+                                    : cotizacion.status === COTIZACION_STATUS.AUTORIZADO
                                         ? 'bg-blue-900/20 border border-blue-700/50'
                                         : 'bg-zinc-900 border border-zinc-800'
                                     }`}

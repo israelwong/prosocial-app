@@ -4,6 +4,7 @@ import prisma from './prismaClient';
 import { calcularPaquete, type ServicioCantidad } from './pricing/calculos';
 import { obtenerConfiguracionActiva } from './configuracion.actions';
 import { obtenerServicio } from './servicio.actions';
+import { COTIZACION_STATUS } from './constants/status';
 
 // Tipos para la nueva funcionalidad (sin cambiar schema)
 export interface ServicioCongelado {
@@ -110,7 +111,7 @@ export async function crearCotizacionCongelada(input: CotizacionCongeladaInput):
                 nombre: input.nombre,
                 precio: resultado.precioVentaFinal,
                 condicionesComercialesId: input.condicionesComercialesId,
-                status: 'pendiente',
+                status: COTIZACION_STATUS.PENDIENTE,
             }
         });
 

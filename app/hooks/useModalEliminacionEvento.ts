@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { verificarDependenciasEvento } from '@/app/admin/_lib/actions/evento/evento/evento.actions'
+import { verificarDependenciasEvento } from '@/app/admin/_lib/actions/evento/evento.actions'
 
 interface DependenciaInfo {
     tipo: string
@@ -32,8 +32,20 @@ export function useModalEliminacionEvento() {
         try {
             const verificacion = await verificarDependenciasEvento(eventoId)
 
-            if (!verificacion.success) {
-                throw new Error(verificacion.message)
+            if (verificacion.error) {
+                throw new Error(verificacion.error)
+            }
+
+            // Crear lista de dependencias basada en los conteos
+            const dependenciasList: string[] = []
+            if (verificacion.dependencias.cotizaciones > 0) {
+                dependenciasList.push(`${verificacion.dependencias.cotizaciones} cotización(es)`)
+            }
+            if (verificacion.dependencias.agenda > 0) {
+                dependenciasList.push(`${verificacion.dependencias.agenda} agenda(s)`)
+            }
+            if (verificacion.dependencias.bitacora > 0) {
+                dependenciasList.push(`${verificacion.dependencias.bitacora} entrada(s) de bitácora`)
             }
 
             const datosEliminacion: DatosEliminacionEvento = {
@@ -42,14 +54,16 @@ export function useModalEliminacionEvento() {
                     valor: nombreEvento,
                     descripcion: 'Esta acción eliminará permanentemente el evento y sus datos asociados'
                 },
-                dependencias: (verificacion.dependencias || []).map(dep => ({
+                dependencias: dependenciasList.map(dep => ({
                     tipo: dep,
                     cantidad: 1,
                     accion: 'eliminar' as const,
                     descripcion: `Se eliminará: ${dep}`
                 })),
-                advertencias: verificacion.advertencias || [],
-                bloqueos: verificacion.bloqueos || []
+                advertencias: verificacion.tieneDependencias
+                    ? ['Este evento tiene dependencias que también serán eliminadas']
+                    : [],
+                bloqueos: []
             }
 
             setDatos(datosEliminacion)

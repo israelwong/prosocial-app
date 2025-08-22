@@ -235,6 +235,10 @@ export async function actualizarCotizacionStatus(cotizacionId: string, status: s
     }
 }
 
+/**
+ * @deprecated Esta función ha sido migrada a @/app/admin/_lib/actions/cotizacion/cotizacion.actions.ts
+ * Use archivarCotizacion desde la nueva ubicación.
+ */
 export async function archivarCotizacion(cotizacionId: string) {
     try {
         console.log(`📁 Archivando cotización ${cotizacionId}...`);
@@ -276,6 +280,10 @@ export async function archivarCotizacion(cotizacionId: string) {
     }
 }
 
+/**
+ * @deprecated Esta función ha sido migrada a @/app/admin/_lib/actions/cotizacion/cotizacion.actions.ts
+ * Use desarchivarCotizacion desde la nueva ubicación.
+ */
 export async function desarchivarCotizacion(cotizacionId: string) {
     try {
         console.log(`📂 Desarchivando cotización ${cotizacionId}...`);
@@ -609,6 +617,10 @@ export async function cotizacionDetalle(id: string) {
     };
 }
 
+/**
+ * @deprecated Esta función ha sido migrada a @/app/admin/_lib/actions/cotizacion/cotizacion.actions.ts
+ * Use clonarCotizacion desde la nueva ubicación.
+ */
 export async function clonarCotizacion(cotizacionId: string) {
     const cotizacion = await prisma.cotizacion.findUnique({
         where: { id: cotizacionId }

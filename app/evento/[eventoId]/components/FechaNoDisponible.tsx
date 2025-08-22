@@ -11,7 +11,10 @@ interface Evento {
     } | null
     Cliente?: {
         nombre: string
-    }
+        id?: string
+        telefono?: string | null
+        email?: string | null
+    } | null
 }
 
 interface ConflictoInfo {

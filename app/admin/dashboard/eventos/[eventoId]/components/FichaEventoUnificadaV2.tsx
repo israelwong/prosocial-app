@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { toast } from 'sonner'
-import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
+import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
 import type { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.schemas'
 import { crearFechaLocal, formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import {
@@ -16,7 +16,7 @@ import {
     eliminarEvento,
     archivarEvento,
     desarchivarEvento
-} from '@/app/admin/_lib/actions/evento/evento/evento.actions'
+} from '@/app/admin/_lib/actions/evento/evento.actions'
 import ModalConfirmacionEliminacion from '@/app/components/ui/ModalConfirmacionEliminacion'
 import { useModalEliminacionEvento } from '@/app/hooks/useModalEliminacionEvento'
 import {

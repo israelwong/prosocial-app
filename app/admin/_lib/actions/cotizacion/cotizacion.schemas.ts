@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { COTIZACION_STATUS } from '../../constants/status';
 
 // Schema para validar servicios en cotización con snapshot completo
 // Estructura de trazabilidad: Sección → Categoría → Servicio → Precio → Cantidad
@@ -59,7 +60,14 @@ export const CotizacionEditarSchema = z.object({
     descripcion: z.string().optional(),
     precio: z.number().min(0, 'Precio debe ser mayor o igual a 0'),
     condicionesComercialesId: z.string().optional(),
-    status: z.enum(['pendiente', 'aprobada', 'rechazado']).default('pendiente'),
+    status: z.enum([
+        COTIZACION_STATUS.PENDIENTE,
+        COTIZACION_STATUS.APROBADA,
+        COTIZACION_STATUS.RECHAZADA,
+        COTIZACION_STATUS.AUTORIZADO,
+        COTIZACION_STATUS.EXPIRADA,
+        COTIZACION_STATUS.ARCHIVADA
+    ] as const).default(COTIZACION_STATUS.PENDIENTE),
     visible_cliente: z.boolean().default(true),
     servicios: z.array(CotizacionServicioSchema),
     costos: z.array(CotizacionCostoSchema).optional().default([])

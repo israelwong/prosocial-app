@@ -74,3 +74,36 @@ export interface EventoExtendido {
     totalPagado: number;
     balance: number;
 }
+
+// Tipo para evento completo con todas las relaciones
+export interface EventoCompleto {
+    id: string;
+    clienteId: string;
+    eventoTipoId: string | null;
+    nombre: string | null;
+    fecha_evento: Date;
+    sede: string | null;
+    direccion: string | null;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+    userId: string | null;
+    eventoEtapaId: string | null;
+    EventoTipo?: {
+        id: string;
+        nombre: string;
+    } | null;
+    Cliente?: {
+        id: string;
+        nombre: string;
+        telefono: string | null;
+        email: string | null;
+    } | null;
+    EventoEtapa?: {
+        id: string;
+        nombre: string;
+    } | null;
+    Cotizacion?: any[];
+    Agenda?: any[];
+    EventoBitacora?: any[];
+}

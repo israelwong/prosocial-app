@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
+import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
 
 // Nuevos componentes unificados
 import EventoHeader from './EventoHeader'
@@ -19,21 +19,43 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
 
+    // Verificar que tenemos los datos mínimos requeridos
+    if (!eventoCompleto.Cliente) {
+        return <div className="p-4 text-red-500">Error: Datos del cliente no disponibles</div>
+    }
+
+    // Para compatibilidad con FichaClienteUnificadaV2, necesitamos un cliente con más propiedades
+    const clienteExtendido = {
+        ...eventoCompleto.Cliente,
+        direccion: null,
+        status: 'prospecto',
+        canalId: null,
+        userId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        Canal: null
+    }
+
+    const eventoCompletoExtendido = {
+        ...eventoCompleto,
+        Cliente: clienteExtendido
+    }
+
     // Extraer datos del evento completo
     const eventoData = {
         id: eventoCompleto.id,
         clienteId: eventoCompleto.clienteId,
         eventoTipoId: eventoCompleto.eventoTipoId ?? '',
-        nombreCliente: eventoCompleto.Cliente.nombre,
-        telefono: eventoCompleto.Cliente.telefono ?? '',
-        email: eventoCompleto.Cliente.email ?? '',
+        nombreCliente: eventoCompleto.Cliente?.nombre || '',
+        telefono: eventoCompleto.Cliente?.telefono ?? '',
+        email: eventoCompleto.Cliente?.email ?? '',
         nombreEtapa: eventoCompleto.EventoEtapa?.nombre ?? '',
         eventoAsignado: !!eventoCompleto.userId,
         nombreEvento: eventoCompleto.nombre ?? '',
         fechaEvento: eventoCompleto.fecha_evento,
         status: eventoCompleto.status,
-        totalPagado: (eventoCompleto.Cotizacion || []).reduce((acc, cot) => {
-            const totalPagos = (cot.Pago || []).reduce((sum, pago) => sum + pago.monto, 0)
+        totalPagado: (eventoCompleto.Cotizacion || []).reduce((acc: number, cot: any) => {
+            const totalPagos = (cot.Pago || []).reduce((sum: number, pago: any) => sum + pago.monto, 0)
             return acc + totalPagos
         }, 0)
     }
@@ -80,7 +102,7 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
                     {/* Columna 1: Información del Cliente */}
                     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
                         <FichaClienteUnificadaV2
-                            eventoCompleto={eventoCompleto}
+                            eventoCompleto={eventoCompletoExtendido}
                         />
                     </div>
 
@@ -110,7 +132,7 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
                 <EventoMobileNavigation
                     gestionContent={
                         <div className="p-4 space-y-6">
-                            <FichaClienteUnificadaV2 eventoCompleto={eventoCompleto} />
+                            <FichaClienteUnificadaV2 eventoCompleto={eventoCompletoExtendido} />
                             <hr className="border-zinc-800" />
                             <FichaEventoUnificadaV2
                                 eventoCompleto={eventoCompleto}

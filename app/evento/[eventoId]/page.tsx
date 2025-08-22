@@ -2,7 +2,7 @@ import React from 'react'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { obtenerCotizacionesParaEvento } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
-import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.actions'
+import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento.actions'
 // Nuevos componentes
 import EventoHeader from '../components/layout/EventoHeader'
 import EventoFooter from '../components/layout/EventoFooter'

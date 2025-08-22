@@ -14,8 +14,10 @@ import {
     type EventoEtapaStatusForm,
     type EventoCreateForm,
     type EventoUpdateForm,
-    type EventoExtendido
+    type EventoExtendido,
+    type EventoCompleto
 } from './evento.schemas';
+import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
 import { revalidatePath } from 'next/cache';
 
 // Importamos las funciones auxiliares existentes
@@ -23,6 +25,300 @@ import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions';
 import { obtenerBalancePagosEvento } from '@/app/admin/_lib/pago.actions';
 import { obtenerCliente } from '@/app/admin/_lib/cliente.actions';
 import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
+
+// =============================================================================
+// FUNCIONES BÁSICAS DE EVENTOS (migradas desde evento/evento.actions.ts)
+// =============================================================================
+
+/**
+ * Obtiene todos los eventos básicos
+ */
+export async function obtenerEventos() {
+    return await prisma.evento.findMany({
+        orderBy: {
+            fecha_evento: 'desc'
+        }
+    })
+}
+
+/**
+ * Obtiene un evento completo con todas las relaciones para el detalle
+ */
+export async function obtenerEventoCompleto(eventoId: string): Promise<EventoCompleto | null> {
+    if (!eventoId) {
+        return null;
+    }
+
+    try {
+        const evento = await prisma.evento.findUnique({
+            where: { id: eventoId },
+            include: {
+                EventoTipo: {
+                    select: {
+                        id: true,
+                        nombre: true,
+                    }
+                },
+                Cliente: {
+                    select: {
+                        id: true,
+                        nombre: true,
+                        telefono: true,
+                        email: true,
+                    }
+                },
+                EventoEtapa: {
+                    select: {
+                        id: true,
+                        nombre: true
+                    }
+                },
+                Cotizacion: {
+                    where: { archivada: false },
+                    select: {
+                        id: true,
+                        nombre: true,
+                        descripcion: true,
+                        precio: true,
+                        status: true,
+                        archivada: true,
+                        createdAt: true,
+                        updatedAt: true,
+                        Servicio: {
+                            include: {
+                                Servicio: {
+                                    select: {
+                                        id: true,
+                                        nombre: true,
+                                        ServicioCategoria: {
+                                            select: {
+                                                nombre: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
+                },
+                Agenda: {
+                    select: {
+                        id: true,
+                        fecha: true,
+                        status: true,
+                        descripcion: true,
+                        direccion: true,
+                    }
+                },
+                EventoBitacora: {
+                    select: {
+                        id: true,
+                        comentario: true,
+                        createdAt: true,
+                        importancia: true,
+                        status: true,
+                    },
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
+                }
+            }
+        });
+
+        return evento as EventoCompleto | null;
+    } catch (error) {
+        console.error('Error obteniendo evento completo:', error);
+        return null;
+    }
+}
+
+/**
+ * Obtiene eventos filtrados por etapas
+ */
+export async function obtenerEventosPorEtapa(etapas: string[]) {
+    return await prisma.evento.findMany({
+        where: {
+            eventoEtapaId: {
+                in: etapas
+            }
+        },
+        include: {
+            EventoTipo: {
+                select: {
+                    nombre: true,
+                }
+            },
+            Cliente: {
+                select: {
+                    nombre: true,
+                    telefono: true
+                }
+            },
+            EventoEtapa: {
+                select: {
+                    nombre: true
+                }
+            }
+        },
+        orderBy: {
+            fecha_evento: 'asc'
+        }
+    })
+}
+
+/**
+ * Obtiene eventos por cliente
+ */
+export async function obtenerEventosPorCliente(clienteId: string) {
+    return await prisma.evento.findMany({
+        where: { clienteId },
+        orderBy: { fecha_evento: 'desc' }
+    })
+}
+
+/**
+ * Obtiene el status de un evento
+ */
+export async function obtenerStatusEvento(eventoId: string) {
+    const evento = await prisma.evento.findUnique({
+        where: { id: eventoId },
+        select: { status: true }
+    })
+    return evento?.status
+}
+
+/**
+ * Verifica las dependencias de un evento antes de eliminarlo
+ */
+export async function verificarDependenciasEvento(eventoId: string) {
+    try {
+        const [cotizaciones, agenda, bitacora] = await Promise.all([
+            prisma.cotizacion.count({ where: { eventoId } }),
+            prisma.agenda.count({ where: { eventoId } }),
+            prisma.eventoBitacora.count({ where: { eventoId } })
+        ]);
+
+        const total = cotizaciones + agenda + bitacora;
+
+        return {
+            tieneDependencias: total > 0,
+            dependencias: {
+                cotizaciones,
+                agenda,
+                bitacora,
+                total
+            }
+        };
+    } catch (error) {
+        console.error('Error verificando dependencias del evento:', error);
+        return {
+            tieneDependencias: true,
+            dependencias: {
+                cotizaciones: 0,
+                agenda: 0,
+                bitacora: 0,
+                total: 0
+            },
+            error: 'Error al verificar dependencias'
+        };
+    }
+}
+
+/**
+ * Actualiza el status de un evento
+ */
+export async function actualizarEventoStatus(eventoId: string, status: string) {
+    return await prisma.evento.update({
+        where: { id: eventoId },
+        data: { status }
+    })
+}
+
+/**
+ * Elimina un evento y todas sus dependencias
+ */
+export async function eliminarEvento(eventoId: string) {
+    try {
+        await prisma.$transaction(async (tx) => {
+            // Eliminar en orden para evitar violaciones de clave foránea
+            await tx.eventoBitacora.deleteMany({ where: { eventoId } });
+            await tx.cotizacionServicio.deleteMany({
+                where: {
+                    Cotizacion: {
+                        eventoId
+                    }
+                }
+            });
+            await tx.cotizacion.deleteMany({ where: { eventoId } });
+            await tx.agenda.deleteMany({ where: { eventoId } });
+            await tx.evento.delete({ where: { id: eventoId } });
+        });
+
+        return {
+            success: true,
+            message: 'Evento eliminado exitosamente'
+        };
+    } catch (error) {
+        console.error('Error eliminando evento:', error);
+        return {
+            success: false,
+            message: 'Error al eliminar evento'
+        };
+    }
+}
+
+/**
+ * Archivar un evento (cambia status a 'archived')
+ */
+export async function archivarEvento(eventoId: string) {
+    try {
+        await prisma.evento.update({
+            where: { id: eventoId },
+            data: { status: 'archived' }
+        })
+
+        return {
+            success: true,
+            message: 'Evento archivado exitosamente'
+        }
+    } catch (error) {
+        console.error('Error archivando evento:', error)
+        return {
+            success: false,
+            message: 'Error al archivar evento'
+        }
+    }
+}
+
+/**
+ * Desarchivar un evento (cambia status a 'active')
+ */
+export async function desarchivarEvento(eventoId: string) {
+    try {
+        await prisma.evento.update({
+            where: { id: eventoId },
+            data: { status: 'active' }
+        })
+
+        return {
+            success: true,
+            message: 'Evento desarchivado exitosamente'
+        }
+    } catch (error) {
+        console.error('Error desarchivando evento:', error)
+        return {
+            success: false,
+            message: 'Error al desarchivar evento'
+        }
+    }
+}
+
+// =============================================================================
+// FUNCIONES EXTENDIDAS (funciones originales del archivo)
+// =============================================================================
 
 /**
  * Obtener eventos aprobados con datos extendidos (migrado de la función existente)

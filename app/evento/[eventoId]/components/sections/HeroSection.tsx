@@ -10,10 +10,14 @@ interface Evento {
     direccion?: string | null
     EventoTipo?: {
         nombre: string
+        id?: string
     } | null
     Cliente?: {
         nombre: string
-    }
+        id?: string
+        telefono?: string | null
+        email?: string | null
+    } | null
 }
 
 interface Props {

@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { toast } from 'sonner'
-import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento/evento.schemas'
+import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
+import type { ClienteCompleto } from '@/app/admin/_lib/actions/evento/cliente/cliente.schemas'
 import { actualizarCliente, obtenerCanales } from '@/app/admin/_lib/actions/evento/cliente/cliente.actions'
 import {
     User,
@@ -18,8 +19,13 @@ import {
     X
 } from 'lucide-react'
 
+// Extendemos EventoCompleto para incluir el ClienteCompleto
+interface EventoCompletoExtendido extends Omit<EventoCompleto, 'Cliente'> {
+    Cliente: ClienteCompleto
+}
+
 interface Props {
-    eventoCompleto: EventoCompleto
+    eventoCompleto: EventoCompletoExtendido
     showActions?: boolean
 }
 
@@ -29,7 +35,7 @@ interface Canal {
 }
 
 // Exportamos los botones como un componente separado
-export function FichaClienteActions({ eventoCompleto }: { eventoCompleto: EventoCompleto }) {
+export function FichaClienteActions({ eventoCompleto }: { eventoCompleto: EventoCompletoExtendido }) {
     const [canales, setCanales] = useState<Canal[]>([])
     const [loading, setLoading] = useState(true)
     const [isEditing, setIsEditing] = useState(false)
@@ -67,7 +73,7 @@ export function FichaClienteActions({ eventoCompleto }: { eventoCompleto: Evento
         setSaving(true)
         try {
             await actualizarCliente({
-                id: cliente.id,
+                id: cliente.id || '',
                 ...formData
             })
             toast.success('Cliente actualizado exitosamente')
@@ -171,7 +177,7 @@ export default function FichaClienteUnificadaV2({ eventoCompleto, showActions = 
         setSaving(true)
         try {
             await actualizarCliente({
-                id: cliente.id,
+                id: cliente.id || '',
                 ...formData
             })
             setIsEditing(false)
@@ -352,11 +358,11 @@ export default function FichaClienteUnificadaV2({ eventoCompleto, showActions = 
                         Fecha de registro
                     </label>
                     <p className="text-zinc-200">
-                        {new Date(cliente.createdAt).toLocaleDateString('es-ES', {
+                        {cliente.createdAt ? new Date(cliente.createdAt).toLocaleDateString('es-ES', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric'
-                        })}
+                        }) : 'No disponible'}
                     </p>
                 </div>
             </div>

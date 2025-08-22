@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Cotizacion } from '@/app/admin/_lib/types'
-import { clonarCotizacion, archivarCotizacion, desarchivarCotizacion } from '@/app/admin/_lib/cotizacion.actions'
-import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
+import { clonarCotizacion, archivarCotizacion, desarchivarCotizacion, eliminarCotizacion, autorizarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import { useRouter } from 'next/navigation'
-import { autorizarCotizacion } from '@/app/admin/_lib/autorizarCotizacion.actions'
+import BotonAutorizarCotizacion from '@/app/admin/dashboard/eventos/[eventoId]/cotizacion/components/BotonAutorizarCotizacion'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
 import ModalConfirmacionEliminacion from '@/app/components/ui/ModalConfirmacionEliminacion'
@@ -144,8 +143,14 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
         try {
             const response = await autorizarCotizacion(cotizacion.id)
             if (response.success) {
-                toast.success('Cotización autorizada exitosamente')
-                window.location.reload() // Refrescar para actualizar el estado
+                // Mostrar mensaje específico basado en si se archivaron cotizaciones
+                const mensaje = response.cotizacionesArchivadas && response.cotizacionesArchivadas > 0
+                    ? `Cotización autorizada exitosamente. ${response.cotizacionesArchivadas} cotización(es) adicional(es) fueron archivadas automáticamente.`
+                    : 'Cotización autorizada exitosamente.'
+
+                toast.success(mensaje)
+                // Usar router.refresh() en lugar de window.location.reload() para mejor UX
+                router.refresh()
             } else {
                 toast.error(response.message || 'Error al autorizar cotización')
             }
@@ -299,7 +304,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                 </button>
 
                                 {/* Autorizar - Solo si no está autorizado */}
-                                {cotizacion.status !== 'autorizado' && cotizacion.status !== COTIZACION_STATUS.APROBADA && (
+                                {cotizacion.status !== COTIZACION_STATUS.AUTORIZADO && cotizacion.status !== COTIZACION_STATUS.APROBADA && (
                                     <>
                                         <button
                                             onClick={handleAutorizar}
@@ -392,7 +397,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
             </div>
 
             {/* Status autorizado o aprobado */}
-            {cotizacion.status === 'autorizado' && (
+            {cotizacion.status === COTIZACION_STATUS.AUTORIZADO && (
                 <div className={`mt-3 p-3 bg-blue-900/30 border border-blue-700 rounded-lg ${archivada ? 'opacity-30' : ''}`}>
                     <div className="flex items-center gap-2 text-blue-400 text-sm font-medium">
                         <CheckCircle className="w-4 h-4" />
