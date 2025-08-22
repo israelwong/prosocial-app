@@ -12,6 +12,7 @@ import PaquetesSection from './components/sections/PaquetesSection'
 import PortfolioSection from './components/sections/PortfolioSection'
 import TestimoniosSection from './components/sections/TestimoniosSection'
 import EventoMetadataProvider from './components/EventoMetadataProvider'
+import RedirectCliente from './components/RedirectCliente'
 // Componentes legacy (mantenemos para casos específicos)
 import FechaNoDisponible from './components/FechaNoDisponible'
 
@@ -46,10 +47,10 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
         redirect('/404')
     }
 
-    // 🎯 NUEVA VALIDACIÓN: Si el evento está aprobado, redirigir al panel del cliente
+    // 🎯 NUEVA VALIDACIÓN: Si el evento está aprobado, mostrar redirección al cliente
     if (evento.status === 'aprobado') {
-        console.log('🔄 Evento aprobado, redirigiendo al panel del cliente');
-        redirect('/cliente/login?message=evento-aprobado&redirect=/cliente/dashboard');
+        console.log('🔄 Evento aprobado, mostrando redirección al cliente');
+        return <RedirectCliente motivo="Evento ya aprobado" />
     }
 
     // Si hay error en la validación de cotizaciones

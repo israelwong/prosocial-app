@@ -23,8 +23,8 @@ export default function Page() {
 
             {/* BODY */}
             <div className='max-w-screen-sm mx-auto'>
-                <PagoExitoso 
-                    pagoId={pagoId} 
+                <PagoExitoso
+                    pagoId={pagoId}
                     cotizacionId={cotizacionId}
                     paymentIntentId={paymentIntentId}
                 />

@@ -21,17 +21,22 @@ export default async function handler(req, res) {
       where: {
         cotizacionId: cotizacionId,
         status: {
-          in: ['paid', 'completado']
-        }
+          in: ["paid", "completado"],
+        },
       },
       orderBy: {
-        updatedAt: 'desc'
-      }
+        updatedAt: "desc",
+      },
     });
 
     if (!pago) {
-      console.log("❌ No se encontró pago exitoso para la cotización:", cotizacionId);
-      return res.status(404).json({ error: "No se encontró pago exitoso para esta cotización" });
+      console.log(
+        "❌ No se encontró pago exitoso para la cotización:",
+        cotizacionId
+      );
+      return res
+        .status(404)
+        .json({ error: "No se encontró pago exitoso para esta cotización" });
     }
 
     console.log("✅ Pago encontrado:", pago.id);
@@ -42,15 +47,14 @@ export default async function handler(req, res) {
         id: pago.id,
         cotizacionId: pago.cotizacionId,
         status: pago.status,
-        monto: pago.monto
-      }
+        monto: pago.monto,
+      },
     });
-
   } catch (error) {
     console.error("❌ Error al buscar pago por cotización:", error);
     res.status(500).json({
       error: "Error interno del servidor",
-      details: error.message
+      details: error.message,
     });
   }
 }

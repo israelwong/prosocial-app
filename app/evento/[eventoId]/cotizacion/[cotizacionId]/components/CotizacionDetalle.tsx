@@ -1,6 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { suscribirCotizacion, desuscribirCotizacion, ESTADOS_COTIZACION } from '@/lib/supabase-realtime'
 import { obtenerEventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.actions'
 import { obtenerCondicionesComerciales } from '@/app/admin/_lib/actions/condicionesComerciales/condicionesComerciales.actions'
@@ -75,6 +76,8 @@ export default function CotizacionDetalle({
     const [modalPagoAbierto, setModalPagoAbierto] = useState(false)
     const [clientSecret, setClientSecret] = useState<string | null>(null)
     const [procesandoPago, setProcesandoPago] = useState(false)
+
+    const router = useRouter()
 
     // Función para obtener el total de la cotización
     const calcularTotalCotizacion = () => {

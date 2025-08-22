@@ -3,6 +3,7 @@ import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { obtenerCotizacionCompleta } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import CotizacionDetalle from './components/CotizacionDetalle'
+import RedirectCliente from './components/RedirectCliente'
 import EventoMetadataProvider from '../../components/EventoMetadataProvider'
 
 
@@ -43,10 +44,13 @@ export default async function CotizacionDetallePage({ params, searchParams }: Pa
             redirect('/404')
         }
 
-        // 🎯 VALIDACIÓN MEJORADA: Verificar si el evento ya está aprobado
-        if (datosCotizacion.cotizacion.Evento.status === 'aprobado' || datosCotizacion.cotizacion.Evento.status === 'contratado') {
-            console.log('🔄 Evento aprobado/contratado, redirigiendo al panel del cliente');
-            redirect('/cliente/login?message=evento-aprobado&redirect=/cliente/dashboard');
+        // 🎯 VALIDACIÓN: Si el evento ya está aprobado, mostrar redirección al cliente
+        const eventoAprobado = datosCotizacion.cotizacion.Evento.status === 'aprobado' ||
+            datosCotizacion.cotizacion.Evento.status === 'contratado'
+
+        if (eventoAprobado) {
+            console.log('🔄 Evento aprobado/contratado, mostrando redirección al cliente');
+            return <RedirectCliente motivo="Evento ya aprobado/contratado" />
         }
 
         // Verificar si la cotización está expirada
