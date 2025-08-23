@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { Calendar, CreditCard, ExternalLink } from 'lucide-react'
+import { Calendar, CreditCard, ExternalLink, ArrowLeft } from 'lucide-react'
 import { obtenerTodosPagosCliente } from '@/app/cliente/_lib/actions/pago.actions'
+import { Button } from '@/app/components/ui/button'
 import Link from 'next/link'
 
 // Función para formatear el método de pago
@@ -87,12 +88,28 @@ export default async function PagosGeneralPage() {
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">
-                        Historial de Pagos
-                    </h1>
-                    <p className="text-zinc-400">
-                        Todos tus pagos realizados en ProSocial
-                    </p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <div className="flex items-center space-x-4 mb-2">
+                                <Link href="/cliente/dashboard">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-zinc-400 hover:text-zinc-100"
+                                    >
+                                        <ArrowLeft className="h-4 w-4 mr-2" />
+                                        Volver al Dashboard
+                                    </Button>
+                                </Link>
+                            </div>
+                            <h1 className="text-3xl font-bold text-white mb-2">
+                                Historial de Pagos
+                            </h1>
+                            <p className="text-zinc-400">
+                                Todos tus pagos realizados en ProSocial
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Estadísticas */}

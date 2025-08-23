@@ -292,15 +292,26 @@ export default function HistorialPagosEvento() {
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between py-6">
                         <div className="flex items-center space-x-4">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => router.push(`/cliente/evento/${eventoId}`)}
-                                className="text-zinc-400 hover:text-zinc-100"
-                            >
-                                <ArrowLeft className="h-4 w-4 mr-2" />
-                                Volver al Evento
-                            </Button>
+                            <div className="flex items-center space-x-2">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => router.push('/cliente/dashboard')}
+                                    className="text-zinc-400 hover:text-zinc-100"
+                                >
+                                    <ArrowLeft className="h-4 w-4 mr-2" />
+                                    Dashboard
+                                </Button>
+                                <span className="text-zinc-600">•</span>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => router.push(`/cliente/evento/${eventoId}`)}
+                                    className="text-zinc-400 hover:text-zinc-100"
+                                >
+                                    Volver al Evento
+                                </Button>
+                            </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-zinc-100">Historial de Pagos</h1>
                                 <p className="text-zinc-400">{evento.nombre}</p>
