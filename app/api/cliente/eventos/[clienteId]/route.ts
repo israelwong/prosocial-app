@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/app/admin/_lib/prismaClient';
+import { PAGO_STATUS } from '@/app/admin/_lib/constants/status';
 
 export async function GET(
     request: NextRequest,
@@ -33,7 +34,9 @@ export async function GET(
                         precio: true,
                         Pago: {
                             where: {
-                                status: 'succeeded'
+                                status: {
+                                    in: [PAGO_STATUS.PAID, PAGO_STATUS.COMPLETADO, 'succeeded']
+                                }
                             },
                             select: {
                                 monto: true
@@ -53,13 +56,23 @@ export async function GET(
             const cotizacion = evento.Cotizacion?.[0];
             const totalPagado = cotizacion?.Pago?.reduce((sum: number, pago: any) => sum + pago.monto, 0) || 0;
 
+            // Log de debugging
+            console.log('🔍 DEBUG Evento:', {
+                eventoId: evento.id,
+                nombre: evento.nombre,
+                cotizacionId: cotizacion?.id,
+                precio: cotizacion?.precio,
+                pagos: cotizacion?.Pago,
+                totalPagado
+            });
+
             return {
                 id: evento.id,
                 nombre: evento.nombre,
                 fecha_evento: evento.fecha_evento,
-                hora_evento: evento.fecha_evento, // Temporal hasta que tengamos campo hora_evento
-                numero_invitados: 0, // Temporal hasta que tengamos este campo
-                lugar: evento.sede || evento.direccion || '',
+                hora_evento: '', // Campo no implementado aún
+                numero_invitados: 0, // Campo no implementado aún
+                lugar: evento.sede || evento.direccion || 'No definida',
                 cotizacion: {
                     id: cotizacion?.id,
                     status: cotizacion?.status,

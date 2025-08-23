@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
-import { CalendarDays, MapPin, Users, Clock, CreditCard, Eye } from 'lucide-react'
+import { CalendarDays, MapPin, CreditCard, Eye } from 'lucide-react'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 import { useClienteAuth } from '../../hooks'
 import { obtenerEventosCliente } from '../../_lib/actions/evento.actions'
@@ -48,6 +48,7 @@ export default function ClienteDashboard() {
 
     const formatFecha = (fecha: string) => {
         return new Date(fecha).toLocaleDateString('es-MX', {
+            weekday: 'long',
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -151,16 +152,6 @@ export default function ClienteDashboard() {
                                         <div className="flex items-center text-sm text-zinc-400">
                                             <CalendarDays className="h-4 w-4 mr-2" />
                                             {formatFecha(evento.fecha_evento)}
-                                        </div>
-
-                                        <div className="flex items-center text-sm text-zinc-400">
-                                            <Clock className="h-4 w-4 mr-2" />
-                                            {evento.hora_evento}
-                                        </div>
-
-                                        <div className="flex items-center text-sm text-zinc-400">
-                                            <Users className="h-4 w-4 mr-2" />
-                                            {evento.numero_invitados} invitados
                                         </div>
 
                                         <div className="flex items-center text-sm text-zinc-400">
