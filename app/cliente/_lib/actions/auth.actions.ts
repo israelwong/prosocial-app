@@ -71,13 +71,13 @@ export async function getClienteSession(): Promise<Cliente | null> {
     try {
         const cookieStore = await cookies()
         const session = cookieStore.get('cliente-session')
-        
+
         if (!session) {
             return null
         }
 
         const clienteData = JSON.parse(session.value)
-        
+
         // Verificar que el cliente aún existe
         const cliente = await prisma.cliente.findUnique({
             where: { id: clienteData.id }

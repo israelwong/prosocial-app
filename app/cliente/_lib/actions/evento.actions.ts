@@ -176,14 +176,14 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
             const seccionNombre = cotizacionServicio.seccion_snapshot && cotizacionServicio.seccion_snapshot !== 'Sección migrada'
                 ? cotizacionServicio.seccion_snapshot
                 : cotizacionServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
-                  cotizacionServicio.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
-                  'Sin sección'
+                cotizacionServicio.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
+                'Sin sección'
 
             const categoriaNombre = cotizacionServicio.categoria_snapshot && cotizacionServicio.categoria_snapshot !== 'Categoría migrada'
                 ? cotizacionServicio.categoria_snapshot
                 : cotizacionServicio.Servicio?.ServicioCategoria?.nombre ||
-                  cotizacionServicio.ServicioCategoria?.nombre ||
-                  'Sin categoría'
+                cotizacionServicio.ServicioCategoria?.nombre ||
+                'Sin categoría'
 
             return {
                 id: cotizacionServicio.id,
@@ -194,9 +194,9 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
                 seccion: seccionNombre,
                 categoria: categoriaNombre,
                 seccionPosicion: cotizacionServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
-                               cotizacionServicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 0,
+                    cotizacionServicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 0,
                 categoriaPosicion: cotizacionServicio.Servicio?.ServicioCategoria?.posicion ||
-                                 cotizacionServicio.ServicioCategoria?.posicion || 0,
+                    cotizacionServicio.ServicioCategoria?.posicion || 0,
                 posicion: cotizacionServicio.Servicio?.posicion || cotizacionServicio.posicion || 0
             }
         })
