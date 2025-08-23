@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
@@ -23,16 +23,24 @@ import {
     Mail,
     Edit,
     Tag,
-    Layers
+    Layers,
+    Receipt,
+    CheckCircle,
+    XCircle
 } from 'lucide-react'
 
 export default function EventoDetalle() {
     const [evento, setEvento] = useState<EventoDetalle | null>(null)
     const [loading, setLoading] = useState(true)
     const [modalEditOpen, setModalEditOpen] = useState(false)
+    const [showNotification, setShowNotification] = useState(false)
+    const [notificationMessage, setNotificationMessage] = useState('')
+    const [notificationType, setNotificationType] = useState<'success' | 'error' | 'warning'>('success')
+
     const { cliente, isAuthenticated } = useClienteAuth()
     const router = useRouter()
     const params = useParams()
+    const searchParams = useSearchParams()
     const eventoId = params?.eventoId as string
 
     useEffect(() => {
@@ -59,6 +67,53 @@ export default function EventoDetalle() {
             fetchEvento()
         }
     }, [eventoId, isAuthenticated, cliente])
+
+    // Manejar notificaciones de pago
+    useEffect(() => {
+        if (!searchParams) return
+
+        const pagoExitoso = searchParams.get('pagoExitoso')
+        const pagoPendiente = searchParams.get('pagoPendiente')
+        const pagoError = searchParams.get('pagoError')
+        const message = searchParams.get('message')
+        const pagoId = searchParams.get('pagoId')
+
+        if (pagoExitoso === 'true') {
+            setNotificationType('success')
+            setNotificationMessage(`¡Pago procesado exitosamente! ID: ${pagoId || 'N/A'}`)
+            setShowNotification(true)
+            // Limpiar URL
+            const url = new URL(window.location.href)
+            url.searchParams.delete('pagoExitoso')
+            url.searchParams.delete('pagoId')
+            window.history.replaceState({}, '', url.toString())
+        } else if (pagoPendiente === 'true') {
+            setNotificationType('warning')
+            setNotificationMessage(`Pago registrado como pendiente. ID: ${pagoId || 'N/A'}`)
+            setShowNotification(true)
+            // Limpiar URL
+            const url = new URL(window.location.href)
+            url.searchParams.delete('pagoPendiente')
+            url.searchParams.delete('pagoId')
+            window.history.replaceState({}, '', url.toString())
+        } else if (pagoError === 'true') {
+            setNotificationType('error')
+            setNotificationMessage(message ? decodeURIComponent(message) : 'Error al procesar el pago')
+            setShowNotification(true)
+            // Limpiar URL
+            const url = new URL(window.location.href)
+            url.searchParams.delete('pagoError')
+            url.searchParams.delete('message')
+            window.history.replaceState({}, '', url.toString())
+        }
+
+        // Auto-ocultar notificación después de 5 segundos
+        if (pagoExitoso || pagoPendiente || pagoError) {
+            setTimeout(() => {
+                setShowNotification(false)
+            }, 5000)
+        }
+    }, [searchParams])
 
     const formatFecha = (fecha: string) => {
         return new Date(fecha).toLocaleDateString('es-MX', {
@@ -141,6 +196,28 @@ export default function EventoDetalle() {
 
     return (
         <div className="min-h-screen bg-zinc-950">
+            {/* Notificación de pago */}
+            {showNotification && (
+                <div className={`fixed top-4 right-4 z-50 max-w-sm w-full ${notificationType === 'success' ? 'bg-green-600' :
+                        notificationType === 'warning' ? 'bg-yellow-600' : 'bg-red-600'
+                    } text-white p-4 rounded-lg shadow-lg`}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            {notificationType === 'success' && <CheckCircle className="h-5 w-5 mr-2" />}
+                            {notificationType === 'warning' && <Clock className="h-5 w-5 mr-2" />}
+                            {notificationType === 'error' && <XCircle className="h-5 w-5 mr-2" />}
+                            <span className="font-medium">{notificationMessage}</span>
+                        </div>
+                        <button
+                            onClick={() => setShowNotification(false)}
+                            className="ml-2 text-white hover:text-gray-200"
+                        >
+                            ×
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="bg-zinc-900 shadow-sm border-b border-zinc-800">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center py-6">
@@ -156,15 +233,25 @@ export default function EventoDetalle() {
                             <h1 className="text-2xl font-bold text-zinc-100">{evento.nombre}</h1>
                             <p className="text-zinc-400">Detalles del evento</p>
                         </div>
-                        {/* Botón editar en lugar de status */}
-                        <Button
-                            onClick={() => setModalEditOpen(true)}
-                            variant="outline"
-                            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-                        >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar evento
-                        </Button>
+                        {/* Botones de acción */}
+                        <div className="flex gap-3">
+                            <Button
+                                onClick={() => router.push(`/cliente/evento/${evento.id}/pagos`)}
+                                variant="outline"
+                                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                            >
+                                <Receipt className="h-4 w-4 mr-2" />
+                                Ver Historial de Pagos
+                            </Button>
+                            <Button
+                                onClick={() => setModalEditOpen(true)}
+                                variant="outline"
+                                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                            >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Editar evento
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -307,7 +394,7 @@ export default function EventoDetalle() {
 
                                 {getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) > 0 && (
                                     <Button
-                                        onClick={() => router.push(`/cliente/pago/${evento.id}`)}
+                                        onClick={() => router.push(`/cliente/evento/${evento.id}/pago/${evento.cotizacion.id}`)}
                                         className="w-full bg-blue-600 hover:bg-blue-700"
                                     >
                                         <CreditCard className="h-4 w-4 mr-2" />
