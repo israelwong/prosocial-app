@@ -55,14 +55,15 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
         // Transformar datos para el formato esperado
         const eventosFormateados = eventos.map(evento => {
             const cotizacion = evento.Cotizacion[0]
-            const totalPagado = cotizacion?.Pago?.reduce((sum: number, pago: any) => sum + pago.monto, 0) || 0
+            const totalPagado = cotizacion?.Pago?.reduce((sum, pago) => sum + pago.monto, 0) || 0
+            const saldoPendiente = (cotizacion?.precio || 0) - totalPagado
 
             return {
                 id: evento.id,
                 nombre: evento.nombre || 'Evento sin nombre',
                 fecha_evento: evento.fecha_evento.toISOString(),
-                hora_evento: '', // Campo legacy
-                numero_invitados: 0, // Campo legacy
+                hora_evento: '', // Campo no existe en DB, se puede eliminar del tipo
+                numero_invitados: 0, // Campo no existe en DB, se puede eliminar del tipo
                 lugar: evento.sede || evento.direccion || 'No definida',
                 cotizacion: {
                     id: cotizacion?.id || '',
@@ -88,7 +89,7 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
 
 export async function obtenerEventoDetalle(eventoId: string): Promise<ApiResponse<EventoDetalle>> {
     try {
-        // Copiar exactamente la query que funciona en el API route
+        // Buscar el evento con estructura completa (copiada del API route que funciona)
         const evento = await prisma.evento.findUnique({
             where: {
                 id: eventoId
@@ -167,8 +168,8 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
         const cotizacion = evento.Cotizacion[0]
         const totalPagado = cotizacion.Pago?.reduce((sum: number, pago: any) => sum + pago.monto, 0) || 0
 
-        // Copiar exactamente la lógica de servicios del API route
-        const servicios = cotizacion.Servicio.map((cotizacionServicio: any) => {
+        // Mapear servicios con información completa
+        const servicios = cotizacion.Servicio.map(cotizacionServicio => {
             const nombreServicio = cotizacionServicio.nombre_snapshot && cotizacionServicio.nombre_snapshot !== 'Servicio migrado'
                 ? cotizacionServicio.nombre_snapshot
                 : cotizacionServicio.Servicio?.nombre || 'Servicio sin nombre'
@@ -189,7 +190,7 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
                 id: cotizacionServicio.id,
                 nombre: nombreServicio,
                 cantidad: cotizacionServicio.cantidad,
-                precio_unitario: cotizacionServicio.precioUnitario || 0,
+                precio_unitario: cotizacionServicio.precio_unitario || 0,
                 subtotal: cotizacionServicio.subtotal || 0,
                 seccion: seccionNombre,
                 categoria: categoriaNombre,
@@ -201,7 +202,7 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
             }
         })
 
-        // Construir exactamente igual que en el API route
+        // Construir el evento detalle
         const eventoDetalle: EventoDetalle = {
             id: evento.id,
             nombre: evento.nombre || 'Evento sin nombre',
@@ -218,7 +219,7 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
                 status: cotizacion.status,
                 total: cotizacion.precio,
                 pagado: totalPagado,
-                descripcion: cotizacion.descripcion || undefined,
+                descripcion: cotizacion.descripcion,
                 servicios
             }
         }

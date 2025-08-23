@@ -11,9 +11,9 @@ import { ApiResponse, LoginData, Cliente } from '../types'
 
 export async function loginCliente(data: LoginData): Promise<ApiResponse<Cliente>> {
     try {
-        // Buscar cliente por teléfono (campo único en DB)
+        // Buscar cliente por email
         const cliente = await prisma.cliente.findUnique({
-            where: { telefono: data.telefono }
+            where: { email: data.email }
         })
 
         if (!cliente) {
@@ -23,11 +23,11 @@ export async function loginCliente(data: LoginData): Promise<ApiResponse<Cliente
             }
         }
 
-        // Verificar email (verificación adicional)
-        if (cliente.email !== data.email) {
+        // Verificar teléfono (en lugar de password para clientes)
+        if (cliente.telefono !== data.telefono) {
             return {
                 success: false,
-                message: 'Email incorrecto'
+                message: 'Teléfono incorrecto'
             }
         }
 
@@ -48,8 +48,9 @@ export async function loginCliente(data: LoginData): Promise<ApiResponse<Cliente
             data: {
                 id: cliente.id,
                 nombre: cliente.nombre,
-                email: cliente.email || '',
-                telefono: cliente.telefono || undefined
+                email: cliente.email,
+                telefono: cliente.telefono,
+                avatar: cliente.avatar
             }
         }
     } catch (error) {
@@ -90,11 +91,55 @@ export async function getClienteSession(): Promise<Cliente | null> {
         return {
             id: cliente.id,
             nombre: cliente.nombre,
-            email: cliente.email || '',
-            telefono: cliente.telefono || undefined
+            email: cliente.email,
+            telefono: cliente.telefono,
+            avatar: cliente.avatar
         }
     } catch (error) {
         console.error('Error al obtener sesión:', error)
         return null
+    }
+}
+        // Limpiar datos locales
+        sessionStorage.removeItem('cliente-data')
+
+        // Opcionalmente, llamar al servidor para invalidar la sesión
+        await fetch('/api/cliente/auth/logout', {
+            method: 'POST',
+        })
+
+        return { success: true }
+    } catch (error) {
+        console.error('Error en logoutCliente:', error)
+        return {
+            success: false,
+            message: 'Error al cerrar sesión'
+        }
+    }
+}
+
+export async function validateClienteSession(): Promise<ApiResponse<Cliente>> {
+    try {
+        const clienteData = sessionStorage.getItem('cliente-data')
+
+        if (!clienteData) {
+            return { success: false }
+        }
+
+        const cliente = JSON.parse(clienteData)
+
+        // Aquí puedes agregar validación adicional con el servidor
+        // const response = await fetch('/api/cliente/auth/validate')
+
+        return {
+            success: true,
+            data: cliente
+        }
+    } catch (error) {
+        console.error('Error en validateClienteSession:', error)
+        return {
+            success: false,
+            message: 'Error al validar sesión'
+        }
     }
 }

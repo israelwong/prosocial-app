@@ -8,7 +8,6 @@ export interface Cliente {
     nombre: string
     email: string
     telefono?: string
-    avatar?: string | null
 }
 
 // Evento
@@ -31,11 +30,11 @@ export interface Evento {
 export interface EventoDetalle extends Evento {
     direccion?: string
     sede?: string
-    eventoTipo: {
+    eventoTipo?: {
         id: string
         nombre: string
     }
-    eventoEtapa: {
+    eventoEtapa?: {
         id: string
         nombre: string
     }
@@ -101,7 +100,7 @@ export interface Lead {
 // Datos de login
 export interface LoginData {
     email: string
-    password: string
+    telefono: string
 }
 
 // Datos de sesión de pago
