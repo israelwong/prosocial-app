@@ -56,16 +56,6 @@ export async function GET(
             const cotizacion = evento.Cotizacion?.[0];
             const totalPagado = cotizacion?.Pago?.reduce((sum: number, pago: any) => sum + pago.monto, 0) || 0;
 
-            // Log de debugging
-            console.log('🔍 DEBUG Evento:', {
-                eventoId: evento.id,
-                nombre: evento.nombre,
-                cotizacionId: cotizacion?.id,
-                precio: cotizacion?.precio,
-                pagos: cotizacion?.Pago,
-                totalPagado
-            });
-
             return {
                 id: evento.id,
                 nombre: evento.nombre,
@@ -80,9 +70,7 @@ export async function GET(
                     pagado: totalPagado
                 }
             };
-        });
-
-        return NextResponse.json({
+        });        return NextResponse.json({
             success: true,
             eventos: eventosConPagos
         });

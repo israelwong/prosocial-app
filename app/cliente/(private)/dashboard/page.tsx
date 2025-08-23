@@ -10,10 +10,13 @@ import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 import { useClienteAuth } from '../../hooks'
 import { obtenerEventosCliente } from '../../_lib/actions/evento.actions'
 import { Evento } from '../../_lib/types'
+import ModalPagoCliente from '../../components/ModalPagoCliente'
 
 export default function ClienteDashboard() {
     const [eventos, setEventos] = useState<Evento[]>([])
     const [loading, setLoading] = useState(true)
+    const [eventoParaPago, setEventoParaPago] = useState<Evento | null>(null)
+    const [modalPagoAbierto, setModalPagoAbierto] = useState(false)
     const { cliente, isAuthenticated, logout } = useClienteAuth()
     const router = useRouter()
 
@@ -28,10 +31,8 @@ export default function ClienteDashboard() {
                 console.log('🔄 Cargando eventos para cliente:', cliente.id) // Debug log
 
                 const response = await obtenerEventosCliente(cliente.id)
-                console.log('📡 Response desde action:', response) // Debug log
 
                 if (response.success && response.data) {
-                    console.log('📅 Eventos recibidos:', response.data) // Debug log
                     setEventos(response.data.eventos)
                 } else {
                     console.error('❌ Error al cargar eventos:', response.message)
@@ -90,6 +91,16 @@ export default function ClienteDashboard() {
 
     const getSaldoPendiente = (total: number, pagado: number) => {
         return total - pagado
+    }
+
+    const handlePagarClick = (evento: Evento) => {
+        setEventoParaPago(evento)
+        setModalPagoAbierto(true)
+    }
+
+    const handleCerrarModal = () => {
+        setModalPagoAbierto(false)
+        setEventoParaPago(null)
     }
 
     if (!isAuthenticated || loading) {
@@ -203,7 +214,7 @@ export default function ClienteDashboard() {
                                                 <Button
                                                     size="sm"
                                                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                                                    onClick={() => router.push(`/cliente/pago/${evento.cotizacion.id}`)}
+                                                    onClick={() => handlePagarClick(evento)}
                                                 >
                                                     <CreditCard className="h-4 w-4 mr-1" />
                                                     Pagar
@@ -216,6 +227,13 @@ export default function ClienteDashboard() {
                     </div>
                 )}
             </div>
+
+            {/* Modal de Pago */}
+            <ModalPagoCliente
+                evento={eventoParaPago}
+                isOpen={modalPagoAbierto}
+                onClose={handleCerrarModal}
+            />
         </div>
     )
 }
