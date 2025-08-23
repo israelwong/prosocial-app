@@ -88,13 +88,9 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
             return
         }
 
-        if (metodoPago === 'spei') {
-            // Para SPEI, redirigir a página pendiente interna
-            router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/pending?monto=${monto}`)
-        } else {
-            // Para tarjeta, crear payment intent con el monto con comisión
-            await crearPaymentIntent(montoConComision)
-        }
+        // Para ambos métodos (tarjeta y SPEI), crear payment intent y usar Stripe Elements
+        const montoFinal = metodoPago === 'spei' ? monto : montoConComision
+        await crearPaymentIntent(montoFinal)
     }
 
     const crearPaymentIntent = async (montoFinal: number) => {
@@ -103,7 +99,7 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
         setProcesandoPago(true)
         console.log('🚀 Creando Payment Intent para cliente...', {
             montoBase: parseFloat(montoAPagar),
-            montoConComision: montoFinal,
+            montoFinal: montoFinal,
             metodoPago,
             eventoId
         })
@@ -115,7 +111,7 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                 body: JSON.stringify({
                     cotizacionId: cotizacionId,
                     eventoId: eventoId,
-                    metodoPago: 'card',
+                    metodoPago: metodoPago === 'spei' ? 'spei' : 'card',
                     montoConComision: montoFinal,
                 }),
             })
@@ -128,13 +124,14 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
 
             console.log('✅ Payment Intent cliente creado:', {
                 paymentIntentId: data.paymentIntentId,
+                metodoPago: metodoPago,
                 montoFinal: data.montoFinal
             })
 
             // Guardar el Payment Intent ID para posible cancelación
             setCurrentPaymentIntentId(data.paymentIntentId)
 
-            // Mostrar modal con Stripe Elements
+            // Mostrar modal con Stripe Elements para ambos métodos
             setClientSecret(data.clientSecret)
             setShowStripeModal(true)
 
@@ -161,8 +158,24 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
     const handleStripeCancel = async () => {
         setCancelandoPago(true) // 🔄 Mostrar estado de cancelación
 
-        // 🗑️ Limpiar Payment Intent cancelado para evitar pagos fantasma
-        if (currentPaymentIntentId) {
+        // 🎯 Para SPEI, no cancelamos el Payment Intent, solo redirigimos a pendiente
+        if (metodoPago === 'spei' && currentPaymentIntentId) {
+            console.log('🏦 SPEI: Redirigiendo a página pendiente sin cancelar Payment Intent:', currentPaymentIntentId)
+
+            // Limpiar estado local sin cancelar en Stripe
+            setShowStripeModal(false)
+            setClientSecret(null)
+            setCurrentPaymentIntentId(null)
+            setProcesandoPago(false)
+            setCancelandoPago(false)
+
+            // Redirigir a página pendiente para SPEI
+            router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/pending?payment_intent=${currentPaymentIntentId}&monto=${parseFloat(montoAPagar)}`)
+            return
+        }
+
+        // 🗑️ Para tarjetas, sí limpiamos Payment Intent cancelado para evitar pagos fantasma
+        if (currentPaymentIntentId && metodoPago !== 'spei') {
             try {
                 console.log('🗑️ Cancelando y limpiando Payment Intent:', currentPaymentIntentId)
 
@@ -337,7 +350,9 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                 <div className="fixed inset-0 bg-zinc-900 z-50 overflow-y-auto">
                     <div className="min-h-screen p-6">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-white text-2xl font-bold">Completar Pago</h2>
+                            <h2 className="text-white text-2xl font-bold">
+                                {metodoPago === 'spei' ? 'Transferencia SPEI' : 'Completar Pago'}
+                            </h2>
                             <button
                                 onClick={handleStripeCancel}
                                 disabled={cancelandoPago || procesandoPago} // 🎯 Deshabilitar durante cualquier proceso
@@ -346,9 +361,9 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                                     : 'text-zinc-400 hover:text-white'
                                     }`}
                                 title={
-                                    cancelandoPago ? 'Cancelando pago...' :
+                                    cancelandoPago ? 'Procesando...' :
                                         procesandoPago ? 'Procesando pago...' :
-                                            'Cancelar pago'
+                                            metodoPago === 'spei' ? 'Continuar con los datos de transferencia' : 'Cancelar pago'
                                 }
                             >
                                 {(cancelandoPago || procesandoPago) ? (
@@ -379,19 +394,37 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                                 }
                             }}
                         >
+                            {/* Mensaje informativo para SPEI */}
+                            {metodoPago === 'spei' && (
+                                <div className="mb-6 p-4 bg-green-900/20 border border-green-800 rounded-lg">
+                                    <div className="flex items-start space-x-3">
+                                        <Building2 className="h-5 w-5 text-green-400 mt-0.5" />
+                                        <div>
+                                            <h3 className="text-green-300 font-medium mb-1">Instrucciones para transferencia SPEI</h3>
+                                            <p className="text-green-200 text-sm">
+                                                A continuación se mostrarán los datos bancarios para realizar tu transferencia.
+                                                Al cerrar esta ventana, serás redirigido a una página con toda la información necesaria.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <FormularioPagoStripe
                                 cotizacionId={cotizacionId}
                                 paymentData={{
-                                    montoFinal: montoConComision,
+                                    montoFinal: metodoPago === 'spei' ? parseFloat(montoAPagar) : montoConComision,
                                     esMSI: false, // Por ahora sin MSI para pagos de cliente
                                     numMSI: 0,
-                                    tipoPago: 'card',
+                                    tipoPago: metodoPago === 'spei' ? 'spei' : 'card',
                                     cotizacion: {
                                         nombre: `Pago parcial - ${formatMoney(parseFloat(montoAPagar))}`,
                                         cliente: cliente?.nombre || 'Cliente'
                                     },
                                     metodo: {
-                                        nombre: 'Pago con tarjeta (incluye comisión)',
+                                        nombre: metodoPago === 'spei'
+                                            ? 'Transferencia SPEI (sin comisión)'
+                                            : 'Pago con tarjeta (incluye comisión)',
                                         tipo: 'single'
                                     }
                                 }}
