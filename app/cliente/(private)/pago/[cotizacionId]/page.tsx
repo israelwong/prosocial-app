@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Badge } from '@/app/components/ui/badge'
+import { useClienteAuth } from '../../../hooks'
 import {
     CreditCard,
     ArrowLeft,
@@ -42,19 +43,18 @@ export default function PagoPage() {
     const [loading, setLoading] = useState(true)
     const [processingPayment, setProcessingPayment] = useState(false)
     const [error, setError] = useState('')
+    const { cliente, isAuthenticated } = useClienteAuth()
     const router = useRouter()
     const params = useParams()
     const cotizacionId = params?.cotizacionId as string
 
     useEffect(() => {
+        if (!isAuthenticated || !cliente) {
+            return // El useClienteAuth ya maneja la redirección
+        }
+
         const fetchCotizacion = async () => {
             try {
-                const clienteData = sessionStorage.getItem('cliente-data')
-                if (!clienteData) {
-                    router.push('/cliente/auth/login')
-                    return
-                }
-
                 const response = await fetch(`/api/cliente/pago/${cotizacionId}`)
                 if (response.ok) {
                     const data = await response.json()
@@ -73,7 +73,7 @@ export default function PagoPage() {
         if (cotizacionId) {
             fetchCotizacion()
         }
-    }, [cotizacionId, router])
+    }, [cotizacionId, isAuthenticated, cliente])
 
     const formatMoney = (amount: number) => {
         return new Intl.NumberFormat('es-MX', {
@@ -159,12 +159,14 @@ export default function PagoPage() {
         }
     }
 
-    if (loading) {
+    if (!isAuthenticated || loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Cargando información de pago...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
+                    <p className="mt-4 text-zinc-400">
+                        {!isAuthenticated ? 'Verificando autenticación...' : 'Cargando información de pago...'}
+                    </p>
                 </div>
             </div>
         )
@@ -172,15 +174,18 @@ export default function PagoPage() {
 
     if (error && !cotizacion) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Card className="max-w-md mx-auto">
+            <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+                <Card className="max-w-md mx-auto bg-zinc-900 border-zinc-800">
                     <CardContent className="text-center py-12">
                         <AlertCircle className="mx-auto h-12 w-12 text-red-400 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        <h3 className="text-lg font-medium text-zinc-100 mb-2">
                             Error al cargar
                         </h3>
-                        <p className="text-gray-600 mb-4">{error}</p>
-                        <Button onClick={() => router.push('/cliente/dashboard')}>
+                        <p className="text-zinc-400 mb-4">{error}</p>
+                        <Button
+                            onClick={() => router.push('/cliente/dashboard')}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
                             Volver al Dashboard
                         </Button>
                     </CardContent>
@@ -202,21 +207,21 @@ export default function PagoPage() {
     ]
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="bg-white shadow-sm border-b">
+        <div className="min-h-screen bg-zinc-950">
+            <div className="bg-zinc-900 shadow-sm border-b border-zinc-800">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center py-6">
                         <Button
                             variant="ghost"
                             onClick={() => router.push(`/cliente/evento/${cotizacion.evento.id}`)}
-                            className="mr-4"
+                            className="mr-4 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800"
                         >
                             <ArrowLeft className="h-4 w-4 mr-2" />
                             Volver
                         </Button>
                         <div className="flex-1">
-                            <h1 className="text-2xl font-bold text-gray-900">Realizar Pago</h1>
-                            <p className="text-gray-600">{cotizacion.evento.nombre}</p>
+                            <h1 className="text-2xl font-bold text-zinc-100">Realizar Pago</h1>
+                            <p className="text-zinc-400">{cotizacion.evento.nombre}</p>
                         </div>
                     </div>
                 </div>
@@ -226,29 +231,29 @@ export default function PagoPage() {
                 <div className="grid gap-8 lg:grid-cols-3">
                     {/* Formulario de Pago */}
                     <div className="lg:col-span-2 space-y-6">
-                        <Card>
+                        <Card className="bg-zinc-900 border-zinc-800">
                             <CardHeader>
-                                <CardTitle className="flex items-center">
+                                <CardTitle className="flex items-center text-zinc-100">
                                     <CreditCard className="h-5 w-5 mr-2" />
                                     Opciones de Pago
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 {/* Pago Completo */}
-                                <div className="border rounded-lg p-4">
+                                <div className="border border-zinc-700 rounded-lg p-4">
                                     <div className="flex items-center justify-between mb-4">
                                         <div>
-                                            <h3 className="font-medium">Pago Completo</h3>
-                                            <p className="text-sm text-gray-600">
+                                            <h3 className="font-medium text-zinc-100">Pago Completo</h3>
+                                            <p className="text-sm text-zinc-400">
                                                 Liquidar el saldo pendiente total
                                             </p>
                                         </div>
-                                        <Badge className="bg-green-100 text-green-800">
+                                        <Badge className="bg-green-900/20 text-green-300 border-green-800">
                                             {formatMoney(saldoPendiente)}
                                         </Badge>
                                     </div>
                                     <Button
-                                        className="w-full"
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                                         size="lg"
                                         onClick={handlePagoCompleto}
                                         disabled={processingPayment}
@@ -259,17 +264,17 @@ export default function PagoPage() {
                                 </div>
 
                                 {/* Montos Predefinidos */}
-                                <div className="border rounded-lg p-4">
-                                    <h3 className="font-medium mb-4">Montos Sugeridos</h3>
+                                <div className="border border-zinc-700 rounded-lg p-4">
+                                    <h3 className="font-medium mb-4 text-zinc-100">Montos Sugeridos</h3>
                                     <div className="grid grid-cols-2 gap-3">
                                         {montosPredefinidos.slice(0, 3).map((monto, index) => (
                                             <Button
                                                 key={index}
                                                 variant="outline"
                                                 onClick={() => setMontoCustom(monto.toString())}
-                                                className="h-16 flex flex-col items-center justify-center"
+                                                className="h-16 flex flex-col items-center justify-center border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
                                             >
-                                                <span className="text-sm text-gray-600">
+                                                <span className="text-sm text-zinc-400">
                                                     {index === 0 ? '25%' : index === 1 ? '50%' : '75%'}
                                                 </span>
                                                 <span className="font-medium">{formatMoney(monto)}</span>
@@ -279,8 +284,8 @@ export default function PagoPage() {
                                 </div>
 
                                 {/* Monto Personalizado */}
-                                <div className="border rounded-lg p-4">
-                                    <h3 className="font-medium mb-4">Monto Personalizado</h3>
+                                <div className="border border-zinc-700 rounded-lg p-4">
+                                    <h3 className="font-medium mb-4 text-zinc-100">Monto Personalizado</h3>
                                     <div className="flex gap-3">
                                         <div className="flex-1">
                                             <Input
@@ -291,20 +296,20 @@ export default function PagoPage() {
                                                     setMontoCustom(e.target.value)
                                                     setError('')
                                                 }}
-                                                className="h-12"
+                                                className="h-12 bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-400"
                                                 min="1"
                                                 max={saldoPendiente}
                                                 step="0.01"
                                             />
                                             {error && (
-                                                <p className="text-red-600 text-sm mt-2">{error}</p>
+                                                <p className="text-red-400 text-sm mt-2">{error}</p>
                                             )}
                                         </div>
                                         <Button
                                             size="lg"
                                             onClick={handlePagoCustom}
                                             disabled={!montoCustom || processingPayment}
-                                            className="px-8"
+                                            className="px-8 bg-blue-600 hover:bg-blue-700 text-white"
                                         >
                                             <DollarSign className="h-4 w-4 mr-2" />
                                             Pagar
@@ -317,14 +322,14 @@ export default function PagoPage() {
 
                     {/* Resumen */}
                     <div className="space-y-6">
-                        <Card>
+                        <Card className="bg-zinc-900 border-zinc-800">
                             <CardHeader>
-                                <CardTitle>Resumen del Evento</CardTitle>
+                                <CardTitle className="text-zinc-100">Resumen del Evento</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div>
-                                    <h3 className="font-medium">{cotizacion.evento.nombre}</h3>
-                                    <div className="mt-3 space-y-2 text-sm text-gray-600">
+                                    <h3 className="font-medium text-zinc-100">{cotizacion.evento.nombre}</h3>
+                                    <div className="mt-3 space-y-2 text-sm text-zinc-400">
                                         <div className="flex items-center">
                                             <CalendarDays className="h-4 w-4 mr-2" />
                                             {formatFecha(cotizacion.evento.fecha_evento)}
@@ -342,27 +347,27 @@ export default function PagoPage() {
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="bg-zinc-900 border-zinc-800">
                             <CardHeader>
-                                <CardTitle>Estado de Pagos</CardTitle>
+                                <CardTitle className="text-zinc-100">Estado de Pagos</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Total del evento:</span>
-                                    <span className="font-medium">{formatMoney(cotizacion.total)}</span>
+                                    <span className="text-zinc-400">Total del evento:</span>
+                                    <span className="font-medium text-zinc-100">{formatMoney(cotizacion.total)}</span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Ya pagado:</span>
-                                    <span className="font-medium text-green-600">
+                                    <span className="text-zinc-400">Ya pagado:</span>
+                                    <span className="font-medium text-green-400">
                                         {formatMoney(cotizacion.pagado)}
                                     </span>
                                 </div>
 
-                                <div className="border-t pt-3">
+                                <div className="border-t border-zinc-700 pt-3">
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Saldo pendiente:</span>
-                                        <span className="font-semibold text-amber-600">
+                                        <span className="text-zinc-400">Saldo pendiente:</span>
+                                        <span className="font-semibold text-yellow-400">
                                             {formatMoney(saldoPendiente)}
                                         </span>
                                     </div>
@@ -370,11 +375,11 @@ export default function PagoPage() {
 
                                 {/* Barra de progreso */}
                                 <div className="mt-4">
-                                    <div className="flex justify-between text-sm text-gray-600 mb-2">
+                                    <div className="flex justify-between text-sm text-zinc-400 mb-2">
                                         <span>Progreso de pago</span>
                                         <span>{Math.round((cotizacion.pagado / cotizacion.total) * 100)}%</span>
                                     </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div className="w-full bg-zinc-700 rounded-full h-2">
                                         <div
                                             className="bg-green-600 h-2 rounded-full"
                                             style={{ width: `${(cotizacion.pagado / cotizacion.total) * 100}%` }}

@@ -5,8 +5,9 @@ import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
-import ServiciosPortalCliente from '../../components/ServiciosPortalCliente'
+import ServiciosPortalCliente from '../../../components/ServiciosPortalCliente'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
+import { useClienteAuth } from '../../../hooks'
 import {
     CalendarDays,
     MapPin,
@@ -51,19 +52,18 @@ interface EventoDetalle {
 export default function EventoDetalle() {
     const [evento, setEvento] = useState<EventoDetalle | null>(null)
     const [loading, setLoading] = useState(true)
+    const { cliente, isAuthenticated } = useClienteAuth()
     const router = useRouter()
     const params = useParams()
     const eventoId = params?.eventoId as string
 
     useEffect(() => {
+        if (!isAuthenticated || !cliente) {
+            return // El useClienteAuth ya maneja la redirección
+        }
+
         const fetchEvento = async () => {
             try {
-                const clienteData = sessionStorage.getItem('cliente-data')
-                if (!clienteData) {
-                    router.push('/cliente/auth/login')
-                    return
-                }
-
                 const response = await fetch(`/api/cliente/evento/${eventoId}`)
                 if (response.ok) {
                     const data = await response.json()
@@ -81,7 +81,7 @@ export default function EventoDetalle() {
         if (eventoId) {
             fetchEvento()
         }
-    }, [eventoId, router])
+    }, [eventoId, isAuthenticated, cliente])
 
     const formatFecha = (fecha: string) => {
         return new Date(fecha).toLocaleDateString('es-MX', {
@@ -129,12 +129,14 @@ export default function EventoDetalle() {
         return total - pagado
     }
 
-    if (loading) {
+    if (!isAuthenticated || loading) {
         return (
             <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
-                    <p className="mt-4 text-zinc-400">Cargando detalles del evento...</p>
+                    <p className="mt-4 text-zinc-400">
+                        {!isAuthenticated ? 'Verificando autenticación...' : 'Cargando detalles del evento...'}
+                    </p>
                 </div>
             </div>
         )

@@ -7,6 +7,7 @@ import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
 import { CalendarDays, MapPin, Users, Clock, CreditCard, Eye } from 'lucide-react'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
+import { useClienteAuth } from '../../hooks'
 
 interface Evento {
     id: string
@@ -26,27 +27,19 @@ interface Evento {
 export default function ClienteDashboard() {
     const [eventos, setEventos] = useState<Evento[]>([])
     const [loading, setLoading] = useState(true)
-    const [clienteNombre, setClienteNombre] = useState('')
+    const { cliente, isAuthenticated, logout } = useClienteAuth()
     const router = useRouter()
 
     useEffect(() => {
+        if (!isAuthenticated || !cliente) {
+            return // El useClienteAuth ya maneja la redirección
+        }
+
         const fetchEventos = async () => {
             try {
-                console.log('📊 Dashboard: Iniciando carga de eventos...') // Debug log
-                const clienteData = sessionStorage.getItem('cliente-data')
-                console.log('📦 Cliente data from sessionStorage:', clienteData) // Debug log
-
-                if (!clienteData) {
-                    console.log('❌ No hay datos de cliente, redirigiendo a login') // Debug log
-                    router.push('/cliente/auth/login')
-                    return
-                }
-
-                const cliente = JSON.parse(clienteData)
-                console.log('👤 Cliente parseado:', cliente) // Debug log
-                setClienteNombre(cliente.nombre)
-
+                setLoading(true)
                 console.log('🔄 Cargando eventos para cliente:', cliente.id) // Debug log
+
                 const response = await fetch(`/api/cliente/eventos/${cliente.id}`)
                 console.log('📡 Response status:', response.status) // Debug log
 
@@ -65,7 +58,7 @@ export default function ClienteDashboard() {
         }
 
         fetchEventos()
-    }, [router])
+    }, [isAuthenticated, cliente])
 
     const formatFecha = (fecha: string) => {
         return new Date(fecha).toLocaleDateString('es-MX', {
@@ -112,12 +105,14 @@ export default function ClienteDashboard() {
         return total - pagado
     }
 
-    if (loading) {
+    if (!isAuthenticated || loading) {
         return (
             <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
-                    <p className="mt-4 text-zinc-400">Cargando tus eventos...</p>
+                    <p className="mt-4 text-zinc-400">
+                        {!isAuthenticated ? 'Verificando autenticación...' : 'Cargando tus eventos...'}
+                    </p>
                 </div>
             </div>
         )
@@ -130,18 +125,8 @@ export default function ClienteDashboard() {
                     <div className="flex justify-between items-center py-6">
                         <div>
                             <h1 className="text-2xl font-bold text-zinc-100">Mis Eventos</h1>
-                            <p className="text-zinc-400">Bienvenido, {clienteNombre}</p>
+                            <p className="text-zinc-400">Bienvenido, {cliente?.nombre}</p>
                         </div>
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                sessionStorage.removeItem('cliente-data')
-                                router.push('/cliente/auth/login')
-                            }}
-                            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
-                        >
-                            Cerrar Sesión
-                        </Button>
                     </div>
                 </div>
             </div>
