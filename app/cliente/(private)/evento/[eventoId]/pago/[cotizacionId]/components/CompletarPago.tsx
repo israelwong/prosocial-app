@@ -87,8 +87,8 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
         }
 
         if (metodoPago === 'spei') {
-            // Para SPEI, redirigir directamente (sin comisión)
-            router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/spei?monto=${monto}`)
+            // Para SPEI, redirigir a página pendiente interna
+            router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/pending?monto=${monto}`)
         } else {
             // Para tarjeta, crear payment intent con el monto con comisión
             await crearPaymentIntent(montoConComision)
@@ -102,15 +102,17 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
         console.log('🚀 Creando Payment Intent para cliente...', {
             montoBase: parseFloat(montoAPagar),
             montoConComision: montoFinal,
-            metodoPago
+            metodoPago,
+            eventoId
         })
 
         try {
-            const response = await fetch('/api/checkout/create-payment-intent', {
+            const response = await fetch('/api/cliente/create-payment-intent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     cotizacionId: cotizacionId,
+                    eventoId: eventoId,
                     metodoPago: 'card',
                     montoConComision: montoFinal,
                 }),
@@ -122,7 +124,7 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                 throw new Error(data.error || 'Error al preparar el pago.')
             }
 
-            console.log('✅ Payment Intent creado:', {
+            console.log('✅ Payment Intent cliente creado:', {
                 paymentIntentId: data.paymentIntentId,
                 montoFinal: data.montoFinal
             })
@@ -132,21 +134,22 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
             setShowStripeModal(true)
 
         } catch (error) {
-            console.error('❌ Error al crear Payment Intent:', error)
-            alert('Error al preparar el pago. Por favor inténtalo de nuevo.')
+            console.error('❌ Error al crear Payment Intent cliente:', error)
+            // Redirigir a página de error interna
+            router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/error`)
         }
 
         setProcesandoPago(false)
     }
 
-    const handleStripeSuccess = () => {
+    const handleStripeSuccess = (paymentIntent?: any) => {
         setShowStripeModal(false)
         setClientSecret(null)
         setMontoAPagar('')
-        // Llamar callback para refrescar datos en el componente padre
-        if (onPaymentSuccess) {
-            onPaymentSuccess()
-        }
+
+        // Redirigir a página de éxito interna
+        const paymentIntentId = paymentIntent?.id || 'success'
+        router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/success?payment_intent=${paymentIntentId}`)
     }
 
     const handleStripeCancel = () => {
@@ -319,9 +322,9 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
 
             {/* Modal de Stripe con Elements */}
             {showStripeModal && clientSecret && (
-                <div className="fixed inset-0 bg-zinc-900 z-50">
-                    <div className="h-full flex flex-col">
-                        <div className="flex justify-between items-center p-6 border-b border-zinc-800">
+                <div className="fixed inset-0 bg-zinc-900 z-50 overflow-y-auto">
+                    <div className="min-h-screen p-6">
+                        <div className="flex justify-between items-center mb-6">
                             <h2 className="text-white text-2xl font-bold">Completar Pago</h2>
                             <button
                                 onClick={handleStripeCancel}
@@ -331,46 +334,44 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                             </button>
                         </div>
 
-                        <div className="flex-1 p-6 overflow-y-auto">
-                            <Elements
-                                stripe={stripePromise}
-                                options={{
-                                    clientSecret,
-                                    appearance: {
-                                        theme: 'night',
-                                        variables: {
-                                            colorPrimary: '#3b82f6',
-                                            colorBackground: '#27272a',
-                                            colorText: '#ffffff',
-                                            colorDanger: '#ef4444',
-                                            fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-                                            spacingUnit: '4px',
-                                            borderRadius: '8px',
-                                        }
+                        <Elements
+                            stripe={stripePromise}
+                            options={{
+                                clientSecret,
+                                appearance: {
+                                    theme: 'night',
+                                    variables: {
+                                        colorPrimary: '#3b82f6',
+                                        colorBackground: '#27272a',
+                                        colorText: '#ffffff',
+                                        colorDanger: '#ef4444',
+                                        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                                        spacingUnit: '4px',
+                                        borderRadius: '8px',
+                                    }
+                                }
+                            }}
+                        >
+                            <FormularioPagoStripe
+                                cotizacionId={cotizacionId}
+                                paymentData={{
+                                    montoFinal: montoConComision,
+                                    esMSI: false, // Por ahora sin MSI para pagos de cliente
+                                    numMSI: 0,
+                                    tipoPago: 'card',
+                                    cotizacion: {
+                                        nombre: `Pago parcial - ${formatMoney(parseFloat(montoAPagar))}`,
+                                        cliente: cliente?.nombre || 'Cliente'
+                                    },
+                                    metodo: {
+                                        nombre: 'Pago con tarjeta (incluye comisión)',
+                                        tipo: 'single'
                                     }
                                 }}
-                            >
-                                <FormularioPagoStripe
-                                    cotizacionId={cotizacionId}
-                                    paymentData={{
-                                        montoFinal: montoConComision,
-                                        esMSI: false, // Por ahora sin MSI para pagos de cliente
-                                        numMSI: 0,
-                                        tipoPago: 'card',
-                                        cotizacion: {
-                                            nombre: `Pago parcial - ${formatMoney(parseFloat(montoAPagar))}`,
-                                            cliente: cliente?.nombre || 'Cliente'
-                                        },
-                                        metodo: {
-                                            nombre: 'Pago con tarjeta (incluye comisión)',
-                                            tipo: 'single'
-                                        }
-                                    }}
-                                    onSuccess={handleStripeSuccess}
-                                    onCancel={handleStripeCancel}
-                                />
-                            </Elements>
-                        </div>
+                                onSuccess={handleStripeSuccess}
+                                onCancel={handleStripeCancel}
+                            />
+                        </Elements>
                     </div>
                 </div>
             )}

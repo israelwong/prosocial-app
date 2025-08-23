@@ -18,15 +18,17 @@ interface Props {
             tipo: string;
         };
     };
-    onSuccess?: () => void;
+    onSuccess?: (paymentIntent?: any) => void;
     onCancel?: () => void;
+    returnUrl?: string; // 🎯 Nueva prop para URL de retorno customizable
 }
 
 export default function FormularioPagoStripe({
     cotizacionId,
     paymentData,
     onSuccess,
-    onCancel
+    onCancel,
+    returnUrl
 }: Props) {
     const stripe = useStripe();
     const elements = useElements();
@@ -53,7 +55,7 @@ export default function FormularioPagoStripe({
         });
 
         const confirmParams: any = {
-            return_url: `${window.location.origin}/checkout/success?cotizacion=${cotizacionId}&payment_intent={PAYMENT_INTENT_ID}`,
+            return_url: returnUrl || `${window.location.origin}/checkout/success?cotizacion=${cotizacionId}&payment_intent={PAYMENT_INTENT_ID}`,
         };
 
         // 🎯 MSI: Configurar plan específico durante confirmación
@@ -78,23 +80,51 @@ export default function FormularioPagoStripe({
         }
 
         try {
-            const { error } = await stripe.confirmPayment({
-                elements,
-                confirmParams,
-            });
+            // 🎯 Si tenemos returnUrl, usar redirección de Stripe (cotizaciones)
+            if (returnUrl) {
+                const { error } = await stripe.confirmPayment({
+                    elements,
+                    confirmParams: {
+                        ...confirmParams,
+                        return_url: returnUrl,
+                    },
+                });
 
-            if (error) {
-                console.error('❌ Error en confirmPayment:', error);
-
-                if (error.type === "card_error" || error.type === "validation_error") {
-                    setMensaje(error.message || 'Ocurrió un error con tu método de pago.');
+                if (error) {
+                    console.error('❌ Error en confirmPayment (redirect):', error);
+                    if (error.type === "card_error" || error.type === "validation_error") {
+                        setMensaje(error.message || 'Ocurrió un error con tu método de pago.');
+                    } else {
+                        setMensaje("Un error inesperado ocurrió. Inténtalo de nuevo.");
+                    }
                 } else {
-                    setMensaje("Un error inesperado ocurrió. Inténtalo de nuevo.");
+                    console.log('✅ Pago procesado correctamente (redirect a Stripe)');
+                    // Stripe maneja la redirección automáticamente
                 }
             } else {
-                // El pago se procesó correctamente, el usuario será redirigido
-                console.log('✅ Pago procesado correctamente');
-                onSuccess?.();
+                // 🎯 Si NO hay returnUrl, usar callback (clientes)
+                const { error, paymentIntent } = await stripe.confirmPayment({
+                    elements,
+                    confirmParams: {
+                        ...confirmParams,
+                        return_url: undefined, // No redirigir
+                    },
+                    redirect: 'if_required', // Solo redirigir si es absolutamente necesario
+                });
+
+                if (error) {
+                    console.error('❌ Error en confirmPayment (callback):', error);
+                    if (error.type === "card_error" || error.type === "validation_error") {
+                        setMensaje(error.message || 'Ocurrió un error con tu método de pago.');
+                    } else {
+                        setMensaje("Un error inesperado ocurrió. Inténtalo de nuevo.");
+                    }
+                } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+                    console.log('✅ Pago procesado correctamente (callback)');
+                    onSuccess?.(paymentIntent);
+                } else {
+                    console.log('⏳ Pago en proceso...', paymentIntent?.status);
+                }
             }
         } catch (err: any) {
             console.error('❌ Error inesperado:', err);

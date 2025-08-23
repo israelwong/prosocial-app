@@ -637,6 +637,7 @@ export default function CotizacionDetalle({
                                         tipo: infoMetodoPago?.esMSI ? 'msi' : 'single'
                                     }
                                 }}
+                                returnUrl={`${window.location.origin}/checkout/success?cotizacion=${cotizacion.id}&payment_intent={PAYMENT_INTENT_ID}`}
                                 onSuccess={onPagoExitoso}
                                 onCancel={cerrarModalPago}
                             />

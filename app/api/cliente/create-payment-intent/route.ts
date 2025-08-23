@@ -1,184 +1,157 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { PrismaClient } from '@prisma/client'
 import Stripe from 'stripe'
-import prisma from '@/app/admin/_lib/prismaClient'
 
+const prisma = new PrismaClient()
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-02-24.acacia',
 })
 
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json()
-        const {
-            cotizacionId,
-            clienteId,
-            metodoPago,
-            montoConComision,
-            nombreCliente,
-            emailCliente,
-            telefonoCliente
-        } = body
+        const { cotizacionId, metodoPago, montoConComision, eventoId } = await request.json()
 
-        console.log('🚀 Cliente Payment Intent - Datos recibidos:', {
+        console.log('🚀 CREATE-PAYMENT-INTENT CLIENTE')
+        console.log('📊 Datos recibidos:', {
             cotizacionId,
-            clienteId,
             metodoPago,
             montoConComision,
-            nombreCliente
+            eventoId
         })
 
-        // Validaciones básicas
-        if (!cotizacionId || !clienteId || !metodoPago || !montoConComision) {
-            return NextResponse.json(
-                { error: 'Faltan parámetros requeridos' },
-                { status: 400 }
-            )
+        if (!cotizacionId || !eventoId) {
+            return NextResponse.json({
+                error: 'cotizacionId y eventoId son requeridos.'
+            }, { status: 400 })
         }
 
-        if (montoConComision <= 0) {
-            return NextResponse.json(
-                { error: 'El monto debe ser mayor a 0' },
-                { status: 400 }
-            )
-        }
-
-        // Verificar que la cotización pertenece al cliente
-        const cotizacion = await prisma.cotizacion.findFirst({
-            where: {
-                id: cotizacionId,
-                Evento: {
-                    clienteId: clienteId
-                }
-            },
+        // 1. 🔍 Obtener cotización y evento
+        const cotizacion = await prisma.cotizacion.findUnique({
+            where: { id: cotizacionId },
             include: {
                 Evento: {
                     include: {
-                        Cliente: true
-                    }
-                }
-            }
+                        Cliente: true,
+                    },
+                },
+            },
         })
 
         if (!cotizacion) {
-            return NextResponse.json(
-                { error: 'Cotización no encontrada o no pertenece al cliente' },
-                { status: 404 }
-            )
+            console.error('❌ Cotización no encontrada:', { cotizacionId })
+            return NextResponse.json({
+                error: 'Cotización no encontrada.'
+            }, { status: 404 })
         }
 
-        // Configurar parámetros del Payment Intent
-        const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
-            amount: Math.round(montoConComision * 100), // Convertir a centavos
+        // Verificar que la cotización pertenece al evento
+        if (cotizacion.eventoId !== eventoId) {
+            console.error('❌ Cotización no pertenece al evento:', { cotizacionId, eventoId })
+            return NextResponse.json({
+                error: 'Cotización no válida para este evento.'
+            }, { status: 403 })
+        }
+
+        // 2. 🧮 Cálculo de montos
+        const montoBase = Number(montoConComision)
+        const montoFinalEnCentavos = Math.round(montoBase * 100)
+
+        console.log('💰 Detalles del pago cliente:', {
+            montoBase,
+            centavos: montoFinalEnCentavos,
+            metodoPago,
+            cliente: cotizacion.Evento?.Cliente?.nombre,
+        })
+
+        // 3. 🎯 Configurar Payment Intent
+        let paymentIntentData: any = {
+            amount: montoFinalEnCentavos,
             currency: 'mxn',
-            automatic_payment_methods: {
-                enabled: false // Vamos a especificar manualmente
-            },
             metadata: {
-                cotizacionId,
-                clienteId,
-                metodoPago,
-                isClientPortal: 'true',
-                eventoId: cotizacion.Evento.id,
-                clienteNombre: nombreCliente || cotizacion.Evento.Cliente.nombre
+                cotizacionId: cotizacion.id,
+                cliente_nombre: cotizacion.Evento?.Cliente?.nombre || '',
+                evento_id: cotizacion.Evento?.id || '',
+                evento_fecha: cotizacion.Evento?.fecha_evento ?
+                    Math.floor(new Date(cotizacion.Evento.fecha_evento).getTime() / 1000).toString() : '',
+                metodo_pago: metodoPago || 'card',
+                source: 'cliente', // 🎯 Identificador para el webhook
             },
-            description: `Pago cliente - Cotización ${cotizacionId}`,
         }
 
-        // Configurar método de pago específico
+        // 🔄 Configuración por método de pago
         if (metodoPago === 'spei') {
-            // Para SPEI: crear customer y configurar customer_balance
+            const cliente = cotizacion.Evento?.Cliente
+            if (!cliente) {
+                return NextResponse.json({
+                    error: 'Cliente no encontrado para SPEI'
+                }, { status: 400 })
+            }
+
             const customer = await stripe.customers.create({
-                name: nombreCliente || cotizacion.Evento.Cliente.nombre,
-                email: emailCliente || cotizacion.Evento.Cliente.email,
-                phone: telefonoCliente || cotizacion.Evento.Cliente.telefono,
+                name: cliente.nombre,
+                email: cliente.email || 'cliente@example.com',
                 metadata: {
-                    clienteId,
-                    cotizacionId,
-                    metodoPago: 'spei'
-                }
+                    cotizacion_id: cotizacion.id,
+                    evento_id: cotizacion.Evento?.id || '',
+                },
             })
 
-            paymentIntentParams.customer = customer.id
-            paymentIntentParams.payment_method_types = ['customer_balance']
-            paymentIntentParams.payment_method_options = {
+            paymentIntentData.customer = customer.id
+            paymentIntentData.payment_method_types = ['customer_balance']
+            paymentIntentData.payment_method_data = {
+                type: 'customer_balance',
+            }
+            paymentIntentData.payment_method_options = {
                 customer_balance: {
                     funding_type: 'bank_transfer',
                     bank_transfer: {
-                        type: 'mx_bank_transfer'
-                    }
-                }
+                        type: 'mx_bank_transfer',
+                    },
+                },
             }
-
-            console.log('🏦 SPEI Payment Intent configurado para cliente')
-        } else if (metodoPago === 'card') {
-            // Para tarjetas: configuración simple sin MSI
-            paymentIntentParams.payment_method_types = ['card']
-            paymentIntentParams.payment_method_options = {
-                card: {
-                    // No MSI para clientes - solo pago único
-                    installments: {
-                        enabled: false
-                    }
-                }
-            }
-
-            console.log('💳 Card Payment Intent configurado para cliente (sin MSI)')
         } else {
-            return NextResponse.json(
-                { error: `Método de pago '${metodoPago}' no soportado para clientes` },
-                { status: 400 }
-            )
+            // Para tarjetas
+            paymentIntentData.payment_method_types = ['card']
+            paymentIntentData.payment_method_options = {
+                card: {
+                    installments: {
+                        enabled: true,
+                    },
+                },
+            }
         }
 
-        // Crear el Payment Intent
-        const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams)
+        // 4. 💎 Crear Payment Intent (SIN registrar pago en BD todavía)
+        const paymentIntent = await stripe.paymentIntents.create(paymentIntentData)
 
-        console.log('✅ Payment Intent creado exitosamente:', {
-            paymentIntentId: paymentIntent.id,
-            clientSecret: paymentIntent.client_secret ? '***GENERADO***' : 'ERROR',
-            amount: paymentIntent.amount,
-            metodoPago,
-            clienteId
-        })
+        console.log(
+            `✅ Payment Intent cliente creado: ${paymentIntent.id} por $${montoBase.toFixed(2)} MXN (${metodoPago || 'card'})`
+        )
 
-        // Opcional: Guardar el registro del pago en la base de datos
-        try {
-            await prisma.pago.create({
-                data: {
-                    clienteId,
-                    cotizacionId,
-                    monto: montoConComision,
-                    metodo_pago: metodoPago,
-                    concepto: `Pago cliente - Cotización ${cotizacionId}`,
-                    descripcion: `Payment Intent: ${paymentIntent.id}`,
-                    stripe_payment_id: paymentIntent.id,
-                    status: 'pending'
-                }
-            })
-            console.log('📝 Registro de pago creado en BD')
-        } catch (dbError) {
-            console.error('⚠️ Error al crear registro en BD (continuando):', dbError)
-            // No fallar el pago por error de BD
-        }
-
+        // 5. 📤 Respuesta (SIN crear registro en BD - lo hará el webhook)
         return NextResponse.json({
-            success: true,
-            paymentIntentId: paymentIntent.id,
             clientSecret: paymentIntent.client_secret,
-            metodoPago,
-            montoFinal: montoConComision,
-            customerId: metodoPago === 'spei' ? paymentIntentParams.customer : null
+            paymentIntentId: paymentIntent.id,
+            montoFinal: montoBase,
+            metodoPago: metodoPago || 'card',
+            cotizacion: {
+                id: cotizacion.id,
+                nombre: cotizacion.nombre,
+                cliente: cotizacion.Evento?.Cliente?.nombre || '',
+            },
+            // 🎯 URLs de respuesta para cliente
+            redirectUrls: {
+                success: `/cliente/evento/${eventoId}/pago/${cotizacionId}/success?payment_intent=${paymentIntent.id}`,
+                error: `/cliente/evento/${eventoId}/pago/${cotizacionId}/error`,
+                pending: `/cliente/evento/${eventoId}/pago/${cotizacionId}/pending?payment_intent=${paymentIntent.id}`
+            }
         })
 
     } catch (error) {
-        console.error('❌ Error en create-payment-intent-cliente:', error)
-
-        return NextResponse.json(
-            {
-                error: 'Error interno del servidor',
-                details: error instanceof Error ? error.message : 'Error desconocido'
-            },
-            { status: 500 }
-        )
+        console.error('❌ Error al crear Payment Intent cliente:', error)
+        return NextResponse.json({
+            error: 'Error interno del servidor',
+            details: error instanceof Error ? error.message : 'Error desconocido',
+        }, { status: 500 })
     }
 }
