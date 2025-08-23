@@ -8,6 +8,8 @@ import { Badge } from '@/app/components/ui/badge'
 import ServiciosPortalCliente from '../../../components/ServiciosPortalCliente'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 import { useClienteAuth } from '../../../hooks'
+import { obtenerEventoDetalle } from '../../../_lib/actions/evento.actions'
+import { EventoDetalle } from '../../../_lib/types'
 import {
     CalendarDays,
     MapPin,
@@ -20,34 +22,6 @@ import {
     Phone,
     Mail
 } from 'lucide-react'
-
-interface EventoDetalle {
-    id: string
-    nombre: string
-    fecha_evento: string
-    hora_evento: string
-    numero_invitados: number
-    lugar: string
-    cotizacion: {
-        id: string
-        status: string
-        total: number
-        pagado: number
-        descripcion?: string
-        servicios: Array<{
-            id: string
-            nombre: string
-            cantidad: number
-            precio_unitario?: number
-            subtotal?: number
-            seccion?: string
-            categoria?: string
-            seccionPosicion?: number
-            categoriaPosicion?: number
-            posicion?: number
-        }>
-    }
-}
 
 export default function EventoDetalle() {
     const [evento, setEvento] = useState<EventoDetalle | null>(null)
@@ -64,12 +38,11 @@ export default function EventoDetalle() {
 
         const fetchEvento = async () => {
             try {
-                const response = await fetch(`/api/cliente/evento/${eventoId}`)
-                if (response.ok) {
-                    const data = await response.json()
-                    setEvento(data.evento)
+                const response = await obtenerEventoDetalle(eventoId)
+                if (response.success && response.data) {
+                    setEvento(response.data)
                 } else {
-                    console.error('Error al cargar evento')
+                    console.error('Error al cargar evento:', response.message)
                 }
             } catch (error) {
                 console.error('Error al cargar evento:', error)

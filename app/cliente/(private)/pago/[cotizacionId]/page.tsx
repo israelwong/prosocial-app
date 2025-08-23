@@ -7,6 +7,8 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { Badge } from '@/app/components/ui/badge'
 import { useClienteAuth } from '../../../hooks'
+import { obtenerCotizacionPago, crearSesionPago } from '../../../_lib/actions/pago.actions'
+import { CotizacionPago } from '../../../_lib/types'
 import {
     CreditCard,
     ArrowLeft,
@@ -17,25 +19,6 @@ import {
     AlertCircle,
     CheckCircle
 } from 'lucide-react'
-
-interface CotizacionPago {
-    id: string
-    total: number
-    pagado: number
-    evento: {
-        id: string
-        nombre: string
-        fecha_evento: string
-        lugar: string
-        numero_invitados: number
-    }
-    cliente: {
-        id: string
-        nombre: string
-        email: string
-        telefono: string
-    }
-}
 
 export default function PagoPage() {
     const [cotizacion, setCotizacion] = useState<CotizacionPago | null>(null)
@@ -55,12 +38,11 @@ export default function PagoPage() {
 
         const fetchCotizacion = async () => {
             try {
-                const response = await fetch(`/api/cliente/pago/${cotizacionId}`)
-                if (response.ok) {
-                    const data = await response.json()
-                    setCotizacion(data.cotizacion)
+                const response = await obtenerCotizacionPago(cotizacionId)
+                if (response.success && response.cotizacion) {
+                    setCotizacion(response.cotizacion)
                 } else {
-                    setError('No se pudo cargar la información de pago')
+                    setError(response.message || 'No se pudo cargar la información de pago')
                 }
             } catch (error) {
                 console.error('Error al cargar cotización:', error)
@@ -129,27 +111,19 @@ export default function PagoPage() {
         setError('')
 
         try {
-            const response = await fetch('/api/cliente/create-payment-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    cotizacionId: cotizacion.id,
-                    monto,
-                    clienteEmail: cotizacion.cliente.email,
-                    clienteNombre: cotizacion.cliente.nombre,
-                    eventoNombre: cotizacion.evento.nombre
-                })
+            const response = await crearSesionPago({
+                cotizacionId: cotizacion.id,
+                monto,
+                clienteEmail: cotizacion.cliente.email,
+                clienteNombre: cotizacion.cliente.nombre,
+                eventoNombre: cotizacion.evento.nombre
             })
 
-            const data = await response.json()
-
-            if (data.success && data.sessionUrl) {
+            if (response.success && response.sessionUrl) {
                 // Redirigir a Stripe Checkout
-                window.location.href = data.sessionUrl
+                window.location.href = response.sessionUrl
             } else {
-                setError(data.message || 'Error al procesar el pago')
+                setError(response.message || 'Error al procesar el pago')
             }
         } catch (error) {
             console.error('Error al procesar pago:', error)

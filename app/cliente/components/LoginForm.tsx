@@ -1,6 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { loginCliente } from '../_lib/actions/auth.actions'
 
 export default function LoginForm() {
     const [formData, setFormData] = useState({
@@ -50,38 +51,31 @@ export default function LoginForm() {
                 }
             }
 
-            // Llamada a API para validar credenciales
-            const response = await fetch('/api/cliente/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    email: formData.email || null,
-                    telefono: formData.telefono || null
-                })
+            // Llamada a action para validar credenciales
+            const response = await loginCliente({
+                email: formData.email || '',
+                password: formData.telefono || '' // Usando telefono como password temporal
             })
 
-            if (!response.ok) {
-                const errorData = await response.json()
-                setError(errorData.message || 'Error al iniciar sesión')
+            if (!response.success) {
+                setError(response.message || 'Error al iniciar sesión')
                 return
             }
 
-            const data = await response.json()
+            const data = response.data
             console.log('🔐 Login response:', data) // Debug log
 
-            // Si el cliente no tiene contraseña, redirigir a onboarding
-            if (!data.hasPassword) {
+            // Para compatibilidad, verificar si existe hasPassword en la respuesta
+            if (data && 'hasPassword' in (data as any) && !(data as any).hasPassword) {
                 console.log('👤 Cliente sin contraseña, redirigiendo a setup') // Debug log
-                sessionStorage.setItem('cliente-setup', JSON.stringify(data.cliente))
+                sessionStorage.setItem('cliente-setup', JSON.stringify(data))
                 router.push('/cliente/auth/setup')
                 return
             }
 
             // Si ya tiene contraseña, ir al dashboard
             console.log('✅ Cliente con contraseña, redirigiendo a dashboard') // Debug log
-            sessionStorage.setItem('cliente-data', JSON.stringify(data.cliente))
+            sessionStorage.setItem('cliente-data', JSON.stringify(data))
             router.push('/cliente/dashboard')
 
         } catch (error) {

@@ -2,44 +2,9 @@
  * Acciones para manejo de eventos del cliente
  */
 
-interface Evento {
-    id: string
-    nombre: string
-    fecha_evento: string
-    hora_evento: string
-    numero_invitados: number
-    lugar: string
-    cotizacion: {
-        id: string
-        status: string
-        total: number
-        pagado: number
-    }
-}
+import { ApiResponse, Evento, EventoDetalle } from '../types'
 
-interface EventoDetalle extends Evento {
-    cotizacion: {
-        id: string
-        status: string
-        total: number
-        pagado: number
-        descripcion?: string
-        servicios: Array<{
-            id: string
-            nombre: string
-            cantidad: number
-            precio_unitario?: number
-            subtotal?: number
-            seccion?: string
-            categoria?: string
-            seccionPosicion?: number
-            categoriaPosicion?: number
-            posicion?: number
-        }>
-    }
-}
-
-export async function obtenerEventosCliente(clienteId: string): Promise<{ success: boolean; eventos?: Evento[]; message?: string }> {
+export async function obtenerEventosCliente(clienteId: string): Promise<ApiResponse<{ eventos: Evento[] }>> {
     try {
         const response = await fetch(`/api/cliente/eventos/${clienteId}`)
         const result = await response.json()
@@ -47,7 +12,9 @@ export async function obtenerEventosCliente(clienteId: string): Promise<{ succes
         if (response.ok && result.success) {
             return {
                 success: true,
-                eventos: result.eventos
+                data: {
+                    eventos: result.eventos
+                }
             }
         } else {
             return {
@@ -56,15 +23,15 @@ export async function obtenerEventosCliente(clienteId: string): Promise<{ succes
             }
         }
     } catch (error) {
-        console.error('Error en obtenerEventosCliente:', error)
+        console.error('Error al obtener eventos del cliente:', error)
         return {
             success: false,
-            message: 'Error de conexión'
+            message: error instanceof Error ? error.message : 'Error desconocido'
         }
     }
 }
 
-export async function obtenerEventoDetalle(eventoId: string): Promise<{ success: boolean; evento?: EventoDetalle; message?: string }> {
+export async function obtenerEventoDetalle(eventoId: string): Promise<ApiResponse<EventoDetalle>> {
     try {
         const response = await fetch(`/api/cliente/evento/${eventoId}`)
         const result = await response.json()
@@ -72,7 +39,7 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<{ success:
         if (response.ok && result.success) {
             return {
                 success: true,
-                evento: result.evento
+                data: result.evento
             }
         } else {
             return {
@@ -84,7 +51,7 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<{ success:
         console.error('Error en obtenerEventoDetalle:', error)
         return {
             success: false,
-            message: 'Error de conexión'
+            message: error instanceof Error ? error.message : 'Error desconocido'
         }
     }
 }

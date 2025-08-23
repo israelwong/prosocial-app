@@ -8,21 +8,8 @@ import { Badge } from '@/app/components/ui/badge'
 import { CalendarDays, MapPin, Users, Clock, CreditCard, Eye } from 'lucide-react'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 import { useClienteAuth } from '../../hooks'
-
-interface Evento {
-    id: string
-    nombre: string
-    fecha_evento: string
-    hora_evento: string
-    numero_invitados: number
-    lugar: string
-    cotizacion: {
-        id: string
-        status: string
-        total: number
-        pagado: number
-    }
-}
+import { obtenerEventosCliente } from '../../_lib/actions/evento.actions'
+import { Evento } from '../../_lib/types'
 
 export default function ClienteDashboard() {
     const [eventos, setEventos] = useState<Evento[]>([])
@@ -40,15 +27,14 @@ export default function ClienteDashboard() {
                 setLoading(true)
                 console.log('🔄 Cargando eventos para cliente:', cliente.id) // Debug log
 
-                const response = await fetch(`/api/cliente/eventos/${cliente.id}`)
-                console.log('📡 Response status:', response.status) // Debug log
+                const response = await obtenerEventosCliente(cliente.id)
+                console.log('📡 Response desde action:', response) // Debug log
 
-                if (response.ok) {
-                    const data = await response.json()
-                    console.log('📅 Eventos recibidos:', data) // Debug log
-                    setEventos(data.eventos)
+                if (response.success && response.data) {
+                    console.log('📅 Eventos recibidos:', response.data) // Debug log
+                    setEventos(response.data.eventos)
                 } else {
-                    console.error('❌ Error al cargar eventos:', response.status)
+                    console.error('❌ Error al cargar eventos:', response.message)
                 }
             } catch (error) {
                 console.error('❌ Error al cargar eventos:', error)

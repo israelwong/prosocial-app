@@ -13,9 +13,4 @@ export * from './pago.actions'
 
 // Exportar acciones de cotizaciones
 export * from './cotizacion.actions'
-
-// Exportar acciones de pagos
-export * from './pago.actions'
-
-// Exportar acciones de leads
 export * from './lead.actions'
