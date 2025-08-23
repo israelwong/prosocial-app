@@ -121,14 +121,30 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // 4. 💎 Crear Payment Intent (SIN registrar pago en BD todavía)
+        // 4. 💎 Crear Payment Intent
         const paymentIntent = await stripe.paymentIntents.create(paymentIntentData)
 
         console.log(
             `✅ Payment Intent cliente creado: ${paymentIntent.id} por $${montoBase.toFixed(2)} MXN (${metodoPago || 'card'})`
         )
 
-        // 5. 📤 Respuesta (SIN crear registro en BD - lo hará el webhook)
+        // 5. � Crear registro de pago en BD para que el webhook lo encuentre
+        await prisma.pago.create({
+            data: {
+                clienteId: cotizacion.Evento?.Cliente?.id || '',
+                cotizacionId: cotizacion.id,
+                monto: montoBase,
+                metodo_pago: metodoPago || 'card',
+                concepto: `Pago cliente - ${cotizacion.nombre}`,
+                descripcion: `Payment Intent: ${paymentIntent.id}`,
+                stripe_payment_id: paymentIntent.id,
+                status: 'pending', // El webhook lo cambiará a 'paid'
+            }
+        })
+
+        console.log(`📝 Registro de pago creado en BD para Payment Intent: ${paymentIntent.id}`)
+
+        // 6. 📤 Respuesta
         return NextResponse.json({
             clientSecret: paymentIntent.client_secret,
             paymentIntentId: paymentIntent.id,

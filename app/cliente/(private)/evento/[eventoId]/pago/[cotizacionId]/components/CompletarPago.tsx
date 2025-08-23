@@ -23,7 +23,9 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
     const [metodoPago, setMetodoPago] = useState('tarjeta')
     const [showStripeModal, setShowStripeModal] = useState(false)
     const [clientSecret, setClientSecret] = useState<string | null>(null)
+    const [currentPaymentIntentId, setCurrentPaymentIntentId] = useState<string | null>(null) // 🆕 Para limpieza
     const [procesandoPago, setProcesandoPago] = useState(false)
+    const [cancelandoPago, setCancelandoPago] = useState(false) // 🆕 Estado de cancelación
     const [montoConComision, setMontoConComision] = useState(0)
     const router = useRouter()
 
@@ -129,6 +131,9 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                 montoFinal: data.montoFinal
             })
 
+            // Guardar el Payment Intent ID para posible cancelación
+            setCurrentPaymentIntentId(data.paymentIntentId)
+
             // Mostrar modal con Stripe Elements
             setClientSecret(data.clientSecret)
             setShowStripeModal(true)
@@ -145,6 +150,7 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
     const handleStripeSuccess = (paymentIntent?: any) => {
         setShowStripeModal(false)
         setClientSecret(null)
+        setCurrentPaymentIntentId(null) // 🧹 Limpiar estado tras éxito
         setMontoAPagar('')
 
         // Redirigir a página de éxito interna
@@ -152,10 +158,40 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
         router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/success?payment_intent=${paymentIntentId}`)
     }
 
-    const handleStripeCancel = () => {
+    const handleStripeCancel = async () => {
+        setCancelandoPago(true) // 🔄 Mostrar estado de cancelación
+
+        // 🗑️ Limpiar Payment Intent cancelado para evitar pagos fantasma
+        if (currentPaymentIntentId) {
+            try {
+                console.log('🗑️ Cancelando y limpiando Payment Intent:', currentPaymentIntentId)
+
+                const response = await fetch('/api/cliente/cancel-payment-intent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        paymentIntentId: currentPaymentIntentId
+                    }),
+                })
+
+                const data = await response.json()
+
+                if (response.ok) {
+                    console.log('✅ Payment Intent limpiado:', data)
+                } else {
+                    console.error('⚠️ Error al limpiar Payment Intent:', data.error)
+                }
+            } catch (error) {
+                console.error('❌ Error en limpieza de Payment Intent:', error)
+            }
+        }
+
+        // Limpiar estado del componente
         setShowStripeModal(false)
         setClientSecret(null)
+        setCurrentPaymentIntentId(null)
         setProcesandoPago(false)
+        setCancelandoPago(false) // 🔄 Limpiar estado de cancelación
     }
 
     return (
@@ -215,38 +251,26 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                                     }`}
                                 onClick={() => handleMetodoPagoChange('tarjeta')}
                             >
-                                <div className="flex items-start space-x-3">
-                                    <div className="flex items-center mt-1">
-                                        <input
-                                            type="radio"
-                                            name="metodoPago"
-                                            value="tarjeta"
-                                            checked={metodoPago === 'tarjeta'}
-                                            onChange={() => handleMetodoPagoChange('tarjeta')}
-                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-600 bg-zinc-700"
-                                        />
+                                <div className="w-full">
+                                    <div className="flex items-center mb-2">
+                                        <CreditCard className="h-4 w-4 mr-2 text-blue-400" />
+                                        <span className="font-medium text-zinc-200">Tarjeta de Crédito/Débito</span>
                                     </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center mb-2">
-                                            <CreditCard className="h-4 w-4 mr-2 text-blue-400" />
-                                            <span className="font-medium text-zinc-200">Tarjeta de Crédito/Débito</span>
+                                    <p className="text-sm text-zinc-400 mb-2">
+                                        Procesamiento seguro con Stripe. Acepta Visa, Mastercard, American Express.
+                                    </p>
+                                    <div className="bg-zinc-900/50 rounded p-3 space-y-1 w-full">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-zinc-400">Subtotal:</span>
+                                            <span className="text-zinc-300">{formatMoney(parseFloat(montoAPagar))}</span>
                                         </div>
-                                        <p className="text-sm text-zinc-400 mb-2">
-                                            Procesamiento seguro con Stripe. Acepta Visa, Mastercard, American Express.
-                                        </p>
-                                        <div className="bg-zinc-900/50 rounded p-3 space-y-1">
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-zinc-400">Subtotal:</span>
-                                                <span className="text-zinc-300">{formatMoney(parseFloat(montoAPagar))}</span>
-                                            </div>
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-zinc-400">Comisión Stripe (3.6% + IVA):</span>
-                                                <span className="text-zinc-300">{formatMoney(montoConComision - parseFloat(montoAPagar))}</span>
-                                            </div>
-                                            <div className="flex justify-between font-medium border-t border-zinc-600 pt-2">
-                                                <span className="text-zinc-200">Total a pagar:</span>
-                                                <span className="text-blue-400 font-bold">{formatMoney(montoConComision)}</span>
-                                            </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-zinc-400">Comisión Stripe (3.6% + IVA):</span>
+                                            <span className="text-zinc-300">{formatMoney(montoConComision - parseFloat(montoAPagar))}</span>
+                                        </div>
+                                        <div className="flex justify-between font-medium border-t border-zinc-600 pt-2">
+                                            <span className="text-zinc-200">Total a pagar:</span>
+                                            <span className="text-blue-400 font-bold">{formatMoney(montoConComision)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -260,32 +284,20 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                                     }`}
                                 onClick={() => handleMetodoPagoChange('spei')}
                             >
-                                <div className="flex items-start space-x-3">
-                                    <div className="flex items-center mt-1">
-                                        <input
-                                            type="radio"
-                                            name="metodoPago"
-                                            value="spei"
-                                            checked={metodoPago === 'spei'}
-                                            onChange={() => handleMetodoPagoChange('spei')}
-                                            className="h-4 w-4 text-green-600 focus:ring-green-500 border-zinc-600 bg-zinc-700"
-                                        />
+                                <div className="w-full">
+                                    <div className="flex items-center mb-2">
+                                        <Building2 className="h-4 w-4 mr-2 text-green-400" />
+                                        <span className="font-medium text-zinc-200">Transferencia SPEI</span>
                                     </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center mb-2">
-                                            <Building2 className="h-4 w-4 mr-2 text-green-400" />
-                                            <span className="font-medium text-zinc-200">Transferencia SPEI</span>
+                                    <p className="text-sm text-zinc-400 mb-2">
+                                        Te proporcionaremos los datos bancarios para realizar la transferencia.
+                                    </p>
+                                    <div className="bg-zinc-900/50 rounded p-3 w-full">
+                                        <div className="flex justify-between font-medium">
+                                            <span className="text-zinc-200">Total a transferir:</span>
+                                            <span className="text-green-400 font-bold">{formatMoney(parseFloat(montoAPagar))}</span>
                                         </div>
-                                        <p className="text-sm text-zinc-400 mb-2">
-                                            Te proporcionaremos los datos bancarios para realizar la transferencia.
-                                        </p>
-                                        <div className="bg-zinc-900/50 rounded p-3">
-                                            <div className="flex justify-between font-medium">
-                                                <span className="text-zinc-200">Total a transferir:</span>
-                                                <span className="text-green-400 font-bold">{formatMoney(parseFloat(montoAPagar))}</span>
-                                            </div>
-                                            <p className="text-xs text-green-300 mt-1">✨ Sin comisiones adicionales (las absorbemos nosotros)</p>
-                                        </div>
+                                        <p className="text-xs text-green-300 mt-1">✨ Sin comisiones adicionales (las absorbemos nosotros)</p>
                                     </div>
                                 </div>
                             </div>
@@ -328,9 +340,24 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                             <h2 className="text-white text-2xl font-bold">Completar Pago</h2>
                             <button
                                 onClick={handleStripeCancel}
-                                className="text-zinc-400 hover:text-white text-3xl"
+                                disabled={cancelandoPago || procesandoPago} // 🎯 Deshabilitar durante cualquier proceso
+                                className={`text-3xl transition-all duration-200 ${(cancelandoPago || procesandoPago)
+                                    ? 'text-zinc-600 cursor-not-allowed'
+                                    : 'text-zinc-400 hover:text-white'
+                                    }`}
+                                title={
+                                    cancelandoPago ? 'Cancelando pago...' :
+                                        procesandoPago ? 'Procesando pago...' :
+                                            'Cancelar pago'
+                                }
                             >
-                                ×
+                                {(cancelandoPago || procesandoPago) ? (
+                                    <div className="flex items-center space-x-2">
+                                        <div className="w-6 h-6 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                ) : (
+                                    '×'
+                                )}
                             </button>
                         </div>
 
@@ -370,6 +397,8 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                                 }}
                                 onSuccess={handleStripeSuccess}
                                 onCancel={handleStripeCancel}
+                                isCanceling={cancelandoPago}
+                                isProcessingPayment={procesandoPago}
                             />
                         </Elements>
                     </div>
