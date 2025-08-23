@@ -54,7 +54,7 @@ export default function LoginForm() {
             // Llamada a action para validar credenciales
             const response = await loginCliente({
                 email: formData.email || '',
-                password: formData.telefono || '' // Usando telefono como password temporal
+                telefono: formData.telefono || '' // Corregido: usar telefono en lugar de password
             })
 
             if (!response.success) {

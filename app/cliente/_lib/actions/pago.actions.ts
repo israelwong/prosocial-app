@@ -1,6 +1,11 @@
 /**
- * Acciones para manejo de pagos del cliente
+ * Server Actions para pagos del cliente
  */
+
+'use server'
+
+import { cookies } from 'next/headers'
+import prisma from '@/app/admin/_lib/prismaClient'
 
 interface CotizacionPago {
     id: string
@@ -9,7 +14,7 @@ interface CotizacionPago {
     evento: {
         id: string
         nombre: string
-        fecha_evento: string
+        fecha_evento: Date
         lugar: string
         numero_invitados: number
     }
@@ -29,27 +34,91 @@ interface SesionPagoData {
     eventoNombre: string
 }
 
+/**
+ * Obtiene información de cotización para pagos (Server Action)
+ */
 export async function obtenerCotizacionPago(cotizacionId: string): Promise<{ success: boolean; cotizacion?: CotizacionPago; message?: string }> {
     try {
-        const response = await fetch(`/api/cliente/pago/${cotizacionId}`)
-        const result = await response.json()
+        const cookieStore = await cookies()
+        const clienteId = cookieStore.get('clienteId')?.value
 
-        if (response.ok && result.success) {
-            return {
-                success: true,
-                cotizacion: result.cotizacion
-            }
-        } else {
+        if (!clienteId) {
             return {
                 success: false,
-                message: result.message || 'Error al obtener información de pago'
+                message: 'Cliente no autenticado'
             }
         }
+
+        // Buscar la cotización con validación de cliente
+        const cotizacion = await prisma.cotizacion.findFirst({
+            where: {
+                id: cotizacionId,
+                status: 'aprobada', // Solo cotizaciones aprobadas pueden tener pagos
+                Evento: {
+                    clienteId: clienteId // Validar que pertenece al cliente autenticado
+                }
+            },
+            include: {
+                Evento: {
+                    include: {
+                        Cliente: {
+                            select: {
+                                id: true,
+                                nombre: true,
+                                email: true,
+                                telefono: true
+                            }
+                        }
+                    }
+                },
+                Pago: {
+                    where: {
+                        status: 'succeeded'
+                    },
+                    select: {
+                        monto: true
+                    }
+                }
+            }
+        })
+
+        if (!cotizacion) {
+            return {
+                success: false,
+                message: 'Cotización no encontrada o no está aprobada'
+            }
+        }
+
+        const totalPagado = cotizacion.Pago?.reduce((sum: number, pago: any) => sum + pago.monto, 0) || 0
+
+        const cotizacionPago: CotizacionPago = {
+            id: cotizacion.id,
+            total: cotizacion.precio,
+            pagado: totalPagado,
+            evento: {
+                id: cotizacion.Evento.id,
+                nombre: cotizacion.Evento.nombre || 'Evento',
+                fecha_evento: cotizacion.Evento.fecha_evento,
+                lugar: cotizacion.Evento.sede || cotizacion.Evento.direccion || '',
+                numero_invitados: 0 // Temporal hasta que tengamos este campo
+            },
+            cliente: {
+                id: cotizacion.Evento.Cliente.id,
+                nombre: cotizacion.Evento.Cliente.nombre || '',
+                email: cotizacion.Evento.Cliente.email || '',
+                telefono: cotizacion.Evento.Cliente.telefono || ''
+            }
+        }
+
+        return {
+            success: true,
+            cotizacion: cotizacionPago
+        }
     } catch (error) {
-        console.error('Error en obtenerCotizacionPago:', error)
+        console.error('Error al obtener cotización para pago:', error)
         return {
             success: false,
-            message: 'Error de conexión'
+            message: 'Error interno del servidor'
         }
     }
 }

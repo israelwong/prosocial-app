@@ -196,7 +196,9 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
 
     // Cálculos financieros
     const totalCotizacion = cotizacion?.precio || 0
-    const totalPagado = pagos?.reduce((suma, pago) => suma + (pago.monto || pago.cantidad || 0), 0) || 0
+    const totalPagado = pagos
+        ?.filter(pago => pago.status === PAGO_STATUS.PAID)
+        .reduce((suma, pago) => suma + (pago.monto || pago.cantidad || 0), 0) || 0
     const saldoPendiente = Math.max(0, totalCotizacion - totalPagado)
     const porcentajePagado = totalCotizacion > 0 ? (totalPagado / totalCotizacion) * 100 : 0
 
