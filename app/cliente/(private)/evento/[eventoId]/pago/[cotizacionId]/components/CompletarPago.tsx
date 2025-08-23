@@ -150,32 +150,25 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
         setCurrentPaymentIntentId(null) // 🧹 Limpiar estado tras éxito
         setMontoAPagar('')
 
-        // Redirigir a página de éxito interna
-        const paymentIntentId = paymentIntent?.id || 'success'
-        router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/success?payment_intent=${paymentIntentId}`)
+        const paymentIntentId = paymentIntent?.id || currentPaymentIntentId || 'success'
+
+        // 🏦 Para SPEI, redirigir a página pendiente porque el pago aún no se completó
+        if (metodoPago === 'spei') {
+            console.log('🏦 SPEI: Datos de transferencia configurados, redirigiendo a pendiente:', paymentIntentId)
+            router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/pending?payment_intent=${paymentIntentId}&monto=${parseFloat(montoAPagar)}`)
+        } else {
+            // 💳 Para tarjetas, redirigir a página de éxito porque el pago se completó
+            console.log('💳 Tarjeta: Pago completado, redirigiendo a éxito:', paymentIntentId)
+            router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/success?payment_intent=${paymentIntentId}`)
+        }
     }
 
     const handleStripeCancel = async () => {
         setCancelandoPago(true) // 🔄 Mostrar estado de cancelación
 
-        // 🎯 Para SPEI, no cancelamos el Payment Intent, solo redirigimos a pendiente
-        if (metodoPago === 'spei' && currentPaymentIntentId) {
-            console.log('🏦 SPEI: Redirigiendo a página pendiente sin cancelar Payment Intent:', currentPaymentIntentId)
-
-            // Limpiar estado local sin cancelar en Stripe
-            setShowStripeModal(false)
-            setClientSecret(null)
-            setCurrentPaymentIntentId(null)
-            setProcesandoPago(false)
-            setCancelandoPago(false)
-
-            // Redirigir a página pendiente para SPEI
-            router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/pending?payment_intent=${currentPaymentIntentId}&monto=${parseFloat(montoAPagar)}`)
-            return
-        }
-
-        // 🗑️ Para tarjetas, sí limpiamos Payment Intent cancelado para evitar pagos fantasma
-        if (currentPaymentIntentId && metodoPago !== 'spei') {
+        // 🗑️ Limpiar Payment Intent cancelado para evitar pagos fantasma
+        // Para SPEI y tarjetas, si el usuario cancela explícitamente, limpiamos el Payment Intent
+        if (currentPaymentIntentId) {
             try {
                 console.log('🗑️ Cancelando y limpiando Payment Intent:', currentPaymentIntentId)
 
@@ -400,11 +393,13 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                                     <div className="flex items-start space-x-3">
                                         <Building2 className="h-5 w-5 text-green-400 mt-0.5" />
                                         <div>
-                                            <h3 className="text-green-300 font-medium mb-1">Instrucciones para transferencia SPEI</h3>
-                                            <p className="text-green-200 text-sm">
-                                                A continuación se mostrarán los datos bancarios para realizar tu transferencia.
-                                                Al cerrar esta ventana, serás redirigido a una página con toda la información necesaria.
-                                            </p>
+                                            <h3 className="text-green-300 font-medium mb-1">¿Cómo funciona la transferencia SPEI?</h3>
+                                            <div className="text-green-200 text-sm space-y-1">
+                                                <p>1. Se mostrarán los datos bancarios para tu transferencia</p>
+                                                <p>2. Al confirmar, irás a una página con instrucciones detalladas</p>
+                                                <p>3. Realiza la transferencia desde tu banco</p>
+                                                <p>4. Tu pago se reflejará automáticamente</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
