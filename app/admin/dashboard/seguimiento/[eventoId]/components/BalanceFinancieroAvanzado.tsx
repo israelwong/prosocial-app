@@ -64,10 +64,9 @@ interface BalanceFinancieroAvanzadoProps {
 
 const STATUS_COLORS = {
     [PAGO_STATUS.PAID]: 'bg-green-900/20 text-green-400 border border-green-800',
-    [PAGO_STATUS.COMPLETADO]: 'bg-green-900/20 text-green-400 border border-green-800',
     [PAGO_STATUS.PENDING]: 'bg-amber-900/20 text-amber-400 border border-amber-800',
     [PAGO_STATUS.FAILED]: 'bg-red-900/20 text-red-400 border border-red-800',
-    [PAGO_STATUS.CANCELLED]: 'bg-red-900/20 text-red-400 border border-red-800',
+    [PAGO_STATUS.CANCELLED]: 'bg-zinc-800 text-zinc-400 border border-zinc-700',
     'default': 'bg-zinc-800 text-zinc-500 border border-zinc-700'
 } as const
 
@@ -198,14 +197,14 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
     // Cálculos financieros
     const totalCotizacion = cotizacion?.precio || 0
     const totalPagado = pagos
-        ?.filter(pago => pago.status === PAGO_STATUS.PAID || pago.status === PAGO_STATUS.COMPLETADO)
+        ?.filter(pago => pago.status === PAGO_STATUS.PAID)
         .reduce((suma, pago) => suma + (pago.monto || pago.cantidad || 0), 0) || 0
     const saldoPendiente = Math.max(0, totalCotizacion - totalPagado)
     const porcentajePagado = totalCotizacion > 0 ? (totalPagado / totalCotizacion) * 100 : 0
 
     // Análisis de pagos
     const pagosExitosos = pagos?.filter(
-        pago => pago.status === PAGO_STATUS.PAID || pago.status === PAGO_STATUS.COMPLETADO
+        pago => pago.status === PAGO_STATUS.PAID && PAGO_STATUS.COMPLETADO
     ) || []
     const pagosPendientes = pagos?.filter(pago => pago.status === PAGO_STATUS.PENDING) || []
     const pagosFallidos = pagos?.filter(pago => pago.status === PAGO_STATUS.FAILED) || []
@@ -526,14 +525,6 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                                 )}
                                 {pagos.map((pago, index) => {
                                     const IconoMetodo = getMetodoIcon(pago.metodo_pago)
-                                    // Debug para verificar el status del pago
-                                    console.log('🔍 Status del pago:', {
-                                        id: pago.id,
-                                        status: pago.status,
-                                        statusType: typeof pago.status,
-                                        PAID: PAGO_STATUS.PAID,
-                                        COMPLETADO: PAGO_STATUS.COMPLETADO
-                                    })
                                     return (
                                         <div
                                             key={pago.id || index}
@@ -558,26 +549,12 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                                                     <p className="font-semibold text-zinc-100">
                                                         {formatearMoneda(pago.monto || pago.cantidad || 0)}
                                                     </p>
-                                                    <Badge className={
-                                                        pago.status === PAGO_STATUS.PAID || pago.status === PAGO_STATUS.COMPLETADO
-                                                            ? 'bg-green-900/20 text-green-400 border border-green-800'
-                                                            : pago.status === PAGO_STATUS.PENDING
-                                                                ? 'bg-amber-900/20 text-amber-400 border border-amber-800'
-                                                                : pago.status === PAGO_STATUS.FAILED || pago.status === PAGO_STATUS.CANCELLED
-                                                                    ? 'bg-red-900/20 text-red-400 border border-red-800'
-                                                                    : 'bg-zinc-800 text-zinc-500 border border-zinc-700'
-                                                    }>
+                                                    <Badge className={getStatusColor(pago.status)}>
                                                         {pago.status === PAGO_STATUS.PAID
                                                             ? 'Pagado'
-                                                            : pago.status === PAGO_STATUS.COMPLETADO
-                                                                ? 'Completado'
-                                                                : pago.status === PAGO_STATUS.PENDING
-                                                                    ? 'Pendiente'
-                                                                    : pago.status === PAGO_STATUS.FAILED
-                                                                        ? 'Fallido'
-                                                                        : pago.status === PAGO_STATUS.CANCELLED
-                                                                            ? 'Cancelado'
-                                                                            : pago.statusDisplay || pago.status || 'Sin status'}
+                                                            : pago.status === PAGO_STATUS.PENDING
+                                                                ? 'Pendiente'
+                                                                : pago.statusDisplay || pago.status || 'Sin status'}
                                                     </Badge>
                                                 </div>
 
