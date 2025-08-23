@@ -14,6 +14,18 @@ export async function GET(
                 id: eventoId
             },
             include: {
+                EventoTipo: {
+                    select: {
+                        id: true,
+                        nombre: true
+                    }
+                },
+                EventoEtapa: {
+                    select: {
+                        id: true,
+                        nombre: true
+                    }
+                },
                 Cotizacion: {
                     where: {
                         status: {
@@ -126,6 +138,16 @@ export async function GET(
             hora_evento: evento.fecha_evento, // Temporal hasta que tengamos campo hora_evento
             numero_invitados: 0, // Temporal hasta que tengamos este campo
             lugar: evento.sede || evento.direccion || '',
+            direccion: evento.direccion || '',
+            sede: evento.sede || '',
+            eventoTipo: {
+                id: evento.EventoTipo?.id || '',
+                nombre: evento.EventoTipo?.nombre || 'No definido'
+            },
+            eventoEtapa: {
+                id: evento.EventoEtapa?.id || '',
+                nombre: evento.EventoEtapa?.nombre || 'No definida'
+            },
             cotizacion: {
                 id: cotizacion.id,
                 status: cotizacion.status,
@@ -143,6 +165,75 @@ export async function GET(
 
     } catch (error) {
         console.error('Error al obtener evento:', error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: 'Error interno del servidor'
+            },
+            { status: 500 }
+        );
+    }
+}
+
+export async function PATCH(
+    request: NextRequest,
+    { params }: { params: Promise<{ eventoId: string }> }
+) {
+    try {
+        const { eventoId } = await params;
+        const body = await request.json();
+        const { nombre, direccion, sede } = body;
+
+        // Validaciones básicas
+        if (!nombre?.trim()) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'El nombre del evento es requerido'
+                },
+                { status: 400 }
+            );
+        }
+
+        // Verificar que el evento existe
+        const eventoExiste = await prisma.evento.findUnique({
+            where: { id: eventoId }
+        });
+
+        if (!eventoExiste) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'Evento no encontrado'
+                },
+                { status: 404 }
+            );
+        }
+
+        // Actualizar el evento
+        const eventoActualizado = await prisma.evento.update({
+            where: { id: eventoId },
+            data: {
+                nombre: nombre.trim(),
+                direccion: direccion?.trim() || null,
+                sede: sede?.trim() || null,
+                updatedAt: new Date()
+            }
+        });
+
+        return NextResponse.json({
+            success: true,
+            message: 'Evento actualizado correctamente',
+            evento: {
+                id: eventoActualizado.id,
+                nombre: eventoActualizado.nombre,
+                direccion: eventoActualizado.direccion,
+                sede: eventoActualizado.sede
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al editar evento:', error);
         return NextResponse.json(
             {
                 success: false,

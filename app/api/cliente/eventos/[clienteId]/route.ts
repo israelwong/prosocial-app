@@ -70,7 +70,7 @@ export async function GET(
                     pagado: totalPagado
                 }
             };
-        });        return NextResponse.json({
+        }); return NextResponse.json({
             success: true,
             eventos: eventosConPagos
         });

@@ -29,6 +29,16 @@ export interface Evento {
 
 // Evento con detalles
 export interface EventoDetalle extends Evento {
+    direccion?: string
+    sede?: string
+    eventoTipo: {
+        id: string
+        nombre: string
+    }
+    eventoEtapa: {
+        id: string
+        nombre: string
+    }
     cotizacion: {
         id: string
         status: string

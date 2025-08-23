@@ -55,3 +55,38 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
         }
     }
 }
+
+export async function editarEvento(
+    eventoId: string, 
+    datos: { nombre: string; direccion: string; sede: string }
+): Promise<ApiResponse<{ mensaje: string }>> {
+    try {
+        const response = await fetch(`/api/cliente/evento/${eventoId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(datos),
+        })
+
+        const result = await response.json()
+
+        if (response.ok && result.success) {
+            return {
+                success: true,
+                data: { mensaje: 'Evento actualizado correctamente' }
+            }
+        } else {
+            return {
+                success: false,
+                message: result.message || 'Error al editar el evento'
+            }
+        }
+    } catch (error) {
+        console.error('Error en editarEvento:', error)
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : 'Error desconocido'
+        }
+    }
+}
