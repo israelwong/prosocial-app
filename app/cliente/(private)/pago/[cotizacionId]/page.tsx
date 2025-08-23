@@ -40,7 +40,15 @@ export default function PagoPage() {
             try {
                 const response = await obtenerCotizacionPago(cotizacionId)
                 if (response.success && response.cotizacion) {
-                    setCotizacion(response.cotizacion)
+                    setCotizacion({
+                        ...response.cotizacion,
+                        evento: {
+                            ...response.cotizacion.evento,
+                            fecha_evento: typeof response.cotizacion.evento.fecha_evento === 'string'
+                                ? response.cotizacion.evento.fecha_evento
+                                : response.cotizacion.evento.fecha_evento.toISOString(),
+                        }
+                    })
                 } else {
                     setError(response.message || 'No se pudo cargar la información de pago')
                 }

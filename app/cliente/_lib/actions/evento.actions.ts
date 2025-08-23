@@ -23,6 +23,18 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
                 }
             },
             include: {
+                EventoTipo: {
+                    select: {
+                        id: true,
+                        nombre: true
+                    }
+                },
+                EventoEtapa: {
+                    select: {
+                        id: true,
+                        nombre: true
+                    }
+                },
                 Cotizacion: {
                     where: {
                         status: {
@@ -64,6 +76,14 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
                 hora_evento: '', // Campo legacy
                 numero_invitados: 0, // Campo legacy
                 lugar: evento.sede || evento.direccion || 'No definida',
+                eventoTipo: evento.EventoTipo ? {
+                    id: evento.EventoTipo.id,
+                    nombre: evento.EventoTipo.nombre
+                } : undefined,
+                eventoEtapa: evento.EventoEtapa ? {
+                    id: evento.EventoEtapa.id,
+                    nombre: evento.EventoEtapa.nombre
+                } : undefined,
                 cotizacion: {
                     id: cotizacion?.id || '',
                     status: cotizacion?.status || '',

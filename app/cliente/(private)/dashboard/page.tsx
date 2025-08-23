@@ -146,16 +146,38 @@ export default function ClienteDashboard() {
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                         {eventos.map((evento) => (
                             <Card key={evento.id} className="hover:shadow-lg transition-shadow border-zinc-800 bg-zinc-900">
-                                <CardHeader>
-                                    <div className="flex justify-between items-start">
-                                        <CardTitle className="text-lg font-semibold line-clamp-2 text-zinc-100">
+                                <CardHeader className="pb-4">
+                                    {/* Encabezado: Tipo Evento | Nombre | Etapa */}
+                                    <div className="space-y-3">
+                                        {/* Fila superior: Tipo de evento y Etapa */}
+                                        <div className="flex justify-between items-center">
+                                            <Badge
+                                                variant="outline"
+                                                className="bg-purple-900/20 text-purple-300 border-purple-800 text-xs"
+                                            >
+                                                {evento.eventoTipo?.nombre || 'Sin tipo'}
+                                            </Badge>
+                                            <Badge
+                                                variant="outline"
+                                                className="bg-blue-900/20 text-blue-300 border-blue-800 text-xs"
+                                            >
+                                                {evento.eventoEtapa?.nombre || 'Sin etapa'}
+                                            </Badge>
+                                        </div>
+                                        
+                                        {/* Nombre del evento */}
+                                        <CardTitle className="text-lg font-semibold line-clamp-2 text-zinc-100 text-center">
                                             {evento.nombre}
                                         </CardTitle>
-                                        <Badge
-                                            className={`${getStatusColor(evento.cotizacion.status)} text-xs`}
-                                        >
-                                            {getStatusText(evento.cotizacion.status)}
-                                        </Badge>
+                                        
+                                        {/* Badge de status de cotización */}
+                                        <div className="flex justify-center">
+                                            <Badge
+                                                className={`${getStatusColor(evento.cotizacion.status)} text-xs`}
+                                            >
+                                                {getStatusText(evento.cotizacion.status)}
+                                            </Badge>
+                                        </div>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-4">

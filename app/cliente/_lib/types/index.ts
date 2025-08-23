@@ -18,6 +18,14 @@ export interface Evento {
     hora_evento: string
     numero_invitados: number
     lugar: string
+    eventoTipo?: {
+        id: string
+        nombre: string
+    }
+    eventoEtapa?: {
+        id: string
+        nombre: string
+    }
     cotizacion: {
         id: string
         status: string
