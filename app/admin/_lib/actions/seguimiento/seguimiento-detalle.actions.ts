@@ -26,6 +26,7 @@ import {
     AGENDA_STATUS_COLORS,
     SERVICIO_STATUS_COLORS
 } from './seguimiento-detalle.schemas';
+import { PAGO_STATUS } from '@/app/admin/_lib/constants/status';
 
 // ========================================
 // FUNCIÓN PRINCIPAL DE CONSULTA

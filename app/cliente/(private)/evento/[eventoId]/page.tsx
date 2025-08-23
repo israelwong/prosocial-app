@@ -5,17 +5,16 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
-import ServiciosPortalCliente from '../../../components/ServiciosPortalCliente'
-import ModalEditarEvento, { EventoEditData } from '../../../components/ModalEditarEvento'
+import ServiciosContratados from './components/ServiciosContratados'
+import ResumenPago from './components/ResumenPago'
 import { useClienteAuth } from '../../../hooks'
-import { obtenerEventoDetalle, editarEvento } from '../../../_lib/actions'
+import { obtenerEventoDetalle } from '../../../_lib/actions'
 import type { EventoDetalle } from '../../../_lib/types'
 import {
     CalendarDays,
     MapPin,
     Users,
     Clock,
-    CreditCard,
     ArrowLeft,
     Package,
     FileText,
@@ -32,7 +31,6 @@ import {
 export default function EventoDetalle() {
     const [evento, setEvento] = useState<EventoDetalle | null>(null)
     const [loading, setLoading] = useState(true)
-    const [modalEditOpen, setModalEditOpen] = useState(false)
     const [showNotification, setShowNotification] = useState(false)
     const [notificationMessage, setNotificationMessage] = useState('')
     const [notificationType, setNotificationType] = useState<'success' | 'error' | 'warning'>('success')
@@ -124,39 +122,6 @@ export default function EventoDetalle() {
         })
     }
 
-    const formatMoney = (amount: number) => {
-        return new Intl.NumberFormat('es-MX', {
-            style: 'currency',
-            currency: 'MXN'
-        }).format(amount)
-    }
-
-    const handleEditEvento = async (datos: EventoEditData) => {
-        try {
-            const result = await editarEvento(eventoId, datos)
-            if (result.success) {
-                // Actualizar el evento local
-                setEvento(prev => prev ? {
-                    ...prev,
-                    nombre: datos.nombre,
-                    direccion: datos.direccion,
-                    sede: datos.sede
-                } : null)
-
-                setModalEditOpen(false)
-            } else {
-                throw new Error(result.message || 'Error al editar evento')
-            }
-        } catch (error) {
-            console.error('Error al editar evento:', error)
-            throw error
-        }
-    }
-
-    const getSaldoPendiente = (total: number, pagado: number) => {
-        return total - pagado
-    }
-
     if (!isAuthenticated || loading) {
         return (
             <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -199,7 +164,7 @@ export default function EventoDetalle() {
             {/* Notificación de pago */}
             {showNotification && (
                 <div className={`fixed top-4 right-4 z-50 max-w-sm w-full ${notificationType === 'success' ? 'bg-green-600' :
-                        notificationType === 'warning' ? 'bg-yellow-600' : 'bg-red-600'
+                    notificationType === 'warning' ? 'bg-yellow-600' : 'bg-red-600'
                     } text-white p-4 rounded-lg shadow-lg`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
@@ -220,189 +185,74 @@ export default function EventoDetalle() {
 
             <div className="bg-zinc-900 shadow-sm border-b border-zinc-800">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center py-6">
-                        <Button
-                            variant="ghost"
-                            onClick={() => router.push('/cliente/dashboard')}
-                            className="mr-4 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800"
-                        >
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Volver
-                        </Button>
-                        <div className="flex-1">
-                            <h1 className="text-2xl font-bold text-zinc-100">{evento.nombre}</h1>
-                            <p className="text-zinc-400">Detalles del evento</p>
+                    <div className="py-6 space-y-4">
+                        {/* Línea 1: botón regresar | editar (evento) */}
+                        <div className="flex items-center justify-between">
+                            <Button
+                                variant="ghost"
+                                onClick={() => router.push('/cliente/dashboard')}
+                                className="text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800"
+                            >
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                Volver
+                            </Button>
+                            <div className="flex gap-3">
+                                <Button
+                                    onClick={() => router.push(`/cliente/evento/${evento.id}/pagos`)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                                >
+                                    <Receipt className="h-4 w-4 mr-2" />
+                                    Historial de Pagos
+                                </Button>
+                                <Button
+                                    onClick={() => router.push(`/cliente/evento/${eventoId}/editar`)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                                >
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Editar
+                                </Button>
+                            </div>
                         </div>
-                        {/* Botones de acción */}
-                        <div className="flex gap-3">
-                            <Button
-                                onClick={() => router.push(`/cliente/evento/${evento.id}/pagos`)}
-                                variant="outline"
-                                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-                            >
-                                <Receipt className="h-4 w-4 mr-2" />
-                                Ver Historial de Pagos
-                            </Button>
-                            <Button
-                                onClick={() => setModalEditOpen(true)}
-                                variant="outline"
-                                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-                            >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Editar evento
-                            </Button>
+
+                        {/* Línea 2: Nombre evento, fecha evento, tipo de evento, etapa del evento */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <p className="text-sm text-zinc-500 mb-1">Nombre del evento</p>
+                                <h1 className="text-xl font-bold text-zinc-100">{evento.nombre}</h1>
+                            </div>
+                            <div>
+                                <p className="text-sm text-zinc-500 mb-1">Fecha del evento</p>
+                                <p className="text-zinc-300">{formatFecha(evento.fecha_evento)}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-zinc-500 mb-1">Tipo de evento</p>
+                                <p className="text-zinc-300">{evento.eventoTipo?.nombre || 'No especificado'}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-zinc-500 mb-1">Etapa del evento</p>
+                                <Badge variant="secondary" className="bg-zinc-800 text-zinc-200">
+                                    {evento.eventoEtapa?.nombre || 'No especificado'}
+                                </Badge>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid gap-8 lg:grid-cols-3">
+                <div className="grid gap-8 lg:grid-cols-2">
                     {/* Información del Evento */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <Card className="bg-zinc-900 border-zinc-800">
-                            <CardHeader>
-                                <CardTitle className="flex items-center text-zinc-100">
-                                    <CalendarDays className="h-5 w-5 mr-2" />
-                                    Información del Evento
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    <div className="flex items-center text-sm">
-                                        <CalendarDays className="h-4 w-4 mr-3 text-zinc-500" />
-                                        <div>
-                                            <p className="font-medium text-zinc-300">Fecha</p>
-                                            <p className="text-zinc-400">{formatFecha(evento.fecha_evento)}</p>
-                                        </div>
-                                    </div>
+                    {/* Servicios */}
+                    <ServiciosContratados servicios={evento.cotizacion.servicios} />
 
-                                    <div className="flex items-center text-sm">
-                                        <Clock className="h-4 w-4 mr-3 text-zinc-500" />
-                                        <div>
-                                            <p className="font-medium text-zinc-300">Hora</p>
-                                            <p className="text-zinc-400">{evento.hora_evento}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center text-sm">
-                                        <MapPin className="h-4 w-4 mr-3 text-zinc-500" />
-                                        <div>
-                                            <p className="font-medium text-zinc-300">Ubicación</p>
-                                            <p className="text-zinc-400">{evento.lugar || 'No especificado'}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center text-sm">
-                                        <Users className="h-4 w-4 mr-3 text-zinc-500" />
-                                        <div>
-                                            <p className="font-medium text-zinc-300">Invitados</p>
-                                            <p className="text-zinc-400">{evento.numero_invitados} personas</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Nuevos campos: Tipo y Etapa del evento */}
-                                    {evento.eventoTipo && (
-                                        <div className="flex items-center text-sm">
-                                            <Tag className="h-4 w-4 mr-3 text-zinc-500" />
-                                            <div>
-                                                <p className="font-medium text-zinc-300">Tipo de evento</p>
-                                                <p className="text-zinc-400">{evento.eventoTipo.nombre}</p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {evento.eventoEtapa && (
-                                        <div className="flex items-center text-sm">
-                                            <Layers className="h-4 w-4 mr-3 text-zinc-500" />
-                                            <div>
-                                                <p className="font-medium text-zinc-300">Etapa del evento</p>
-                                                <p className="text-zinc-400">{evento.eventoEtapa.nombre}</p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {evento.direccion && (
-                                        <div className="flex items-start text-sm md:col-span-2">
-                                            <MapPin className="h-4 w-4 mr-3 text-zinc-500 mt-0.5" />
-                                            <div className="min-w-0 flex-1">
-                                                <p className="font-medium text-zinc-300">Dirección</p>
-                                                <p className="text-zinc-400 break-words">{evento.direccion}</p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {evento.sede && (
-                                        <div className="flex items-start text-sm md:col-span-2">
-                                            <Package className="h-4 w-4 mr-3 text-zinc-500 mt-0.5" />
-                                            <div className="min-w-0 flex-1">
-                                                <p className="font-medium text-zinc-300">Sede</p>
-                                                <p className="text-zinc-400 break-words">{evento.sede}</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Servicios */}
-                        <Card className="bg-zinc-900 border-zinc-800">
-                            <CardHeader>
-                                <CardTitle className="flex items-center text-zinc-100">
-                                    <Package className="h-5 w-5 mr-2" />
-                                    Servicios Contratados
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <ServiciosPortalCliente servicios={evento.cotizacion.servicios} />
-                            </CardContent>
-                        </Card>
-                    </div>
 
                     {/* Resumen de Pago */}
                     <div className="space-y-6">
-                        <Card className="bg-zinc-900 border-zinc-800">
-                            <CardHeader>
-                                <CardTitle className="flex items-center text-zinc-100">
-                                    <CreditCard className="h-5 w-5 mr-2" />
-                                    Resumen de Pago
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-3">
-                                    <div className="flex justify-between py-2">
-                                        <span className="text-zinc-400">Total del evento:</span>
-                                        <span className="font-semibold text-zinc-100">
-                                            {formatMoney(evento.cotizacion.total)}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between py-2">
-                                        <span className="text-zinc-400">Pagado:</span>
-                                        <span className="font-semibold text-green-400">
-                                            {formatMoney(evento.cotizacion.pagado)}
-                                        </span>
-                                    </div>
-                                    <div className="border-t border-zinc-700 pt-3">
-                                        <div className="flex justify-between py-2">
-                                            <span className="text-zinc-300 font-medium">Saldo pendiente:</span>
-                                            <span className="font-bold text-amber-400">
-                                                {formatMoney(getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado))}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) > 0 && (
-                                    <Button
-                                        onClick={() => router.push(`/cliente/evento/${evento.id}/pago/${evento.cotizacion.id}`)}
-                                        className="w-full bg-blue-600 hover:bg-blue-700"
-                                    >
-                                        <CreditCard className="h-4 w-4 mr-2" />
-                                        Realizar Pago
-                                    </Button>
-                                )}
-                            </CardContent>
-                        </Card>
+                        <ResumenPago evento={evento} />
 
                         {/* Información de Contacto */}
                         <Card className="bg-zinc-900 border-zinc-800">
@@ -433,14 +283,6 @@ export default function EventoDetalle() {
                     </div>
                 </div>
             </div>
-
-            {/* Modal para editar evento */}
-            <ModalEditarEvento
-                evento={evento}
-                isOpen={modalEditOpen}
-                onClose={() => setModalEditOpen(false)}
-                onSave={handleEditEvento}
-            />
         </div>
     )
 }

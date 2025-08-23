@@ -80,27 +80,35 @@ export default function CheckoutPage() {
     const handleProcesarPago = async () => {
         if (!cliente || !monto) return
 
-        // Validaciones básicas
-        if (!formData.numeroTarjeta || !formData.fechaExpiracion || !formData.cvv || !formData.nombreTarjeta) {
-            alert('Por favor completa todos los campos')
-            return
+        // Validaciones según el método de pago
+        if (formData.metodoPago === 'tarjeta') {
+            if (!formData.numeroTarjeta || !formData.fechaExpiracion || !formData.cvv || !formData.nombreTarjeta) {
+                alert('Por favor completa todos los campos de la tarjeta')
+                return
+            }
         }
 
         try {
             setLoading(true)
 
-            const response = await crearPagoCliente({
+            const pagoData: any = {
                 cotizacionId,
                 clienteId: cliente.id,
                 monto: parseFloat(monto),
-                metodoPago: formData.metodoPago,
-                datosTarjeta: {
+                metodoPago: formData.metodoPago
+            }
+
+            // Solo incluir datos de tarjeta si el método es tarjeta
+            if (formData.metodoPago === 'tarjeta') {
+                pagoData.datosTarjeta = {
                     numero: formData.numeroTarjeta.replace(/\s/g, ''),
                     fechaExpiracion: formData.fechaExpiracion,
                     cvv: formData.cvv,
                     nombre: formData.nombreTarjeta
                 }
-            })
+            }
+
+            const response = await crearPagoCliente(pagoData)
 
             if (response.success) {
                 // Para pagos del cliente procesados internamente, solo mostramos notificación
@@ -196,16 +204,22 @@ export default function CheckoutPage() {
                                 onValueChange={(value) => handleInputChange('metodoPago', value)}
                             >
                                 <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-100">
-                                    <SelectValue placeholder="Selecciona método de pago" />
+                                    <SelectValue placeholder="Selecciona un método de pago" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="tarjeta">Tarjeta de Crédito/Débito</SelectItem>
-                                    <SelectItem value="transferencia">Transferencia Bancaria</SelectItem>
-                                    <SelectItem value="paypal">PayPal</SelectItem>
+                                    <SelectItem value="spei">Transferencia SPEI</SelectItem>
                                 </SelectContent>
                             </Select>
+                            <p className="text-xs text-zinc-500 mt-1">
+                                {formData.metodoPago === 'spei'
+                                    ? 'Transferencia bancaria inmediata disponible 24/7'
+                                    : 'Pago inmediato con tarjeta de crédito o débito'
+                                }
+                            </p>
                         </div>
 
+                        {/* Campos de Tarjeta - Solo mostrar si el método es tarjeta */}
                         {formData.metodoPago === 'tarjeta' && (
                             <>
                                 {/* Número de Tarjeta */}
@@ -220,6 +234,7 @@ export default function CheckoutPage() {
                                         placeholder="1234 5678 9012 3456"
                                         maxLength={19}
                                         className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-500"
+                                        disabled={loading}
                                     />
                                 </div>
 
@@ -236,6 +251,7 @@ export default function CheckoutPage() {
                                             placeholder="MM/AA"
                                             maxLength={5}
                                             className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-500"
+                                            disabled={loading}
                                         />
                                     </div>
 
@@ -251,6 +267,7 @@ export default function CheckoutPage() {
                                             placeholder="123"
                                             maxLength={4}
                                             className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-500"
+                                            disabled={loading}
                                         />
                                     </div>
                                 </div>
@@ -266,29 +283,45 @@ export default function CheckoutPage() {
                                         onChange={(e) => handleInputChange('nombreTarjeta', e.target.value.toUpperCase())}
                                         placeholder="NOMBRE COMPLETO"
                                         className="bg-zinc-800 border-zinc-700 text-zinc-100 placeholder-zinc-500"
+                                        disabled={loading}
                                     />
                                 </div>
                             </>
                         )}
 
-                        {formData.metodoPago === 'transferencia' && (
-                            <div className="bg-zinc-800 p-4 rounded-lg">
-                                <h4 className="font-medium text-zinc-300 mb-2">Datos para Transferencia:</h4>
-                                <div className="text-sm text-zinc-400 space-y-1">
-                                    <p><strong>Banco:</strong> BBVA Bancomer</p>
-                                    <p><strong>Cuenta:</strong> 0123456789</p>
-                                    <p><strong>CLABE:</strong> 012345678901234567</p>
-                                    <p><strong>Beneficiario:</strong> Prosocial Events</p>
+                        {/* Información SPEI - Solo mostrar si el método es SPEI */}
+                        {formData.metodoPago === 'spei' && (
+                            <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-4">
+                                <h4 className="font-medium text-blue-300 mb-3 flex items-center">
+                                    <CreditCard className="h-4 w-4 mr-2" />
+                                    Información para transferencia SPEI
+                                </h4>
+                                <div className="space-y-2 text-sm">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <span className="text-zinc-400">Banco:</span>
+                                            <p className="text-zinc-100 font-medium">BBVA Bancomer</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-zinc-400">CLABE:</span>
+                                            <p className="text-zinc-100 font-medium">012180001234567890</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-zinc-400">Beneficiario:</span>
+                                            <p className="text-zinc-100 font-medium">ProSocial Events SA de CV</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-zinc-400">Referencia:</span>
+                                            <p className="text-zinc-100 font-medium">EVENTO-{eventoId?.slice(-8).toUpperCase()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 p-3 bg-amber-900/20 border border-amber-800 rounded">
+                                        <p className="text-amber-300 text-xs">
+                                            <strong>Importante:</strong> Una vez realizada la transferencia, el pago se reflejará en un plazo de 15 a 30 minutos.
+                                            Asegúrate de incluir la referencia exacta para identificar tu pago.
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-
-                        {formData.metodoPago === 'paypal' && (
-                            <div className="bg-zinc-800 p-4 rounded-lg">
-                                <h4 className="font-medium text-zinc-300 mb-2">Pago con PayPal:</h4>
-                                <p className="text-sm text-zinc-400">
-                                    Serás redirigido a PayPal para completar tu pago de forma segura.
-                                </p>
                             </div>
                         )}
 
@@ -311,12 +344,15 @@ export default function CheckoutPage() {
                             {loading ? (
                                 <>
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Procesando pago...
+                                    Procesando pago, no cierre esta ventana...
                                 </>
                             ) : (
                                 <>
                                     <Lock className="h-4 w-4 mr-2" />
-                                    Confirmar Pago de {formatMoney(parseFloat(monto))}
+                                    {formData.metodoPago === 'spei'
+                                        ? `Confirmar transferencia de ${formatMoney(parseFloat(monto))}`
+                                        : `Pagar ${formatMoney(parseFloat(monto))} con tarjeta`
+                                    }
                                 </>
                             )}
                         </Button>

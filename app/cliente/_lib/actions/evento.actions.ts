@@ -48,7 +48,7 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
                         Pago: {
                             where: {
                                 status: {
-                                    in: [PAGO_STATUS.PAID, PAGO_STATUS.COMPLETADO, 'succeeded']
+                                    in: [PAGO_STATUS.PAID, PAGO_STATUS.COMPLETADO]
                                 }
                             },
                             select: {
@@ -165,7 +165,9 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
                         },
                         Pago: {
                             where: {
-                                status: 'succeeded'
+                                status: {
+                                    in: [PAGO_STATUS.PAID, PAGO_STATUS.COMPLETADO]
+                                }
                             },
                             select: {
                                 monto: true
@@ -186,6 +188,14 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
 
         const cotizacion = evento.Cotizacion[0]
         const totalPagado = cotizacion.Pago?.reduce((sum: number, pago: any) => sum + pago.monto, 0) || 0
+
+        // Debug para verificar los pagos encontrados
+        console.log('🔍 obtenerEventoDetalle - Pagos encontrados:', {
+            eventoId,
+            pagosCount: cotizacion.Pago?.length || 0,
+            pagos: cotizacion.Pago?.map((p: any) => ({ monto: p.monto })) || [],
+            totalPagado
+        })
 
         // Copiar exactamente la lógica de servicios del API route
         const servicios = cotizacion.Servicio.map((cotizacionServicio: any) => {
