@@ -56,25 +56,41 @@ export async function obtenerCotizacionPago(cotizacionId: string): Promise<{ suc
 
 export async function crearSesionPago(data: SesionPagoData): Promise<{ success: boolean; sessionUrl?: string; message?: string }> {
     try {
-        const response = await fetch('/api/cliente/create-payment-session', {
+        // Usar el endpoint de checkout existente que es más completo
+        const response = await fetch('/api/checkout/create-session', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify({
+                cotizacionId: data.cotizacionId,
+                monto: data.monto,
+                montoFinal: data.monto,
+                nombreCliente: data.clienteNombre,
+                emailCliente: data.clienteEmail,
+                concepto: `Pago para ${data.eventoNombre}`,
+                descripcion: `Abono de ${new Intl.NumberFormat('es-MX', {
+                    style: 'currency',
+                    currency: 'MXN'
+                }).format(data.monto)} para el evento ${data.eventoNombre}`,
+                paymentMethod: 'card', // Por defecto tarjeta
+                isClientPortal: true, // Identificar que viene del portal cliente
+                returnUrl: `${window.location.origin}/cliente/pago/success?session_id={CHECKOUT_SESSION_ID}`,
+                cancelUrl: `${window.location.origin}/cliente/pago/${data.cotizacionId}`
+            })
         })
 
         const result = await response.json()
 
-        if (response.ok && result.success) {
+        if (response.ok && result.url) {
             return {
                 success: true,
-                sessionUrl: result.sessionUrl
+                sessionUrl: result.url
             }
         } else {
             return {
                 success: false,
-                message: result.message || 'Error al crear sesión de pago'
+                message: result.error || 'Error al crear sesión de pago'
             }
         }
     } catch (error) {
