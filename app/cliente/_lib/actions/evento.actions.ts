@@ -57,7 +57,7 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
 }
 
 export async function editarEvento(
-    eventoId: string, 
+    eventoId: string,
     datos: { nombre: string; direccion: string; sede: string }
 ): Promise<ApiResponse<{ mensaje: string }>> {
     try {

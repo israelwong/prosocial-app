@@ -51,7 +51,7 @@ export default function ModalEditarEvento({ evento, isOpen, onClose, onSave }: P
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        
+
         if (!formData.nombre.trim()) {
             setError('El nombre del evento es requerido')
             return

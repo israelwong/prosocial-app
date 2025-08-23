@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
 import ServiciosPortalCliente from '../../../components/ServiciosPortalCliente'
-import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
+import ModalEditarEvento, { EventoEditData } from '../../../components/ModalEditarEvento'
 import { useClienteAuth } from '../../../hooks'
-import { obtenerEventoDetalle } from '../../../_lib/actions/evento.actions'
-import { EventoDetalle } from '../../../_lib/types'
+import { obtenerEventoDetalle, editarEvento } from '../../../_lib/actions'
+import type { EventoDetalle } from '../../../_lib/types'
 import {
     CalendarDays,
     MapPin,
@@ -20,12 +20,16 @@ import {
     Package,
     FileText,
     Phone,
-    Mail
+    Mail,
+    Edit,
+    Tag,
+    Layers
 } from 'lucide-react'
 
 export default function EventoDetalle() {
     const [evento, setEvento] = useState<EventoDetalle | null>(null)
     const [loading, setLoading] = useState(true)
+    const [modalEditOpen, setModalEditOpen] = useState(false)
     const { cliente, isAuthenticated } = useClienteAuth()
     const router = useRouter()
     const params = useParams()
@@ -38,11 +42,11 @@ export default function EventoDetalle() {
 
         const fetchEvento = async () => {
             try {
-                const response = await obtenerEventoDetalle(eventoId)
-                if (response.success && response.data) {
-                    setEvento(response.data)
+                const result = await obtenerEventoDetalle(eventoId)
+                if (result.success && result.data) {
+                    setEvento(result.data)
                 } else {
-                    console.error('Error al cargar evento:', response.message)
+                    console.error('Error al cargar evento:', result.message)
                 }
             } catch (error) {
                 console.error('Error al cargar evento:', error)
@@ -72,29 +76,25 @@ export default function EventoDetalle() {
         }).format(amount)
     }
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case COTIZACION_STATUS.APROBADA:
-                return 'bg-green-900/20 text-green-300 border-green-800'
-            case 'enviada':
-                return 'bg-amber-900/20 text-amber-300 border-amber-800'
-            case 'cancelada':
-                return 'bg-red-900/20 text-red-300 border-red-800'
-            default:
-                return 'bg-zinc-800 text-zinc-400 border-zinc-700'
-        }
-    }
+    const handleEditEvento = async (datos: EventoEditData) => {
+        try {
+            const result = await editarEvento(eventoId, datos)
+            if (result.success) {
+                // Actualizar el evento local
+                setEvento(prev => prev ? {
+                    ...prev,
+                    nombre: datos.nombre,
+                    direccion: datos.direccion,
+                    sede: datos.sede
+                } : null)
 
-    const getStatusText = (status: string) => {
-        switch (status) {
-            case COTIZACION_STATUS.APROBADA:
-                return 'Cotización Aprobada'
-            case 'enviada':
-                return 'Cotización Pendiente'
-            case 'cancelada':
-                return 'Cotización Cancelada'
-            default:
-                return status
+                setModalEditOpen(false)
+            } else {
+                throw new Error(result.message || 'Error al editar evento')
+            }
+        } catch (error) {
+            console.error('Error al editar evento:', error)
+            throw error
         }
     }
 
@@ -156,9 +156,15 @@ export default function EventoDetalle() {
                             <h1 className="text-2xl font-bold text-zinc-100">{evento.nombre}</h1>
                             <p className="text-zinc-400">Detalles del evento</p>
                         </div>
-                        <Badge className={`${getStatusColor(evento.cotizacion.status)} text-sm`}>
-                            {getStatusText(evento.cotizacion.status)}
-                        </Badge>
+                        {/* Botón editar en lugar de status */}
+                        <Button
+                            onClick={() => setModalEditOpen(true)}
+                            variant="outline"
+                            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                        >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Editar evento
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -193,6 +199,14 @@ export default function EventoDetalle() {
                                     </div>
 
                                     <div className="flex items-center text-sm">
+                                        <MapPin className="h-4 w-4 mr-3 text-zinc-500" />
+                                        <div>
+                                            <p className="font-medium text-zinc-300">Ubicación</p>
+                                            <p className="text-zinc-400">{evento.lugar || 'No especificado'}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center text-sm">
                                         <Users className="h-4 w-4 mr-3 text-zinc-500" />
                                         <div>
                                             <p className="font-medium text-zinc-300">Invitados</p>
@@ -200,31 +214,62 @@ export default function EventoDetalle() {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center text-sm">
-                                        <MapPin className="h-4 w-4 mr-3 text-zinc-500" />
-                                        <div>
-                                            <p className="font-medium text-zinc-300">Lugar</p>
-                                            <p className="text-zinc-400">{evento.lugar}</p>
+                                    {/* Nuevos campos: Tipo y Etapa del evento */}
+                                    {evento.eventoTipo && (
+                                        <div className="flex items-center text-sm">
+                                            <Tag className="h-4 w-4 mr-3 text-zinc-500" />
+                                            <div>
+                                                <p className="font-medium text-zinc-300">Tipo de evento</p>
+                                                <p className="text-zinc-400">{evento.eventoTipo.nombre}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
+                                    )}
 
-                                {evento.cotizacion.descripcion && (
-                                    <div className="mt-6 pt-6 border-t border-zinc-800">
-                                        <h4 className="font-medium mb-2 text-zinc-300">Descripción</h4>
-                                        <p className="text-zinc-400 text-sm leading-relaxed">
-                                            {evento.cotizacion.descripcion}
-                                        </p>
-                                    </div>
-                                )}
+                                    {evento.eventoEtapa && (
+                                        <div className="flex items-center text-sm">
+                                            <Layers className="h-4 w-4 mr-3 text-zinc-500" />
+                                            <div>
+                                                <p className="font-medium text-zinc-300">Etapa del evento</p>
+                                                <p className="text-zinc-400">{evento.eventoEtapa.nombre}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {evento.direccion && (
+                                        <div className="flex items-start text-sm md:col-span-2">
+                                            <MapPin className="h-4 w-4 mr-3 text-zinc-500 mt-0.5" />
+                                            <div className="min-w-0 flex-1">
+                                                <p className="font-medium text-zinc-300">Dirección</p>
+                                                <p className="text-zinc-400 break-words">{evento.direccion}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {evento.sede && (
+                                        <div className="flex items-start text-sm md:col-span-2">
+                                            <Package className="h-4 w-4 mr-3 text-zinc-500 mt-0.5" />
+                                            <div className="min-w-0 flex-1">
+                                                <p className="font-medium text-zinc-300">Sede</p>
+                                                <p className="text-zinc-400 break-words">{evento.sede}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </CardContent>
                         </Card>
 
-                        {/* Servicios Incluidos */}
-                        <ServiciosPortalCliente
-                            servicios={evento.cotizacion.servicios}
-                            loading={loading}
-                        />
+                        {/* Servicios */}
+                        <Card className="bg-zinc-900 border-zinc-800">
+                            <CardHeader>
+                                <CardTitle className="flex items-center text-zinc-100">
+                                    <Package className="h-5 w-5 mr-2" />
+                                    Servicios Contratados
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <ServiciosPortalCliente servicios={evento.cotizacion.servicios} />
+                            </CardContent>
+                        </Card>
                     </div>
 
                     {/* Resumen de Pago */}
@@ -238,74 +283,77 @@ export default function EventoDetalle() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-3">
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">Total:</span>
-                                        <span className="font-semibold text-zinc-100">{formatMoney(evento.cotizacion.total)}</span>
+                                    <div className="flex justify-between py-2">
+                                        <span className="text-zinc-400">Total del evento:</span>
+                                        <span className="font-semibold text-zinc-100">
+                                            {formatMoney(evento.cotizacion.total)}
+                                        </span>
                                     </div>
-
-                                    <div className="flex justify-between">
+                                    <div className="flex justify-between py-2">
                                         <span className="text-zinc-400">Pagado:</span>
                                         <span className="font-semibold text-green-400">
                                             {formatMoney(evento.cotizacion.pagado)}
                                         </span>
                                     </div>
-
-                                    <div className="border-t border-zinc-800 pt-3">
-                                        <div className="flex justify-between">
-                                            <span className="text-zinc-400">Saldo pendiente:</span>
-                                            <span className={`font-semibold ${getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) > 0
-                                                ? 'text-yellow-400'
-                                                : 'text-green-400'
-                                                }`}>
+                                    <div className="border-t border-zinc-700 pt-3">
+                                        <div className="flex justify-between py-2">
+                                            <span className="text-zinc-300 font-medium">Saldo pendiente:</span>
+                                            <span className="font-bold text-amber-400">
                                                 {formatMoney(getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado))}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {evento.cotizacion.status === COTIZACION_STATUS.APROBADA &&
-                                    getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) > 0 && (
-                                        <Button
-                                            className="w-full mt-6 bg-blue-600 hover:bg-blue-700"
-                                            onClick={() => router.push(`/cliente/pago/${evento.cotizacion.id}`)}
-                                        >
-                                            <CreditCard className="h-4 w-4 mr-2" />
-                                            Realizar Pago
-                                        </Button>
-                                    )}
+                                {getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) > 0 && (
+                                    <Button
+                                        onClick={() => router.push(`/cliente/pago/${evento.id}`)}
+                                        className="w-full bg-blue-600 hover:bg-blue-700"
+                                    >
+                                        <CreditCard className="h-4 w-4 mr-2" />
+                                        Realizar Pago
+                                    </Button>
+                                )}
                             </CardContent>
                         </Card>
 
-                        {/* Contacto */}
+                        {/* Información de Contacto */}
                         <Card className="bg-zinc-900 border-zinc-800">
                             <CardHeader>
-                                <CardTitle className="text-zinc-100">¿Necesitas ayuda?</CardTitle>
+                                <CardTitle className="flex items-center text-zinc-100">
+                                    <Phone className="h-5 w-5 mr-2" />
+                                    Información de Contacto
+                                </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-3">
-                                <div className="flex items-center text-sm">
-                                    <Phone className="h-4 w-4 mr-3 text-zinc-500" />
-                                    <div>
-                                        <p className="font-medium text-zinc-300">Teléfono</p>
-                                        <p className="text-zinc-400">+52 55 1234 5678</p>
+                            <CardContent className="space-y-4">
+                                <div className="text-sm">
+                                    <p className="text-zinc-400 mb-2">
+                                        ¿Tienes dudas sobre tu evento? Contáctanos:
+                                    </p>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center">
+                                            <Phone className="h-4 w-4 mr-2 text-zinc-500" />
+                                            <span className="text-zinc-300">+52 55 1234 5678</span>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <Mail className="h-4 w-4 mr-2 text-zinc-500" />
+                                            <span className="text-zinc-300">hola@prosocial.com.mx</span>
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div className="flex items-center text-sm">
-                                    <Mail className="h-4 w-4 mr-3 text-zinc-500" />
-                                    <div>
-                                        <p className="font-medium text-zinc-300">Email</p>
-                                        <p className="text-zinc-400">contacto@prosocial.mx</p>
-                                    </div>
-                                </div>
-
-                                <Button variant="outline" className="w-full mt-4 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100">
-                                    Contactar Equipo
-                                </Button>
                             </CardContent>
                         </Card>
                     </div>
                 </div>
             </div>
+
+            {/* Modal para editar evento */}
+            <ModalEditarEvento
+                evento={evento}
+                isOpen={modalEditOpen}
+                onClose={() => setModalEditOpen(false)}
+                onSave={handleEditEvento}
+            />
         </div>
     )
 }
