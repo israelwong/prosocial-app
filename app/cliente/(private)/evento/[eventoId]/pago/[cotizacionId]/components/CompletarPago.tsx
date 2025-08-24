@@ -26,6 +26,7 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
     const [currentPaymentIntentId, setCurrentPaymentIntentId] = useState<string | null>(null) // 🆕 Para limpieza
     const [procesandoPago, setProcesandoPago] = useState(false)
     const [cancelandoPago, setCancelandoPago] = useState(false) // 🆕 Estado de cancelación
+    const [procesandoConfirmacion, setProcesandoConfirmacion] = useState(false) // 🆕 Estado post-pago
     const [montoConComision, setMontoConComision] = useState(0)
     const router = useRouter()
 
@@ -109,10 +110,11 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    cotizacionId: cotizacionId,
-                    eventoId: eventoId,
-                    metodoPago: metodoPago === 'spei' ? 'spei' : 'card',
-                    montoConComision: montoFinal,
+                    cotizacionId,
+                    metodoPago,
+                    montoBase: parseFloat(montoAPagar), // 🆕 Monto que se abona al cliente
+                    montoConComision, // 🆕 Monto que se cobra en Stripe
+                    eventoId
                 }),
             })
 
@@ -144,22 +146,36 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
         setProcesandoPago(false)
     }
 
-    const handleStripeSuccess = (paymentIntent?: any) => {
+    const handleStripeSuccess = async (paymentIntent?: any) => {
+        console.log('🎉 Pago exitoso:', paymentIntent)
+
+        // 🔄 Activar estado de procesamiento de confirmación
+        setProcesandoConfirmacion(true)
+
+        // 🧹 Limpiar estados de configuración
         setShowStripeModal(false)
         setClientSecret(null)
         setCurrentPaymentIntentId(null) // 🧹 Limpiar estado tras éxito
         setMontoAPagar('')
 
-        const paymentIntentId = paymentIntent?.id || currentPaymentIntentId || 'success'
+        try {
+            // ⏳ Pequeña pausa para mostrar el estado de procesando
+            await new Promise(resolve => setTimeout(resolve, 1500))
 
-        // 🏦 Para SPEI, redirigir a página pendiente porque el pago aún no se completó
-        if (metodoPago === 'spei') {
-            console.log('🏦 SPEI: Datos de transferencia configurados, redirigiendo a pendiente:', paymentIntentId)
-            router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/pending?payment_intent=${paymentIntentId}&monto=${parseFloat(montoAPagar)}`)
-        } else {
-            // 💳 Para tarjetas, redirigir a página de éxito porque el pago se completó
-            console.log('💳 Tarjeta: Pago completado, redirigiendo a éxito:', paymentIntentId)
-            router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/success?payment_intent=${paymentIntentId}`)
+            const paymentIntentId = paymentIntent?.id || currentPaymentIntentId || 'success'
+
+            // 🏦 Para SPEI, redirigir a página pendiente porque el pago aún no se completó
+            if (metodoPago === 'spei') {
+                console.log('🏦 SPEI: Datos de transferencia configurados, redirigiendo a pendiente:', paymentIntentId)
+                router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/pending?payment_intent=${paymentIntentId}&monto=${parseFloat(montoAPagar)}`)
+            } else {
+                // 💳 Para tarjetas, redirigir a página de éxito porque el pago se completó
+                console.log('💳 Tarjeta: Pago completado, redirigiendo a éxito:', paymentIntentId)
+                router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/success?payment_intent=${paymentIntentId}`)
+            }
+        } catch (error) {
+            console.error('❌ Error durante el procesamiento:', error)
+            setProcesandoConfirmacion(false)
         }
     }
 
@@ -197,6 +213,7 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
         setClientSecret(null)
         setCurrentPaymentIntentId(null)
         setProcesandoPago(false)
+        setProcesandoConfirmacion(false) // 🔄 Limpiar estado de confirmación
         setCancelandoPago(false) // 🔄 Limpiar estado de cancelación
     }
 
@@ -231,6 +248,31 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
 
     return (
         <>
+            {/* 🔄 Overlay de procesando confirmación - se muestra después del pago exitoso */}
+            {procesandoConfirmacion && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-8 max-w-md mx-4">
+                        <div className="text-center space-y-4">
+                            <div className="flex justify-center">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+                            </div>
+                            <div>
+                                <h3 className="text-white font-semibold text-lg mb-2">
+                                    ✅ Pago Completado
+                                </h3>
+                                <p className="text-zinc-300 text-sm">
+                                    Procesando confirmación y redirigiendo...
+                                </p>
+                            </div>
+                            <div className="flex items-center justify-center space-x-1 text-zinc-400 text-xs">
+                                <CheckCircle className="h-3 w-3" />
+                                <span>Esto solo tomará unos segundos</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader>
                     <CardTitle className="text-zinc-100 flex items-center">
@@ -505,6 +547,7 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                                 onCancel={metodoPago === 'spei' ? handleSPEIClose : handleStripeCancel}
                                 isCanceling={cancelandoPago}
                                 isProcessingPayment={procesandoPago}
+                                isProcessingConfirmation={procesandoConfirmacion}
                             />
                         </Elements>
                     </div>

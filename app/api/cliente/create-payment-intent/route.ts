@@ -9,13 +9,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
     try {
-        const { cotizacionId, metodoPago, montoConComision, eventoId } = await request.json()
+        const { cotizacionId, metodoPago, montoBase, montoConComision, eventoId } = await request.json()
 
         console.log('🚀 CREATE-PAYMENT-INTENT CLIENTE')
         console.log('📊 Datos recibidos:', {
             cotizacionId,
             metodoPago,
-            montoConComision,
+            montoBase, // 🆕 Monto que se abona al cliente
+            montoConComision, // 🆕 Monto que se cobra en Stripe
             eventoId
         })
 
@@ -53,11 +54,13 @@ export async function POST(request: NextRequest) {
         }
 
         // 2. 🧮 Cálculo de montos
-        const montoBase = Number(montoConComision)
-        const montoFinalEnCentavos = Math.round(montoBase * 100)
+        const montoAbonoCliente = Number(montoBase) // 🆕 Monto que se abona al cliente
+        const montoCobroStripe = Number(montoConComision) // 🆕 Monto que se cobra en Stripe
+        const montoFinalEnCentavos = Math.round(montoCobroStripe * 100)
 
         console.log('💰 Detalles del pago cliente:', {
-            montoBase,
+            montoAbonoCliente, // 🆕 Lo que se abona al cliente
+            montoCobroStripe, // 🆕 Lo que cobra Stripe
             centavos: montoFinalEnCentavos,
             metodoPago,
             cliente: cotizacion.Evento?.Cliente?.nombre,
@@ -75,6 +78,8 @@ export async function POST(request: NextRequest) {
                     Math.floor(new Date(cotizacion.Evento.fecha_evento).getTime() / 1000).toString() : '',
                 metodo_pago: metodoPago || 'card',
                 source: 'cliente', // 🎯 Identificador para el webhook
+                monto_abono_cliente: montoAbonoCliente.toString(), // 🆕 Monto que se abona al cliente
+                monto_cobro_stripe: montoCobroStripe.toString(), // 🆕 Monto que se cobra en Stripe
             },
         }
 
@@ -125,21 +130,27 @@ export async function POST(request: NextRequest) {
         const paymentIntent = await stripe.paymentIntents.create(paymentIntentData)
 
         console.log(
-            `✅ Payment Intent cliente creado: ${paymentIntent.id} por $${montoBase.toFixed(2)} MXN (${metodoPago || 'card'})`
+            `✅ Payment Intent cliente creado: ${paymentIntent.id} por $${montoCobroStripe.toFixed(2)} MXN (Stripe) / $${montoAbonoCliente.toFixed(2)} MXN (Abono) - ${metodoPago || 'card'}`
         )
 
-        // 5. � Crear registro de pago en BD para que el webhook lo encuentre
+        // 5. 📝 Crear registro de pago en BD para que el webhook lo encuentre
+        // 🚨 IMPORTANTE: Registramos el monto de ABONO, no el de Stripe
+        const comisionCalculada = montoCobroStripe - montoAbonoCliente // 🧮 Calcular comisión
+
+        const pagoData: any = {
+            clienteId: cotizacion.Evento?.Cliente?.id || '',
+            cotizacionId: cotizacion.id,
+            monto: montoAbonoCliente, // 🎯 Monto que se abona al cliente (SIN comisiones)
+            comisionStripe: metodoPago === 'spei' ? 0 : comisionCalculada, // 🆕 Comisión de Stripe
+            metodo_pago: metodoPago || 'card',
+            concepto: `Pago cliente - ${cotizacion.nombre}`,
+            descripcion: `Payment Intent: ${paymentIntent.id} | Abono: $${montoAbonoCliente} | Cobro Stripe: $${montoCobroStripe} | Comisión: $${comisionCalculada}`,
+            stripe_payment_id: paymentIntent.id,
+            status: 'pending', // El webhook lo cambiará a 'paid'
+        }
+
         await prisma.pago.create({
-            data: {
-                clienteId: cotizacion.Evento?.Cliente?.id || '',
-                cotizacionId: cotizacion.id,
-                monto: montoBase,
-                metodo_pago: metodoPago || 'card',
-                concepto: `Pago cliente - ${cotizacion.nombre}`,
-                descripcion: `Payment Intent: ${paymentIntent.id}`,
-                stripe_payment_id: paymentIntent.id,
-                status: 'pending', // El webhook lo cambiará a 'paid'
-            }
+            data: pagoData
         })
 
         console.log(`📝 Registro de pago creado en BD para Payment Intent: ${paymentIntent.id}`)

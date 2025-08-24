@@ -23,6 +23,7 @@ interface Props {
     returnUrl?: string; // 🎯 Nueva prop para URL de retorno customizable
     isCanceling?: boolean; // 🆕 Estado de cancelación
     isProcessingPayment?: boolean; // 🆕 Estado de procesamiento de pago externo
+    isProcessingConfirmation?: boolean; // 🆕 Estado de procesamiento de confirmación
 }
 
 export default function FormularioPagoStripe({
@@ -32,7 +33,8 @@ export default function FormularioPagoStripe({
     onCancel,
     returnUrl,
     isCanceling = false,
-    isProcessingPayment = false
+    isProcessingPayment = false,
+    isProcessingConfirmation = false
 }: Props) {
     const stripe = useStripe();
     const elements = useElements();
@@ -197,17 +199,19 @@ export default function FormularioPagoStripe({
                 )}
 
                 {/* 🚨 Mensaje de advertencia durante el proceso */}
-                {(isLoading || isCanceling || isProcessingPayment) && (
+                {(isLoading || isCanceling || isProcessingPayment || isProcessingConfirmation) && (
                     <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
                         <div className="flex items-center space-x-2">
                             <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
                             <p className="text-yellow-300 text-sm font-medium">
-                                {(isLoading || isProcessingPayment) ? '⚠️ No cierres esta ventana mientras procesamos tu pago' : '🗑️ Cancelando pago...'}
+                                {(isLoading || isProcessingPayment) ? '⚠️ No cierres esta ventana mientras procesamos tu pago' :
+                                    isProcessingConfirmation ? '✅ Pago completado, procesando confirmación...' :
+                                        '🗑️ Cancelando pago...'}
                             </p>
                         </div>
-                        {(isLoading || isProcessingPayment) && (
+                        {(isLoading || isProcessingPayment || isProcessingConfirmation) && (
                             <p className="text-yellow-400 text-xs mt-2">
-                                Tu transacción está siendo procesada de forma segura
+                                {isProcessingConfirmation ? 'Redirigiendo a la página de confirmación' : 'Tu transacción está siendo procesada de forma segura'}
                             </p>
                         )}
                     </div>
@@ -225,8 +229,8 @@ export default function FormularioPagoStripe({
                     <button
                         type="button"
                         onClick={onCancel}
-                        disabled={isCanceling || isLoading || isProcessingPayment}
-                        className={`flex-1 py-3 px-6 rounded-lg border border-zinc-600 font-medium text-sm transition-all duration-200 ${(isCanceling || isLoading || isProcessingPayment)
+                        disabled={isCanceling || isLoading || isProcessingPayment || isProcessingConfirmation}
+                        className={`flex-1 py-3 px-6 rounded-lg border border-zinc-600 font-medium text-sm transition-all duration-200 ${(isCanceling || isLoading || isProcessingPayment || isProcessingConfirmation)
                             ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                             : 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300 hover:text-white'
                             }`}
@@ -236,6 +240,11 @@ export default function FormularioPagoStripe({
                                 <div className="w-4 h-4 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></div>
                                 Cancelando...
                             </div>
+                        ) : isProcessingConfirmation ? (
+                            <div className="flex items-center justify-center gap-2">
+                                <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                                Procesando...
+                            </div>
                         ) : (
                             paymentData.tipoPago === 'spei' ? 'Cerrar ventana' : 'Cancelar'
                         )}
@@ -243,16 +252,21 @@ export default function FormularioPagoStripe({
 
                     <button
                         type="submit"
-                        disabled={isLoading || !stripe || !elements || isCanceling || isProcessingPayment}
+                        disabled={isLoading || !stripe || !elements || isCanceling || isProcessingPayment || isProcessingConfirmation}
                         className={`flex-1 py-3 px-6 rounded-lg border font-medium text-sm transition-all duration-200 ${paymentData.tipoPago === 'spei'
-                                ? 'bg-green-600 hover:bg-green-700 text-white border-green-500 hover:border-green-400'
-                                : 'bg-purple-600 hover:bg-purple-700 text-white border-purple-500 hover:border-purple-400'
+                            ? 'bg-green-600 hover:bg-green-700 text-white border-green-500 hover:border-green-400'
+                            : 'bg-purple-600 hover:bg-purple-700 text-white border-purple-500 hover:border-purple-400'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                         {(isLoading || isProcessingPayment) ? (
                             <div className="flex items-center justify-center gap-2">
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 Procesando...
+                            </div>
+                        ) : isProcessingConfirmation ? (
+                            <div className="flex items-center justify-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Confirmando...
                             </div>
                         ) : paymentData.tipoPago === 'spei' ? (
                             `Obtener CLABE interbancaria`

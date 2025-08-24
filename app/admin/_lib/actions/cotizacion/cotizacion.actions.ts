@@ -153,18 +153,18 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
                 },
                 EventoTipo: true,
                 CondicionesComerciales: true,
-                Costos: {
+                Costos: { // 🔧 Usar nombre correcto del schema restaurado
                     orderBy: { posicion: 'asc' }
                 },
-                Servicio: {
+                Servicio: { // 🔧 Usar nombre correcto del schema restaurado
                     include: {
                         Servicio: {
                             include: {
                                 ServicioCategoria: {
                                     include: {
-                                        seccionCategoria: {
+                                        seccionCategoria: { // 🔧 Usar nombre correcto del schema restaurado
                                             include: {
-                                                Seccion: true
+                                                Seccion: true // 🔧 Usar nombre correcto del schema restaurado
                                             }
                                         }
                                     }
@@ -173,7 +173,7 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
                         },
                         ServicioCategoria: {
                             include: {
-                                seccionCategoria: {
+                                seccionCategoria: { // 🔧 Usar nombre correcto del schema restaurado
                                     include: {
                                         Seccion: true
                                     }
