@@ -155,11 +155,10 @@ export default function ClienteNavbar() {
                     <div className="flex items-center space-x-8">
                         <Link href="/cliente/dashboard" className="flex items-center">
                             <img
-                                src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/isotipo_gris.svg"
+                                src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_gris.svg"
                                 alt="ProSocial"
-                                className="w-8 h-8 mr-3"
+                                className="h-8 w-auto"
                             />
-                            <span className="text-xl font-bold text-white">ProSocial</span>
                             <span className="ml-2 text-sm text-zinc-400 hidden sm:inline">Portal Cliente</span>
                         </Link>
 
