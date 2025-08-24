@@ -74,16 +74,16 @@ export default function PagoExitoso({ pagoId, cotizacionId, paymentIntentId }: P
         if (evento?.status === 'aprobado' && evento?.id) {
             // Si el evento está aprobado, redirigir al panel del cliente
             if (cliente?.email) {
-                window.location.href = `/cliente/login?email=${encodeURIComponent(cliente.email)}&redirect=/cliente/dashboard`;
+                window.location.href = `/cliente/auth/login?email=${encodeURIComponent(cliente.email)}&redirect=/cliente/dashboard`;
             } else {
-                window.location.href = '/cliente/login?redirect=/cliente/dashboard';
+                window.location.href = '/cliente/auth/login?redirect=/cliente/dashboard';
             }
         } else if (cliente?.email && evento?.id) {
             // Si el evento no está aprobado, redirigir al evento público
-            window.location.href = `/cliente/login?email=${encodeURIComponent(cliente.email)}&redirect=/evento/${evento.id}`;
+            window.location.href = `/cliente/auth/login?email=${encodeURIComponent(cliente.email)}&redirect=/evento/${evento.id}`;
         } else {
             // Redirigir al login general si no tenemos datos completos
-            window.location.href = '/cliente/login';
+            window.location.href = '/cliente/auth/login';
         }
     };
 

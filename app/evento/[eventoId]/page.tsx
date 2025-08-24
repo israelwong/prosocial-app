@@ -60,7 +60,7 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
 
     // Si requiere login de cliente
     if (resultadoCotizaciones.requiereLogin) {
-        redirect('/cliente/login')
+        redirect('/cliente/auth/login')
     }
 
     // Calcular días restantes
