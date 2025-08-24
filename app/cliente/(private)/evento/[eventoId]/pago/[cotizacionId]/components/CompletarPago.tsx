@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
-import { CreditCard, Building2, AlertCircle, Lock } from 'lucide-react'
+import { CreditCard, Building2, AlertCircle, Lock, Clock, CheckCircle } from 'lucide-react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
 import FormularioPagoStripe from '@/app/components/checkout/FormularioPagoStripe'
@@ -200,6 +200,35 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
         setCancelandoPago(false) // 🔄 Limpiar estado de cancelación
     }
 
+    // 🏦 Función específica para cerrar modal SPEI y ir directamente a pendiente
+    const handleSPEIRedirect = () => {
+        console.log('🏦 SPEI: Cerrando modal y redirigiendo a página pendiente:', currentPaymentIntentId)
+
+        // Limpiar estado local sin cancelar Payment Intent
+        setShowStripeModal(false)
+        setClientSecret(null)
+        const paymentIntentId = currentPaymentIntentId
+        setCurrentPaymentIntentId(null)
+        setProcesandoPago(false)
+        setCancelandoPago(false)
+        setMontoAPagar('')
+
+        // Redirigir a página pendiente para SPEI
+        router.push(`/cliente/evento/${eventoId}/pago/${cotizacionId}/pending?payment_intent=${paymentIntentId}&monto=${parseFloat(montoAPagar)}`)
+    }
+
+    // 🏦 Función específica para cerrar modal SPEI sin eliminar Payment Intent
+    const handleSPEIClose = () => {
+        console.log('🏦 SPEI: Cerrando modal sin eliminar Payment Intent:', currentPaymentIntentId)
+
+        // Solo cerrar modal y limpiar estado local, preservar Payment Intent
+        setShowStripeModal(false)
+        setClientSecret(null)
+        setCurrentPaymentIntentId(null)
+        setProcesandoPago(false)
+        setCancelandoPago(false)
+    }
+
     return (
         <>
             <Card className="bg-zinc-900 border-zinc-800">
@@ -310,7 +339,7 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                         </div>
                     )}
 
-                    {/* Botón Pagar */}
+                    {/* Botón normal de pagar */}
                     <Button
                         onClick={handlePagar}
                         disabled={!montoAPagar || parseFloat(montoAPagar) <= 0 || procesandoPago}
@@ -331,7 +360,7 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                                 ) : (
                                     <Building2 className="h-4 w-4 mr-2" />
                                 )}
-                                Pagarás {formatMoney(metodoPago === 'spei' ? parseFloat(montoAPagar) : montoConComision)}
+                                {metodoPago === 'spei' ? 'Obtener datos de transferencia' : `Pagarás ${formatMoney(montoConComision)}`}
                             </>
                         )}
                     </Button>
@@ -346,27 +375,26 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                             <h2 className="text-white text-2xl font-bold">
                                 {metodoPago === 'spei' ? 'Transferencia SPEI' : 'Completar Pago'}
                             </h2>
-                            <button
-                                onClick={handleStripeCancel}
-                                disabled={cancelandoPago || procesandoPago} // 🎯 Deshabilitar durante cualquier proceso
-                                className={`text-3xl transition-all duration-200 ${(cancelandoPago || procesandoPago)
-                                    ? 'text-zinc-600 cursor-not-allowed'
-                                    : 'text-zinc-400 hover:text-white'
-                                    }`}
-                                title={
-                                    cancelandoPago ? 'Procesando...' :
-                                        procesandoPago ? 'Procesando pago...' :
-                                            metodoPago === 'spei' ? 'Continuar con los datos de transferencia' : 'Cancelar pago'
-                                }
-                            >
-                                {(cancelandoPago || procesandoPago) ? (
-                                    <div className="flex items-center space-x-2">
-                                        <div className="w-6 h-6 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></div>
-                                    </div>
-                                ) : (
-                                    '×'
-                                )}
-                            </button>
+                            {/* Ocultar botón X cuando es SPEI para evitar confusión */}
+                            {metodoPago !== 'spei' && (
+                                <button
+                                    onClick={handleStripeCancel}
+                                    disabled={cancelandoPago || procesandoPago}
+                                    className={`text-3xl transition-all duration-200 ${(cancelandoPago || procesandoPago)
+                                        ? 'text-zinc-600 cursor-not-allowed'
+                                        : 'text-zinc-400 hover:text-white'
+                                        }`}
+                                    title={cancelandoPago ? 'Procesando...' : procesandoPago ? 'Procesando pago...' : 'Cancelar pago'}
+                                >
+                                    {(cancelandoPago || procesandoPago) ? (
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-6 h-6 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></div>
+                                        </div>
+                                    ) : (
+                                        '×'
+                                    )}
+                                </button>
+                            )}
                         </div>
 
                         <Elements
@@ -387,18 +415,68 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                                 }
                             }}
                         >
-                            {/* Mensaje informativo para SPEI */}
+                            {/* Ficha informativa detallada para SPEI */}
                             {metodoPago === 'spei' && (
-                                <div className="mb-6 p-4 bg-green-900/20 border border-green-800 rounded-lg">
-                                    <div className="flex items-start space-x-3">
-                                        <Building2 className="h-5 w-5 text-green-400 mt-0.5" />
-                                        <div>
-                                            <h3 className="text-green-300 font-medium mb-1">¿Cómo funciona la transferencia SPEI?</h3>
-                                            <div className="text-green-200 text-sm space-y-1">
-                                                <p>1. Se mostrarán los datos bancarios para tu transferencia</p>
-                                                <p>2. Al confirmar, irás a una página con instrucciones detalladas</p>
-                                                <p>3. Realiza la transferencia desde tu banco</p>
-                                                <p>4. Tu pago se reflejará automáticamente</p>
+                                <div className="mb-6 space-y-4">
+                                    {/* Información principal */}
+                                    <div className="p-5 bg-blue-900/20 border border-blue-700 rounded-lg">
+                                        <div className="flex items-start space-x-3">
+                                            <div className="bg-blue-600 rounded-full p-2">
+                                                <Building2 className="h-5 w-5 text-white" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="text-blue-300 font-semibold text-lg mb-2">Transferencia SPEI - Información importante</h3>
+                                                <div className="text-blue-100 text-sm space-y-2">
+                                                    <p className="font-medium text-blue-200">Al confirmar obtener los datos bancarios:</p>
+                                                    <div className="pl-4 space-y-1">
+                                                        <p>• Se generarán los datos bancarios para tu transferencia</p>
+                                                        <p>• Tu pago quedará registrado como <span className="font-semibold text-yellow-300">"PENDIENTE"</span></p>
+                                                        <p>• Irás a una página con instrucciones detalladas</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Estado y proceso */}
+                                    <div className="p-4 bg-yellow-900/20 border border-yellow-700 rounded-lg">
+                                        <div className="flex items-start space-x-3">
+                                            <div className="bg-yellow-600 rounded-full p-1.5">
+                                                <Clock className="h-4 w-4 text-white" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="text-yellow-300 font-medium mb-1">Estado del pago</h4>
+                                                <div className="text-yellow-100 text-sm space-y-1">
+                                                    <p>• El estatus será <span className="font-semibold">"PENDIENTE"</span> hasta realizar la transferencia</p>
+                                                    <p>• Se actualizará automáticamente cuando tu banco notifique la transacción</p>
+                                                    <p>• Recibirás confirmación por email una vez procesado</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Proceso paso a paso */}
+                                    <div className="p-4 bg-green-900/20 border border-green-700 rounded-lg">
+                                        <div className="flex items-start space-x-3">
+                                            <div className="bg-green-600 rounded-full p-1.5">
+                                                <CheckCircle className="h-4 w-4 text-white" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="text-green-300 font-medium mb-2">Proceso de pago</h4>
+                                                <div className="text-green-100 text-sm space-y-1">
+                                                    <div className="flex items-center space-x-2">
+                                                        <span className="bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">1</span>
+                                                        <span>Obtener datos bancarios (CLABE interbancaria)</span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-2">
+                                                        <span className="bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">2</span>
+                                                        <span>Realizar transferencia desde tu banco o app bancaria</span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-2">
+                                                        <span className="bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">3</span>
+                                                        <span>El pago se reflejará automáticamente (puede tardar unos minutos)</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -424,7 +502,7 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                                     }
                                 }}
                                 onSuccess={handleStripeSuccess}
-                                onCancel={handleStripeCancel}
+                                onCancel={metodoPago === 'spei' ? handleSPEIClose : handleStripeCancel}
                                 isCanceling={cancelandoPago}
                                 isProcessingPayment={procesandoPago}
                             />

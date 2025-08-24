@@ -220,15 +220,15 @@ export default function FormularioPagoStripe({
                     </div>
                 )}
 
-                {/* 🔄 Botones de acción */}
+                {/* 🔄 Botones de acción - Dinámicos según tipo de pago */}
                 <div className="flex gap-3">
                     <button
                         type="button"
                         onClick={onCancel}
-                        disabled={isCanceling || isLoading || isProcessingPayment} // 🎯 Deshabilitar si cualquier proceso está activo
+                        disabled={isCanceling || isLoading || isProcessingPayment}
                         className={`flex-1 py-3 px-6 rounded-lg border border-zinc-600 font-medium text-sm transition-all duration-200 ${(isCanceling || isLoading || isProcessingPayment)
-                                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                                : 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300 hover:text-white'
+                            ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                            : 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300 hover:text-white'
                             }`}
                     >
                         {isCanceling ? (
@@ -237,20 +237,25 @@ export default function FormularioPagoStripe({
                                 Cancelando...
                             </div>
                         ) : (
-                            'Cancelar'
+                            paymentData.tipoPago === 'spei' ? 'Cerrar ventana' : 'Cancelar'
                         )}
                     </button>
 
                     <button
                         type="submit"
-                        disabled={isLoading || !stripe || !elements || isCanceling || isProcessingPayment} // 🎯 Deshabilitar si cualquier proceso está activo
-                        className="flex-1 py-3 px-6 rounded-lg border font-medium text-sm transition-all duration-200 bg-purple-600 hover:bg-purple-700 text-white border-purple-500 hover:border-purple-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isLoading || !stripe || !elements || isCanceling || isProcessingPayment}
+                        className={`flex-1 py-3 px-6 rounded-lg border font-medium text-sm transition-all duration-200 ${paymentData.tipoPago === 'spei'
+                                ? 'bg-green-600 hover:bg-green-700 text-white border-green-500 hover:border-green-400'
+                                : 'bg-purple-600 hover:bg-purple-700 text-white border-purple-500 hover:border-purple-400'
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                         {(isLoading || isProcessingPayment) ? (
                             <div className="flex items-center justify-center gap-2">
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 Procesando...
                             </div>
+                        ) : paymentData.tipoPago === 'spei' ? (
+                            `Obtener CLABE interbancaria`
                         ) : (
                             `Pagar $${paymentData.montoFinal.toLocaleString('es-MX', {
                                 minimumFractionDigits: 2,
