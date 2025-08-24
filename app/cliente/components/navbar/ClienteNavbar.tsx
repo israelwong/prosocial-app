@@ -85,7 +85,7 @@ export default function ClienteNavbar() {
             description: 'Eventos contratados y en progreso'
         },
         {
-            name: 'Pagos',
+            name: 'Historial de Pagos',
             href: '/cliente/pagos',
             icon: CreditCard,
             current: pathname?.includes('/pago') || pathname === '/cliente/pagos' || false,

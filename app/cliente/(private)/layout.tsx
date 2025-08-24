@@ -7,7 +7,7 @@
 import { useClienteAuth } from '@/app/cliente/hooks/useClienteAuth';
 import ClienteNavbar from '@/app/cliente/components/navbar/ClienteNavbar';
 import ClienteFooter from '@/app/cliente/components/footer/ClienteFooter';
-import { DashboardContentSkeleton } from '@/app/cliente/components/ui/skeleton';
+import { AuthValidationSkeleton } from '@/app/cliente/components/ui/skeleton';
 
 export default function ClientePrivateLayout({
     children,
@@ -22,7 +22,7 @@ export default function ClientePrivateLayout({
             <div className="min-h-screen bg-zinc-950 flex flex-col">
                 <ClienteNavbar />
                 <main className="flex-1">
-                    <DashboardContentSkeleton />
+                    <AuthValidationSkeleton />
                 </main>
                 <ClienteFooter />
             </div>
@@ -35,7 +35,7 @@ export default function ClientePrivateLayout({
             <div className="min-h-screen bg-zinc-950 flex flex-col">
                 <ClienteNavbar />
                 <main className="flex-1">
-                    <DashboardContentSkeleton />
+                    <AuthValidationSkeleton />
                 </main>
                 <ClienteFooter />
             </div>

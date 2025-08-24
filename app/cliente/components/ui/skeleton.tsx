@@ -420,6 +420,18 @@ function PagosListSkeleton() {
     );
 }
 
+// Skeleton compacto para validación de autenticación (layout loading)
+function AuthValidationSkeleton() {
+    return (
+        <div className="bg-zinc-950 flex-1 flex items-center justify-center min-h-[200px]">
+            <div className="text-center">
+                <div className="w-8 h-8 border-2 border-zinc-300 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                <p className="text-zinc-400 text-sm">Cargando...</p>
+            </div>
+        </div>
+    );
+}
+
 export {
     Skeleton,
     CardSkeleton,
@@ -434,5 +446,6 @@ export {
     FormSkeleton,
     ButtonLoadingSkeleton,
     EditarEventoSkeleton,
-    PagosListSkeleton
+    PagosListSkeleton,
+    AuthValidationSkeleton
 };
