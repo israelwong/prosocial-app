@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { obtenerPagoSesionStripe } from '@/app/admin/_lib/actions/pagos';
 import { Pago as PagoType, Cliente as ClienteType } from '@/app/admin/_lib/types';
+import { PagoLoadingSkeleton } from '../../../components/ui/skeleton';
 
 export default function PagoExitosoCliente() {
     const searchParams = useSearchParams();
@@ -36,17 +37,7 @@ export default function PagoExitosoCliente() {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full">
-                    <div className="animate-pulse space-y-4">
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                        <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                    </div>
-                </div>
-            </div>
-        );
+        return <PagoLoadingSkeleton />
     }
 
     return (

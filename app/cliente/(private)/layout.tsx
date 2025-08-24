@@ -6,6 +6,8 @@
 
 import { useClienteAuth } from '@/app/cliente/hooks/useClienteAuth';
 import ClienteNavbar from '@/app/cliente/components/navbar/ClienteNavbar';
+import ClienteFooter from '@/app/cliente/components/footer/ClienteFooter';
+import { DashboardContentSkeleton } from '@/app/cliente/components/ui/skeleton';
 
 export default function ClientePrivateLayout({
     children,
@@ -17,11 +19,12 @@ export default function ClientePrivateLayout({
     // Mostrar loading mientras se verifica la autenticación
     if (loading) {
         return (
-            <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
-                    <p className="mt-4 text-zinc-400">Verificando autenticación...</p>
-                </div>
+            <div className="min-h-screen bg-zinc-950 flex flex-col">
+                <ClienteNavbar />
+                <main className="flex-1">
+                    <DashboardContentSkeleton />
+                </main>
+                <ClienteFooter />
             </div>
         );
     }
@@ -29,17 +32,18 @@ export default function ClientePrivateLayout({
     // Si no está autenticado, el hook ya manejó la redirección
     if (!isAuthenticated || !cliente) {
         return (
-            <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
-                    <p className="mt-4 text-zinc-400">Redirigiendo...</p>
-                </div>
+            <div className="min-h-screen bg-zinc-950 flex flex-col">
+                <ClienteNavbar />
+                <main className="flex-1">
+                    <DashboardContentSkeleton />
+                </main>
+                <ClienteFooter />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-zinc-950">
+        <div className="min-h-screen bg-zinc-950 flex flex-col">
             {/* Navbar Component */}
             <ClienteNavbar />
 
@@ -47,6 +51,9 @@ export default function ClientePrivateLayout({
             <main className="flex-1">
                 {children}
             </main>
+
+            {/* Footer Component */}
+            <ClienteFooter />
         </div>
     );
 }

@@ -348,7 +348,7 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                     >
                         {procesandoPago ? (
                             <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                <div className="w-4 h-4 border-2 border-zinc-300 border-t-transparent rounded-full animate-spin mr-2"></div>
                                 Procesando pago...
                             </>
                         ) : !montoAPagar || parseFloat(montoAPagar) <= 0 ? (

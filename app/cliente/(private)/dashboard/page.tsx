@@ -7,6 +7,7 @@ import { useClienteAuth } from '../../hooks'
 import { obtenerEventosCliente } from '../../_lib/actions/evento.actions'
 import { Evento } from '../../_lib/types'
 import EventoCard from './components/EventoCard'
+import { DashboardContentSkeleton } from '@/app/cliente/components/ui/skeleton'
 
 export default function ClienteDashboard() {
     const [eventos, setEventos] = useState<Evento[]>([])
@@ -41,16 +42,7 @@ export default function ClienteDashboard() {
     }, [isAuthenticated, cliente])
 
     if (!isAuthenticated || loading) {
-        return (
-            <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
-                    <p className="mt-4 text-zinc-400">
-                        {!isAuthenticated ? 'Verificando autenticación...' : 'Cargando tus eventos...'}
-                    </p>
-                </div>
-            </div>
-        )
+        return <DashboardContentSkeleton />
     }
 
     return (

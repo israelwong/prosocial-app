@@ -56,7 +56,7 @@ export default function SPEIPage() {
         return (
             <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
+                    <div className="w-12 h-12 border-2 border-zinc-300 border-t-transparent rounded-full animate-spin mx-auto"></div>
                     <p className="mt-4 text-zinc-400">Cargando...</p>
                 </div>
             </div>

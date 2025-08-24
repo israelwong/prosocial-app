@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { CheckCircle, CreditCard, Eye, ArrowLeft } from 'lucide-react'
+import { PagoLoadingSkeleton } from '../../../../../../components/ui/skeleton'
 
 export default function PagoExitoso() {
     const router = useRouter()
@@ -48,36 +49,22 @@ export default function PagoExitoso() {
     }
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-                <Card className="bg-zinc-900 border-zinc-800 w-full max-w-md">
-                    <CardContent className="p-8 text-center">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-500 mx-auto mb-4"></div>
-                        <p className="text-zinc-300">Procesando pago...</p>
-                    </CardContent>
-                </Card>
-            </div>
-        )
+        return <PagoLoadingSkeleton />
     }
 
     return (
         <div className="min-h-screen bg-zinc-950 p-4">
             <div className="max-w-2xl mx-auto pt-8">
                 {/* Header de éxito */}
-                <Card className="bg-gradient-to-r from-green-900/20 to-emerald-900/20 border-green-800 mb-6">
-                    <CardContent className="p-8 text-center">
-                        <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                        <h1 className="text-3xl font-bold text-green-400 mb-2">
-                            ¡Pago Exitoso!
+                <Card className="bg-zinc-900 border-green-700 mb-6">
+                    <CardContent className="p-6 text-center">
+                        <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                        <h1 className="text-2xl font-bold text-green-400 mb-2">
+                            Pago Exitoso
                         </h1>
-                        <p className="text-zinc-300 text-lg">
+                        <p className="text-zinc-400">
                             Tu pago ha sido procesado correctamente
                         </p>
-                        {paymentIntentId && (
-                            <p className="text-zinc-500 text-sm mt-2">
-                                ID de transacción: {paymentIntentId.slice(-8)}
-                            </p>
-                        )}
                     </CardContent>
                 </Card>
 

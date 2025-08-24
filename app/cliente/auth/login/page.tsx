@@ -1,6 +1,7 @@
 import React from 'react'
 import { Metadata } from 'next'
 import LoginForm from '../../components/LoginForm'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
     title: 'Acceso Clientes - ProSocial'
@@ -12,18 +13,21 @@ export default function ClientePortalLoginPage() {
             <div className="max-w-md w-full">
                 {/* Logo y título */}
                 <div className="text-center mb-8">
-                    <div className="text-4xl font-bold text-white mb-2">
-                        ProSocial
-                    </div>
-                    <div className="text-zinc-400">
-                        Portal de clientes
+                    <div className="flex flex-col items-center justify-center">
+                        <Link href="/cliente/dashboard" className="flex items-center justify-center">
+                            <img
+                                src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_gris.svg"
+                                alt="ProSocial"
+                                className="w-48 h-auto"
+                            />
+                        </Link>
                     </div>
                 </div>
 
                 {/* Formulario de login */}
                 <div className="bg-zinc-800/50 backdrop-blur-sm border border-zinc-700 rounded-2xl p-8">
                     <h1 className="text-2xl font-bold text-white mb-6 text-center">
-                        Bienvenido
+                        Portal de clientes
                     </h1>
 
                     <div className="text-zinc-400 text-sm mb-6 text-center">

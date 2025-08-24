@@ -10,6 +10,7 @@ import { obtenerCotizacionPago, obtenerPagosCotizacion } from '../../../../../_l
 import CompletarPago from './components/CompletarPago'
 import ResumenCotizacion from './components/ResumenCotizacion'
 import HistorialPagos from './components/HistorialPagos'
+import { PagoLoadingSkeleton } from '../../../../../components/ui/skeleton'
 
 interface CotizacionPago {
     id: string
@@ -125,14 +126,7 @@ export default function PagoCotizacionPage() {
     }
 
     if (!isAuthenticated || loading) {
-        return (
-            <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
-                    <p className="mt-4 text-zinc-400">Cargando información de pago...</p>
-                </div>
-            </div>
-        )
+        return <PagoLoadingSkeleton />
     }
 
     if (!cotizacion) {

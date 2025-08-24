@@ -21,6 +21,7 @@ import { useClienteAuth } from '../../../../hooks'
 import { obtenerEventoDetalle } from '../../../../_lib/actions/evento.actions'
 import { obtenerPagosEvento } from '../../../../_lib/actions/pago.actions'
 import { EventoDetalle } from '../../../../_lib/types'
+import { PagosSkeleton, PagosListSkeleton } from '@/app/cliente/components/ui/skeleton'
 
 interface PagoDetalle {
     id: string
@@ -135,6 +136,7 @@ export default function HistorialPagosEvento() {
         switch (status) {
             case 'completado':
             case 'succeeded':
+            case 'paid':
                 return <CheckCircle className="h-5 w-5 text-green-400" />
             case 'pendiente':
             case 'pending':
@@ -193,20 +195,22 @@ export default function HistorialPagosEvento() {
 
         // Mapeo de métodos de pago comunes
         const metodosComunes: Record<string, string> = {
-            'tarjeta': 'Tarjeta',
+            'tarjeta': 'Tarjeta de Crédito',
             'tarjeta_credito': 'Tarjeta de Crédito',
             'tarjeta_debito': 'Tarjeta de Débito',
             'credit_card': 'Tarjeta de Crédito',
             'debit_card': 'Tarjeta de Débito',
-            'transferencia': 'Transferencia Bancaria',
-            'transferencia_bancaria': 'Transferencia Bancaria',
-            'bank_transfer': 'Transferencia Bancaria',
+            'card': 'Tarjeta de Crédito',
+            'transferencia': 'Transferencia SPEI',
+            'transferencia_bancaria': 'Transferencia SPEI',
+            'bank_transfer': 'Transferencia SPEI',
+            'customer_balance': 'Transferencia SPEI',
+            'spei': 'Transferencia SPEI',
             'efectivo': 'Efectivo',
             'cash': 'Efectivo',
             'paypal': 'PayPal',
             'stripe': 'Stripe',
-            'oxxo': 'OXXO',
-            'spei': 'SPEI'
+            'oxxo': 'OXXO'
         }
 
         // Buscar en el mapeo primero
@@ -238,14 +242,7 @@ export default function HistorialPagosEvento() {
     }
 
     if (!isAuthenticated || loading) {
-        return (
-            <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
-                    <p className="mt-4 text-zinc-400">Cargando historial de pagos...</p>
-                </div>
-            </div>
-        )
+        return <PagosSkeleton />
     }
 
     if (!evento) {
@@ -290,49 +287,40 @@ export default function HistorialPagosEvento() {
             {/* Header */}
             <div className="bg-zinc-900 shadow-sm border-b border-zinc-800">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between py-6">
-                        <div className="flex items-center space-x-4">
-                            <div className="flex items-center space-x-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 sm:py-6 gap-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                            <div className="flex items-center space-x-2 text-sm">
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => router.push('/cliente/dashboard')}
-                                    className="text-zinc-400 hover:text-zinc-100"
+                                    className="text-zinc-400 hover:text-zinc-100 p-1 sm:p-2"
                                 >
-                                    <ArrowLeft className="h-4 w-4 mr-2" />
-                                    Dashboard
+                                    <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+                                    <span className="hidden sm:inline">Dashboard</span>
                                 </Button>
-                                <span className="text-zinc-600">•</span>
+                                <span className="text-zinc-600 hidden sm:inline">•</span>
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => router.push(`/cliente/evento/${eventoId}`)}
-                                    className="text-zinc-400 hover:text-zinc-100"
+                                    className="text-zinc-400 hover:text-zinc-100 p-1 sm:p-2"
                                 >
-                                    Volver al Evento
+                                    <span className="hidden sm:inline">Volver al Evento</span>
+                                    <span className="sm:hidden">Evento</span>
                                 </Button>
                             </div>
-                            <div>
-                                <h1 className="text-2xl font-bold text-zinc-100">Historial de Pagos</h1>
-                                <p className="text-zinc-400">{evento.nombre}</p>
+                            <div className="min-w-0 flex-1">
+                                <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 truncate">Historial de Pagos del evento</h1>
+                                <p className="text-zinc-400 text-sm sm:text-base truncate">{evento.nombre}</p>
                             </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => router.push(`/cliente/evento/${eventoId}`)}
-                                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-                            >
-                                <Eye className="h-4 w-4 mr-2" />
-                                Ver Evento
-                            </Button>
-                        </div>
+
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col items-center">
                 <div className="grid gap-6 lg:grid-cols-3">
                     {/* Resumen */}
                     <div className="lg:col-span-1">
@@ -404,10 +392,7 @@ export default function HistorialPagosEvento() {
                             </CardHeader>
                             <CardContent>
                                 {loadingPagos ? (
-                                    <div className="text-center py-12">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
-                                        <p className="mt-4 text-zinc-400">Cargando pagos...</p>
-                                    </div>
+                                    <PagosListSkeleton />
                                 ) : pagos.length === 0 ? (
                                     <div className="text-center py-12">
                                         <CreditCard className="mx-auto h-12 w-12 text-zinc-500 mb-4" />
@@ -461,12 +446,6 @@ export default function HistorialPagosEvento() {
                                                         {pago.descripcion && (
                                                             <p className="text-sm text-zinc-500 mt-2">
                                                                 {pago.descripcion}
-                                                            </p>
-                                                        )}
-
-                                                        {pago.stripe_payment_id && (
-                                                            <p className="text-xs text-zinc-600 mt-2 font-mono">
-                                                                Ref: {pago.stripe_payment_id}
                                                             </p>
                                                         )}
                                                     </div>

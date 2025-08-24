@@ -10,6 +10,7 @@ import ResumenPago from './components/ResumenPago'
 import { useClienteAuth } from '../../../hooks'
 import { obtenerEventoDetalle } from '../../../_lib/actions'
 import type { EventoDetalle } from '../../../_lib/types'
+import { EventoContentSkeleton } from '@/app/cliente/components/ui/skeleton'
 import {
     CalendarDays,
     MapPin,
@@ -123,16 +124,7 @@ export default function EventoDetalle() {
     }
 
     if (!isAuthenticated || loading) {
-        return (
-            <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
-                    <p className="mt-4 text-zinc-400">
-                        {!isAuthenticated ? 'Verificando autenticación...' : 'Cargando detalles del evento...'}
-                    </p>
-                </div>
-            </div>
-        )
+        return <EventoContentSkeleton />
     }
 
     if (!evento) {

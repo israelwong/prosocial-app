@@ -10,6 +10,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import { useClienteAuth } from '../../../../hooks'
 import { obtenerEventoDetalle, editarEvento } from '../../../../_lib/actions/evento.actions'
 import { EventoDetalle } from '../../../../_lib/types'
+import { EditarEventoSkeleton } from '../../../../components/ui/skeleton'
 
 interface EventoEditData {
     nombre: string
@@ -105,16 +106,7 @@ export default function EditarEventoPage() {
     }
 
     if (!isAuthenticated || loading) {
-        return (
-            <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
-                    <p className="mt-4 text-zinc-400">
-                        {!isAuthenticated ? 'Verificando autenticación...' : 'Cargando evento...'}
-                    </p>
-                </div>
-            </div>
-        )
+        return <EditarEventoSkeleton />
     }
 
     if (error && !evento) {
@@ -245,7 +237,7 @@ export default function EditarEventoPage() {
                                 >
                                     {saving ? (
                                         <div className="flex items-center gap-2">
-                                            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                            <div className="w-4 h-4 border-2 border-zinc-300 border-t-transparent rounded-full animate-spin" />
                                             Guardando...
                                         </div>
                                     ) : (
