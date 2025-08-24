@@ -285,6 +285,7 @@ export async function obtenerPagosEvento(eventoId: string, clienteId?: string): 
             cotizacion.Pago.map(pago => ({
                 id: pago.id,
                 monto: pago.monto,
+                comisionStripe: (pago as any).comisionStripe || 0, // 🆕 Incluir comisión Stripe
                 metodo_pago: pago.metodo_pago,
                 status: pago.status,
                 createdAt: pago.createdAt,
@@ -573,6 +574,48 @@ export async function obtenerTodosPagosCliente(clienteId?: string): Promise<{
         return {
             success: false,
             message: 'Error interno del servidor'
+        }
+    }
+}
+
+/**
+ * Obtener métodos de pago disponibles con sus comisiones
+ */
+export async function obtenerMetodosPago() {
+    try {
+        console.log('🔍 Obteniendo métodos de pago con comisiones...')
+
+        const metodosPago = await prisma.metodoPago.findMany({
+            where: {
+                status: 'active'
+            },
+            select: {
+                id: true,
+                metodo_pago: true,
+                comision_porcentaje_base: true,
+                comision_fija_monto: true,
+                num_msi: true,
+                comision_msi_porcentaje: true,
+                payment_method: true
+            },
+            orderBy: {
+                orden: 'asc'
+            }
+        })
+
+        console.log('✅ Métodos de pago obtenidos:', metodosPago.length)
+
+        return {
+            success: true,
+            data: metodosPago
+        }
+
+    } catch (error) {
+        console.error('❌ Error al obtener métodos de pago:', error)
+        return {
+            success: false,
+            message: 'Error al obtener métodos de pago',
+            data: []
         }
     }
 }

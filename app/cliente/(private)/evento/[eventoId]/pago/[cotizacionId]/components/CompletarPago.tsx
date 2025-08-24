@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
@@ -7,8 +7,19 @@ import { CreditCard, Building2, AlertCircle, Lock, Clock, CheckCircle } from 'lu
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
 import FormularioPagoStripe from '@/app/components/checkout/FormularioPagoStripe'
+import { obtenerMetodosPago } from '@/app/cliente/_lib/actions/pago.actions'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+
+interface MetodoPago {
+    id: string
+    metodo_pago: string
+    comision_porcentaje_base: number | null
+    comision_fija_monto: number | null
+    num_msi: number | null
+    comision_msi_porcentaje: number | null
+    payment_method: string | null
+}
 
 interface CompletarPagoProps {
     cotizacionId: string
@@ -28,7 +39,32 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
     const [cancelandoPago, setCancelandoPago] = useState(false) // 🆕 Estado de cancelación
     const [procesandoConfirmacion, setProcesandoConfirmacion] = useState(false) // 🆕 Estado post-pago
     const [montoConComision, setMontoConComision] = useState(0)
+    const [metodosPago, setMetodosPago] = useState<MetodoPago[]>([]) // 🆕 Métodos de pago de BD
+    const [cargandoMetodos, setCargandoMetodos] = useState(true) // 🆕 Estado de carga
     const router = useRouter()
+
+    // 🆕 Cargar métodos de pago al montar el componente
+    useEffect(() => {
+        const cargarMetodosPago = async () => {
+            try {
+                setCargandoMetodos(true)
+                const resultado = await obtenerMetodosPago()
+
+                if (resultado.success && resultado.data) {
+                    setMetodosPago(resultado.data)
+                    console.log('✅ Métodos de pago cargados:', resultado.data)
+                } else {
+                    console.error('❌ Error al cargar métodos de pago:', resultado.message)
+                }
+            } catch (error) {
+                console.error('❌ Error al cargar métodos de pago:', error)
+            } finally {
+                setCargandoMetodos(false)
+            }
+        }
+
+        cargarMetodosPago()
+    }, [])
 
     const formatMoney = (amount: number) => {
         return new Intl.NumberFormat('es-MX', {
@@ -37,24 +73,52 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
         }).format(amount)
     }
 
-    // Calcular el monto con comisión según el método de pago
+    // 🆕 Calcular el monto con comisión según el método de pago desde BD
     const calcularMontoConComision = (monto: number, metodo: string) => {
-        if (metodo === 'spei') {
+        // Buscar el método de pago en los datos de BD
+        const metodoPagoData = metodosPago.find(mp =>
+            mp.payment_method === metodo ||
+            mp.metodo_pago.toLowerCase().includes(metodo.toLowerCase())
+        )
+
+        if (!metodoPagoData) {
+            console.warn(`⚠️ Método de pago no encontrado en BD: ${metodo}`)
+            // Fallback a valores anteriores si no se encuentra en BD
+            if (metodo === 'spei') {
+                return monto // SPEI sin comisión
+            } else {
+                // Tarjeta con comisión del 3.6% + IVA (16%)
+                const comisionBase = monto * 0.036
+                const iva = comisionBase * 0.16
+                return monto + comisionBase + iva
+            }
+        }
+
+        // Usar datos de la BD
+        if (metodo === 'spei' || metodoPagoData.payment_method === 'customer_balance') {
             // SPEI sin comisión adicional
             return monto
         } else {
-            // Tarjeta con comisión del 3.6% + IVA (16%)
-            const comisionBase = monto * 0.036 // 3.6%
-            const iva = comisionBase * 0.16 // 16% de IVA
-            const comisionTotal = comisionBase + iva
-            return monto + comisionTotal
+            // Tarjeta u otros métodos con comisión
+            const porcentajeComision = metodoPagoData.comision_porcentaje_base || 0
+            const montoFijo = metodoPagoData.comision_fija_monto || 0
+
+            // Calcular comisión base
+            const comisionBase = monto * (porcentajeComision / 100)
+
+            // Agregar IVA del 16% a la comisión
+            const iva = comisionBase * 0.16
+
+            // Total = monto base + comisión + IVA + monto fijo
+            const total = monto + comisionBase + iva + montoFijo
+            return parseFloat(total.toFixed(2)) // 🎯 Truncar a 2 decimales
         }
     }
 
     const handleMontoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const valor = e.target.value
-        // Solo permitir números y punto decimal
-        if (/^\d*\.?\d*$/.test(valor)) {
+        // Solo permitir números y punto decimal, máximo 2 decimales
+        if (/^\d*\.?\d{0,2}$/.test(valor)) { // 🎯 Limitar a 2 decimales desde el input
             setMontoAPagar(valor)
 
             // Recalcular monto con comisión
@@ -320,75 +384,90 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                                 Selecciona tu método de pago:
                             </label>
 
-                            {/* Opción Tarjeta */}
-                            <div
-                                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${metodoPago === 'tarjeta'
-                                    ? 'border-blue-500 bg-blue-500/10'
-                                    : 'border-zinc-700 bg-zinc-800 hover:border-zinc-600'
-                                    }`}
-                                onClick={() => handleMetodoPagoChange('tarjeta')}
-                            >
-                                <div className="w-full">
-                                    <div className="flex items-center mb-2">
-                                        <CreditCard className="h-4 w-4 mr-2 text-blue-400" />
-                                        <span className="font-medium text-zinc-200">Tarjeta de Crédito/Débito</span>
-                                    </div>
-                                    <p className="text-sm text-zinc-400 mb-2">
-                                        Procesamiento seguro con Stripe. Acepta Visa, Mastercard, American Express.
-                                    </p>
-                                    <div className="bg-zinc-900/50 rounded p-3 space-y-1 w-full">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-zinc-400">Subtotal:</span>
-                                            <span className="text-zinc-300">{formatMoney(parseFloat(montoAPagar))}</span>
-                                        </div>
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-zinc-400">Comisión Stripe (3.6% + IVA):</span>
-                                            <span className="text-zinc-300">{formatMoney(montoConComision - parseFloat(montoAPagar))}</span>
-                                        </div>
-                                        <div className="flex justify-between font-medium border-t border-zinc-600 pt-2">
-                                            <span className="text-zinc-200">Total a pagar:</span>
-                                            <span className="text-blue-400 font-bold">{formatMoney(montoConComision)}</span>
-                                        </div>
-                                    </div>
+                            {/* 🔄 Indicador de carga de métodos de pago */}
+                            {cargandoMetodos ? (
+                                <div className="flex items-center justify-center p-4 text-zinc-400">
+                                    <Clock className="h-4 w-4 mr-2 animate-spin" />
+                                    Cargando métodos de pago...
                                 </div>
-                            </div>
+                            ) : (
+                                <>
+                                    {/* Opción Tarjeta */}
+                                    <div
+                                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${metodoPago === 'tarjeta'
+                                            ? 'border-blue-500 bg-blue-500/10'
+                                            : 'border-zinc-700 bg-zinc-800 hover:border-zinc-600'
+                                            }`}
+                                        onClick={() => handleMetodoPagoChange('tarjeta')}
+                                    >
+                                        <div className="w-full">
+                                            <div className="flex items-center mb-2">
+                                                <CreditCard className="h-4 w-4 mr-2 text-blue-400" />
+                                                <span className="font-medium text-zinc-200">Tarjeta de Crédito/Débito</span>
+                                            </div>
+                                            <p className="text-sm text-zinc-400 mb-2">
+                                                Procesamiento seguro con Stripe. Acepta Visa, Mastercard, American Express.
+                                            </p>
+                                            <div className="bg-zinc-900/50 rounded p-3 space-y-1 w-full">
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-zinc-400">Subtotal:</span>
+                                                    <span className="text-zinc-300">{formatMoney(parseFloat(montoAPagar))}</span>
+                                                </div>
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-zinc-400">Comisión Stripe + IVA:</span>
+                                                    <span className="text-zinc-300">{formatMoney(montoConComision - parseFloat(montoAPagar))}</span>
+                                                </div>
+                                                <div className="flex justify-between font-medium border-t border-zinc-600 pt-2">
+                                                    <span className="text-zinc-200">Total a pagar:</span>
+                                                    <span className="text-blue-400 font-bold">{formatMoney(montoConComision)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            {/* Opción SPEI */}
-                            <div
-                                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${metodoPago === 'spei'
-                                    ? 'border-green-500 bg-green-500/10'
-                                    : 'border-zinc-700 bg-zinc-800 hover:border-zinc-600'
-                                    }`}
-                                onClick={() => handleMetodoPagoChange('spei')}
-                            >
-                                <div className="w-full">
-                                    <div className="flex items-center mb-2">
-                                        <Building2 className="h-4 w-4 mr-2 text-green-400" />
-                                        <span className="font-medium text-zinc-200">Transferencia SPEI</span>
-                                    </div>
-                                    <p className="text-sm text-zinc-400 mb-2">
-                                        Te proporcionaremos los datos bancarios para realizar la transferencia.
-                                    </p>
-                                    <div className="bg-zinc-900/50 rounded p-3 w-full">
-                                        <div className="flex justify-between font-medium">
-                                            <span className="text-zinc-200">Total a transferir:</span>
-                                            <span className="text-green-400 font-bold">{formatMoney(parseFloat(montoAPagar))}</span>
+                                    {/* Opción SPEI */}
+                                    <div
+                                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${metodoPago === 'spei'
+                                            ? 'border-green-500 bg-green-500/10'
+                                            : 'border-zinc-700 bg-zinc-800 hover:border-zinc-600'
+                                            }`}
+                                        onClick={() => handleMetodoPagoChange('spei')}
+                                    >
+                                        <div className="w-full">
+                                            <div className="flex items-center mb-2">
+                                                <Building2 className="h-4 w-4 mr-2 text-green-400" />
+                                                <span className="font-medium text-zinc-200">Transferencia SPEI</span>
+                                            </div>
+                                            <p className="text-sm text-zinc-400 mb-2">
+                                                Te proporcionaremos los datos bancarios para realizar la transferencia.
+                                            </p>
+                                            <div className="bg-zinc-900/50 rounded p-3 w-full">
+                                                <div className="flex justify-between font-medium">
+                                                    <span className="text-zinc-200">Total a transferir:</span>
+                                                    <span className="text-green-400 font-bold">{formatMoney(parseFloat(montoAPagar))}</span>
+                                                </div>
+                                                <p className="text-xs text-green-300 mt-1">✨ Sin comisiones adicionales (las absorbemos nosotros)</p>
+                                            </div>
                                         </div>
-                                        <p className="text-xs text-green-300 mt-1">✨ Sin comisiones adicionales (las absorbemos nosotros)</p>
                                     </div>
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </div>
                     )}
 
                     {/* Botón normal de pagar */}
                     <Button
                         onClick={handlePagar}
-                        disabled={!montoAPagar || parseFloat(montoAPagar) <= 0 || procesandoPago}
+                        disabled={!montoAPagar || parseFloat(montoAPagar) <= 0 || procesandoPago || cargandoMetodos}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                         size="lg"
                     >
-                        {procesandoPago ? (
+                        {cargandoMetodos ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-zinc-300 border-t-transparent rounded-full animate-spin mr-2"></div>
+                                Cargando métodos de pago...
+                            </>
+                        ) : procesandoPago ? (
                             <>
                                 <div className="w-4 h-4 border-2 border-zinc-300 border-t-transparent rounded-full animate-spin mr-2"></div>
                                 Procesando pago...

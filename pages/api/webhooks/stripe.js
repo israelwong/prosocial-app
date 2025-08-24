@@ -344,24 +344,38 @@ async function handlePaymentIntentSucceeded(paymentIntent) {
 async function handlePaymentIntentFailed(paymentIntent) {
   console.log("❌ Payment Intent failed:", paymentIntent.id);
 
-  const { cotizacionId } = paymentIntent.metadata;
+  const {
+    cotizacionId,
+    monto_abono_cliente,
+    monto_cobro_stripe,
+    comision_stripe,
+    metodo_pago,
+  } = paymentIntent.metadata;
 
   try {
+    // Usar el monto de abono del cliente, no el total de Stripe
+    const montoAbonoCliente = parseFloat(monto_abono_cliente || "0");
+    const comisionStripe = parseFloat(comision_stripe || "0");
+
     await prisma.pago.create({
       data: {
         cotizacion_id: cotizacionId,
         stripe_payment_id: paymentIntent.id,
-        monto: paymentIntent.amount / 100,
+        monto: montoAbonoCliente, // 🎯 Monto que se abona al cliente (SIN comisiones)
+        comisionStripe: comisionStripe, // 🆕 Comisión de Stripe por separado
         status: "fallido",
-        metodo_pago: "tarjeta_credito",
+        metodo_pago: metodo_pago || "tarjeta_credito",
         fecha_pago: new Date(),
         metadata: JSON.stringify({
           error: paymentIntent.last_payment_error || "Error desconocido",
+          monto_cobro_stripe: monto_cobro_stripe,
         }),
       },
     });
 
     console.log("📝 Pago fallido registrado para cotización:", cotizacionId);
+    console.log("💰 Monto abono cliente:", montoAbonoCliente);
+    console.log("💳 Comisión Stripe:", comisionStripe);
   } catch (error) {
     console.error("❌ Error al registrar pago fallido:", error);
   }

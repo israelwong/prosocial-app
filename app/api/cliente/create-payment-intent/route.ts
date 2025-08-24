@@ -56,15 +56,30 @@ export async function POST(request: NextRequest) {
         // 2. 🧮 Cálculo de montos
         const montoAbonoCliente = Number(montoBase) // 🆕 Monto que se abona al cliente
         const montoCobroStripe = Number(montoConComision) // 🆕 Monto que se cobra en Stripe
+        const comisionCalculada = metodoPago === 'spei' ? 0 : (montoCobroStripe - montoAbonoCliente) // 🧮 Calcular comisión
         const montoFinalEnCentavos = Math.round(montoCobroStripe * 100)
 
         console.log('💰 Detalles del pago cliente:', {
             montoAbonoCliente, // 🆕 Lo que se abona al cliente
             montoCobroStripe, // 🆕 Lo que cobra Stripe
+            comisionCalculada, // 🆕 Comisión calculada
             centavos: montoFinalEnCentavos,
             metodoPago,
             cliente: cotizacion.Evento?.Cliente?.nombre,
         })
+
+        // 🚨 VALIDACIÓN: Verificar que los cálculos sean coherentes
+        if (metodoPago !== 'spei' && (montoAbonoCliente + comisionCalculada) !== montoCobroStripe) {
+            console.error('❌ ERROR: Inconsistencia en cálculos de comisión', {
+                montoAbonoCliente,
+                comisionCalculada,
+                suma: montoAbonoCliente + comisionCalculada,
+                montoCobroStripe
+            })
+            return NextResponse.json({
+                error: 'Error en cálculo de comisiones'
+            }, { status: 400 })
+        }
 
         // 3. 🎯 Configurar Payment Intent
         let paymentIntentData: any = {
@@ -80,6 +95,7 @@ export async function POST(request: NextRequest) {
                 source: 'cliente', // 🎯 Identificador para el webhook
                 monto_abono_cliente: montoAbonoCliente.toString(), // 🆕 Monto que se abona al cliente
                 monto_cobro_stripe: montoCobroStripe.toString(), // 🆕 Monto que se cobra en Stripe
+                comision_stripe: comisionCalculada.toString(), // 🆕 Comisión calculada para webhook
             },
         }
 
@@ -135,16 +151,15 @@ export async function POST(request: NextRequest) {
 
         // 5. 📝 Crear registro de pago en BD para que el webhook lo encuentre
         // 🚨 IMPORTANTE: Registramos el monto de ABONO, no el de Stripe
-        const comisionCalculada = montoCobroStripe - montoAbonoCliente // 🧮 Calcular comisión
 
         const pagoData: any = {
             clienteId: cotizacion.Evento?.Cliente?.id || '',
             cotizacionId: cotizacion.id,
-            monto: montoAbonoCliente, // 🎯 Monto que se abona al cliente (SIN comisiones)
-            comisionStripe: metodoPago === 'spei' ? 0 : comisionCalculada, // 🆕 Comisión de Stripe
+            monto: parseFloat(montoAbonoCliente.toFixed(2)), // 🎯 Monto que se abona al cliente (2 decimales)
+            comisionStripe: parseFloat(comisionCalculada.toFixed(2)), // 🆕 Comisión de Stripe (2 decimales)
             metodo_pago: metodoPago || 'card',
             concepto: `Pago cliente - ${cotizacion.nombre}`,
-            descripcion: `Payment Intent: ${paymentIntent.id} | Abono: $${montoAbonoCliente} | Cobro Stripe: $${montoCobroStripe} | Comisión: $${comisionCalculada}`,
+            descripcion: `Abono: $${montoAbonoCliente.toFixed(2)} | Comisión: $${comisionCalculada.toFixed(2)}`, // 🎯 Descripción limpia para cliente
             stripe_payment_id: paymentIntent.id,
             status: 'pending', // El webhook lo cambiará a 'paid'
         }

@@ -26,6 +26,7 @@ import { PagosSkeleton, PagosListSkeleton } from '@/app/cliente/components/ui/sk
 interface PagoDetalle {
     id: string
     monto: number
+    comisionStripe?: number // 🆕 Agregar comisión para el desglose
     metodo_pago: string
     status: string
     createdAt: Date
@@ -118,6 +119,18 @@ export default function HistorialPagosEvento() {
             style: 'currency',
             currency: 'MXN'
         }).format(amount)
+    }
+
+    // 🆕 Función para formatear el desglose del pago
+    const formatearDesglosePago = (pago: PagoDetalle) => {
+        if (!pago.comisionStripe || pago.comisionStripe === 0) {
+            // SPEI o sin comisión
+            return `Abono: ${formatMoney(pago.monto)} (Sin comisiones adicionales)`
+        } else {
+            // Tarjeta con comisión
+            const totalPagado = pago.monto + pago.comisionStripe
+            return `Total pagado: ${formatMoney(totalPagado)} (Abono: ${formatMoney(pago.monto)} + Comisión: ${formatMoney(pago.comisionStripe)})`
+        }
     }
 
     const formatFecha = (fecha: string | Date) => {
@@ -443,11 +456,12 @@ export default function HistorialPagosEvento() {
                                                             </div>
                                                         </div>
 
-                                                        {pago.descripcion && (
-                                                            <p className="text-sm text-zinc-500 mt-2">
-                                                                {pago.descripcion}
+                                                        {/* 🆕 Desglose del pago amigable para el cliente */}
+                                                        <div className="mt-3 p-3 bg-zinc-900/50 rounded-lg border border-zinc-700">
+                                                            <p className="text-sm text-zinc-300">
+                                                                {formatearDesglosePago(pago)}
                                                             </p>
-                                                        )}
+                                                        </div>
                                                     </div>
 
                                                     <div className="flex flex-col items-end gap-2 ml-4">

@@ -150,6 +150,7 @@ model Pago {
   MetodoPago                         MetodoPago?                       @relation(fields: [metodoPagoId], references: [id])
   metodo_pago                        String
   monto                              Float
+  comisionStripe                      Float?
   concepto                           String
   descripcion                        String?
   stripe_session_id                  String?                           @unique
