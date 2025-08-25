@@ -162,6 +162,7 @@ export async function POST(request: NextRequest) {
         // 🚨 IMPORTANTE: Registramos el monto de ABONO, no el de Stripe
         const pagoData = {
             cotizacionId: cotizacion.id,
+            clienteId: cotizacion.Evento?.Cliente?.id, // 🆕 Agregar clienteId para mostrar datos en finanzas
             monto: parseFloat(montoAbonoCliente.toFixed(2)), // 🎯 Monto que se abona al cliente (2 decimales)
             comisionStripe: parseFloat(comisionCalculada.toFixed(2)), // 🆕 Comisión de Stripe (2 decimales)
             status: 'pending', // El webhook lo cambiará a 'paid'

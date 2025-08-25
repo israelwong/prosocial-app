@@ -404,6 +404,19 @@ export async function obtenerPagosEntrantes(
                     select: {
                         nombre: true
                     }
+                },
+                Cotizacion: {
+                    include: {
+                        Evento: {
+                            include: {
+                                Cliente: {
+                                    select: {
+                                        nombre: true
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             },
             orderBy: {
@@ -419,7 +432,7 @@ export async function obtenerPagosEntrantes(
             monto: pago.monto,
             status: pago.status,
             fecha: pago.createdAt,
-            cliente: pago.Cliente?.nombre,
+            cliente: pago.Cliente?.nombre || pago.Cotizacion?.Evento?.Cliente?.nombre || 'Cliente no especificado',
             metodoPago: pago.metodo_pago
         }));
 
