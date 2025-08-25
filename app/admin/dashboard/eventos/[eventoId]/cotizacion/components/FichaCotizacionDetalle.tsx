@@ -191,18 +191,18 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
             if (response.success) {
                 // Mostrar mensaje específico basado en si se archivaron cotizaciones
                 const mensaje = response.cotizacionesArchivadas && response.cotizacionesArchivadas > 0
-                    ? `Cotización autorizada exitosamente. ${response.cotizacionesArchivadas} cotización(es) adicional(es) fueron archivadas automáticamente.`
-                    : 'Cotización autorizada exitosamente.'
+                    ? `Cotización aprobada exitosamente. ${response.cotizacionesArchivadas} cotización(es) adicional(es) fueron archivadas automáticamente.`
+                    : 'Cotización aprobada exitosamente.'
 
                 toast.success(mensaje)
                 // Usar router.refresh() en lugar de window.location.reload() para mejor UX
                 router.refresh()
             } else {
-                toast.error(response.message || 'Error al autorizar cotización')
+                toast.error(response.message || 'Error al aprobar cotización')
             }
         } catch (error) {
-            console.error('Error autorizando cotización:', error)
-            toast.error('Error al autorizar cotización')
+            console.error('Error aprobando cotización:', error)
+            toast.error('Error al aprobar cotización')
         } finally {
             setAutorizando(false)
             setMenuAbierto(false)
@@ -420,8 +420,8 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                     Compartir cotización
                                 </button>
 
-                                {/* Autorizar - Solo si no está autorizado */}
-                                {cotizacion.status !== COTIZACION_STATUS.AUTORIZADO && cotizacion.status !== COTIZACION_STATUS.APROBADA && (
+                                {/* Autorizar - Solo si está en pendiente */}
+                                {cotizacion.status === COTIZACION_STATUS.PENDIENTE && (
                                     <>
                                         <button
                                             onClick={handleAutorizar}
@@ -429,7 +429,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                             className="w-full px-3 py-2 text-left text-green-400 hover:bg-zinc-700 flex items-center gap-2 text-sm disabled:opacity-50"
                                         >
                                             <CheckCircle className="w-4 h-4" />
-                                            {autorizando ? 'Autorizando...' : 'Autorizar cotización'}
+                                            {autorizando ? 'Aprobando...' : 'Aprobar cotización'}
                                         </button>
                                         <div className="border-t border-zinc-700 my-1"></div>
                                     </>

@@ -1,6 +1,7 @@
 'use server'
 
-import { PAGO_STATUS, type PagoStatus } from '@/app/admin/_lib/constants/status'
+import { PAGO_STATUS, COTIZACION_STATUS, EVENTO_STATUS, AGENDA_STATUS, type PagoStatus } from '@/app/admin/_lib/constants/status'
+import { EVENTO_ETAPAS } from '@/app/admin/_lib/constants/evento-etapas'
 import prisma from '@/app/admin/_lib/prismaClient'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -231,34 +232,230 @@ export async function cambiarStatusPago(pagoId: string, nuevoStatus: PagoStatus)
     try {
         console.log('🔄 Cambiando status del pago:', pagoId, 'a', nuevoStatus)
 
-        const pagoActualizado = await prisma.pago.update({
-            where: { id: pagoId },
-            data: { status: nuevoStatus },
-            include: {
-                MetodoPago: true,
-                Cliente: true,
-                Cotizacion: {
-                    include: {
-                        Evento: true
+        // Ejecutar en transacción para garantizar consistencia
+        const resultado = await prisma.$transaction(async (tx) => {
+            // 1. Obtener información completa del pago
+            const pagoActual = await tx.pago.findUnique({
+                where: { id: pagoId },
+                include: {
+                    MetodoPago: true,
+                    Cliente: true,
+                    Cotizacion: {
+                        include: {
+                            Evento: {
+                                include: {
+                                    Agenda: true,
+                                    EventoEtapa: true
+                                }
+                            }
+                        }
                     }
                 }
+            })
+
+            if (!pagoActual) {
+                throw new Error('Pago no encontrado')
             }
+
+            // 2. Actualizar el estado del pago
+            const pagoActualizado = await tx.pago.update({
+                where: { id: pagoId },
+                data: { status: nuevoStatus },
+                include: {
+                    MetodoPago: true,
+                    Cliente: true,
+                    Cotizacion: {
+                        include: {
+                            Evento: {
+                                include: {
+                                    Agenda: true,
+                                    EventoEtapa: true
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+
+            let cambiosAdicionales = {
+                cotizacionActualizada: false,
+                eventoActualizado: false,
+                eventoEtapaActualizada: false,
+                agendaActualizada: false
+            }
+
+            // 3. Si es autorización de pago SPEI (pending → paid), aplicar flujo de autorización
+            if (pagoActual.status === PAGO_STATUS.PENDING && nuevoStatus === PAGO_STATUS.PAID) {
+                const cotizacion = pagoActualizado.Cotizacion
+                const evento = cotizacion?.Evento
+
+                console.log('🔥 Aplicando flujo de autorización manual por pago SPEI')
+
+                // 3a. Actualizar cotización si está en pendiente
+                if (cotizacion && cotizacion.status === COTIZACION_STATUS.PENDIENTE) {
+                    await tx.cotizacion.update({
+                        where: { id: cotizacion.id },
+                        data: { 
+                            status: COTIZACION_STATUS.APROBADA,
+                            updatedAt: new Date()
+                        }
+                    })
+                    cambiosAdicionales.cotizacionActualizada = true
+                    console.log('✅ Cotización actualizada a APROBADA')
+                }
+
+                // 3b. Actualizar evento si está en pendiente
+                if (evento && evento.status === EVENTO_STATUS.PENDIENTE) {
+                    await tx.evento.update({
+                        where: { id: evento.id },
+                        data: { 
+                            status: EVENTO_STATUS.APROBADO,
+                            updatedAt: new Date()
+                        }
+                    })
+                    cambiosAdicionales.eventoActualizado = true
+                    console.log('✅ Evento actualizado a APROBADO')
+                }
+
+                // 3c. Si el evento está en etapa "NUEVO", moverlo a "APROBADO" y asegurar creación en agenda
+                if (evento && evento.eventoEtapaId === EVENTO_ETAPAS.NUEVO) {
+                    // Cambiar etapa del evento a APROBADO
+                    await tx.evento.update({
+                        where: { id: evento.id },
+                        data: { 
+                            eventoEtapaId: EVENTO_ETAPAS.APROBADO,
+                            updatedAt: new Date()
+                        }
+                    })
+                    cambiosAdicionales.eventoEtapaActualizada = true
+                    console.log('✅ Evento movido de etapa NUEVO a APROBADO')
+
+                    // Asegurar que el evento esté en agenda como confirmado
+                    if (evento.Agenda && evento.Agenda.length > 0) {
+                        // Actualizar agenda existente a confirmado
+                        const agenda = evento.Agenda[0]
+                        if (agenda.status !== AGENDA_STATUS.CONFIRMADO) {
+                            await tx.agenda.update({
+                                where: { id: agenda.id },
+                                data: { 
+                                    status: AGENDA_STATUS.CONFIRMADO,
+                                    updatedAt: new Date()
+                                }
+                            })
+                            cambiosAdicionales.agendaActualizada = true
+                            console.log('✅ Agenda existente actualizada a CONFIRMADO')
+                        }
+                    } else {
+                        // Crear nueva entrada en agenda como confirmada
+                        await tx.agenda.create({
+                            data: {
+                                eventoId: evento.id,
+                                fecha: evento.fecha_evento,
+                                concepto: `Evento autorizado por pago - ${pagoActualizado.Cliente?.nombre || 'Cliente'}`,
+                                status: AGENDA_STATUS.CONFIRMADO,
+                                createdAt: new Date(),
+                                updatedAt: new Date()
+                            }
+                        })
+                        cambiosAdicionales.agendaActualizada = true
+                        console.log('✅ Evento NUEVO creado en agenda como CONFIRMADO')
+                    }
+                } else if (evento?.Agenda && evento.Agenda.length > 0) {
+                    // 3d. Para eventos que ya no están en etapa "NUEVO", solo actualizar agenda si está pendiente
+                    const agenda = evento.Agenda[0]
+                    if (agenda.status === AGENDA_STATUS.PENDIENTE) {
+                        await tx.agenda.update({
+                            where: { id: agenda.id },
+                            data: { 
+                                status: AGENDA_STATUS.CONFIRMADO,
+                                updatedAt: new Date()
+                            }
+                        })
+                        cambiosAdicionales.agendaActualizada = true
+                        console.log('✅ Agenda actualizada a CONFIRMADO')
+                    }
+                } else if (evento) {
+                    // 3e. Si no existe agenda para cualquier evento, crear una confirmada
+                    await tx.agenda.create({
+                        data: {
+                            eventoId: evento.id,
+                            fecha: evento.fecha_evento,
+                            concepto: `Evento - ${pagoActualizado.Cliente?.nombre || 'Cliente'}`,
+                            status: AGENDA_STATUS.CONFIRMADO,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        }
+                    })
+                    cambiosAdicionales.agendaActualizada = true
+                    console.log('✅ Agenda creada como CONFIRMADO')
+                }
+
+                // 3f. Crear entrada en bitácora
+                if (evento) {
+                    let comentarioBitacora = `Pago SPEI autorizado por ${pagoActualizado.monto.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}. `
+                    
+                    const cambios = []
+                    if (cambiosAdicionales.cotizacionActualizada) cambios.push('cotización aprobada')
+                    if (cambiosAdicionales.eventoActualizado) cambios.push('evento aprobado')
+                    if (cambiosAdicionales.eventoEtapaActualizada) cambios.push('movido a etapa APROBADO')
+                    if (cambiosAdicionales.agendaActualizada) cambios.push('agenda confirmada')
+                    
+                    if (cambios.length > 0) {
+                        comentarioBitacora += `Sistema aplicó autorización automática: ${cambios.join(', ')}.`
+                    }
+
+                    await tx.eventoBitacora.create({
+                        data: {
+                            eventoId: evento.id,
+                            comentario: comentarioBitacora,
+                            importancia: '2',
+                            status: 'active',
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        }
+                    })
+                    console.log('✅ Entrada de bitácora creada')
+                }
+            }
+
+            return { pagoActualizado, cambiosAdicionales }
         })
 
-        console.log('✅ Status de pago actualizado exitosamente')
+        console.log('✅ Status de pago actualizado exitosamente:', {
+            pagoId,
+            nuevoStatus,
+            cambiosAdicionales: resultado.cambiosAdicionales
+        })
 
         // Revalidar las páginas relacionadas
         revalidatePath('/admin/dashboard/seguimiento')
         revalidatePath('/admin/dashboard/eventos')
-        if (pagoActualizado.Cotizacion?.Evento?.id) {
-            revalidatePath(`/admin/dashboard/seguimiento/${pagoActualizado.Cotizacion.Evento.id}`)
-            revalidatePath(`/admin/dashboard/eventos/${pagoActualizado.Cotizacion.Evento.id}`)
+        revalidatePath('/admin/dashboard/finanzas/pagos')
+        if (resultado.pagoActualizado.Cotizacion?.Evento?.id) {
+            const eventoId = resultado.pagoActualizado.Cotizacion.Evento.id
+            revalidatePath(`/admin/dashboard/seguimiento/${eventoId}`)
+            revalidatePath(`/admin/dashboard/eventos/${eventoId}`)
+        }
+
+        // Mensaje de éxito con detalles de cambios
+        let mensaje = `Status de pago cambiado a ${nuevoStatus} exitosamente`
+        const cambios = resultado.cambiosAdicionales
+        
+        if (cambios.cotizacionActualizada || cambios.eventoActualizado || cambios.eventoEtapaActualizada || cambios.agendaActualizada) {
+            const detalles = []
+            if (cambios.cotizacionActualizada) detalles.push('cotización aprobada')
+            if (cambios.eventoActualizado) detalles.push('evento aprobado')
+            if (cambios.eventoEtapaActualizada) detalles.push('movido a etapa APROBADO')
+            if (cambios.agendaActualizada) detalles.push('agenda confirmada')
+            
+            mensaje += `. Autorización automática aplicada: ${detalles.join(', ')}`
         }
 
         return {
             success: true,
-            data: pagoActualizado,
-            message: `Status cambiado a ${nuevoStatus} exitosamente`
+            data: resultado.pagoActualizado,
+            message: mensaje,
+            cambiosAdicionales: resultado.cambiosAdicionales
         }
 
     } catch (error) {

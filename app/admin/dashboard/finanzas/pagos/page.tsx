@@ -131,7 +131,23 @@ export default function PagosPage() {
                                 : pago
                         )
                     );
-                    alert('Pago autorizado exitosamente');
+                    
+                    // Mostrar mensaje con detalles de los cambios
+                    let mensaje = 'Pago autorizado exitosamente';
+                    if (resultado.cambiosAdicionales) {
+                        const cambios = resultado.cambiosAdicionales;
+                        const detalles = [];
+                        if (cambios.cotizacionActualizada) detalles.push('cotización aprobada');
+                        if (cambios.eventoActualizado) detalles.push('evento aprobado');
+                        if (cambios.eventoEtapaActualizada) detalles.push('movido a etapa APROBADO');
+                        if (cambios.agendaActualizada) detalles.push('agenda confirmada');
+                        
+                        if (detalles.length > 0) {
+                            mensaje += `\n\nCambios automáticos aplicados:\n• ${detalles.join('\n• ')}`;
+                        }
+                    }
+                    
+                    alert(mensaje);
                 } else {
                     alert('Error al autorizar el pago: ' + resultado.error);
                 }

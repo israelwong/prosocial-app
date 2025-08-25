@@ -8,7 +8,7 @@ import { obtenerCatalogoCompleto } from '@/app/admin/_lib/actions/catalogo/catal
 import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
 import { obtenerMetodosPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions';
 import { obtenerPaquete } from '@/app/admin/_lib/actions/paquetes/paquetes.actions';
-import { COTIZACION_STATUS, AGENDA_STATUS } from '@/app/admin/_lib/constants/status';
+import { COTIZACION_STATUS, AGENDA_STATUS, EVENTO_STATUS } from '@/app/admin/_lib/constants/status';
 import { revalidatePath } from 'next/cache';
 import {
     CotizacionNuevaSchema,
@@ -1072,7 +1072,7 @@ interface AutorizarCotizacionResult {
  */
 export async function autorizarCotizacion(cotizacionId: string): Promise<AutorizarCotizacionResult> {
     try {
-        console.log('🔥 Iniciando autorización de cotización:', cotizacionId);
+        console.log('🔥 Iniciando aprobación de cotización:', cotizacionId);
 
         // 1. Obtener la cotización completa
         const cotizacion = await prisma.cotizacion.findUnique({
@@ -1091,8 +1091,8 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
             return { error: 'Cotización no encontrada' };
         }
 
-        if (cotizacion.status === COTIZACION_STATUS.AUTORIZADO) {
-            return { error: 'La cotización ya está autorizada' };
+        if (cotizacion.status === COTIZACION_STATUS.APROBADA) {
+            return { error: 'La cotización ya está aprobada' };
         }
 
         const evento = cotizacion.Evento;
@@ -1117,11 +1117,21 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
 
         // 3. Realizar las actualizaciones en una transacción
         const result = await prisma.$transaction(async (tx) => {
-            // Actualizar status de la cotización autorizada
+            // Actualizar status de la cotización de pendiente a aprobada
             await tx.cotizacion.update({
                 where: { id: cotizacionId },
                 data: {
-                    status: COTIZACION_STATUS.AUTORIZADO,
+                    status: COTIZACION_STATUS.APROBADA,
+                    updatedAt: new Date()
+                }
+            });
+
+            // Actualizar status del evento a aprobado
+            await tx.evento.update({
+                where: { id: evento.id },
+                data: {
+                    status: EVENTO_STATUS.APROBADO,
+                    eventoEtapaId: etapaAutorizado.id,
                     updatedAt: new Date()
                 }
             });
@@ -1131,7 +1141,7 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
                 where: {
                     eventoId: evento.id,
                     id: { not: cotizacionId }, // Excluir la cotización que se está autorizando
-                    status: { not: COTIZACION_STATUS.AUTORIZADO }, // Solo contar las no autorizadas
+                    status: { not: COTIZACION_STATUS.APROBADA }, // Solo contar las no aprobadas
                     archivada: false // Solo las que no estén ya archivadas
                 }
             });
@@ -1140,7 +1150,7 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
                 where: {
                     eventoId: evento.id,
                     id: { not: cotizacionId }, // Excluir la cotización que se está autorizando
-                    status: { not: COTIZACION_STATUS.AUTORIZADO }, // Solo archivar las no autorizadas
+                    status: { not: COTIZACION_STATUS.APROBADA }, // Solo archivar las no aprobadas
                     archivada: false // Solo las que no estén ya archivadas
                 },
                 data: {
@@ -1151,16 +1161,7 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
 
             console.log(`🗃️ ${archivadas.count} cotizaciones del evento archivadas automáticamente`);
 
-            // Actualizar etapa del evento
-            await tx.evento.update({
-                where: { id: evento.id },
-                data: {
-                    eventoEtapaId: etapaAutorizado.id,
-                    updatedAt: new Date()
-                }
-            });
-
-            // Crear entrada en la agenda si no existe
+            // Crear entrada en la agenda si no existe (como confirmada)
             const agendaExistente = await tx.agenda.findFirst({
                 where: {
                     eventoId: evento.id,
@@ -1174,19 +1175,28 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
                         eventoId: evento.id,
                         fecha: evento.fecha_evento,
                         concepto: `${evento.EventoTipo?.nombre || 'Evento'} - ${evento.Cliente.nombre}`,
-                        status: AGENDA_STATUS.PENDIENTE,
+                        status: AGENDA_STATUS.CONFIRMADO,
                         createdAt: new Date(),
                         updatedAt: new Date()
                     }
                 });
-                console.log('📅 Evento agregado a la agenda');
+                console.log('📅 Evento agregado a la agenda como confirmado');
             } else {
-                console.log('📅 Evento ya existe en la agenda');
+                // Si ya existe, actualizar a confirmado
+                await tx.agenda.update({
+                    where: { id: agendaExistente.id },
+                    data: {
+                        status: AGENDA_STATUS.CONFIRMADO,
+                        updatedAt: new Date()
+                    }
+                });
+                console.log('📅 Evento existente en agenda actualizado a confirmado');
             }
 
             // Crear entrada en bitácora del evento
-            const comentarioBitacora = `Cotización "${cotizacion.nombre}" autorizada. Evento movido a etapa: ${etapaAutorizado.nombre}` +
-                (archivadas.count > 0 ? `. ${archivadas.count} cotización(es) adicional(es) archivadas automáticamente.` : '');
+            const comentarioBitacora = `Cotización "${cotizacion.nombre}" aprobada. Evento movido a etapa: ${etapaAutorizado.nombre}` +
+                (archivadas.count > 0 ? `. ${archivadas.count} cotización(es) adicional(es) archivadas automáticamente.` : '') +
+                '. Evento agregado/confirmado en agenda.';
 
             await tx.eventoBitacora.create({
                 data: {
@@ -1214,15 +1224,16 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
         revalidatePath(`/admin/dashboard/eventos/${evento.id}`);
         revalidatePath(`/admin/dashboard/eventos/${evento.id}/cotizacion`);
 
-        console.log('✅ Cotización autorizada exitosamente:', {
+        console.log('✅ Cotización aprobada exitosamente:', {
             cotizacion: cotizacionId,
             evento: evento.id,
             etapa: result.etapaNombre,
             archivadas: result.cotizacionesArchivadas
         });
 
-        const mensaje = `Cotización autorizada exitosamente. El evento fue movido a la etapa: ${result.etapaNombre}` +
-            (result.cotizacionesArchivadas > 0 ? `. ${result.cotizacionesArchivadas} cotización(es) adicional(es) fueron archivadas automáticamente.` : '');
+        const mensaje = `Cotización aprobada exitosamente. El evento fue movido a la etapa: ${result.etapaNombre}` +
+            (result.cotizacionesArchivadas > 0 ? `. ${result.cotizacionesArchivadas} cotización(es) adicional(es) fueron archivadas automáticamente.` : '') +
+            '. Evento confirmado en agenda.';
 
         return {
             success: true,
@@ -1231,13 +1242,13 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
         };
 
     } catch (error: unknown) {
-        console.error('❌ Error al autorizar cotización:', error);
+        console.error('❌ Error al aprobar cotización:', error);
 
         if (error instanceof Error) {
-            return { error: `Error al autorizar cotización: ${error.message}` };
+            return { error: `Error al aprobar cotización: ${error.message}` };
         }
 
-        return { error: 'Error desconocido al autorizar cotización' };
+        return { error: 'Error desconocido al aprobar cotización' };
     }
 }
 
