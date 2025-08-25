@@ -61,6 +61,7 @@ export default function CotizacionDetalle({
     const [condicionSeleccionada, setCondicionSeleccionada] = useState<string>('')
     const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState<string>('')
     const [precioFinalStripe, setPrecioFinalStripe] = useState<number>(0)
+    const [montoBaseCliente, setMontoBaseCliente] = useState<number>(0) // 🆕 Monto base sin comisión
     const [infoMetodoPago, setInfoMetodoPago] = useState<{
         esMSI: boolean
         numMSI: number
@@ -76,6 +77,7 @@ export default function CotizacionDetalle({
     const [modalPagoAbierto, setModalPagoAbierto] = useState(false)
     const [clientSecret, setClientSecret] = useState<string | null>(null)
     const [procesandoPago, setProcesandoPago] = useState(false)
+    const [cancelandoPago, setCancelandoPago] = useState(false) // 🆕 Estado para cancelación
 
     const router = useRouter()
 
@@ -380,15 +382,24 @@ export default function CotizacionDetalle({
             return
         }
 
+        if (!montoBaseCliente || !precioFinalStripe) {
+            alert('Error en el cálculo de montos. Por favor selecciona nuevamente el método de pago.')
+            return
+        }
+
         if (procesandoPago) return
 
         setProcesandoPago(true)
-        console.log('🚀 Iniciando creación de Payment Intent...')
+        console.log('🚀 Iniciando creación de Payment Intent con separación de comisiones...')
 
         try {
             // Obtener información del método de pago seleccionado
             const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
             const metodoActivo = condicionActiva?.metodosPago.find((m: any) => m.metodoPagoId === metodoPagoSeleccionado)
+
+            if (!metodoActivo) {
+                throw new Error('Método de pago no encontrado.')
+            }
 
             // Determinar el tipo de método de pago
             let metodoPago = 'card' // Por defecto
@@ -396,14 +407,26 @@ export default function CotizacionDetalle({
                 metodoPago = metodoActivo.payment_method || metodoActivo.metodo_pago || 'card'
             }
 
-            // 🎯 LLAMADA A PAYMENT INTENT API
-            const response = await fetch('/api/checkout/create-payment-intent', {
+            console.log('💰 Enviando al API con separación de comisiones:', {
+                cotizacionId: cotizacion.id,
+                montoBase: montoBaseCliente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                montoConComision: precioFinalStripe.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                comisionStripe: (precioFinalStripe - montoBaseCliente).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                metodoPago
+            })
+
+            // 🎯 LLAMADA A PAYMENT INTENT API CON SEPARACIÓN DE COMISIONES
+            const response = await fetch('/api/cotizacion/payments/create-payment-intent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     cotizacionId: cotizacion.id,
                     metodoPago: metodoPago,
-                    montoConComision: precioFinalStripe,
+                    montoBase: montoBaseCliente, // 🆕 Monto sin comisión para el cliente
+                    montoConComision: precioFinalStripe, // 🆕 Monto total para Stripe
+                    metodoPagoId: metodoPagoSeleccionado,
+                    condicionId: condicionSeleccionada,
+                    numMsi: metodoActivo.num_msi || 0,
                 }),
             })
 
@@ -413,10 +436,12 @@ export default function CotizacionDetalle({
                 throw new Error(data.error || 'Error al preparar el pago.')
             }
 
-            console.log('✅ Payment Intent creado:', {
+            console.log('✅ Payment Intent creado con separación de comisiones:', {
                 paymentIntentId: data.paymentIntentId,
                 metodoPago: data.metodoPago,
+                montoBase: data.montoBase,
                 montoFinal: data.montoFinal,
+                comisionStripe: data.comisionStripe,
                 clientSecret: data.clientSecret ? '***RECIBIDO***' : 'NO_RECIBIDO'
             })
 
@@ -424,15 +449,46 @@ export default function CotizacionDetalle({
             setClientSecret(data.clientSecret)
             setModalPagoAbierto(true)
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('❌ Error al crear Payment Intent:', error)
-            alert('Error al preparar el pago. Por favor inténtalo de nuevo.')
+            alert(error.message || 'Error al preparar el pago. Por favor inténtalo de nuevo.')
         }
 
         setProcesandoPago(false)
     }
 
-    const cerrarModalPago = () => {
+    const cerrarModalPago = async () => {
+        // 🗑️ Si hay un clientSecret, significa que hay un Payment Intent pendiente
+        if (clientSecret) {
+            setCancelandoPago(true) // 🆕 Activar estado de cancelación
+
+            try {
+                console.log('🗑️ Cancelando Payment Intent al cerrar modal...')
+
+                // Extraer Payment Intent ID del clientSecret
+                const paymentIntentId = clientSecret.split('_secret_')[0]
+
+                const response = await fetch('/api/cotizacion/payments/cancel-payment-intent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ paymentIntentId }),
+                })
+
+                const data = await response.json()
+
+                if (response.ok) {
+                    console.log('✅ Payment Intent cancelado exitosamente:', data)
+                } else {
+                    console.error('⚠️ Error al cancelar Payment Intent:', data.error)
+                }
+            } catch (error) {
+                console.error('❌ Error al cancelar Payment Intent:', error)
+            } finally {
+                setCancelandoPago(false) // 🆕 Desactivar estado de cancelación
+            }
+        }
+
+        // Limpiar estado del modal
         setModalPagoAbierto(false)
         setClientSecret(null)
         setProcesandoPago(false)
@@ -455,16 +511,51 @@ export default function CotizacionDetalle({
 
     const handleMetodoPagoChange = (metodoPagoId: string, precioFinal: number) => {
         setMetodoPagoSeleccionado(metodoPagoId)
-        setPrecioFinalStripe(precioFinal)
 
         // Buscar información detallada del método de pago
         const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
         const metodoActivo = condicionActiva?.metodosPago.find((m: any) => m.metodoPagoId === metodoPagoId)
 
         if (metodoActivo) {
+            // 🆕 CALCULAR SEPARACIÓN DE COMISIONES
+            // Usar la misma lógica que CompletarPago.tsx
+
+            let montoBase, montoConComision;
+            const esSpei = metodoActivo.payment_method === 'customer_balance' ||
+                metodoActivo.metodo_pago?.toLowerCase().includes('spei');
+
+            // Determinar el monto base sin comisión basado en la condición comercial
+            const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
+            let montoSinComision = totalCotizacion; // Precio base de la cotización
+
+            // Si hay descuento, aplicarlo
+            if (condicionActiva?.descuento) {
+                montoSinComision = totalCotizacion - (totalCotizacion * (condicionActiva.descuento / 100))
+            }
+
+            // Si es anticipo, tomar solo el porcentaje del anticipo del monto ORIGINAL
+            if (condicionActiva?.porcentaje_anticipo) {
+                montoSinComision = totalCotizacion * (condicionActiva.porcentaje_anticipo / 100)
+            }
+
+            if (esSpei) {
+                // SPEI: Sin comisión adicional
+                montoBase = montoSinComision;
+                montoConComision = montoSinComision;
+            } else {
+                // Tarjeta: precioFinal YA incluye las comisiones
+                montoBase = montoSinComision; // Monto que se abona al cliente (sin comisión)
+                montoConComision = precioFinal; // Monto que se cobra en Stripe (con comisión)
+            }            // Truncar a 2 decimales
+            montoBase = parseFloat(montoBase.toFixed(2));
+            montoConComision = parseFloat(montoConComision.toFixed(2));
+
+            setMontoBaseCliente(montoBase); // 🆕 Guardar monto base
+            setPrecioFinalStripe(montoConComision); // Total para Stripe
+
             const esMSI = metodoActivo.num_msi > 0
             const esAnticipo = !!condicionActiva?.porcentaje_anticipo && condicionActiva.porcentaje_anticipo > 0
-            const montoPorPago = esMSI ? precioFinal / metodoActivo.num_msi : precioFinal
+            const montoPorPago = esMSI ? montoConComision / metodoActivo.num_msi : montoConComision
 
             setInfoMetodoPago({
                 esMSI,
@@ -473,9 +564,12 @@ export default function CotizacionDetalle({
                 montoPorPago
             })
 
-            console.log('💳 Método de pago seleccionado:', {
+            console.log('💳 Método de pago seleccionado (con separación):', {
                 metodoPagoId,
-                precioFinal: precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                montoBase: montoBase.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                montoConComision: montoConComision.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                comisionStripe: (montoConComision - montoBase).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                esSpei,
                 esMSI,
                 numMSI: metodoActivo.num_msi,
                 esAnticipo,
@@ -586,7 +680,7 @@ export default function CotizacionDetalle({
                 precioFinal={precioFinalStripe}
                 infoMetodoPago={infoMetodoPago}
                 onIniciarPago={iniciarPago}
-                loading={procesandoPago}
+                loading={procesandoPago || cancelandoPago} // 🆕 Incluir estado de cancelación
             />
 
             {/* 🔥 MODAL DE PAGO CON STRIPE ELEMENTS */}
@@ -594,10 +688,16 @@ export default function CotizacionDetalle({
                 <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
                     <div className="bg-zinc-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-white text-xl font-bold">Completa tu pago</h2>
+                            <h2 className="text-white text-xl font-bold">
+                                {cancelandoPago ? 'Cancelando pago...' : 'Completa tu pago'}
+                            </h2>
                             <button
                                 onClick={cerrarModalPago}
-                                className="text-zinc-400 hover:text-white text-2xl"
+                                disabled={cancelandoPago || procesandoPago} // 🆕 Deshabilitar durante cancelación
+                                className={`text-2xl transition-colors ${cancelandoPago || procesandoPago
+                                    ? 'text-zinc-600 cursor-not-allowed'
+                                    : 'text-zinc-400 hover:text-white'
+                                    }`}
                             >
                                 ×
                             </button>
@@ -627,7 +727,19 @@ export default function CotizacionDetalle({
                                     montoFinal: precioFinalStripe,
                                     esMSI: infoMetodoPago?.esMSI || false,
                                     numMSI: infoMetodoPago?.numMSI || 0,
-                                    tipoPago: infoMetodoPago?.esMSI ? 'card' : 'spei',
+                                    tipoPago: (() => {
+                                        // 🎯 DETERMINAR TIPO DE PAGO BASADO EN EL MÉTODO SELECCIONADO
+                                        const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
+                                        const metodoActivo = condicionActiva?.metodosPago.find((m: any) => m.metodoPagoId === metodoPagoSeleccionado)
+
+                                        if (metodoActivo) {
+                                            const esSpei = metodoActivo.payment_method === 'customer_balance' ||
+                                                metodoActivo.metodo_pago?.toLowerCase().includes('spei');
+                                            return esSpei ? 'spei' : 'card';
+                                        }
+
+                                        return 'card'; // Fallback
+                                    })(),
                                     cotizacion: {
                                         nombre: cotizacion.nombre || 'Cotización',
                                         cliente: cotizacion.Evento?.Cliente?.nombre || 'Cliente'
@@ -645,9 +757,13 @@ export default function CotizacionDetalle({
 
                         <button
                             onClick={cerrarModalPago}
-                            className="text-zinc-400 text-sm mt-4 w-full text-center hover:text-white transition-colors"
+                            disabled={cancelandoPago || procesandoPago} // 🆕 Deshabilitar durante cancelación
+                            className={`text-sm mt-4 w-full text-center transition-colors ${cancelandoPago || procesandoPago
+                                ? 'text-zinc-600 cursor-not-allowed'
+                                : 'text-zinc-400 hover:text-white'
+                                }`}
                         >
-                            Cancelar
+                            {cancelandoPago ? '🔄 Cancelando...' : 'Cancelar'}
                         </button>
                     </div>
                 </div>

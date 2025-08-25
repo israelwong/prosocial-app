@@ -167,7 +167,9 @@ export async function obtenerDetallesPago(pagoId: string) {
     });
 
     if (!pago) {
-        throw new Error(`Pago con ID ${pagoId} no encontrado`);
+        // ⚠️ Cambio: No lanzar error, retornar null para manejar graciosamente
+        console.log(`⚠️ Pago con ID ${pagoId} no encontrado (puede haber sido cancelado)`);
+        return null;
     }
 
     const pagosCotizacion = pago.cotizacionId ? await prisma.pago.findMany({
@@ -295,12 +297,20 @@ export async function validarPagoStripe(pagoId: string) {
     console.log('Procesando pago:', pagoId);
 
     try {
+        const detallesPago = await obtenerDetallesPago(pagoId);
+
+        // ✅ Verificar si el pago existe antes de continuar
+        if (!detallesPago) {
+            console.log('⚠️ Pago no encontrado, probablemente fue cancelado. Saltando validación.');
+            return;
+        }
+
         const {
             pago,
             cliente,
             cotizacion,
             evento,
-        } = await obtenerDetallesPago(pagoId);
+        } = detallesPago;
 
         //pago cliente nuevo
         if (pago?.status === PAGO_STATUS.PAID && evento?.eventoEtapaId == 'cm6498zw00001gu1a67s88y5h') {

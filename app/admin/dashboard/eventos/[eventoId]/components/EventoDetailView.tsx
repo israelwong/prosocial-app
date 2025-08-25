@@ -91,7 +91,7 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
             <EventoHeader
                 eventoData={eventoData}
                 onAbrirConversacion={handleAbrirConversacion}
-                onCerrar={() => router.back()}
+                onCerrar={() => router.push('/admin/dashboard/eventos')}
                 onGestionarEvento={() => router.push(`/admin/dashboard/seguimiento/${eventoId}`)}
             />
 

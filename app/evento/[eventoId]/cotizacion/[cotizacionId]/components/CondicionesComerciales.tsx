@@ -98,8 +98,19 @@ export default function CondicionesComerciales({
     // Función para obtener información de pago de una condición
     const obtenerInfoPago = (condicion: CondicionComercial) => {
         const precioBase = calcularPrecioConDescuento(montoTotal, condicion.descuento)
-        const anticipo = condicion.porcentaje_anticipo ? (precioBase * condicion.porcentaje_anticipo / 100) : precioBase
+        // CORRECCIÓN: El anticipo debe calcularse sobre el montoTotal (precio original), no sobre precioBase (precio con descuento)
+        const anticipo = condicion.porcentaje_anticipo ? (montoTotal * condicion.porcentaje_anticipo / 100) : precioBase
         const aDiferir = precioBase - anticipo
+
+        // Debug: Verificar cálculo del anticipo
+        if (condicion.porcentaje_anticipo) {
+            console.log('🧮 Cálculo de anticipo:', {
+                montoTotal,
+                porcentaje_anticipo: condicion.porcentaje_anticipo,
+                anticipo_calculado: anticipo,
+                formula: `${montoTotal} × ${condicion.porcentaje_anticipo}% = ${anticipo}`
+            })
+        }
 
         return {
             precioBase,

@@ -494,7 +494,10 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                     <div className="min-h-screen p-6">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-white text-2xl font-bold">
-                                {metodoPago === 'spei' ? 'Transferencia SPEI' : 'Completar Pago'}
+                                {cancelandoPago
+                                    ? '🔄 Cancelando pago...'
+                                    : metodoPago === 'spei' ? 'Transferencia SPEI' : 'Completar Pago'
+                                }
                             </h2>
                             {/* Ocultar botón X cuando es SPEI para evitar confusión */}
                             {metodoPago !== 'spei' && (

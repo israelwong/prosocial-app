@@ -386,6 +386,34 @@ async function handlePaymentIntentCanceled(paymentIntent) {
 
   const { cotizacionId } = paymentIntent.metadata;
   console.log("📝 Pago cancelado para cotización:", cotizacionId);
+
+  try {
+    // 🗑️ Verificar si hay algún registro pendiente de este payment intent
+    const pagoPendiente = await prisma.pago.findFirst({
+      where: {
+        stripe_payment_id: paymentIntent.id,
+        status: "pending",
+      },
+    });
+
+    if (pagoPendiente) {
+      console.log(
+        `🗑️ Limpiando registro de pago pendiente: ${pagoPendiente.id}`
+      );
+
+      await prisma.pago.delete({
+        where: {
+          id: pagoPendiente.id,
+        },
+      });
+
+      console.log("✅ Registro de pago cancelado limpiado correctamente");
+    } else {
+      console.log("ℹ️ No se encontró registro pendiente para limpiar");
+    }
+  } catch (error) {
+    console.error("❌ Error al limpiar pago cancelado:", error);
+  }
 }
 
 async function handlePaymentIntentProcessing(paymentIntent) {
