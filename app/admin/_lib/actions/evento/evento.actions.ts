@@ -87,31 +87,6 @@ export async function obtenerEventoCompleto(eventoId: string): Promise<EventoCom
                 },
                 Cotizacion: {
                     where: { archivada: false },
-                    select: {
-                        id: true,
-                        nombre: true,
-                        descripcion: true,
-                        precio: true,
-                        status: true,
-                        archivada: true,
-                        createdAt: true,
-                        updatedAt: true,
-                        CotizacionServicio: {
-                            include: {
-                                Servicio: {
-                                    select: {
-                                        id: true,
-                                        nombre: true,
-                                        ServicioCategoria: {
-                                            select: {
-                                                nombre: true
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
                     orderBy: {
                         createdAt: 'desc'
                     }

@@ -457,7 +457,7 @@ export default function HistorialPagosEvento() {
                                                         </div>
 
                                                         {/* 🆕 Desglose del pago amigable para el cliente */}
-                                                        <div className="mt-3 p-3 bg-zinc-900/50 rounded-lg border border-zinc-700 w-full">
+                                                        <div className="mt-3 p-3 bg-zinc-900/50 rounded-lg border border-zinc-700">
                                                             <p className="text-sm text-zinc-300">
                                                                 {formatearDesglosePago(pago)}
                                                             </p>
