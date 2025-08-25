@@ -31,13 +31,34 @@ export default function EventoCard({ evento }: EventoCardProps) {
         }).format(amount)
     }
 
-    const getSaldoPendiente = (total: number, pagado: number) => {
-        return total - pagado
+    const getSaldoPendiente = () => {
+        // Usar el saldo pendiente calculado si está disponible
+        if (evento.cotizacion.saldoPendiente !== undefined) {
+            return evento.cotizacion.saldoPendiente
+        }
+        // Fallback al cálculo simple
+        return evento.cotizacion.total - evento.cotizacion.pagado
+    }
+
+    const getMontoAPagar = () => {
+        // Usar el monto real a pagar si está disponible
+        if (evento.cotizacion.montoRealAPagar !== undefined) {
+            return evento.cotizacion.montoRealAPagar
+        }
+        // Fallback al total original
+        return evento.cotizacion.total
     }
 
     const isPagado = () => {
         if (evento.cotizacion.status !== COTIZACION_STATUS.APROBADA) return false
-        return getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) <= 0
+
+        // Usar el cálculo correcto si está disponible
+        if (evento.cotizacion.esPagoCompleto !== undefined) {
+            return evento.cotizacion.esPagoCompleto
+        }
+
+        // Fallback al cálculo simple
+        return getSaldoPendiente() <= 0
     }
 
     return (
@@ -106,23 +127,48 @@ export default function EventoCard({ evento }: EventoCardProps) {
                     <>
                         <hr className="border-zinc-700" />
                         <div className="space-y-2">
+                            {/* Mostrar precio original */}
                             <div className="flex justify-between text-sm">
                                 <span className="text-zinc-400 font-medium">Total:</span>
                                 <span className="text-zinc-100">
                                     {formatMoney(evento.cotizacion.total)}
                                 </span>
                             </div>
+
+                            {/* Mostrar descuento si aplica */}
+                            {evento.cotizacion.condicionesComerciales?.descuento && (
+                                <>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-green-400 font-medium">
+                                            Descuento ({evento.cotizacion.condicionesComerciales.descuento}%):
+                                        </span>
+                                        <span className="text-green-400">
+                                            -{formatMoney(evento.cotizacion.total - getMontoAPagar())}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-sm bg-zinc-800/50 px-2 py-1 rounded">
+                                        <span className="text-zinc-200 font-medium">Total a pagar:</span>
+                                        <span className="text-zinc-100 font-semibold">
+                                            {formatMoney(getMontoAPagar())}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Mostrar pagado */}
                             <div className="flex justify-between text-sm">
                                 <span className="text-zinc-400 font-medium">Pagado:</span>
                                 <span className="text-green-400">
                                     {formatMoney(evento.cotizacion.pagado)}
                                 </span>
                             </div>
-                            {getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado) > 0 && (
+
+                            {/* Mostrar saldo pendiente */}
+                            {getSaldoPendiente() > 0 && (
                                 <div className="flex justify-between text-sm">
                                     <span className="text-zinc-400 font-medium">Saldo pendiente:</span>
                                     <span className="text-yellow-400">
-                                        {formatMoney(getSaldoPendiente(evento.cotizacion.total, evento.cotizacion.pagado))}
+                                        {formatMoney(getSaldoPendiente())}
                                     </span>
                                 </div>
                             )}

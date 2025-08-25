@@ -29,8 +29,18 @@ export interface Evento {
     cotizacion: {
         id: string
         status: string
-        total: number
+        total: number // Precio original de la cotización
         pagado: number
+        // 🆕 Información de condiciones comerciales y cálculos
+        condicionesComerciales?: {
+            id: string
+            nombre: string
+            descuento: number | null
+            porcentaje_anticipo: number | null
+        } | null
+        montoRealAPagar?: number // Monto después de aplicar descuentos
+        saldoPendiente?: number
+        esPagoCompleto?: boolean
         // 🆕 Información de pagos SPEI pendientes
         pagoSpeiPendiente?: {
             status: string
@@ -56,10 +66,40 @@ export interface EventoDetalle extends Evento {
     cotizacion: {
         id: string
         status: string
-        total: number
+        total: number // Precio original de la cotización
         pagado: number
         descripcion?: string
         servicios: ServicioCotizacion[]
+        // 🆕 Información de condiciones comerciales y cálculos
+        condicionesComerciales?: {
+            id: string
+            nombre: string
+            descuento: number | null
+            porcentaje_anticipo: number | null
+        } | null
+        montoRealAPagar: number // Monto después de aplicar descuentos
+        saldoPendiente: number
+        esPagoCompleto: boolean
+        // 🆕 Información de pagos SPEI pendientes
+        pagoSpeiPendiente?: {
+            status: string
+            monto: number
+            fechaCreacion: Date
+            fechaActualizacion: Date
+            // 🆕 Información de condiciones comerciales del pago
+            condicionesComerciales?: {
+                id: string
+                nombre: string
+                descuento: number | null
+                porcentaje_anticipo: number | null
+            } | null
+            // 🆕 Información del método de pago
+            metodoPago?: {
+                id: string
+                metodo_pago: string
+                payment_method: string | null
+            } | null
+        } | null
     }
 }
 

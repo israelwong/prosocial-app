@@ -24,6 +24,7 @@ export default function ClienteDashboard() {
                 setLoading(true)
                 console.log('🔄 Cargando eventos para cliente:', cliente.id) // Debug log
 
+                // 🆕 Obtener eventos contratados: cotizaciones aprobadas + pagos SPEI pendientes
                 const response = await obtenerEventosCliente(cliente.id)
 
                 if (response.success && response.data) {

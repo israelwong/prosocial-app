@@ -10,17 +10,50 @@ import { ApiResponse, Evento, EventoDetalle } from '../types'
 
 export async function obtenerEventosCliente(clienteId: string): Promise<ApiResponse<{ eventos: Evento[] }>> {
     try {
-        // Buscar eventos del cliente con cotizaciones aprobadas
+        // 🆕 Buscar eventos contratados del cliente:
+        // 1. Cotizaciones aprobadas (flujo normal)
+        // 2. Eventos con pagos SPEI pendientes (requieren confirmación bancaria)
         const eventos = await prisma.evento.findMany({
             where: {
                 clienteId: clienteId,
-                Cotizacion: {
-                    some: {
-                        status: {
-                            in: ['aprobada', 'enviada']
+                OR: [
+                    // Caso 1: Cotizaciones aprobadas
+                    {
+                        Cotizacion: {
+                            some: {
+                                status: {
+                                    in: ['aprobada', 'enviada']
+                                }
+                            }
+                        }
+                    },
+                    // Caso 2: Eventos con pagos SPEI pendientes
+                    {
+                        Cotizacion: {
+                            some: {
+                                Pago: {
+                                    some: {
+                                        AND: [
+                                            {
+                                                OR: [
+                                                    { metodo_pago: { contains: 'spei', mode: 'insensitive' } },
+                                                    { metodo_pago: 'customer_balance' },
+                                                    { metodo_pago: { contains: 'transferencia', mode: 'insensitive' } },
+                                                    { metodo_pago: { contains: 'banco', mode: 'insensitive' } }
+                                                ]
+                                            },
+                                            {
+                                                status: {
+                                                    in: ['pending', 'processing', 'pending_payment']
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
                         }
                     }
-                }
+                ]
             },
             include: {
                 EventoTipo: {
@@ -37,19 +70,54 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
                 },
                 Cotizacion: {
                     where: {
-                        status: {
-                            in: ['aprobada', 'enviada']
-                        }
+                        OR: [
+                            // Cotizaciones aprobadas
+                            {
+                                status: {
+                                    in: ['aprobada', 'enviada']
+                                }
+                            },
+                            // Cotizaciones con pagos SPEI pendientes
+                            {
+                                Pago: {
+                                    some: {
+                                        AND: [
+                                            {
+                                                OR: [
+                                                    { metodo_pago: { contains: 'spei', mode: 'insensitive' } },
+                                                    { metodo_pago: 'customer_balance' },
+                                                    { metodo_pago: { contains: 'transferencia', mode: 'insensitive' } },
+                                                    { metodo_pago: { contains: 'banco', mode: 'insensitive' } }
+                                                ]
+                                            },
+                                            {
+                                                status: {
+                                                    in: ['pending', 'processing', 'pending_payment']
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        ]
                     },
                     select: {
                         id: true,
                         status: true,
                         precio: true,
+                        CondicionesComerciales: {
+                            select: {
+                                id: true,
+                                nombre: true,
+                                descuento: true,
+                                porcentaje_anticipo: true
+                            }
+                        },
                         Pago: {
                             where: {
                                 status: {
                                     in: [
-                                        PAGO_STATUS.PAID, 
+                                        PAGO_STATUS.PAID,
                                         PAGO_STATUS.COMPLETADO,
                                         PAGO_STATUS.PENDING,
                                         'pending_payment',
@@ -79,19 +147,49 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
 
         // Transformar datos para el formato esperado
         const eventosFormateados = eventos.map(evento => {
-            const cotizacion = evento.Cotizacion[0]
-            
+            // Buscar la mejor cotización: aprobada primero, luego con pagos SPEI pendientes
+            const cotizacionAprobada = evento.Cotizacion.find(cot => ['aprobada', 'enviada'].includes(cot.status))
+            const cotizacionConSpei = evento.Cotizacion.find(cot =>
+                cot.Pago?.some(pago =>
+                    pago.metodo_pago && (
+                        pago.metodo_pago.toLowerCase().includes('spei') ||
+                        pago.metodo_pago === 'customer_balance' ||
+                        pago.metodo_pago.toLowerCase().includes('transferencia') ||
+                        pago.metodo_pago.toLowerCase().includes('banco')
+                    ) && ['pending', 'pending_payment', 'processing'].includes(pago.status)
+                )
+            )
+
+            const cotizacion = cotizacionAprobada || cotizacionConSpei || evento.Cotizacion[0]
+
+            // 🆕 Calcular el monto real a pagar considerando condiciones comerciales
+            const precioOriginal = cotizacion?.precio || 0
+            const condicionesComerciales = cotizacion?.CondicionesComerciales
+            let montoRealAPagar = precioOriginal
+
+            if (condicionesComerciales?.descuento) {
+                // Aplicar descuento: precio - (precio * descuento / 100)
+                const montoDescuento = precioOriginal * (condicionesComerciales.descuento / 100)
+                montoRealAPagar = precioOriginal - montoDescuento
+            }
+
             // Calcular totales y estado de pagos
             const pagos = cotizacion?.Pago || []
             const pagosPagados = pagos.filter(pago => ['paid', 'completado'].includes(pago.status))
             const pagosPendientes = pagos.filter(pago => ['pending', 'pending_payment', 'processing'].includes(pago.status))
             const totalPagado = pagosPagados.reduce((sum: number, pago: any) => sum + pago.monto, 0)
-            
-            // Detectar si hay pagos SPEI pendientes
-            const pagoSpeiPendiente = pagosPendientes.find(pago => 
+
+            // 🆕 Calcular saldo pendiente y estado de pago
+            const saldoPendiente = montoRealAPagar - totalPagado
+            const esPagoCompleto = saldoPendiente <= 0
+
+            // Detectar si hay pagos SPEI pendientes (versión mejorada)
+            const pagoSpeiPendiente = pagosPendientes.find(pago =>
                 pago.metodo_pago && (
                     pago.metodo_pago.toLowerCase().includes('spei') ||
-                    pago.metodo_pago === 'customer_balance'
+                    pago.metodo_pago === 'customer_balance' ||
+                    pago.metodo_pago.toLowerCase().includes('transferencia') ||
+                    pago.metodo_pago.toLowerCase().includes('banco')
                 )
             )
 
@@ -113,8 +211,18 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
                 cotizacion: {
                     id: cotizacion?.id || '',
                     status: cotizacion?.status || '',
-                    total: cotizacion?.precio || 0,
+                    total: cotizacion?.precio || 0, // Precio original
                     pagado: totalPagado,
+                    // 🆕 Información de condiciones comerciales y cálculos
+                    condicionesComerciales: condicionesComerciales ? {
+                        id: condicionesComerciales.id,
+                        nombre: condicionesComerciales.nombre,
+                        descuento: condicionesComerciales.descuento,
+                        porcentaje_anticipo: condicionesComerciales.porcentaje_anticipo
+                    } : null,
+                    montoRealAPagar,
+                    saldoPendiente,
+                    esPagoCompleto,
                     // 🆕 Información de pagos SPEI pendientes
                     pagoSpeiPendiente: pagoSpeiPendiente ? {
                         status: pagoSpeiPendiente.status,
@@ -161,11 +269,46 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
                 },
                 Cotizacion: {
                     where: {
-                        status: {
-                            in: ['aprobada', 'enviada']
-                        }
+                        OR: [
+                            // Cotizaciones aprobadas
+                            {
+                                status: {
+                                    in: ['aprobada', 'enviada']
+                                }
+                            },
+                            // Cotizaciones con pagos SPEI pendientes
+                            {
+                                Pago: {
+                                    some: {
+                                        AND: [
+                                            {
+                                                OR: [
+                                                    { metodo_pago: { contains: 'spei', mode: 'insensitive' } },
+                                                    { metodo_pago: 'customer_balance' },
+                                                    { metodo_pago: { contains: 'transferencia', mode: 'insensitive' } },
+                                                    { metodo_pago: { contains: 'banco', mode: 'insensitive' } }
+                                                ]
+                                            },
+                                            {
+                                                status: {
+                                                    in: ['pending', 'processing', 'pending_payment']
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        ]
                     },
                     include: {
+                        CondicionesComerciales: {
+                            select: {
+                                id: true,
+                                nombre: true,
+                                descuento: true,
+                                porcentaje_anticipo: true
+                            }
+                        },
                         Servicio: {
                             include: {
                                 Servicio: {
@@ -199,11 +342,31 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
                         Pago: {
                             where: {
                                 status: {
-                                    in: [PAGO_STATUS.PAID, PAGO_STATUS.COMPLETADO]
+                                    in: [
+                                        PAGO_STATUS.PAID,
+                                        PAGO_STATUS.COMPLETADO,
+                                        PAGO_STATUS.PENDING,
+                                        'pending_payment',
+                                        'processing'
+                                    ]
                                 }
                             },
-                            select: {
-                                monto: true
+                            include: {
+                                CondicionesComerciales: {
+                                    select: {
+                                        id: true,
+                                        nombre: true,
+                                        descuento: true,
+                                        porcentaje_anticipo: true
+                                    }
+                                },
+                                MetodoPago: {
+                                    select: {
+                                        id: true,
+                                        metodo_pago: true,
+                                        payment_method: true
+                                    }
+                                }
                             }
                         }
                     },
@@ -220,14 +383,62 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
         }
 
         const cotizacion = evento.Cotizacion[0]
-        const totalPagado = cotizacion.Pago?.reduce((sum: number, pago: any) => sum + pago.monto, 0) || 0
+
+        // 🆕 Calcular el monto real a pagar considerando condiciones comerciales
+        const precioOriginal = cotizacion.precio
+        const condicionesComerciales = cotizacion.CondicionesComerciales
+        let montoRealAPagar = precioOriginal
+
+        if (condicionesComerciales?.descuento) {
+            // Aplicar descuento: precio - (precio * descuento / 100)
+            const montoDescuento = precioOriginal * (condicionesComerciales.descuento / 100)
+            montoRealAPagar = precioOriginal - montoDescuento
+        }
+
+        // Calcular solo los pagos completados para el total pagado
+        const pagosPagados = cotizacion.Pago?.filter((pago: any) =>
+            ['paid', 'completado'].includes(pago.status)
+        ) || []
+        const totalPagado = pagosPagados.reduce((sum: number, pago: any) => sum + pago.monto, 0)
+
+        // 🆕 Determinar si el pago está completo basado en el monto real
+        const saldoPendiente = montoRealAPagar - totalPagado
+        const esPagoCompleto = saldoPendiente <= 0
+
+        // Detectar si hay pagos SPEI pendientes
+        const pagosPendientes = cotizacion.Pago?.filter((pago: any) =>
+            ['pending', 'pending_payment', 'processing'].includes(pago.status)
+        ) || []
+        const pagoSpeiPendiente = pagosPendientes.find((pago: any) =>
+            pago.metodo_pago && (
+                pago.metodo_pago.toLowerCase().includes('spei') ||
+                pago.metodo_pago === 'customer_balance' ||
+                pago.metodo_pago.toLowerCase().includes('transferencia') ||
+                pago.metodo_pago.toLowerCase().includes('banco')
+            )
+        )
 
         // Debug para verificar los pagos encontrados
-        console.log('🔍 obtenerEventoDetalle - Pagos encontrados:', {
+        console.log('🔍 obtenerEventoDetalle - Cálculos de pago:', {
             eventoId,
+            precioOriginal,
+            condicionesComerciales: condicionesComerciales ? {
+                nombre: condicionesComerciales.nombre,
+                descuento: condicionesComerciales.descuento,
+                porcentaje_anticipo: condicionesComerciales.porcentaje_anticipo
+            } : null,
+            montoRealAPagar,
             pagosCount: cotizacion.Pago?.length || 0,
-            pagos: cotizacion.Pago?.map((p: any) => ({ monto: p.monto })) || [],
-            totalPagado
+            pagosPagados: pagosPagados.map((p: any) => ({ monto: p.monto, status: p.status })),
+            pagosPendientes: pagosPendientes.map((p: any) => ({ monto: p.monto, status: p.status, metodo: p.metodo_pago })),
+            totalPagado,
+            saldoPendiente,
+            esPagoCompleto,
+            pagoSpeiPendiente: pagoSpeiPendiente ? {
+                monto: pagoSpeiPendiente.monto,
+                status: pagoSpeiPendiente.status,
+                metodo: pagoSpeiPendiente.metodo_pago
+            } : null
         })
 
         // Copiar exactamente la lógica de servicios del API route
@@ -279,10 +490,40 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
             cotizacion: {
                 id: cotizacion.id,
                 status: cotizacion.status,
-                total: cotizacion.precio,
+                total: cotizacion.precio, // Precio original de la cotización
                 pagado: totalPagado,
                 descripcion: cotizacion.descripcion || undefined,
-                servicios
+                servicios,
+                // 🆕 Información de condiciones comerciales y cálculos
+                condicionesComerciales: condicionesComerciales ? {
+                    id: condicionesComerciales.id,
+                    nombre: condicionesComerciales.nombre,
+                    descuento: condicionesComerciales.descuento,
+                    porcentaje_anticipo: condicionesComerciales.porcentaje_anticipo
+                } : null,
+                montoRealAPagar, // Monto después de aplicar descuentos
+                saldoPendiente,
+                esPagoCompleto,
+                // 🆕 Información de pagos SPEI pendientes
+                pagoSpeiPendiente: pagoSpeiPendiente ? {
+                    status: pagoSpeiPendiente.status,
+                    monto: pagoSpeiPendiente.monto,
+                    fechaCreacion: pagoSpeiPendiente.createdAt,
+                    fechaActualizacion: pagoSpeiPendiente.updatedAt,
+                    // 🆕 Información de condiciones comerciales del pago SPEI
+                    condicionesComerciales: pagoSpeiPendiente.CondicionesComerciales ? {
+                        id: pagoSpeiPendiente.CondicionesComerciales.id,
+                        nombre: pagoSpeiPendiente.CondicionesComerciales.nombre,
+                        descuento: pagoSpeiPendiente.CondicionesComerciales.descuento,
+                        porcentaje_anticipo: pagoSpeiPendiente.CondicionesComerciales.porcentaje_anticipo
+                    } : null,
+                    // 🆕 Información del método de pago SPEI
+                    metodoPago: pagoSpeiPendiente.MetodoPago ? {
+                        id: pagoSpeiPendiente.MetodoPago.id,
+                        metodo_pago: pagoSpeiPendiente.MetodoPago.metodo_pago,
+                        payment_method: pagoSpeiPendiente.MetodoPago.payment_method
+                    } : null
+                } : null
             }
         }
 

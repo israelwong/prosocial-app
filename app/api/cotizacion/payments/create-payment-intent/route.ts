@@ -9,7 +9,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
     try {
-        const { cotizacionId, metodoPago, montoBase, montoConComision } = await request.json()
+        const {
+            cotizacionId,
+            metodoPago,
+            montoBase,
+            montoConComision,
+            condicionId, // 🆕 ID de condiciones comerciales (viene como condicionId del frontend)
+            metodoPagoId
+        } = await request.json()
 
         console.log('🚀 CREATE-PAYMENT-INTENT COTIZACIONES (App Router)')
         console.log('📊 Datos recibidos:', {
@@ -17,6 +24,8 @@ export async function POST(request: NextRequest) {
             metodoPago,
             montoBase, // 🆕 Monto que se abona al cliente
             montoConComision, // 🆕 Monto que se cobra en Stripe
+            condicionId, // 🆕 ID de condiciones comerciales
+            metodoPagoId, // 🆕 ID del método de pago
         })
 
         if (!cotizacionId) {
@@ -104,6 +113,8 @@ export async function POST(request: NextRequest) {
                 monto_abono_cliente: montoAbonoCliente.toString(), // 🆕 Monto que se abona al cliente
                 monto_cobro_stripe: montoCobroStripe.toString(), // 🆕 Monto que se cobra en Stripe
                 comision_stripe: comisionCalculada.toString(), // 🆕 Comisión calculada para webhook
+                condiciones_comerciales_id: condicionId || '', // 🆕 ID de condiciones comerciales
+                metodo_pago_id: metodoPagoId || '', // 🆕 ID del método de pago
             },
         }
 
@@ -170,6 +181,9 @@ export async function POST(request: NextRequest) {
             concepto: `Pago cotización - ${cotizacion.nombre}`,
             descripcion: `Abono: $${montoAbonoCliente.toFixed(2)} | Comisión: $${comisionCalculada.toFixed(2)}`, // 🎯 Descripción limpia
             stripe_payment_id: paymentIntent.id,
+            // 🆕 Nuevos campos para almacenar condiciones comerciales y método de pago
+            condicionesComercialesId: condicionId || null,
+            metodoPagoId: metodoPagoId || null,
         }
 
         const nuevoPago = await prisma.pago.create({
