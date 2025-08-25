@@ -421,6 +421,34 @@ async function handlePaymentIntentProcessing(paymentIntent) {
 
   const { cotizacionId } = paymentIntent.metadata;
   console.log("⏳ Pago en proceso para cotización:", cotizacionId);
+
+  try {
+    // Buscar el pago existente por Payment Intent ID
+    const pagoExistente = await prisma.pago.findFirst({
+      where: { stripe_payment_id: paymentIntent.id },
+    });
+
+    if (pagoExistente) {
+      // Actualizar el pago a estado "processing"
+      await prisma.pago.update({
+        where: { id: pagoExistente.id },
+        data: {
+          status: "processing",
+          updatedAt: new Date(),
+        },
+      });
+
+      console.log("✅ Pago actualizado a processing:", {
+        pagoId: pagoExistente.id,
+        cotizacionId: cotizacionId,
+        status: "processing"
+      });
+    } else {
+      console.log(`❌ No se encontró el pago correspondiente para Payment Intent: ${paymentIntent.id}`);
+    }
+  } catch (error) {
+    console.error("❌ Error al actualizar pago a processing:", error);
+  }
 }
 
 // 💳 CHARGE HANDLERS
