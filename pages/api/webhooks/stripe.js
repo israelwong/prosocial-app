@@ -441,10 +441,12 @@ async function handlePaymentIntentProcessing(paymentIntent) {
       console.log("✅ Pago actualizado a processing:", {
         pagoId: pagoExistente.id,
         cotizacionId: cotizacionId,
-        status: "processing"
+        status: "processing",
       });
     } else {
-      console.log(`❌ No se encontró el pago correspondiente para Payment Intent: ${paymentIntent.id}`);
+      console.log(
+        `❌ No se encontró el pago correspondiente para Payment Intent: ${paymentIntent.id}`
+      );
     }
   } catch (error) {
     console.error("❌ Error al actualizar pago a processing:", error);

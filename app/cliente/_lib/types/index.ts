@@ -31,6 +31,13 @@ export interface Evento {
         status: string
         total: number
         pagado: number
+        // 🆕 Información de pagos SPEI pendientes
+        pagoSpeiPendiente?: {
+            status: string
+            monto: number
+            fechaCreacion: Date
+            fechaActualizacion: Date
+        } | null
     }
 }
 

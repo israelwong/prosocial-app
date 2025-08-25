@@ -48,11 +48,24 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
                         Pago: {
                             where: {
                                 status: {
-                                    in: [PAGO_STATUS.PAID, PAGO_STATUS.COMPLETADO]
+                                    in: [
+                                        PAGO_STATUS.PAID, 
+                                        PAGO_STATUS.COMPLETADO,
+                                        PAGO_STATUS.PENDING,
+                                        'pending_payment',
+                                        'processing'
+                                    ]
                                 }
                             },
                             select: {
-                                monto: true
+                                monto: true,
+                                status: true,
+                                metodo_pago: true,
+                                createdAt: true,
+                                updatedAt: true
+                            },
+                            orderBy: {
+                                updatedAt: 'desc'
                             }
                         }
                     },
@@ -67,7 +80,20 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
         // Transformar datos para el formato esperado
         const eventosFormateados = eventos.map(evento => {
             const cotizacion = evento.Cotizacion[0]
-            const totalPagado = cotizacion?.Pago?.reduce((sum: number, pago: any) => sum + pago.monto, 0) || 0
+            
+            // Calcular totales y estado de pagos
+            const pagos = cotizacion?.Pago || []
+            const pagosPagados = pagos.filter(pago => ['paid', 'completado'].includes(pago.status))
+            const pagosPendientes = pagos.filter(pago => ['pending', 'pending_payment', 'processing'].includes(pago.status))
+            const totalPagado = pagosPagados.reduce((sum: number, pago: any) => sum + pago.monto, 0)
+            
+            // Detectar si hay pagos SPEI pendientes
+            const pagoSpeiPendiente = pagosPendientes.find(pago => 
+                pago.metodo_pago && (
+                    pago.metodo_pago.toLowerCase().includes('spei') ||
+                    pago.metodo_pago === 'customer_balance'
+                )
+            )
 
             return {
                 id: evento.id,
@@ -88,7 +114,14 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
                     id: cotizacion?.id || '',
                     status: cotizacion?.status || '',
                     total: cotizacion?.precio || 0,
-                    pagado: totalPagado
+                    pagado: totalPagado,
+                    // 🆕 Información de pagos SPEI pendientes
+                    pagoSpeiPendiente: pagoSpeiPendiente ? {
+                        status: pagoSpeiPendiente.status,
+                        monto: pagoSpeiPendiente.monto,
+                        fechaCreacion: pagoSpeiPendiente.createdAt,
+                        fechaActualizacion: pagoSpeiPendiente.updatedAt
+                    } : null
                 }
             }
         })

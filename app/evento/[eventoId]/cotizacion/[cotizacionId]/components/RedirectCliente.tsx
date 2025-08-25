@@ -5,15 +5,16 @@ import { useRouter } from 'next/navigation'
 
 interface Props {
     motivo: string
+    redirigirA?: string // Nueva prop opcional
 }
 
-export default function RedirectCliente({ motivo }: Props) {
+export default function RedirectCliente({ motivo, redirigirA = "/cliente" }: Props) {
     const router = useRouter()
 
     useEffect(() => {
-        console.log(`🔄 ${motivo}, redirigiendo al cliente...`)
-        router.replace('/cliente')
-    }, [router, motivo])
+        console.log(`🔄 ${motivo}, redirigiendo al cliente a: ${redirigirA}`)
+        router.replace(redirigirA)
+    }, [router, motivo, redirigirA])
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center">

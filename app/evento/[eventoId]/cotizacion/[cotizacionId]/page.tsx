@@ -2,6 +2,7 @@ import React from 'react'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { obtenerCotizacionCompleta } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
+import { verificarEstadoPagosCotizacion } from '@/app/admin/_lib/actions/cotizacion/verificar-estado-pagos.actions'
 import CotizacionDetalle from './components/CotizacionDetalle'
 import RedirectCliente from './components/RedirectCliente'
 import EventoMetadataProvider from '../../components/EventoMetadataProvider'
@@ -44,13 +45,35 @@ export default async function CotizacionDetallePage({ params, searchParams }: Pa
             redirect('/404')
         }
 
+        // 🎯 VALIDACIÓN: Verificar primero si hay pagos paid/pending
+        const estadoPagos = await verificarEstadoPagosCotizacion(cotizacionId);
+        
+        if (estadoPagos.requiereLogin) {
+            console.log('🔄 Cotización con pago detectado, redirigiendo al login del cliente:', {
+                estadoPago: estadoPagos.estadoPago,
+                esPendiente: estadoPagos.esPendiente,
+                esPagado: estadoPagos.esPagado
+            });
+            
+            return <RedirectCliente 
+                motivo={estadoPagos.esPendiente 
+                    ? "Tu pago SPEI está siendo procesado" 
+                    : "Pago completado - Accede a tu cuenta"
+                } 
+                redirigirA="/cliente/auth/login"
+            />
+        }
+
         // 🎯 VALIDACIÓN: Si el evento ya está aprobado, mostrar redirección al cliente
         const eventoAprobado = datosCotizacion.cotizacion.Evento.status === 'aprobado' ||
             datosCotizacion.cotizacion.Evento.status === 'contratado'
 
         if (eventoAprobado) {
             console.log('🔄 Evento aprobado/contratado, mostrando redirección al cliente');
-            return <RedirectCliente motivo="Evento ya aprobado/contratado" />
+            return <RedirectCliente 
+                motivo="Evento ya aprobado/contratado" 
+                redirigirA="/cliente/auth/login"
+            />
         }
 
         // Verificar si la cotización está expirada

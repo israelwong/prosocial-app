@@ -21,7 +21,13 @@ export default async function handler(req, res) {
       where: {
         cotizacionId: cotizacionId,
         status: {
-          in: ["paid", "completado", "pending", "pending_payment", "processing"],
+          in: [
+            "paid",
+            "completado",
+            "pending",
+            "pending_payment",
+            "processing",
+          ],
         },
       },
       orderBy: {
@@ -30,10 +36,7 @@ export default async function handler(req, res) {
     });
 
     if (!pago) {
-      console.log(
-        "❌ No se encontró pago para la cotización:",
-        cotizacionId
-      );
+      console.log("❌ No se encontró pago para la cotización:", cotizacionId);
       return res
         .status(404)
         .json({ error: "No se encontró pago para esta cotización" });

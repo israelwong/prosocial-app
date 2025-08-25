@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader } from '@/app/components/ui/card'
 import { Button } from '@/app/components/ui/button'
 import { Badge } from '@/app/components/ui/badge'
-import { CalendarDays, MapPin, CreditCard, Eye, Edit3, CheckCircle } from 'lucide-react'
+import { CalendarDays, MapPin, CreditCard, Eye, Edit3, CheckCircle, Clock } from 'lucide-react'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 import { Evento } from '../../../_lib/types'
 
@@ -86,6 +86,19 @@ export default function EventoCard({ evento }: EventoCardProps) {
                             {evento.eventoEtapa?.nombre || 'Sin etapa'}
                         </Badge>
                     </div>
+
+                    {/* 🆕 Línea 4: Pago SPEI pendiente */}
+                    {evento.cotizacion.pagoSpeiPendiente && (
+                        <div className="flex items-center text-sm text-amber-300 bg-amber-900/20 border border-amber-800 rounded p-2">
+                            <Clock className="h-4 w-4 mr-2 text-amber-400" />
+                            <div className="flex-1">
+                                <div className="font-medium">Tu pago SPEI está siendo procesado</div>
+                                <div className="text-xs text-amber-400 mt-1">
+                                    Confirmación bancaria: 24-48 horas • {formatMoney(evento.cotizacion.pagoSpeiPendiente.monto)}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Separador e información financiera */}

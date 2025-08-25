@@ -100,7 +100,7 @@ export default function PagoExitoso({ pagoId, cotizacionId, paymentIntentId }: P
                 <p className='font-Bebas-Neue text-2xl text-left mb-10 text-blue-600'>
                     🏦 Pago SPEI iniciado
                 </p>
-                
+
                 <p className='mb-5 text-2xl'>
                     ¡Tu solicitud de pago ha sido procesada!
                 </p>
@@ -151,7 +151,7 @@ export default function PagoExitoso({ pagoId, cotizacionId, paymentIntentId }: P
                 <p className='font-Bebas-Neue text-2xl text-left mb-10 text-blue-600'>
                     🏦 Pago SPEI en proceso
                 </p>
-                
+
                 <p className='mb-5 text-2xl'>
                     Hola {cliente?.nombre || 'Cliente'}!,
                 </p>
