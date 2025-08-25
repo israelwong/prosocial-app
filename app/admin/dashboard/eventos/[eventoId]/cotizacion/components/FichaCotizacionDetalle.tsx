@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Cotizacion } from '@/app/admin/_lib/types'
 import { clonarCotizacion, archivarCotizacion, desarchivarCotizacion, eliminarCotizacion, autorizarCotizacion, cancelarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
+import { cambiarEtapaEvento } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.actions'
 import { useRouter } from 'next/navigation'
 import BotonAutorizarCotizacion from '@/app/admin/dashboard/eventos/[eventoId]/cotizacion/components/BotonAutorizarCotizacion'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
+import { EVENTO_ETAPAS } from '@/app/admin/_lib/constants/evento-etapas'
 
 // Funciones helper para el badge de estado
 const getStatusBadgeStyles = (status: string | undefined) => {
@@ -254,6 +256,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
             'Esta acción:\n' +
             '• Cambiará el status de la cotización a PENDIENTE\n' +
             '• Cambiará el status del evento a PENDIENTE\n' +
+            '• Cambiará la etapa del evento a NUEVO\n' +
             '• Cancelará todos los pagos realizados\n' +
             '• Eliminará el evento de la agenda si existe\n\n' +
             '¿Continuar con la cancelación?'
@@ -265,6 +268,17 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
         try {
             const resultado = await cancelarCotizacion(cotizacion.id)
             if (resultado.success) {
+                // Cambiar la etapa del evento a "nuevo" después de la cancelación exitosa
+                try {
+                    await cambiarEtapaEvento({
+                        eventoId: eventoId,
+                        etapaId: EVENTO_ETAPAS.NUEVO
+                    })
+                } catch (etapaError) {
+                    console.warn('No se pudo cambiar la etapa del evento:', etapaError)
+                    // No interrumpimos el flujo por este error
+                }
+
                 let mensaje = 'Cotización cancelada exitosamente'
 
                 if (resultado.detalles) {
@@ -280,6 +294,9 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                         mensaje += `\n\n${detalles.join(', ')}`
                     }
                 }
+
+                // Agregar información sobre el cambio de etapa
+                mensaje += '\n\nEvento movido a etapa "Nuevo"'
 
                 toast.success(mensaje)
                 router.refresh()

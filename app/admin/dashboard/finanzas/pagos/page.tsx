@@ -343,12 +343,6 @@ export default function PagosPage() {
                                                 {formatearMoneda(pago.monto)}
                                             </p>
                                             <div className="flex gap-2">
-                                                <Link href={`/admin/dashboard/finanzas/pagos/${pago.id}`}>
-                                                    <Button variant="outline" size="sm">
-                                                        <Eye className="w-4 h-4 mr-2" />
-                                                        Ver detalle
-                                                    </Button>
-                                                </Link>
                                                 <Button
                                                     variant="outline"
                                                     size="sm"

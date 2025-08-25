@@ -15,6 +15,7 @@ import { supabase } from '../../_lib/supabase'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { validarPagoStripe } from '../../_lib/pago.actions'
+import { EVENTO_STATUS, AGENDA_STATUS } from '../../_lib/constants/status'
 
 const links = [
     // { href: '/admin/dashboard', label: 'Inicio', icon: Home, alt: 'Inicio' },
@@ -51,36 +52,36 @@ function DashboardSideBar() {
     //! CONTEO DE EVENTOS
     const fetchCounts = useCallback(async () => {
 
+        // Eventos en seguimiento (pendientes de aprobación)
         const { count: seguimientoCount, error: seguimientoError } = await supabase
             .from('Evento')
             .select('id', { count: 'exact' })
-            .in('eventoEtapaId', [
-                'cm6498oqp0000gu1ax8qnuuu8',//nuevo
-                'cm6498zw00001gu1a67s88y5h'//seguimiento
-            ]).eq('status', 'active');;
+            .in('status', [
+                EVENTO_STATUS.PENDIENTE,    // Eventos pendientes
+                EVENTO_STATUS.ACTIVE        // Legacy: eventos activos antiguos
+            ]);
 
+        // Eventos aprobados (en proceso o completados)
         const { count: aprobadosCount, error: aprobadosError } = await supabase
             .from('Evento')
             .select('id', { count: 'exact' })
-            .in('eventoEtapaId', [
-                'cm6ecqcju0000gukqfzhu772l', // pendiente
-                'cm6499aqs0002gu1ae4k1a7ls', // aprobado
-                'cm64bp2ba0000guqkip3liohc', // En planeación
-                'cm64bpdlt0001guqkujuf5jfr', // En producción
-                'cm6499n9v0003gu1a9bj1neri', // En edición
-                'cm649aflf0004gu1agr90z9o3', // En revisión
-                'cm649d1380005gu1ar0xr7qev'  // Generando entregables
-            ])
-            .eq('status', 'active');
+            .in('status', [
+                EVENTO_STATUS.APROBADO,     // Eventos aprobados
+                EVENTO_STATUS.COMPLETADO    // Eventos completados
+            ]);
 
+        // Agenda pendiente y confirmada (requieren atención)
         const { count: agendaCount, error: agendaError } = await supabase
             .from('Agenda')
             .select('id', { count: 'exact' })
-            .eq('status', 'pendiente');
+            .in('status', [
+                AGENDA_STATUS.PENDIENTE,    // Citas pendientes de confirmación
+                AGENDA_STATUS.CONFIRMADO    // Citas confirmadas que requieren seguimiento
+            ]);
 
-        if (seguimientoError) console.error('Error al obtener seguimiento leads:', seguimientoError);
-        if (aprobadosError) console.error('Error al obtener aprobados leads:', aprobadosError);
-        if (agendaError) console.error('Error al obtener aprobados leads:', agendaError);
+        if (seguimientoError) console.error('Error al obtener eventos en seguimiento:', seguimientoError);
+        if (aprobadosError) console.error('Error al obtener eventos aprobados:', aprobadosError);
+        if (agendaError) console.error('Error al obtener agenda pendiente:', agendaError);
 
         setSeguimientoCount(seguimientoCount || 0);
         setAprobadosCount(aprobadosCount || 0);
@@ -171,11 +172,11 @@ function DashboardSideBar() {
     const getLinkCount = (href: string) => {
         switch (href) {
             case '/admin/dashboard/eventos':
-                return seguimientoCount;
-            // case '/admin/dashboard/seguimiento':
-            //     return aprobadosCount;
+                return seguimientoCount; // Eventos pendientes en seguimiento
+            case '/admin/dashboard/seguimiento':
+                return aprobadosCount; // Eventos aprobados y completados
             case '/admin/dashboard/agenda':
-                return agendaCount;
+                return agendaCount; // Citas pendientes y confirmadas que requieren atención
             default:
                 return 0;
         }
