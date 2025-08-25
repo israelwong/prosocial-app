@@ -259,8 +259,8 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                 <h3 className="text-lg font-semibold text-zinc-200">Cotizaciones</h3>
 
                 <div className="flex items-center gap-2">
-                    {/* Menú de acciones (solo si hay múltiples cotizaciones) */}
-                    {((cotizaciones.length > 1 || cotizacionesSimples.length > 1)) && (
+                    {/* Menú de acciones (aparece si hay una o más cotizaciones) */}
+                    {((cotizaciones.length >= 1 || cotizacionesSimples.length >= 1)) && (
                         <div className="relative menu-container">
                             <button
                                 onClick={() => setMenuAbierto(!menuAbierto)}

@@ -3,6 +3,7 @@
 'use server';
 
 import prisma from '@/app/admin/_lib/prismaClient';
+import { retryDatabaseOperation } from '@/app/admin/_lib/utils/database-retry';
 import {
     EventoBusquedaSchema,
     EventoEtapaUpdateSchema,
@@ -50,76 +51,92 @@ export async function obtenerEventoCompleto(eventoId: string): Promise<EventoCom
     }
 
     try {
-        const evento = await prisma.evento.findUnique({
-            where: { id: eventoId },
-            include: {
-                EventoTipo: {
-                    select: {
-                        id: true,
-                        nombre: true,
-                    }
-                },
-                Cliente: {
-                    select: {
-                        id: true,
-                        nombre: true,
-                        telefono: true,
-                        email: true,
-                        direccion: true,
-                        status: true,
-                        canalId: true,
-                        userId: true,
-                        createdAt: true,
-                        updatedAt: true,
-                        Canal: {
-                            select: {
-                                id: true,
-                                nombre: true
+        return await retryDatabaseOperation(async () => {
+            const evento = await prisma.evento.findUnique({
+                where: { id: eventoId },
+                include: {
+                    EventoTipo: {
+                        select: {
+                            id: true,
+                            nombre: true,
+                        }
+                    },
+                    Cliente: {
+                        select: {
+                            id: true,
+                            nombre: true,
+                            telefono: true,
+                            email: true,
+                            direccion: true,
+                            status: true,
+                            canalId: true,
+                            userId: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            Canal: {
+                                select: {
+                                    id: true,
+                                    nombre: true
+                                }
                             }
                         }
-                    }
-                },
-                EventoEtapa: {
-                    select: {
-                        id: true,
-                        nombre: true
-                    }
-                },
-                Cotizacion: {
-                    where: { archivada: false },
-                    orderBy: {
-                        createdAt: 'desc'
-                    }
-                },
-                Agenda: {
-                    select: {
-                        id: true,
-                        fecha: true,
-                        status: true,
-                        descripcion: true,
-                        direccion: true,
-                    }
-                },
-                EventoBitacora: {
-                    select: {
-                        id: true,
-                        comentario: true,
-                        createdAt: true,
-                        updatedAt: true,
-                        importancia: true,
-                        status: true,
                     },
-                    orderBy: {
-                        createdAt: 'desc'
+                    EventoEtapa: {
+                        select: {
+                            id: true,
+                            nombre: true
+                        }
+                    },
+                    Cotizacion: {
+                        where: { archivada: false },
+                        orderBy: {
+                            createdAt: 'desc'
+                        }
+                    },
+                    Agenda: {
+                        select: {
+                            id: true,
+                            fecha: true,
+                            status: true,
+                            descripcion: true,
+                            direccion: true,
+                        }
+                    },
+                    EventoBitacora: {
+                        select: {
+                            id: true,
+                            comentario: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            importancia: true,
+                            status: true,
+                        },
+                        orderBy: {
+                            createdAt: 'desc'
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        return evento as EventoCompleto | null;
+            return evento as EventoCompleto | null;
+        }, {
+            maxRetries: 3,
+            baseDelay: 1000
+        });
     } catch (error) {
-        console.error('Error obteniendo evento completo:', error);
-        return null;
+        console.error('❌ Error obteniendo evento completo:', error);
+
+        // Re-lanzar el error para que el componente pueda manejarlo adecuadamente
+        if (error instanceof Error) {
+            // Si es un error de conexión a la base de datos, preservar el mensaje
+            if (error.message.includes('database server') || error.message.includes('P1001')) {
+                throw new Error(`Error de conexión a la base de datos: ${error.message}`);
+            }
+            // Para otros errores de Prisma, proporcionar un mensaje más genérico
+            throw new Error('Error al obtener los datos del evento');
+        }
+
+        throw error;
     }
 }
 

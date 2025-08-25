@@ -37,10 +37,37 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
     }
 
     // Obtener datos completos del evento y validación de cotizaciones
-    const [evento, resultadoCotizaciones] = await Promise.all([
-        obtenerEventoCompleto(eventoId),
-        obtenerCotizacionesParaEvento(eventoId)
-    ])
+    let evento, resultadoCotizaciones;
+
+    try {
+        [evento, resultadoCotizaciones] = await Promise.all([
+            obtenerEventoCompleto(eventoId),
+            obtenerCotizacionesParaEvento(eventoId)
+        ])
+    } catch (error) {
+        console.error('❌ Error al obtener datos del evento:', error);
+
+        // Si es un error de conexión a la base de datos
+        if (error instanceof Error && error.message.includes('database server')) {
+            return (
+                <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center">
+                    <div className="text-center p-8">
+                        <h1 className="text-2xl font-bold text-white mb-4">Servicio temporalmente no disponible</h1>
+                        <p className="text-zinc-400 mb-4">Estamos experimentando problemas técnicos. Por favor, intenta de nuevo en unos minutos.</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        >
+                            Reintentar
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // Para otros tipos de error, redirigir a 404
+        redirect('/404')
+    }
 
     // Si el evento no existe
     if (!evento) {
@@ -76,10 +103,12 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
     // Si la fecha no está disponible por otros motivos
     if (!resultadoCotizaciones.disponible) {
         return <FechaNoDisponible evento={evento} diasRestantes={diasRestantes} />
-    }    // Si hay redirección automática (1 cotización)
-    if (resultadoCotizaciones.accion === 'redireccion_automatica' && resultadoCotizaciones.cotizacionUnica) {
-        redirect(`/evento/${eventoId}/cotizacion/${resultadoCotizaciones.cotizacionUnica.id}`)
     }
+
+    // COMENTADO: Ya no redirigimos automáticamente, siempre mostramos la página del evento
+    // if (resultadoCotizaciones.accion === 'redireccion_automatica' && resultadoCotizaciones.cotizacionUnica) {
+    //     redirect(`/evento/${eventoId}/cotizacion/${resultadoCotizaciones.cotizacionUnica.id}`)
+    // }
 
     // Si no hay cotizaciones
     if (resultadoCotizaciones.accion === 'sin_cotizaciones') {
@@ -96,7 +125,11 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                         }}
                     />
 
-                    <EventoHeader />
+                    <EventoHeader
+                        showShareButton={true}
+                        shareTitle={`${evento.Cliente?.nombre} - Cotización de evento`}
+                        shareDescription={`Revisa la cotización para tu ${evento.EventoTipo?.nombre?.toLowerCase()}`}
+                    />
                     <HeroSection
                         evento={evento}
                         diasRestantes={diasRestantes}
@@ -120,7 +153,9 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
         // Si no hay paquetes ni cotizaciones, mostrar mensaje
         return (
             <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
-                <EventoHeader />
+                <EventoHeader
+                    showShareButton={false}
+                />
                 <HeroSection
                     evento={evento}
                     diasRestantes={diasRestantes}
@@ -167,7 +202,7 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
         )
     }
 
-    // Si hay múltiples cotizaciones, mostrar lista
+    // Si hay cotizaciones disponibles (una o más), mostrar la página completa del evento
     return (
         <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
             {/* Metadata provider para guardar contexto del evento */}
@@ -179,7 +214,11 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                 }}
             />
 
-            <EventoHeader />
+            <EventoHeader
+                showShareButton={true}
+                shareTitle={`${evento.Cliente?.nombre} - Cotización de evento`}
+                shareDescription={`Revisa la cotización para tu ${evento.EventoTipo?.nombre?.toLowerCase()}`}
+            />
             <HeroSection
                 evento={evento}
                 diasRestantes={diasRestantes}

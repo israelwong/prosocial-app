@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { Calendar, Clock, MapPin, User, Share2 } from 'lucide-react'
+import { Calendar, Clock, MapPin, User } from 'lucide-react'
 
 interface Evento {
     id: string
@@ -94,44 +94,6 @@ export default function HeroSection({
 
     const contenido = getContenidoTexto()
 
-    const handleCompartir = async () => {
-        const url = window.location.href
-        const texto = `${contenido.titulo} - ${contenido.subtitulo}`
-
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: texto,
-                    text: contenido.descripcion,
-                    url: url,
-                })
-            } catch (error) {
-                // Fallback a copiar al portapapeles
-                copyToClipboard(url)
-            }
-        } else {
-            // Fallback para navegadores que no soportan Web Share API
-            copyToClipboard(url)
-        }
-    }
-
-    const copyToClipboard = async (text: string) => {
-        try {
-            await navigator.clipboard.writeText(text)
-            // Aquí podrías mostrar una notificación de éxito
-            alert('¡Enlace copiado al portapapeles!')
-        } catch (error) {
-            // Fallback para navegadores muy antiguos
-            const textArea = document.createElement('textarea')
-            textArea.value = text
-            document.body.appendChild(textArea)
-            textArea.select()
-            document.execCommand('copy')
-            document.body.removeChild(textArea)
-            alert('¡Enlace copiado al portapapeles!')
-        }
-    }
-
     return (
         <section className="relative pt-20 pb-12 px-4 overflow-hidden min-h-[60vh] sm:min-h-[70vh]">
             {/* Video Background */}
@@ -166,20 +128,9 @@ export default function HeroSection({
             <div className="relative z-10 max-w-4xl mx-auto text-center">
                 {/* Cliente y título principal */}
                 <div className="mb-6">
-                    <div className="flex items-center justify-center gap-4 mb-4">
-                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight drop-shadow-lg">
-                            {contenido.titulo}
-                        </h1>
-                        {tipoContenido === 'cotizaciones' && (
-                            <button
-                                onClick={handleCompartir}
-                                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-full p-3 transition-all duration-200 hover:scale-110 group"
-                                title="Compartir cotización"
-                            >
-                                <Share2 className="w-6 h-6 text-white group-hover:text-white/90" />
-                            </button>
-                        )}
-                    </div>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight drop-shadow-lg mb-4">
+                        {contenido.titulo}
+                    </h1>
                     <p className="text-lg sm:text-xl text-white/90 font-medium drop-shadow-md">
                         {contenido.subtitulo}
                     </p>

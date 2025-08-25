@@ -92,7 +92,7 @@ export default function CotizacionCard({ cotizacion, eventoId, index, isRecommen
             </div>
 
             {/* Status si existe */}
-            {cotizacion.status && (
+            {/* {cotizacion.status && (
                 <div className="mb-4">
                     <span className={`
                         inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
@@ -104,7 +104,7 @@ export default function CotizacionCard({ cotizacion, eventoId, index, isRecommen
                         {cotizacion.status === 'aprobada' ? '✓ Aprobada' : 'Pendiente'}
                     </span>
                 </div>
-            )}
+            )} */}
 
             {/* Características destacadas */}
             <div className="mb-6 space-y-2">

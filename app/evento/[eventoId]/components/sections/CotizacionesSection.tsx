@@ -33,17 +33,28 @@ export default function CotizacionesSection({ cotizaciones, eventoId }: Props) {
                     </p>
                 </div>
 
-                {/* Grid de cotizaciones responsive */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {cotizaciones.map((cotizacion, index) => (
-                        <CotizacionCard
-                            key={cotizacion.id}
-                            cotizacion={cotizacion}
-                            eventoId={eventoId}
-                            index={index}
-                            isRecommended={index === 1 && cotizaciones.length > 2} // Marcar la segunda como recomendada si hay más de 2
-                        />
-                    ))}
+                {/* Grid de cotizaciones responsive - centrado */}
+                <div className="flex justify-center w-full">
+                    <div className={`
+                        grid gap-6 w-full max-w-7xl
+                        ${cotizaciones.length === 1 ? 'grid-cols-1 justify-items-center' : ''}
+                        ${cotizaciones.length === 2 ? 'grid-cols-1 md:grid-cols-2 justify-items-center' : ''}
+                        ${cotizaciones.length >= 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : ''}
+                    `}>
+                        {cotizaciones.map((cotizacion, index) => (
+                            <div key={cotizacion.id} className={`
+                                ${cotizaciones.length === 1 ? 'max-w-md mx-auto' : ''}
+                                ${cotizaciones.length === 2 ? 'max-w-md mx-auto' : ''}
+                            `}>
+                                <CotizacionCard
+                                    cotizacion={cotizacion}
+                                    eventoId={eventoId}
+                                    index={index}
+                                    isRecommended={index === 1 && cotizaciones.length > 2} // Marcar la segunda como recomendada si hay más de 2
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Información adicional */}

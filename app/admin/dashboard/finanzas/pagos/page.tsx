@@ -12,11 +12,14 @@ import {
     Eye,
     CreditCard,
     AlertCircle,
-    Trash2
+    Trash2,
+    CheckCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { obtenerPagosEntrantes } from '@/app/admin/_lib/actions/finanzas';
 import { eliminarPago } from '@/app/admin/_lib/actions/pagos';
+import { cambiarStatusPago } from '@/app/admin/_lib/actions/seguimiento/pagos.actions';
+import { PAGO_STATUS } from '@/app/admin/_lib/constants/status';
 
 interface PagoEntrante {
     id: string;
@@ -26,6 +29,7 @@ interface PagoEntrante {
     fecha: Date;
     cliente?: string;
     metodoPago?: string;
+    eventoNombre?: string;
 }
 
 export default function PagosPage() {
@@ -36,6 +40,7 @@ export default function PagosPage() {
     const [eliminandoPago, setEliminandoPago] = useState<string | null>(null);
     const [pagosSeleccionados, setPagosSeleccionados] = useState<string[]>([]);
     const [eliminandoMultiples, setEliminandoMultiples] = useState(false);
+    const [autorizandoPago, setAutorizandoPago] = useState<string | null>(null);
 
     // Cargar pagos
     useEffect(() => {
@@ -63,19 +68,79 @@ export default function PagosPage() {
         }).format(amount);
     };
 
+    const formatearFecha = (fecha: Date) => {
+        return fecha.toLocaleDateString('es-MX', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+
     const obtenerBadgeStatus = (status: string) => {
         switch (status) {
-            case 'paid':
-            case 'confirmed':
+            case PAGO_STATUS.PAID:
+            case 'confirmed': // Legacy support
                 return <Badge variant="success">Pagado</Badge>;
-            case 'pending':
+            case PAGO_STATUS.PENDING:
+            case PAGO_STATUS.PENDIENTE:
                 return <Badge variant="warning">Pendiente</Badge>;
             case 'processing':
                 return <Badge variant="default">Procesando</Badge>;
-            case 'failed':
+            case PAGO_STATUS.FAILED:
                 return <Badge variant="destructive">Fallido</Badge>;
             default:
                 return <Badge variant="outline">{status}</Badge>;
+        }
+    };
+
+    const formatearMetodoPago = (metodo: string | undefined) => {
+        if (!metodo) return 'No especificado';
+
+        switch (metodo.toLowerCase()) {
+            case 'tarjeta_credito':
+                return 'Tarjeta de crédito';
+            case 'spei':
+                return 'SPEI';
+            case 'transferencia interbancaria':
+                return 'Transferencia interbancaria';
+            default:
+                return metodo;
+        }
+    };
+
+    const manejarAutorizarPago = async (pagoId: string, concepto: string) => {
+        const confirmacion = confirm(
+            `¿Estás seguro de que deseas autorizar el pago "${concepto}"?`
+        );
+
+        if (confirmacion) {
+            try {
+                setAutorizandoPago(pagoId);
+                const resultado = await cambiarStatusPago(pagoId, PAGO_STATUS.PAID);
+
+                if (resultado.success) {
+                    // Actualizar el estado local del pago
+                    setPagos(prevPagos =>
+                        prevPagos.map(pago =>
+                            pago.id === pagoId
+                                ? { ...pago, status: PAGO_STATUS.PAID }
+                                : pago
+                        )
+                    );
+                    alert('Pago autorizado exitosamente');
+                } else {
+                    alert('Error al autorizar el pago: ' + resultado.error);
+                }
+            } catch (error) {
+                console.error('Error al autorizar pago:', error);
+                alert('Error al autorizar el pago');
+            } finally {
+                setAutorizandoPago(null);
+            }
         }
     };
 
@@ -150,8 +215,8 @@ export default function PagosPage() {
     };
 
     const totalPagos = pagos.reduce((sum, pago) => sum + pago.monto, 0);
-    const pagosPagados = pagos.filter(p => ['paid', 'confirmed'].includes(p.status));
-    const pagosPendientes = pagos.filter(p => ['pending', 'processing'].includes(p.status));
+    const pagosPagados = pagos.filter(p => [PAGO_STATUS.PAID, 'confirmed'].includes(p.status as any));
+    const pagosPendientes = pagos.filter(p => [PAGO_STATUS.PENDING, PAGO_STATUS.PENDIENTE, 'processing'].includes(p.status as any));
 
     return (
         <div className="space-y-6">
@@ -334,8 +399,9 @@ export default function PagosPage() {
                                             </div>
                                             <div className="text-sm text-zinc-400 space-y-1">
                                                 <p>Cliente: {pago.cliente || 'No especificado'}</p>
-                                                <p>Método: {pago.metodoPago || 'No especificado'}</p>
-                                                <p>Fecha: {pago.fecha.toLocaleDateString('es-MX')}</p>
+                                                <p>Evento: {pago.eventoNombre || 'No especificado'}</p>
+                                                <p>Método: {formatearMetodoPago(pago.metodoPago)}</p>
+                                                <p>Fecha: {formatearFecha(pago.fecha)}</p>
                                             </div>
                                         </div>
                                         <div className="text-right space-y-2">
@@ -343,6 +409,30 @@ export default function PagosPage() {
                                                 {formatearMoneda(pago.monto)}
                                             </p>
                                             <div className="flex gap-2">
+                                                {/* Botón de autorizar para pagos SPEI pendientes */}
+                                                {(pago.status === PAGO_STATUS.PENDING || pago.status === PAGO_STATUS.PENDIENTE) &&
+                                                    (pago.metodoPago === 'spei' || pago.metodoPago === 'transferencia interbancaria') && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => manejarAutorizarPago(pago.id, pago.concepto)}
+                                                            disabled={autorizandoPago === pago.id}
+                                                            className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white disabled:opacity-50"
+                                                        >
+                                                            {autorizandoPago === pago.id ? (
+                                                                <>
+                                                                    <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                                                    Autorizando...
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                                                    Autorizar
+                                                                </>
+                                                            )}
+                                                        </Button>
+                                                    )}
+
                                                 <Button
                                                     variant="outline"
                                                     size="sm"

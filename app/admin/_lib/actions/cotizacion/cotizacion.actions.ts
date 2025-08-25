@@ -1,6 +1,7 @@
 'use server';
 
 import prisma from '@/app/admin/_lib/prismaClient';
+import { retryDatabaseOperation } from '@/app/admin/_lib/utils/database-retry';
 import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento.actions';
 import { obtenerTiposEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
 import { obtenerCatalogoCompleto } from '@/app/admin/_lib/actions/catalogo/catalogo.actions';
@@ -574,175 +575,181 @@ export async function manejarSubmitCotizacion(data: any) {
  */
 export async function obtenerCotizacionesParaEvento(eventoId: string) {
     try {
-        // 1. Verificar que el evento existe y obtener información básica
-        const evento = await prisma.evento.findUnique({
-            where: { id: eventoId },
-            select: {
-                id: true,
-                fecha_evento: true,
-                eventoTipoId: true,
-                EventoEtapa: {
-                    select: {
-                        posicion: true,
-                        nombre: true
+        return await retryDatabaseOperation(async () => {
+            // 1. Verificar que el evento existe y obtener información básica
+            const evento = await prisma.evento.findUnique({
+                where: { id: eventoId },
+                select: {
+                    id: true,
+                    fecha_evento: true,
+                    eventoTipoId: true,
+                    EventoEtapa: {
+                        select: {
+                            posicion: true,
+                            nombre: true
+                        }
                     }
                 }
+            })
+
+            if (!evento) {
+                return { error: 'Evento no encontrado', disponible: false }
             }
-        })
 
-        if (!evento) {
-            return { error: 'Evento no encontrado', disponible: false }
-        }
+            // 2. Verificar disponibilidad de fecha en agenda
+            const inicioDelDia = new Date(evento.fecha_evento)
+            inicioDelDia.setHours(0, 0, 0, 0)
 
-        // 2. Verificar disponibilidad de fecha en agenda
-        const inicioDelDia = new Date(evento.fecha_evento)
-        inicioDelDia.setHours(0, 0, 0, 0)
+            const finDelDia = new Date(evento.fecha_evento)
+            finDelDia.setHours(23, 59, 59, 999)
 
-        const finDelDia = new Date(evento.fecha_evento)
-        finDelDia.setHours(23, 59, 59, 999)
-
-        const eventosEnConflicto = await prisma.agenda.findMany({
-            where: {
-                fecha: {
-                    gte: inicioDelDia,
-                    lte: finDelDia
+            const eventosEnConflicto = await prisma.agenda.findMany({
+                where: {
+                    fecha: {
+                        gte: inicioDelDia,
+                        lte: finDelDia
+                    },
+                    eventoId: {
+                        not: eventoId // Excluir el evento actual
+                    },
+                    status: {
+                        not: 'cancelado' // No contar eventos cancelados
+                    }
                 },
-                eventoId: {
-                    not: eventoId // Excluir el evento actual
-                },
-                status: {
-                    not: 'cancelado' // No contar eventos cancelados
-                }
-            },
-            select: {
-                id: true,
-                Evento: {
-                    select: {
-                        nombre: true,
-                        EventoTipo: {
-                            select: {
-                                nombre: true
+                select: {
+                    id: true,
+                    Evento: {
+                        select: {
+                            nombre: true,
+                            EventoTipo: {
+                                select: {
+                                    nombre: true
+                                }
                             }
                         }
                     }
                 }
-            }
-        })
+            })
 
-        const fechaDisponible = eventosEnConflicto.length === 0
+            const fechaDisponible = eventosEnConflicto.length === 0
 
-        // 3. Si la fecha no está disponible, retornar información del conflicto
-        if (!fechaDisponible) {
-            return {
-                disponible: false,
-                conflicto: {
-                    mensaje: 'Fecha no disponible',
-                    eventosEnConflicto: eventosEnConflicto.map(agenda => ({
-                        evento: agenda.Evento?.nombre,
-                        tipo: agenda.Evento?.EventoTipo?.nombre
-                    }))
+            // 3. Si la fecha no está disponible, retornar información del conflicto
+            if (!fechaDisponible) {
+                return {
+                    disponible: false,
+                    conflicto: {
+                        mensaje: 'Fecha no disponible',
+                        eventosEnConflicto: eventosEnConflicto.map(agenda => ({
+                            evento: agenda.Evento?.nombre,
+                            tipo: agenda.Evento?.EventoTipo?.nombre
+                        }))
+                    }
                 }
             }
-        }
 
-        // 4. Verificar si el evento ya está contratado (requiere login de cliente)
-        const etapaPosicion = evento.EventoEtapa?.posicion || 0
-        const eventoContratado = etapaPosicion >= 5
+            // 4. Verificar si el evento ya está contratado (requiere login de cliente)
+            const etapaPosicion = evento.EventoEtapa?.posicion || 0
+            const eventoContratado = etapaPosicion >= 5
 
-        // 5. Obtener cotizaciones visibles al cliente
-        const cotizaciones = await prisma.cotizacion.findMany({
-            where: {
-                eventoId,
-                visible_cliente: true,
-                status: {
-                    in: [
-                        'pending', // Valor legacy a migrar
-                        COTIZACION_STATUS.PENDIENTE,
-                        COTIZACION_STATUS.APROBADA,
-                        'approved' // Valor legacy a migrar
-                    ]
+            // 5. Obtener cotizaciones visibles al cliente
+            const cotizaciones = await prisma.cotizacion.findMany({
+                where: {
+                    eventoId,
+                    visible_cliente: true,
+                    status: {
+                        in: [
+                            'pending', // Valor legacy a migrar
+                            COTIZACION_STATUS.PENDIENTE,
+                            COTIZACION_STATUS.APROBADA,
+                            'approved' // Valor legacy a migrar
+                        ]
+                    }
+                },
+                select: {
+                    id: true,
+                    nombre: true,
+                    precio: true,
+                    status: true
+                },
+                orderBy: {
+                    createdAt: 'desc'
                 }
-            },
-            select: {
-                id: true,
-                nombre: true,
-                precio: true,
-                status: true
-            },
-            orderBy: {
-                createdAt: 'desc'
+            })
+
+            // 5.1. Obtener paquetes pre-diseñados según tipo de evento
+            const paquetes = evento.eventoTipoId ? await prisma.paquete.findMany({
+                where: {
+                    eventoTipoId: evento.eventoTipoId,
+                    status: 'active' // Solo paquetes activos
+                },
+                select: {
+                    id: true,
+                    nombre: true,
+                    precio: true
+                },
+                orderBy: {
+                    precio: 'asc'
+                }
+            }) : []
+
+            // 6. Verificar si hay cotizaciones aprobadas (requiere login)
+            const cotizacionesAprobadas = cotizaciones.filter(cot =>
+                [COTIZACION_STATUS.APROBADA, 'approved'].includes(cot.status as any) // Incluir valor legacy
+            )
+            const requiereClienteLogin = cotizacionesAprobadas.length > 0 || eventoContratado
+
+            if (requiereClienteLogin) {
+                return {
+                    disponible: true,
+                    requiereLogin: true,
+                    mensaje: eventoContratado
+                        ? 'Evento ya contratado - requiere acceso de cliente'
+                        : 'Cotización aprobada - requiere acceso de cliente'
+                }
             }
-        })
 
-        // 5.1. Obtener paquetes pre-diseñados según tipo de evento
-        const paquetes = evento.eventoTipoId ? await prisma.paquete.findMany({
-            where: {
-                eventoTipoId: evento.eventoTipoId,
-                status: 'active' // Solo paquetes activos
-            },
-            select: {
-                id: true,
-                nombre: true,
-                precio: true
-            },
-            orderBy: {
-                precio: 'asc'
+            // 7. Lógica de redirección basada en número de cotizaciones
+            if (cotizaciones.length === 0) {
+                return {
+                    disponible: true,
+                    cotizaciones: [],
+                    paquetes,
+                    accion: 'sin_cotizaciones',
+                    mensaje: 'No hay cotizaciones disponibles para este evento'
+                }
             }
-        }) : []
 
-        // 6. Verificar si hay cotizaciones aprobadas (requiere login)
-        const cotizacionesAprobadas = cotizaciones.filter(cot =>
-            [COTIZACION_STATUS.APROBADA, 'approved'].includes(cot.status as any) // Incluir valor legacy
-        )
-        const requiereClienteLogin = cotizacionesAprobadas.length > 0 || eventoContratado
+            if (cotizaciones.length === 1) {
+                return {
+                    disponible: true,
+                    cotizaciones,
+                    paquetes,
+                    accion: 'redireccion_automatica',
+                    cotizacionUnica: {
+                        id: cotizaciones[0].id,
+                        nombre: cotizaciones[0].nombre,
+                        precio: cotizaciones[0].precio
+                    }
+                }
+            }
 
-        if (requiereClienteLogin) {
+            // Múltiples cotizaciones - mostrar lista
             return {
                 disponible: true,
-                requiereLogin: true,
-                mensaje: eventoContratado
-                    ? 'Evento ya contratado - requiere acceso de cliente'
-                    : 'Cotización aprobada - requiere acceso de cliente'
-            }
-        }
-
-        // 7. Lógica de redirección basada en número de cotizaciones
-        if (cotizaciones.length === 0) {
-            return {
-                disponible: true,
-                cotizaciones: [],
+                cotizaciones: cotizaciones.map(cot => ({
+                    id: cot.id,
+                    nombre: cot.nombre,
+                    precio: cot.precio
+                })),
                 paquetes,
-                accion: 'sin_cotizaciones',
-                mensaje: 'No hay cotizaciones disponibles para este evento'
+                accion: 'mostrar_lista',
+                mensaje: `${cotizaciones.length} cotizaciones disponibles`
             }
-        }
 
-        if (cotizaciones.length === 1) {
-            return {
-                disponible: true,
-                cotizaciones,
-                paquetes,
-                accion: 'redireccion_automatica',
-                cotizacionUnica: {
-                    id: cotizaciones[0].id,
-                    nombre: cotizaciones[0].nombre,
-                    precio: cotizaciones[0].precio
-                }
-            }
-        }
-
-        // Múltiples cotizaciones - mostrar lista
-        return {
-            disponible: true,
-            cotizaciones: cotizaciones.map(cot => ({
-                id: cot.id,
-                nombre: cot.nombre,
-                precio: cot.precio
-            })),
-            paquetes,
-            accion: 'mostrar_lista',
-            mensaje: `${cotizaciones.length} cotizaciones disponibles`
-        }
+        }, {
+            maxRetries: 3,
+            baseDelay: 1000
+        });
 
     } catch (error) {
         console.error('Error al obtener cotizaciones para evento:', error)
