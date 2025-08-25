@@ -192,7 +192,7 @@ export default function CotizacionDetalle({
             )
 
             console.log('Condiciones comerciales con métodos de pago:', condicionesConMetodos)
-            
+
             // 🔍 DEBUG: Mostrar datos detallados de cada condición
             condicionesConMetodos.forEach((condicion, index) => {
                 console.log(`🏪 Condición ${index + 1}:`, {
@@ -210,7 +210,7 @@ export default function CotizacionDetalle({
                     }))
                 })
             })
-            
+
             setCondicionesComerciales(condicionesConMetodos)
 
             // Si hay condiciones, seleccionar la primera por defecto

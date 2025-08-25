@@ -16,12 +16,12 @@ export default async function handler(req, res) {
 
     console.log("🔍 Buscando pago más reciente para cotización:", cotizacionId);
 
-    // Buscar el pago más reciente (exitoso) de la cotización
+    // Buscar el pago más reciente de la cotización (incluir pending para SPEI)
     const pago = await prisma.pago.findFirst({
       where: {
         cotizacionId: cotizacionId,
         status: {
-          in: ["paid", "completado"],
+          in: ["paid", "completado", "pending", "pending_payment", "processing"],
         },
       },
       orderBy: {
@@ -31,12 +31,12 @@ export default async function handler(req, res) {
 
     if (!pago) {
       console.log(
-        "❌ No se encontró pago exitoso para la cotización:",
+        "❌ No se encontró pago para la cotización:",
         cotizacionId
       );
       return res
         .status(404)
-        .json({ error: "No se encontró pago exitoso para esta cotización" });
+        .json({ error: "No se encontró pago para esta cotización" });
     }
 
     console.log("✅ Pago encontrado:", pago.id);

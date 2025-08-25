@@ -53,10 +53,12 @@ export default function PagoExitoso({ pagoId, cotizacionId, paymentIntentId }: P
                     setEvento(pagoCompleto?.Cotizacion?.Evento || null);
                     setCliente(pagoCompleto?.Cotizacion?.Evento?.Cliente || null);
                 } else {
-                    console.error('❌ No se pudo obtener información del pago');
+                    console.warn('⚠️ No se pudo obtener información del pago');
+                    // Para pagos SPEI o en proceso, no es necesariamente un error
                 }
             } catch (error) {
-                console.error('❌ Error obteniendo datos del pago:', error);
+                console.warn('⚠️ Error obteniendo datos del pago:', error);
+                // Para SPEI, puede ser normal que no tengamos datos inmediatos
             } finally {
                 setLoading(false);
             }
@@ -92,12 +94,128 @@ export default function PagoExitoso({ pagoId, cotizacionId, paymentIntentId }: P
     }
 
     if (!pago) {
+        // Si no hay información de pago, puede ser un SPEI pendiente
         return (
             <div className="mt-10 mb-16 md:p-0 p-5">
-                <p className='font-Bebas-Neue text-2xl text-left mb-10 text-red-700'>
-                    Error al cargar información
+                <p className='font-Bebas-Neue text-2xl text-left mb-10 text-blue-600'>
+                    🏦 Pago SPEI iniciado
                 </p>
-                <p>No se pudo obtener la información del pago.</p>
+                
+                <p className='mb-5 text-2xl'>
+                    ¡Tu solicitud de pago ha sido procesada!
+                </p>
+
+                <div className='p-5 bg-blue-900/20 rounded-md mb-5 border border-blue-500/30'>
+                    <h3 className='text-blue-300 font-semibold mb-4 text-lg'>💳 Estado de tu pago SPEI</h3>
+                    <div className='space-y-3'>
+                        <p className='text-blue-200'>
+                            ✅ Tu pago por transferencia bancaria (SPEI) ha sido iniciado correctamente.
+                        </p>
+                        <p className='text-blue-200'>
+                            ⏳ <strong>Tiempo de confirmación:</strong> Tu pago será confirmado por la institución bancaria en un plazo de 24 a 48 horas hábiles.
+                        </p>
+                        <p className='text-blue-200'>
+                            📧 Te notificaremos por correo electrónico una vez que el pago sea confirmado.
+                        </p>
+                    </div>
+                </div>
+
+                <div className='p-5 bg-zinc-900 rounded-md mb-5 border border-zinc-800'>
+                    <h3 className='text-zinc-300 font-semibold mb-3'>📋 Próximos pasos</h3>
+                    <div className='space-y-2 text-sm text-zinc-300'>
+                        <p>1. Espera la confirmación del pago por parte de tu banco</p>
+                        <p>2. Recibirás una notificación por correo cuando se confirme</p>
+                        <p>3. Podrás acceder a tu panel de cliente para ver el estatus</p>
+                    </div>
+                </div>
+
+                <button
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-5"
+                    onClick={handleIniciarSesion}>
+                    Acceder a mi panel de cliente
+                </button>
+
+                <p className='text-zinc-400 text-sm text-center'>
+                    ¡Nos comunicaremos contigo una vez confirmado el pago!
+                </p>
+            </div>
+        )
+    }
+
+    // Determinar si es un pago SPEI pendiente
+    const esPagoSPEIPendiente = pago?.status === 'pending' || pago?.status === 'pending_payment' || pago?.metodo_pago?.toLowerCase().includes('spei')
+
+    if (esPagoSPEIPendiente) {
+        return (
+            <div className="mt-10 mb-16 md:p-0 p-5">
+                <p className='font-Bebas-Neue text-2xl text-left mb-10 text-blue-600'>
+                    🏦 Pago SPEI en proceso
+                </p>
+                
+                <p className='mb-5 text-2xl'>
+                    Hola {cliente?.nombre || 'Cliente'}!,
+                </p>
+
+                <p className='mb-5 leading-6'>
+                    Tu pago por transferencia bancaria (SPEI) está siendo procesado.
+                </p>
+
+                <div className='p-5 bg-blue-900/20 rounded-md mb-5 border border-blue-500/30'>
+                    <h3 className='text-blue-300 font-semibold mb-4 text-lg'>🏦 Estado de tu pago SPEI</h3>
+                    <div className='space-y-3'>
+                        <div className='flex justify-between items-center py-2'>
+                            <span className='text-blue-200'>Monto del pago:</span>
+                            <span className='text-white font-semibold text-base'>
+                                {(pago?.monto || 0).toLocaleString('es-MX', {
+                                    style: 'currency',
+                                    currency: 'MXN'
+                                })}
+                            </span>
+                        </div>
+                        <div className='flex justify-between items-center py-2'>
+                            <span className='text-blue-200'>Estado:</span>
+                            <span className='text-yellow-400 font-semibold'>⏳ Pendiente de confirmación bancaria</span>
+                        </div>
+                        <div className='mt-4 p-3 bg-blue-800/30 rounded'>
+                            <p className='text-blue-200 text-sm'>
+                                ⏱️ <strong>Tiempo estimado:</strong> 24-48 horas hábiles para confirmación
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Detalles del servicio */}
+                <div className='p-5 bg-zinc-900 rounded-md mb-5 text-sm text-zinc-500 border border-zinc-800'>
+                    <h3 className='text-zinc-300 font-semibold mb-3'>📋 Detalles del servicio</h3>
+                    <p className='mb-3'>
+                        <u>Concepto:</u> {pago?.concepto}
+                    </p>
+                    <p className='mb-3'>
+                        <u>Evento:</u> {evento?.nombre} - {evento?.EventoTipo?.nombre}
+                    </p>
+                    <p className='mb-3'>
+                        <u>Fecha del evento:</u> {evento?.fecha_evento ? new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        }) : 'Por definir'}
+                    </p>
+                </div>
+
+                <p className='mb-10 leading-6 text-zinc-300'>
+                    📧 Te notificaremos por correo electrónico una vez que tu banco confirme el pago.
+                </p>
+
+                <button
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-5"
+                    onClick={handleIniciarSesion}>
+                    Acceder a mi panel de cliente
+                </button>
+
+                <p className='text-zinc-400 text-sm text-center'>
+                    ¡Te mantendremos informado del progreso de tu pago!
+                </p>
             </div>
         )
     }
