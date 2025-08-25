@@ -96,7 +96,7 @@ export async function obtenerEventoCompleto(eventoId: string): Promise<EventoCom
                         archivada: true,
                         createdAt: true,
                         updatedAt: true,
-                        Servicio: {
+                        CotizacionServicio: {
                             include: {
                                 Servicio: {
                                     select: {
