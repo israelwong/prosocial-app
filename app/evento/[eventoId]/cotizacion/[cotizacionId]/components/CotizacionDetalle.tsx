@@ -192,6 +192,25 @@ export default function CotizacionDetalle({
             )
 
             console.log('Condiciones comerciales con métodos de pago:', condicionesConMetodos)
+            
+            // 🔍 DEBUG: Mostrar datos detallados de cada condición
+            condicionesConMetodos.forEach((condicion, index) => {
+                console.log(`🏪 Condición ${index + 1}:`, {
+                    id: condicion.id,
+                    nombre: condicion.nombre,
+                    descuento: condicion.descuento,
+                    porcentaje_anticipo: condicion.porcentaje_anticipo,
+                    status: condicion.status,
+                    metodosPago: condicion.metodosPago.map(m => ({
+                        metodoPagoId: m.metodoPagoId,
+                        metodo_pago: m.metodo_pago,
+                        num_msi: m.num_msi,
+                        comision_porcentaje_base: m.comision_porcentaje_base,
+                        payment_method: m.payment_method
+                    }))
+                })
+            })
+            
             setCondicionesComerciales(condicionesConMetodos)
 
             // Si hay condiciones, seleccionar la primera por defecto
@@ -533,10 +552,18 @@ export default function CotizacionDetalle({
                 montoSinComision = totalCotizacion - (totalCotizacion * (condicionActiva.descuento / 100))
             }
 
-            // Si es anticipo, tomar solo el porcentaje del anticipo del monto ORIGINAL
+            // Si es anticipo, tomar solo el porcentaje del anticipo del monto YA CON DESCUENTO
             if (condicionActiva?.porcentaje_anticipo) {
-                montoSinComision = totalCotizacion * (condicionActiva.porcentaje_anticipo / 100)
+                montoSinComision = montoSinComision * (condicionActiva.porcentaje_anticipo / 100)
             }
+
+            console.log('🧮 Cálculo de monto para pagos:', {
+                totalOriginal: totalCotizacion.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                descuento: condicionActiva?.descuento || 0,
+                porcentajeAnticipo: condicionActiva?.porcentaje_anticipo || 0,
+                montoFinal: montoSinComision.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
+                esSpei
+            })
 
             if (esSpei) {
                 // SPEI: Sin comisión adicional
