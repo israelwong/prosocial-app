@@ -115,12 +115,36 @@ export default function EventoDetalle() {
     }, [searchParams])
 
     const formatFecha = (fecha: string) => {
-        return new Date(fecha).toLocaleDateString('es-MX', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            weekday: 'long'
-        })
+        try {
+            // Extraer solo la parte de la fecha (YYYY-MM-DD) si viene en formato ISO completo
+            const fechaSolo = fecha.split('T')[0]
+            // Crear la fecha sin conversión de zona horaria para evitar desfase
+            const fechaObj = new Date(fechaSolo + 'T00:00:00')
+
+            if (isNaN(fechaObj.getTime())) {
+                // Si aún hay error, intentar con el formato original
+                const fechaFallback = new Date(fecha)
+                if (isNaN(fechaFallback.getTime())) {
+                    return 'Fecha no válida'
+                }
+                return fechaFallback.toLocaleDateString('es-MX', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                })
+            }
+
+            return fechaObj.toLocaleDateString('es-MX', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            })
+        } catch (error) {
+            console.error('Error formateando fecha:', error, 'Fecha recibida:', fecha)
+            return 'Error en fecha'
+        }
     }
 
     if (!isAuthenticated || loading) {

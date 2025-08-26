@@ -16,12 +16,36 @@ export default function EventoCard({ evento }: EventoCardProps) {
     const router = useRouter()
 
     const formatFecha = (fecha: string) => {
-        return new Date(fecha).toLocaleDateString('es-MX', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        })
+        try {
+            // Extraer solo la parte de la fecha (YYYY-MM-DD) si viene en formato ISO completo
+            const fechaSolo = fecha.split('T')[0]
+            // Crear la fecha sin conversión de zona horaria para evitar desfase
+            const fechaObj = new Date(fechaSolo + 'T00:00:00')
+
+            if (isNaN(fechaObj.getTime())) {
+                // Si aún hay error, intentar con el formato original
+                const fechaFallback = new Date(fecha)
+                if (isNaN(fechaFallback.getTime())) {
+                    return 'Fecha no válida'
+                }
+                return fechaFallback.toLocaleDateString('es-MX', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                })
+            }
+
+            return fechaObj.toLocaleDateString('es-MX', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            })
+        } catch (error) {
+            console.error('Error formateando fecha:', error, 'Fecha recibida:', fecha)
+            return 'Error en fecha'
+        }
     }
 
     const formatMoney = (amount: number) => {
@@ -79,18 +103,18 @@ export default function EventoCard({ evento }: EventoCardProps) {
     }
 
     return (
-        <Card className="hover:shadow-lg transition-shadow border-zinc-800 bg-zinc-900">
+        <Card className="hover:shadow-xl transition-all duration-300 border-zinc-800 bg-gradient-to-br from-zinc-900 to-zinc-900/80 hover:border-zinc-700 group">
             <CardHeader className="pb-4">
                 {/* Encabezado: Nombre del evento | Botón Editar */}
                 <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-zinc-100 flex-1">
-                        {evento.nombre}
+                    <h3 className="text-lg font-semibold text-zinc-100 flex-1 group-hover:text-white transition-colors duration-200">
+                        ✨ {evento.nombre}
                     </h3>
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => router.push(`/cliente/evento/${evento.id}/editar`)}
-                        className="text-zinc-400 hover:text-zinc-100 p-2"
+                        className="text-zinc-400 hover:text-amber-400 p-2 transition-colors duration-200 hover:bg-zinc-800/50"
                     >
                         <Edit3 className="h-4 w-4" />
                     </Button>
@@ -98,20 +122,20 @@ export default function EventoCard({ evento }: EventoCardProps) {
             </CardHeader>
 
             <CardContent className="space-y-4">
-                {/* Cuerpo de la ficha */}
+                {/* Cuerpo de la ficha con personalidad */}
                 <div className="space-y-3">
                     {/* Línea 1: Fecha del evento */}
                     <div className="flex items-center text-sm text-zinc-300">
-                        <CalendarDays className="h-4 w-4 mr-2 text-zinc-400" />
+                        <CalendarDays className="h-4 w-4 mr-3 text-amber-400" />
                         <span className="font-medium">Fecha:</span>
-                        <span className="ml-2">{formatFecha(evento.fecha_evento)}</span>
+                        <span className="ml-2 text-zinc-200">{formatFecha(evento.fecha_evento)}</span>
                     </div>
 
                     {/* Línea 2: Sede */}
                     <div className="flex items-center text-sm text-zinc-300">
-                        <MapPin className="h-4 w-4 mr-2 text-zinc-400" />
+                        <MapPin className="h-4 w-4 mr-3 text-rose-400" />
                         <span className="font-medium">Sede:</span>
-                        <span className="ml-2 line-clamp-1">{evento.lugar}</span>
+                        <span className="ml-2 line-clamp-1 text-zinc-200">{evento.lugar}</span>
                     </div>
 
                     {/* Línea 3: Etapa del evento */}
@@ -119,20 +143,23 @@ export default function EventoCard({ evento }: EventoCardProps) {
                         <span className="font-medium">Etapa:</span>
                         <Badge
                             variant="outline"
-                            className="ml-2 bg-blue-900/20 text-blue-300 border-blue-800 text-xs"
+                            className="ml-2 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 text-blue-300 border-blue-700/50 text-xs font-medium"
                         >
                             {evento.eventoEtapa?.nombre || 'Sin etapa'}
                         </Badge>
                     </div>
 
-                    {/* 🆕 Línea 4: Pago SPEI pendiente */}
+                    {/* 🆕 Línea 4: Pago SPEI pendiente con personalidad */}
                     {evento.cotizacion.pagoSpeiPendiente && (
-                        <div className="flex items-center text-sm text-amber-300 bg-amber-900/20 border border-amber-800 rounded p-2">
-                            <Clock className="h-4 w-4 mr-2 text-amber-400" />
+                        <div className="flex items-center text-sm text-amber-300 bg-gradient-to-r from-amber-900/20 to-yellow-900/20 border border-amber-700/50 rounded-lg p-3 shadow-md">
+                            <Clock className="h-5 w-5 mr-3 text-amber-400 animate-pulse" />
                             <div className="flex-1">
-                                <div className="font-medium">Tu pago SPEI está siendo procesado</div>
-                                <div className="text-xs text-amber-400 mt-1">
-                                    Confirmación bancaria: 24-48 horas • {formatMoney(evento.cotizacion.pagoSpeiPendiente.monto)}
+                                <div className="font-semibold flex items-center">
+                                    Tu pago SPEI está en proceso
+                                </div>
+                                <div className="text-xs text-amber-400 mt-1 flex items-center">
+                                    Confirmación bancaria: 24-48 horas •
+                                    <span className="font-bold ml-1">{formatMoney(evento.cotizacion.pagoSpeiPendiente.monto)}</span>
                                 </div>
                             </div>
                         </div>
@@ -144,50 +171,58 @@ export default function EventoCard({ evento }: EventoCardProps) {
                     <>
                         <hr className="border-zinc-700" />
                         <div className="space-y-2">
-                            {/* Mostrar precio original */}
+                            {/* Mostrar precio original con personalidad */}
                             <div className="flex justify-between text-sm">
-                                <span className="text-zinc-400 font-medium">Total:</span>
-                                <span className="text-zinc-100">
+                                <span className="text-zinc-400 font-medium flex items-center">
+                                    Total cotización:
+                                </span>
+                                <span className="text-zinc-100 font-semibold">
                                     {formatMoney(evento.cotizacion.total)}
                                 </span>
                             </div>
 
-                            {/* Mostrar descuento si aplica */}
+                            {/* Mostrar descuento si aplica - Con personalidad */}
                             {getDescuentoPorcentaje() > 0 && (
                                 <>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-green-400 font-medium">
-                                            Descuento ({getDescuentoPorcentaje()}%)
+                                        <span className="text-green-400 font-medium flex items-center">
+                                            🎉 Descuento ({getDescuentoPorcentaje()}%)
                                             {evento.cotizacion.descuento &&
-                                                <span className="text-xs text-green-300 ml-1">(congelado)</span>
+                                                <span className="text-xs text-green-300 ml-1 bg-green-900/30 px-1 rounded">⭐ congelado</span>
                                             }:
                                         </span>
-                                        <span className="text-green-400">
+                                        <span className="text-green-400 font-semibold">
                                             -{formatMoney(getDescuentoMonto())}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between text-sm bg-zinc-800/50 px-2 py-1 rounded">
-                                        <span className="text-zinc-200 font-medium">Total a pagar:</span>
-                                        <span className="text-zinc-100 font-semibold">
+                                    <div className="flex justify-between text-sm bg-gradient-to-r from-zinc-800/50 to-zinc-700/50 px-3 py-2 rounded-md border border-zinc-600/30">
+                                        <span className="text-zinc-200 font-medium flex items-center">
+                                            ✨ Total a pagar:
+                                        </span>
+                                        <span className="text-zinc-100 font-bold text-base">
                                             {formatMoney(getMontoAPagar())}
                                         </span>
                                     </div>
                                 </>
                             )}
 
-                            {/* Mostrar pagado */}
+                            {/* Mostrar pagado con personalidad */}
                             <div className="flex justify-between text-sm">
-                                <span className="text-zinc-400 font-medium">Pagado:</span>
-                                <span className="text-green-400">
+                                <span className="text-zinc-400 font-medium flex items-center">
+                                    Abonado:
+                                </span>
+                                <span className="text-green-400 font-semibold">
                                     {formatMoney(evento.cotizacion.pagado)}
                                 </span>
                             </div>
 
-                            {/* Mostrar saldo pendiente */}
+                            {/* Mostrar saldo pendiente con personalidad */}
                             {getSaldoPendiente() > 0 && (
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-zinc-400 font-medium">Saldo pendiente:</span>
-                                    <span className="text-yellow-400">
+                                <div className="flex justify-between text-sm bg-yellow-900/20 border border-yellow-800/50 px-3 py-2 rounded-md">
+                                    <span className="text-yellow-300 font-medium flex items-center">
+                                        Saldo pendiente:
+                                    </span>
+                                    <span className="text-yellow-400 font-bold">
                                         {formatMoney(getSaldoPendiente())}
                                     </span>
                                 </div>
@@ -196,12 +231,12 @@ export default function EventoCard({ evento }: EventoCardProps) {
                     </>
                 )}
 
-                {/* Botones de acción */}
+                {/* Botones de acción con personalidad */}
                 <div className="flex gap-2 pt-2">
                     <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                        className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 hover:border-zinc-600 transition-all duration-200"
                         onClick={() => router.push(`/cliente/evento/${evento.id}`)}
                     >
                         <Eye className="h-4 w-4 mr-1" />
@@ -211,9 +246,9 @@ export default function EventoCard({ evento }: EventoCardProps) {
                     {evento.cotizacion.status === COTIZACION_STATUS.APROBADA && (
                         <Button
                             size="sm"
-                            className={`flex-1 ${isPagado()
-                                ? 'bg-green-600 hover:bg-green-700 text-white cursor-default'
-                                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                            className={`flex-1 transition-all duration-200 ${isPagado()
+                                ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white cursor-default shadow-lg'
+                                : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl'
                                 }`}
                             onClick={() => !isPagado() && router.push(`/cliente/evento/${evento.id}/pago/${evento.cotizacion.id}`)}
                             disabled={isPagado()}
@@ -226,7 +261,7 @@ export default function EventoCard({ evento }: EventoCardProps) {
                             ) : (
                                 <>
                                     <CreditCard className="h-4 w-4 mr-1" />
-                                    Pagar
+                                    Pagar Ahora
                                 </>
                             )}
                         </Button>
