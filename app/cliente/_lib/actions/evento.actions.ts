@@ -142,7 +142,7 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
                 }
             },
             orderBy: {
-                fecha_evento: 'asc'
+                fecha_evento: 'desc'
             }
         })
 

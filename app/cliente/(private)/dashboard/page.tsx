@@ -28,7 +28,13 @@ export default function ClienteDashboard() {
                 const response = await obtenerEventosCliente(cliente.id)
 
                 if (response.success && response.data) {
-                    setEventos(response.data.eventos)
+                    // Asegurar orden cronológico: eventos más recientes primero
+                    const eventosOrdenados = response.data.eventos.sort((a, b) => {
+                        const fechaA = new Date(a.fecha_evento)
+                        const fechaB = new Date(b.fecha_evento)
+                        return fechaB.getTime() - fechaA.getTime() // desc: más reciente primero
+                    })
+                    setEventos(eventosOrdenados)
                 } else {
                     console.error('❌ Error al cargar eventos:', response.message)
                 }

@@ -69,7 +69,8 @@ export default function CondicionesComerciales({
             comision_porcentaje_base: metodo.comision_porcentaje_base,
             comision_fija_monto: metodo.comision_fija_monto,
             comision_msi_porcentaje: metodo.comision_msi_porcentaje,
-            payment_method: metodo.payment_method
+            payment_method: metodo.payment_method,
+            monto_a_procesar: monto
         })
 
         // SPEI: No aplicar comisiones (se absorben)
@@ -78,8 +79,16 @@ export default function CondicionesComerciales({
         }
 
         // Aplicar comisión porcentual base (ej: 3.6% para tarjeta de crédito)
+        // CORRECCIÓN: Aplicar comisión sobre el monto exacto que se cobra (anticipo o total)
         if (metodo.comision_porcentaje_base) {
-            precioFinal += monto * (metodo.comision_porcentaje_base / 100)
+            const comisionPorcentual = monto * (metodo.comision_porcentaje_base / 100)
+            precioFinal += comisionPorcentual
+            console.log('💰 Comisión porcentual aplicada:', {
+                base: monto,
+                porcentaje: metodo.comision_porcentaje_base,
+                comision: comisionPorcentual,
+                resultado: precioFinal
+            })
         }
 
         // Aplicar comisión fija
@@ -89,7 +98,14 @@ export default function CondicionesComerciales({
 
         // Aplicar comisión adicional por MSI (solo si tiene MSI)
         if (metodo.num_msi > 0 && metodo.comision_msi_porcentaje) {
-            precioFinal += monto * (metodo.comision_msi_porcentaje / 100)
+            const comisionMSI = monto * (metodo.comision_msi_porcentaje / 100)
+            precioFinal += comisionMSI
+            console.log('💳 Comisión MSI aplicada:', {
+                base: monto,
+                porcentaje: metodo.comision_msi_porcentaje,
+                comision: comisionMSI,
+                resultado: precioFinal
+            })
         }
 
         return precioFinal
@@ -258,6 +274,15 @@ export default function CondicionesComerciales({
                                             if (infoPago.tieneAnticipo) {
                                                 montoCobrar = infoPago.anticipo // Solo se cobra el anticipo
                                             }
+
+                                            // Debug: Verificar el monto que se está cobrando
+                                            console.log('🧮 Calculando comisión para método:', {
+                                                metodo: metodo.metodo_pago,
+                                                precioBase: infoPago.precioBase,
+                                                tieneAnticipo: infoPago.tieneAnticipo,
+                                                anticipo: infoPago.anticipo,
+                                                montoCobrar: montoCobrar
+                                            })
 
                                             const precioConComision = calcularPrecioConComision(montoCobrar, metodo)
                                             const pagoMensual = metodo.num_msi > 0 ? precioConComision / metodo.num_msi : 0
