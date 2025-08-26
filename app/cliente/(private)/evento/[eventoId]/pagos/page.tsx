@@ -249,6 +249,40 @@ export default function HistorialPagosEvento() {
             .reduce((sum, pago) => sum + pago.monto, 0)
     }
 
+    // 🆕 Calcular el total final con descuento congelado aplicado
+    const calcularTotalConDescuento = () => {
+        if (!evento?.cotizacion) return 0
+
+        const precioOriginal = evento.cotizacion.total
+        const descuentoCongelado = evento.cotizacion.descuento || 0
+
+        if (descuentoCongelado > 0) {
+            // Si hay descuento congelado, aplicarlo
+            return precioOriginal * (1 - descuentoCongelado / 100)
+        }
+
+        // Si no hay descuento congelado, usar el precio original
+        return precioOriginal
+    }
+
+    // 🆕 Obtener información del descuento aplicado
+    const getDescuentoInfo = () => {
+        if (!evento?.cotizacion) return null
+
+        const descuentoCongelado = evento.cotizacion.descuento
+
+        if (descuentoCongelado && descuentoCongelado > 0) {
+            const montoDescuento = evento.cotizacion.total * (descuentoCongelado / 100)
+            return {
+                porcentaje: descuentoCongelado,
+                monto: montoDescuento,
+                origen: 'Descuento congelado'
+            }
+        }
+
+        return null
+    }
+
     const handleDescargarComprobante = (pagoId: string) => {
         // TODO: Implementar descarga de comprobante
         console.log('Descargando comprobante para pago:', pagoId)
@@ -344,22 +378,51 @@ export default function HistorialPagosEvento() {
                             <CardContent className="space-y-4">
                                 <div className="space-y-3">
                                     <div className="flex justify-between">
-                                        <span className="text-zinc-400">Total de la cotización:</span>
+                                        <span className="text-zinc-400">Precio original:</span>
                                         <span className="font-medium text-zinc-100">
                                             {evento.cotizacion ? formatMoney(evento.cotizacion.total) : 'N/A'}
                                         </span>
                                     </div>
+
+                                    {/* 🆕 Mostrar descuento congelado si existe */}
+                                    {(() => {
+                                        const descuentoInfo = getDescuentoInfo()
+                                        if (!descuentoInfo) return null
+
+                                        return (
+                                            <>
+                                                <div className="flex justify-between">
+                                                    <span className="text-zinc-400">
+                                                        Descuento aplicado ({descuentoInfo.porcentaje}%):
+                                                    </span>
+                                                    <span className="font-medium text-green-400">
+                                                        -{formatMoney(descuentoInfo.monto)}
+                                                    </span>
+                                                </div>
+
+                                                {/* Total después del descuento */}
+                                                <div className="flex justify-between border-t border-zinc-800 pt-3">
+                                                    <span className="text-zinc-300 font-medium">Total a pagar:</span>
+                                                    <span className="font-bold text-zinc-100">
+                                                        {formatMoney(calcularTotalConDescuento())}
+                                                    </span>
+                                                </div>
+                                            </>
+                                        )
+                                    })()}
+
                                     <div className="flex justify-between">
                                         <span className="text-zinc-400">Total pagado:</span>
                                         <span className="font-medium text-green-400">
                                             {formatMoney(getTotalPagado())}
                                         </span>
                                     </div>
+
                                     {evento.cotizacion && (
                                         <div className="flex justify-between border-t border-zinc-800 pt-3">
                                             <span className="text-zinc-400">Saldo pendiente:</span>
                                             <span className="font-bold text-yellow-400">
-                                                {formatMoney(evento.cotizacion.total - getTotalPagado())}
+                                                {formatMoney(calcularTotalConDescuento() - getTotalPagado())}
                                             </span>
                                         </div>
                                     )}

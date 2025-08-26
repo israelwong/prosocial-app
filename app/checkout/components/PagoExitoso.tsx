@@ -160,25 +160,25 @@ export default function PagoExitoso({ pagoId, cotizacionId, paymentIntentId }: P
                     Tu pago por transferencia bancaria (SPEI) está siendo procesado.
                 </p>
 
-                <div className='p-5 bg-blue-900/20 rounded-md mb-5 border border-blue-500/30'>
-                    <h3 className='text-blue-300 font-semibold mb-4 text-lg'>🏦 Estado de tu pago SPEI</h3>
-                    <div className='space-y-3'>
-                        <div className='flex justify-between items-center py-2'>
-                            <span className='text-blue-200'>Monto del pago:</span>
-                            <span className='text-white font-semibold text-base'>
+                <div className='p-4 bg-blue-950/40 rounded border border-blue-600/20 mb-5'>
+                    <h3 className='text-blue-300 font-medium mb-3'>Estado del pago</h3>
+                    <div className='space-y-2'>
+                        <div className='flex justify-between items-center'>
+                            <span className='text-blue-200'>Monto:</span>
+                            <span className='text-white font-medium'>
                                 {(pago?.monto || 0).toLocaleString('es-MX', {
                                     style: 'currency',
                                     currency: 'MXN'
                                 })}
                             </span>
                         </div>
-                        <div className='flex justify-between items-center py-2'>
+                        <div className='flex justify-between items-center'>
                             <span className='text-blue-200'>Estado:</span>
-                            <span className='text-yellow-400 font-semibold'>⏳ Pendiente de confirmación bancaria</span>
+                            <span className='text-yellow-400'>Pendiente</span>
                         </div>
-                        <div className='mt-4 p-3 bg-blue-800/30 rounded'>
+                        <div className='mt-3 pt-3 border-t border-blue-600/20'>
                             <p className='text-blue-200 text-sm'>
-                                ⏱️ <strong>Tiempo estimado:</strong> 24-48 horas hábiles para confirmación
+                                Confirmación en 24-48 horas hábiles
                             </p>
                         </div>
                     </div>
