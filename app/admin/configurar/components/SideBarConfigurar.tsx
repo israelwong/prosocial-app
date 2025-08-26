@@ -23,11 +23,12 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-    { href: '/admin/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
     { href: '/admin/configurar/paquetes', label: 'Paquetes', Icon: Boxes },
     { href: '/admin/configurar/tipoEvento', label: 'Tipo de eventos', Icon: CalendarClock },
     { href: '/admin/configurar/catalogo', label: 'Catálogo', Icon: Layers },
     { href: '/admin/configurar/usuarios', label: 'Personal', Icon: Users },
+    { href: '/admin/configurar/pipeline', label: 'Pipeline', Icon: Users },
+
     { href: '/admin/configurar/condicionesComerciales', label: 'Condiciones', Icon: Scale },
     { href: '/admin/configurar/metodoPago', label: 'Métodos de pago', Icon: CreditCard },
     { href: '/admin/configurar/parametros', label: 'Parámetros', Icon: SlidersHorizontal },

@@ -9,8 +9,8 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 
 import { obtenerEtapasPipeline, reordenarEtapasPipeline } from '@/app/admin/_lib/actions/pipeline/pipeline.actions';
 import { EtapaPipelineType } from '@/app/admin/_lib/actions/pipeline/pipeline.schemas';
-import EtapaCard from '@/app/admin/dashboard/gestion/pipeline/components/EtapaCard';
-import CrearEtapaModal from '@/app/admin/dashboard/gestion/pipeline/components/CrearEtapaModal';
+import EtapaCard from './EtapaCard';
+import CrearEtapaModal from './CrearEtapaModal';
 
 export default function PipelineManager() {
     const router = useRouter();
@@ -144,16 +144,6 @@ export default function PipelineManager() {
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-
-                    <div className="flex items-center gap-4 mb-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="flex items-center gap-2 text-zinc-400 hover:text-zinc-200 transition-colors"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                            Volver
-                        </button>
-                    </div>
                     <div className="flex items-center gap-3 mb-2">
                         <Settings className="w-8 h-8 text-blue-500" />
                         <h1 className="text-3xl font-bold">Gestión del Pipeline</h1>

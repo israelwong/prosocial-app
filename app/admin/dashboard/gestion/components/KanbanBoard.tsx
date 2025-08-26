@@ -423,14 +423,14 @@ export default function KanbanBoard() {
                     <h1 className="text-2xl font-bold text-zinc-100">Gestión de Pipeline</h1>
                     <p className="text-zinc-400">Vista kanban para gestionar el flujo de eventos</p>
                 </div>
-                <button
+                {/* <button
                     onClick={() => router.push('/admin/dashboard/gestion/pipeline')}
                     className="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-100 px-4 py-2 rounded-lg transition-colors border border-zinc-600 hover:border-zinc-500"
                     title="Configurar etapas del pipeline"
                 >
                     <Settings className="w-4 h-4" />
                     Editar pipeline
-                </button>
+                </button> */}
 
             </div>
 
