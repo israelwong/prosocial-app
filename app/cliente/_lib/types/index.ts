@@ -31,6 +31,7 @@ export interface Evento {
         status: string
         total: number // Precio original de la cotización
         pagado: number
+        descuento?: number | null // 🎯 Descuento congelado (porcentaje)
         // 🆕 Información de condiciones comerciales y cálculos
         condicionesComerciales?: {
             id: string

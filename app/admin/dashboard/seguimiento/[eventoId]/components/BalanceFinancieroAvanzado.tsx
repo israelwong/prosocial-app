@@ -33,6 +33,7 @@ interface BalanceFinancieroAvanzadoProps {
         cliente_id?: string
         precio?: number
         total?: number
+        descuento?: number | null // 🎯 Descuento congelado
         cliente?: {
             id: string
             nombre?: string
@@ -194,8 +195,14 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
         }
     }
 
-    // Cálculos financieros
-    const totalCotizacion = cotizacion?.precio || 0
+    // Cálculos financieros con descuento congelado
+    const precioOriginal = cotizacion?.precio || 0
+    const descuentoCongelado = cotizacion?.descuento || null
+
+    // 🎯 Calcular total con descuento congelado si existe
+    const totalCotizacion = descuentoCongelado
+        ? precioOriginal * (1 - descuentoCongelado / 100)  // Aplicar descuento congelado
+        : precioOriginal  // Sin descuento, usar precio original
     const totalPagado = pagos
         ?.filter(pago => pago.status === PAGO_STATUS.PAID)
         .reduce((suma, pago) => suma + (pago.monto || pago.cantidad || 0), 0) || 0
@@ -342,10 +349,22 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                             )}
                             <div className="text-center p-4 bg-blue-50 rounded-lg">
                                 <DollarSign className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                                <p className="text-sm font-medium text-blue-800">Cotización</p>
+                                <p className="text-sm font-medium text-blue-800">
+                                    Cotización
+                                    {descuentoCongelado && (
+                                        <span className="ml-1 text-xs text-blue-600">
+                                            (-{descuentoCongelado}%)
+                                        </span>
+                                    )}
+                                </p>
                                 <p className="text-xl font-bold text-blue-900">
                                     {formatearMoneda(totalCotizacion)}
                                 </p>
+                                {descuentoCongelado && (
+                                    <p className="text-xs text-blue-700 mt-1">
+                                        Original: {formatearMoneda(precioOriginal)}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="text-center p-4 bg-green-900/20 rounded-lg border border-green-800">

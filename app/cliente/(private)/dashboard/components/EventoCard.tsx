@@ -31,13 +31,21 @@ export default function EventoCard({ evento }: EventoCardProps) {
         }).format(amount)
     }
 
-    const getSaldoPendiente = () => {
-        // Usar el saldo pendiente calculado si está disponible
-        if (evento.cotizacion.saldoPendiente !== undefined) {
-            return evento.cotizacion.saldoPendiente
+    const getDescuentoPorcentaje = () => {
+        // 🎯 PRIORIZAR DESCUENTO CONGELADO: Usar descuento de la cotización si existe
+        if (evento.cotizacion.descuento) {
+            return evento.cotizacion.descuento
         }
-        // Fallback al cálculo simple
-        return evento.cotizacion.total - evento.cotizacion.pagado
+        // Fallback: usar descuento de condiciones comerciales
+        return evento.cotizacion.condicionesComerciales?.descuento || 0
+    }
+
+    const getDescuentoMonto = () => {
+        const descuentoPorcentaje = getDescuentoPorcentaje()
+        if (descuentoPorcentaje > 0) {
+            return evento.cotizacion.total * (descuentoPorcentaje / 100)
+        }
+        return 0
     }
 
     const getMontoAPagar = () => {
@@ -45,8 +53,17 @@ export default function EventoCard({ evento }: EventoCardProps) {
         if (evento.cotizacion.montoRealAPagar !== undefined) {
             return evento.cotizacion.montoRealAPagar
         }
-        // Fallback al total original
-        return evento.cotizacion.total
+        // Calcular basado en descuento congelado
+        return evento.cotizacion.total - getDescuentoMonto()
+    }
+
+    const getSaldoPendiente = () => {
+        // Usar el saldo pendiente calculado si está disponible
+        if (evento.cotizacion.saldoPendiente !== undefined) {
+            return evento.cotizacion.saldoPendiente
+        }
+        // Calcular basado en monto real a pagar
+        return getMontoAPagar() - evento.cotizacion.pagado
     }
 
     const isPagado = () => {
@@ -136,14 +153,17 @@ export default function EventoCard({ evento }: EventoCardProps) {
                             </div>
 
                             {/* Mostrar descuento si aplica */}
-                            {evento.cotizacion.condicionesComerciales?.descuento && (
+                            {getDescuentoPorcentaje() > 0 && (
                                 <>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-green-400 font-medium">
-                                            Descuento ({evento.cotizacion.condicionesComerciales.descuento}%):
+                                            Descuento ({getDescuentoPorcentaje()}%)
+                                            {evento.cotizacion.descuento && 
+                                                <span className="text-xs text-green-300 ml-1">(congelado)</span>
+                                            }:
                                         </span>
                                         <span className="text-green-400">
-                                            -{formatMoney(evento.cotizacion.total - getMontoAPagar())}
+                                            -{formatMoney(getDescuentoMonto())}
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-sm bg-zinc-800/50 px-2 py-1 rounded">

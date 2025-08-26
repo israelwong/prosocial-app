@@ -115,7 +115,7 @@ export async function obtenerEventoDetalleCompleto(
                             ]
                         },
                         // 📋 CONDICIONES COMERCIALES
-                        CondicionesComerciales: true
+                        CondicionesComerciales: true,
                     },
                     where: cotizacionId
                         ? { id: cotizacionId } // Si se especifica cotizacionId, buscar esa específica

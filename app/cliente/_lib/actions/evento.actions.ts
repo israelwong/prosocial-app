@@ -105,6 +105,7 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
                         id: true,
                         status: true,
                         precio: true,
+                        descuento: true, // 🎯 Incluir descuento congelado
                         CondicionesComerciales: {
                             select: {
                                 id: true,
@@ -162,14 +163,24 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
 
             const cotizacion = cotizacionAprobada || cotizacionConSpei || evento.Cotizacion[0]
 
-            // 🆕 Calcular el monto real a pagar considerando condiciones comerciales
+            // 🆕 Calcular el monto real a pagar usando descuento congelado
             const precioOriginal = cotizacion?.precio || 0
             const condicionesComerciales = cotizacion?.CondicionesComerciales
             let montoRealAPagar = precioOriginal
+            let descuentoPorcentaje = 0
 
-            if (condicionesComerciales?.descuento) {
+            // 🎯 PRIORIZAR DESCUENTO CONGELADO: Usar descuento de la cotización si existe
+            if ((cotizacion as any)?.descuento) {
+                // Usar el descuento congelado en la cotización (más confiable)
+                descuentoPorcentaje = (cotizacion as any).descuento
+            } else if (cotizacion?.CondicionesComerciales?.descuento) {
+                // Fallback: usar descuento de condiciones comerciales (para cotizaciones anteriores)
+                descuentoPorcentaje = cotizacion.CondicionesComerciales.descuento
+            }
+
+            if (descuentoPorcentaje > 0) {
                 // Aplicar descuento: precio - (precio * descuento / 100)
-                const montoDescuento = precioOriginal * (condicionesComerciales.descuento / 100)
+                const montoDescuento = precioOriginal * (descuentoPorcentaje / 100)
                 montoRealAPagar = precioOriginal - montoDescuento
             }
 
@@ -212,6 +223,7 @@ export async function obtenerEventosCliente(clienteId: string): Promise<ApiRespo
                     id: cotizacion?.id || '',
                     status: cotizacion?.status || '',
                     total: cotizacion?.precio || 0, // Precio original
+                    descuento: (cotizacion as any)?.descuento || null, // 🎯 Descuento congelado
                     pagado: totalPagado,
                     // 🆕 Información de condiciones comerciales y cálculos
                     condicionesComerciales: condicionesComerciales ? {
