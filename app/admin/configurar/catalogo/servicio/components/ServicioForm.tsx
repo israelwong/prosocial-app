@@ -64,23 +64,23 @@ export default function ServicioForm({ servicio, categorias, configuracion, init
         const gastos = watchedFields.gastos || [];
         const tipoUtilidad = watchedFields.tipo_utilidad;
 
-        const totalGastos = gastos.reduce((acc, gasto) => acc + parseFloat(gasto.costo || '0'), 0);
+        const totalGastos = parseFloat((gastos.reduce((acc, gasto) => acc + parseFloat(gasto.costo || '0'), 0)).toFixed(2));
         // Valores en configuracion ya están persistidos como fracciones (ej: 0.125 para 12.5%)
         const utilidadPorcentaje = (tipoUtilidad === 'servicio' ? (configuracion?.utilidad_servicio ?? 0) : (configuracion?.utilidad_producto ?? 0));
         const comisionPorcentaje = (configuracion?.comision_venta ?? 0);
         const sobreprecioPorcentaje = (configuracion?.sobreprecio ?? 0);
 
-        const utilidadBase = costo * utilidadPorcentaje;
+        const utilidadBase = parseFloat((costo * utilidadPorcentaje).toFixed(2));
         // Calculamos el subtotal, que es la suma del costo, gastos y utilidad
-        const subtotal = costo + totalGastos + utilidadBase;
+        const subtotal = parseFloat((costo + totalGastos + utilidadBase).toFixed(2));
 
         // Primero aplicamos el sobreprecio (markup) al subtotal
-        const sobreprecioMonto = sobreprecioPorcentaje * subtotal;
-        const montoTrasSobreprecio = subtotal + sobreprecioMonto;
+        const sobreprecioMonto = parseFloat((sobreprecioPorcentaje * subtotal).toFixed(2));
+        const montoTrasSobreprecio = parseFloat((subtotal + sobreprecioMonto).toFixed(2));
         // Luego calculamos el precio objetivo que cubre comisión
         const denominador = 1 - comisionPorcentaje;
-        const precioSistema = denominador > 0 ? montoTrasSobreprecio / denominador : Infinity;
-        const comisionVentaMonto = precioSistema * comisionPorcentaje;
+        const precioSistema = denominador > 0 ? parseFloat((montoTrasSobreprecio / denominador).toFixed(2)) : Infinity;
+        const comisionVentaMonto = parseFloat((precioSistema * comisionPorcentaje).toFixed(2));
 
         return { precioSistema, comisionVentaMonto, sobreprecioMonto, utilidadBase, totalGastos };
     }, [watchedFields, configuracion]);
@@ -103,7 +103,7 @@ export default function ServicioForm({ servicio, categorias, configuracion, init
         } else {
             toast.success(`¡Servicio ${isEditMode ? 'actualizado' : 'creado'}!`);
             if (isEditMode) {
-                router.refresh();
+                router.back();
             }
         }
     };
@@ -147,7 +147,7 @@ export default function ServicioForm({ servicio, categorias, configuracion, init
                 <h1 className='text-2xl font-semibold text-zinc-100'>
                     {isEditMode ? 'Editar Servicio' : 'Nuevo Servicio'}
                 </h1>
-                <div className="flex items-center gap-3">
+                {/* <div className="flex items-center gap-3">
                     <label htmlFor="visible_cliente" className="text-sm text-zinc-400">Visible al cliente</label>
                     <input
                         id="visible_cliente"
@@ -155,7 +155,7 @@ export default function ServicioForm({ servicio, categorias, configuracion, init
                         {...register('visible_cliente')}
                         className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-blue-600 focus:ring-blue-500"
                     />
-                </div>
+                </div> */}
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>

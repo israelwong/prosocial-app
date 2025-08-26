@@ -58,13 +58,6 @@ export default function CotizacionForm({
 }: Props) {
     const router = useRouter();
 
-    // Debug del eventoTipoSeleccionado
-    // console.log('🔍 eventoTipoSeleccionado completo:', eventoTipoSeleccionado);
-    // console.log('🔍 eventoTipoSeleccionado.id:', eventoTipoSeleccionado?.id);
-    // console.log('🔍 tipo de eventoTipoSeleccionado.id:', typeof eventoTipoSeleccionado?.id);
-    // console.log('🔍 Keys de eventoTipoSeleccionado:', Object.keys(eventoTipoSeleccionado || {}));
-    // console.log('🔍 tiposEvento disponibles:', tiposEvento);
-
     // Fallback para eventoTipoId - usar el primero disponible si no hay uno seleccionado
     const eventoTipoIdFinal = eventoTipoSeleccionado?.id || tiposEvento?.[0]?.id || '';
     console.log('🔍 eventoTipoIdFinal que se usará:', eventoTipoIdFinal);
@@ -215,7 +208,7 @@ export default function CotizacionForm({
 
     // Helper para calcular precio correcto de un servicio
     const calcularPrecioCorrectoServicio = (servicio: any): number => {
-        if (!configuracion) return servicio.precio_publico || 0;
+        if (!configuracion) return parseFloat((servicio.precio_publico || 0).toFixed(2));
 
         const resultado = calcularServicioDesdeBase({
             costo: servicio.costo || 0,
@@ -224,7 +217,7 @@ export default function CotizacionForm({
             configuracion
         });
 
-        return resultado.precioSistema;
+        return parseFloat(resultado.precioSistema.toFixed(2));
     };
 
     const { fields, append, remove } = useFieldArray({
@@ -300,7 +293,7 @@ export default function CotizacionForm({
 
             // Usar precio personalizado si está definido
             const precioPersonalizado = parseFloat(s.precioPersonalizado || '0');
-            const precioFinal = precioPersonalizado > 0 ? precioPersonalizado : (servicio ? calcularPrecioCorrectoServicio(servicio) : 0);
+            const precioFinal = precioPersonalizado > 0 ? parseFloat(precioPersonalizado.toFixed(2)) : (servicio ? calcularPrecioCorrectoServicio(servicio) : 0);
 
             return {
                 costo: servicio?.costo || 0,
@@ -325,7 +318,7 @@ export default function CotizacionForm({
     }, [watchedServicios, configuracion, secciones, serviciosPersonalizados]);
 
     // Precio sistema sugerido
-    const precioSistema = calculosEnTiempoReal?.precioSistemaPaquete || 0;
+    const precioSistema = parseFloat((calculosEnTiempoReal?.precioSistemaPaquete || 0).toFixed(2));
 
     // Verificar si un servicio ya está seleccionado
     const servicioEstaSeleccionado = (servicioId: string) => {
@@ -370,7 +363,7 @@ export default function CotizacionForm({
     };
 
     const handleCambiarPrecioPersonalizado = (fieldId: string, nuevoPrecio: number) => {
-        setPreciosPersonalizadosValores(prev => ({ ...prev, [fieldId]: nuevoPrecio }));
+        setPreciosPersonalizadosValores(prev => ({ ...prev, [fieldId]: parseFloat(nuevoPrecio.toFixed(2)) }));
     };
 
     const handleGuardarPrecioPersonalizado = (fieldId: string) => {
@@ -395,7 +388,7 @@ export default function CotizacionForm({
     };
 
     const handleCambiarPrecioTotal = (nuevoPrecio: number) => {
-        setPrecioTotalPersonalizado(nuevoPrecio);
+        setPrecioTotalPersonalizado(parseFloat(nuevoPrecio.toFixed(2)));
     };
 
     const handleGuardarPrecioTotal = () => {
@@ -435,6 +428,9 @@ export default function CotizacionForm({
             return;
         }
 
+        // Truncar precio a 2 decimales
+        const precioTruncado = parseFloat(precio.toFixed(2));
+
         // Agregar como servicio con ID especial para servicios personalizados
         const servicioId = `personalizado_${Date.now()}`;
 
@@ -444,7 +440,7 @@ export default function CotizacionForm({
             [servicioId]: {
                 id: servicioId,
                 nombre: servicioPersonalizado.nombre.trim(),
-                precio,
+                precio: precioTruncado,
                 categoria: servicioPersonalizado.categoria
             }
         }));
@@ -452,7 +448,7 @@ export default function CotizacionForm({
         append({
             servicioId,
             cantidad: '1',
-            precioPersonalizado: precio.toString() // Para servicios personalizados, usar el precio como personalizado
+            precioPersonalizado: precioTruncado.toString() // Para servicios personalizados, usar el precio como personalizado
         });
 
         // Limpiar el formulario y cerrar modal
@@ -478,19 +474,34 @@ export default function CotizacionForm({
     // Calcular total de costos adicionales
     const totalCostosAdicionales = useMemo(() => {
         if (!watchedCostos) return 0;
-        return watchedCostos.reduce((total, costo) => {
+        const total = watchedCostos.reduce((total, costo) => {
             const valor = parseFloat(costo?.costo || '0');
             const tipo = costo?.tipo || 'adicional';
 
             // Los descuentos se restan, los demás se suman
             return tipo === 'descuento' ? total - valor : total + valor;
         }, 0);
+        return parseFloat(total.toFixed(2));
     }, [watchedCostos]);
 
     // Precio final incluyendo costos adicionales
     const precioFinal = precioTotalPersonalizado !== null
-        ? precioTotalPersonalizado
-        : precioSistema + totalCostosAdicionales;
+        ? parseFloat(precioTotalPersonalizado.toFixed(2))
+        : parseFloat((precioSistema + totalCostosAdicionales).toFixed(2));
+
+    // Precio base para mostrar (sin costos adicionales para comparación visual)
+    const precioBase = precioSistema;
+
+    // Precio dinámico que se actualiza automáticamente (para mostrar cuando no hay personalización activa)
+    const precioDinamico = parseFloat((precioSistema + totalCostosAdicionales).toFixed(2));
+
+    // Effect para resetear precio personalizado cuando cambian los servicios o costos
+    useEffect(() => {
+        // Si hay precio personalizado y los servicios/costos han cambiado, resetear a dinámico
+        if (precioTotalPersonalizado !== null && (watchedServicios || watchedCostos)) {
+            setPrecioTotalPersonalizado(null);
+        }
+    }, [watchedServicios, watchedCostos]); // Se ejecuta cuando cambian servicios o costos
 
     // Agrupar servicios seleccionados por sección y categoría
     const serviciosAgrupadosSeleccionados = useMemo(() => {
@@ -519,7 +530,7 @@ export default function CotizacionForm({
                 }
 
                 const cantidad = parseInt(watchedServicios[index]?.cantidad || '1', 10);
-                const precio = servicioPersonalizadoData.precio;
+                const precio = parseFloat(servicioPersonalizadoData.precio.toFixed(2));
 
                 agrupados[seccionNombre].categorias[categoriaNombre].servicios.push({
                     id: servicioPersonalizadoData.id,
@@ -528,7 +539,7 @@ export default function CotizacionForm({
                     fieldId: field.id,
                     cantidad,
                     precio,
-                    subtotal: precio * cantidad,
+                    subtotal: parseFloat((precio * cantidad).toFixed(2)),
                     posicion: 999,
                     esPersonalizado: true
                 });
@@ -578,7 +589,7 @@ export default function CotizacionForm({
                 // Usar precio personalizado si está definido, sino calcular precio normal
                 const fieldId = field.id || `${field.servicioId}-${index}`;
                 const precioPersonalizadoValor = preciosPersonalizadosValores[fieldId];
-                const precio = precioPersonalizadoValor > 0 ? precioPersonalizadoValor : calcularPrecioCorrectoServicio(servicioCompleto);
+                const precio = parseFloat((precioPersonalizadoValor > 0 ? precioPersonalizadoValor : calcularPrecioCorrectoServicio(servicioCompleto)).toFixed(2));
 
                 agrupados[seccionNombre].categorias[categoriaNombre].servicios.push({
                     ...servicioCompleto,
@@ -586,7 +597,7 @@ export default function CotizacionForm({
                     fieldId: field.id,
                     cantidad,
                     precio,
-                    subtotal: precio * cantidad,
+                    subtotal: parseFloat((precio * cantidad).toFixed(2)),
                     posicion: posicionServicio
                 });
             }
@@ -645,7 +656,7 @@ export default function CotizacionForm({
                         servicioId: null, // No tiene ID de servicio real
                         servicioCategoriaId: null,
                         cantidad,
-                        precioUnitario,
+                        precioUnitario: parseFloat(precioUnitario.toFixed(2)),
                         posicion: 999,
 
                         // Campos snapshot para trazabilidad
@@ -653,11 +664,11 @@ export default function CotizacionForm({
                         categoria_nombre_snapshot: servicioPersonalizadoData.categoria || 'Sin categoría',
                         nombre_snapshot: servicioPersonalizadoData.nombre,
                         descripcion_snapshot: undefined,
-                        precio_unitario_snapshot: precioUnitario,
+                        precio_unitario_snapshot: parseFloat(precioUnitario.toFixed(2)),
                         costo_snapshot: 0,
                         gasto_snapshot: 0,
-                        utilidad_snapshot: precioUnitario,
-                        precio_publico_snapshot: precioUnitario,
+                        utilidad_snapshot: parseFloat(precioUnitario.toFixed(2)),
+                        precio_publico_snapshot: parseFloat(precioUnitario.toFixed(2)),
                         tipo_utilidad_snapshot: 'servicio',
 
                         // Campos personalización
@@ -690,9 +701,9 @@ export default function CotizacionForm({
                 // Verificar si hay precio personalizado para este campo
                 const fieldId = `servicio-${index}`;
                 const precioPersonalizado = preciosPersonalizadosValores[fieldId];
-                const precioUnitario = precioPersonalizado || calcularPrecioCorrectoServicio(servicio);
+                const precioUnitario = parseFloat((precioPersonalizado || calcularPrecioCorrectoServicio(servicio)).toFixed(2));
                 const cantidad = parseInt(s.cantidad, 10);
-                const utilidad = precioUnitario - (servicio.costo || 0) - (servicio.gasto || 0);
+                const utilidad = parseFloat((precioUnitario - (servicio.costo || 0) - (servicio.gasto || 0)).toFixed(2));
 
                 return {
                     servicioId: servicio.id,
@@ -710,7 +721,7 @@ export default function CotizacionForm({
                     costo_snapshot: servicio.costo || 0,
                     gasto_snapshot: servicio.gasto || 0,
                     utilidad_snapshot: utilidad,
-                    precio_publico_snapshot: servicio.precio_publico || precioUnitario,
+                    precio_publico_snapshot: parseFloat((servicio.precio_publico || precioUnitario).toFixed(2)),
                     tipo_utilidad_snapshot: servicio.tipo_utilidad || 'servicio',
 
                     // Campos personalización
@@ -730,7 +741,7 @@ export default function CotizacionForm({
                 costos: data.costos?.map((costo, index) => ({
                     nombre: costo.nombre,
                     descripcion: undefined,
-                    costo: parseFloat(costo.costo) || 0,
+                    costo: parseFloat((parseFloat(costo.costo) || 0).toFixed(2)),
                     tipo: costo.tipo,
                     posicion: index + 1
                 })) || []
@@ -1278,13 +1289,13 @@ export default function CotizacionForm({
                                                         min="0"
                                                         className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-600 rounded text-blue-300 text-xl font-bold focus:border-blue-400 focus:outline-none"
                                                         onBlur={(e) => {
-                                                            const nuevoPrecio = parseFloat(e.target.value) || (precioSistema + totalCostosAdicionales);
+                                                            const nuevoPrecio = parseFloat((parseFloat(e.target.value) || (precioSistema + totalCostosAdicionales)).toFixed(2));
                                                             handleCambiarPrecioTotal(nuevoPrecio);
                                                             handleGuardarPrecioTotal();
                                                         }}
                                                         onKeyDown={(e) => {
                                                             if (e.key === 'Enter') {
-                                                                const nuevoPrecio = parseFloat((e.target as HTMLInputElement).value) || (precioSistema + totalCostosAdicionales);
+                                                                const nuevoPrecio = parseFloat((parseFloat((e.target as HTMLInputElement).value) || (precioSistema + totalCostosAdicionales)).toFixed(2));
                                                                 handleCambiarPrecioTotal(nuevoPrecio);
                                                                 handleGuardarPrecioTotal();
                                                             }
@@ -1304,7 +1315,11 @@ export default function CotizacionForm({
                                                     onDoubleClick={() => handleActivarPrecioTotal(precioFinal)}
                                                     title="Doble click para personalizar precio total"
                                                 >
-                                                    {precioFinal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                                                    {/* Mostrar precio dinámico cuando no hay personalización activa, sino el precio personalizado */}
+                                                    {(precioTotalPersonalizado === null
+                                                        ? (totalCostosAdicionales === 0 ? precioBase : precioDinamico)
+                                                        : precioFinal
+                                                    ).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
                                                 </div>
                                             )}
                                             <div className="text-xs text-blue-400 mt-1">
@@ -1346,6 +1361,16 @@ export default function CotizacionForm({
                                         mostrarTexto={true}
                                         onAutorizado={() => {
                                             toast.success('Evento autorizado y movido a seguimiento');
+                                        }}
+                                        onEliminado={() => {
+                                            toast.success('Cotización eliminada exitosamente');
+                                            router.push(`/admin/dashboard/eventos/${evento.id}`);
+                                        }}
+                                        cotizacion={{
+                                            id: cotizacionExistente.id,
+                                            nombre: cotizacionExistente.nombre,
+                                            status: cotizacionExistente.status,
+                                            archivada: cotizacionExistente.archivada
                                         }}
                                     />
                                 )}

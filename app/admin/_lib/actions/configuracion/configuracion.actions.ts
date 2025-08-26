@@ -41,10 +41,10 @@ export async function updateGlobalConfiguracion(data: unknown) {
 
         const dataToSave = {
             ...validatedData,
-            utilidad_servicio: parseFloat(validatedData.utilidad_servicio) / 100,
-            utilidad_producto: parseFloat(validatedData.utilidad_producto) / 100,
-            comision_venta: parseFloat(validatedData.comision_venta) / 100,
-            sobreprecio: parseFloat(validatedData.sobreprecio) / 100,
+            utilidad_servicio: parseFloat((parseFloat(validatedData.utilidad_servicio) / 100).toFixed(4)),
+            utilidad_producto: parseFloat((parseFloat(validatedData.utilidad_producto) / 100).toFixed(4)),
+            comision_venta: parseFloat((parseFloat(validatedData.comision_venta) / 100).toFixed(4)),
+            sobreprecio: parseFloat((parseFloat(validatedData.sobreprecio) / 100).toFixed(4)),
             numeroMaximoServiciosPorDia: validatedData.numeroMaximoServiciosPorDia ? parseInt(validatedData.numeroMaximoServiciosPorDia, 10) : null,
         };
 
@@ -69,13 +69,13 @@ export async function updateGlobalConfiguracion(data: unknown) {
                 : dataToSave.utilidad_producto;
 
             // CÁLCULO CORREGIDO - usando la misma lógica que calcularServicioDesdeBase
-            const utilidadBase = servicio.costo * utilidadPorcentaje;
-            const subtotal = servicio.costo + totalGastos + utilidadBase;
-            const sobreprecioMonto = subtotal * dataToSave.sobreprecio;
-            const montoTrasSobreprecio = subtotal + sobreprecioMonto;
+            const utilidadBase = parseFloat((servicio.costo * utilidadPorcentaje).toFixed(2));
+            const subtotal = parseFloat((servicio.costo + totalGastos + utilidadBase).toFixed(2));
+            const sobreprecioMonto = parseFloat((subtotal * dataToSave.sobreprecio).toFixed(2));
+            const montoTrasSobreprecio = parseFloat((subtotal + sobreprecioMonto).toFixed(2));
             const denominador = 1 - dataToSave.comision_venta; // Solo comisión, no sobreprecio
             const nuevoPrecioSistema = denominador > 0
-                ? (montoTrasSobreprecio / denominador)
+                ? parseFloat((montoTrasSobreprecio / denominador).toFixed(2))
                 : 0;
 
             return prisma.servicio.update({
