@@ -158,7 +158,7 @@ export default function EventoCard({ evento }: EventoCardProps) {
                                     <div className="flex justify-between text-sm">
                                         <span className="text-green-400 font-medium">
                                             Descuento ({getDescuentoPorcentaje()}%)
-                                            {evento.cotizacion.descuento && 
+                                            {evento.cotizacion.descuento &&
                                                 <span className="text-xs text-green-300 ml-1">(congelado)</span>
                                             }:
                                         </span>
