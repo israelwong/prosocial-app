@@ -70,6 +70,8 @@ export interface EventoDetalle extends Evento {
         pagado: number
         descripcion?: string
         servicios: ServicioCotizacion[]
+        // 🆕 Campo de descuento congelado en la cotización
+        descuento?: number | null // Descuento congelado (porcentaje)
         // 🆕 Información de condiciones comerciales y cálculos
         condicionesComerciales?: {
             id: string
@@ -100,6 +102,28 @@ export interface EventoDetalle extends Evento {
                 payment_method: string | null
             } | null
         } | null
+        // 🆕 Entidad Pago completa con relaciones
+        Pago?: Array<{
+            id: string
+            monto: number
+            status: string
+            metodo_pago: string
+            concepto: string
+            descripcion?: string | null
+            createdAt: Date
+            updatedAt: Date
+            CondicionesComerciales?: {
+                id: string
+                nombre: string
+                descuento: number | null
+                porcentaje_anticipo: number | null
+            } | null
+            MetodoPago?: {
+                id: string
+                metodo_pago: string
+                payment_method: string | null
+            } | null
+        }>
     }
 }
 

@@ -1,6 +1,6 @@
 import React from 'react'
 // import FormContacto from '@/app/ui/main/FormContacto';
-import LeadForm from './components/LeadForm';
+// import LeadForm from './components/LeadForm';
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ async function page() {
       <section className="container mx-auto mt-10 max-w-screen-sm">
 
         <div className="mx-auto">
-          <LeadForm />
+          {/* <LeadForm /> */}
         </div>
       </section>
 

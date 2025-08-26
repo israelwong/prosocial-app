@@ -384,16 +384,28 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
 
         const cotizacion = evento.Cotizacion[0]
 
-        // 🆕 Calcular el monto real a pagar considerando condiciones comerciales
+        // 🆕 Calcular el monto real a pagar usando el descuento congelado en la cotización
         const precioOriginal = cotizacion.precio
-        const condicionesComerciales = cotizacion.CondicionesComerciales
         let montoRealAPagar = precioOriginal
 
-        if (condicionesComerciales?.descuento) {
+        // 🎯 USAR DESCUENTO CONGELADO: Priorizar el descuento guardado en la cotización
+        let descuentoPorcentaje = 0
+        if (cotizacion.descuento) {
+            // Usar el descuento congelado en la cotización (más confiable)
+            descuentoPorcentaje = cotizacion.descuento
+        } else if (cotizacion.CondicionesComerciales?.descuento) {
+            // Fallback: usar descuento de condiciones comerciales (para cotizaciones anteriores)
+            descuentoPorcentaje = cotizacion.CondicionesComerciales.descuento
+        }
+
+        if (descuentoPorcentaje > 0) {
             // Aplicar descuento: precio - (precio * descuento / 100)
-            const montoDescuento = precioOriginal * (condicionesComerciales.descuento / 100)
+            const montoDescuento = precioOriginal * (descuentoPorcentaje / 100)
             montoRealAPagar = precioOriginal - montoDescuento
         }
+
+        // 🆕 Mantener referencia a condiciones comerciales para compatibilidad
+        const condicionesComerciales = cotizacion.CondicionesComerciales
 
         // Calcular solo los pagos completados para el total pagado
         const pagosPagados = cotizacion.Pago?.filter((pago: any) =>
@@ -417,29 +429,6 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
                 pago.metodo_pago.toLowerCase().includes('banco')
             )
         )
-
-        // Debug para verificar los pagos encontrados
-        console.log('🔍 obtenerEventoDetalle - Cálculos de pago:', {
-            eventoId,
-            precioOriginal,
-            condicionesComerciales: condicionesComerciales ? {
-                nombre: condicionesComerciales.nombre,
-                descuento: condicionesComerciales.descuento,
-                porcentaje_anticipo: condicionesComerciales.porcentaje_anticipo
-            } : null,
-            montoRealAPagar,
-            pagosCount: cotizacion.Pago?.length || 0,
-            pagosPagados: pagosPagados.map((p: any) => ({ monto: p.monto, status: p.status })),
-            pagosPendientes: pagosPendientes.map((p: any) => ({ monto: p.monto, status: p.status, metodo: p.metodo_pago })),
-            totalPagado,
-            saldoPendiente,
-            esPagoCompleto,
-            pagoSpeiPendiente: pagoSpeiPendiente ? {
-                monto: pagoSpeiPendiente.monto,
-                status: pagoSpeiPendiente.status,
-                metodo: pagoSpeiPendiente.metodo_pago
-            } : null
-        })
 
         // Copiar exactamente la lógica de servicios del API route
         const servicios = cotizacion.Servicio.map((cotizacionServicio: any) => {
@@ -494,6 +483,8 @@ export async function obtenerEventoDetalle(eventoId: string): Promise<ApiRespons
                 pagado: totalPagado,
                 descripcion: cotizacion.descripcion || undefined,
                 servicios,
+                // 🆕 Campo de descuento congelado en la cotización
+                descuento: cotizacion.descuento || null,
                 // 🆕 Información de condiciones comerciales y cálculos
                 condicionesComerciales: condicionesComerciales ? {
                     id: condicionesComerciales.id,

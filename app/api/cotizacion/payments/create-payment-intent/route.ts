@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
                         Cliente: true,
                     },
                 },
+                CondicionesComerciales: true, // 🆕 Incluir condiciones comerciales
             },
         })
 
@@ -52,6 +53,27 @@ export async function POST(request: NextRequest) {
                 error: 'Cotización no encontrada.'
             }, { status: 404 })
         }
+
+        // 🆕 1.5 Obtener y calcular descuento desde condiciones comerciales
+        let descuentoPorcentaje = 0
+
+        if (condicionId) {
+            // Si viene condicionId en el request, usar esas condiciones
+            const condicionesElegidas = await prisma.condicionesComerciales.findUnique({
+                where: { id: condicionId }
+            })
+            descuentoPorcentaje = condicionesElegidas?.descuento || 0
+        } else if (cotizacion.CondicionesComerciales) {
+            // Si no viene condicionId, usar las condiciones de la cotización
+            descuentoPorcentaje = cotizacion.CondicionesComerciales.descuento || 0
+        }
+
+        console.log('🎯 Descuento aplicado:', {
+            condicionId,
+            descuentoPorcentaje,
+            precioOriginal: cotizacion.precio,
+            montoDescuento: cotizacion.precio * (descuentoPorcentaje / 100)
+        })
 
         // 2. 🧮 Cálculo de montos con separación de comisiones
         let montoAbonoCliente, montoCobroStripe, comisionCalculada
@@ -191,6 +213,20 @@ export async function POST(request: NextRequest) {
         })
 
         console.log(`📝 Registro de pago cotizaciones creado en BD para Payment Intent: ${paymentIntent.id}`)
+
+        // 🆕 5.5 Actualizar cotización con descuento congelado
+        if (descuentoPorcentaje > 0 && !cotizacion.descuento) {
+            // Solo actualizar si hay descuento y la cotización no tiene descuento ya guardado
+            await prisma.cotizacion.update({
+                where: { id: cotizacion.id },
+                data: {
+                    descuento: descuentoPorcentaje,
+                    updatedAt: new Date()
+                }
+            })
+
+            console.log(`🎯 Descuento ${descuentoPorcentaje}% congelado en cotización ${cotizacion.id}`)
+        }
 
         // 6. 📤 Respuesta unificada
         return NextResponse.json({
