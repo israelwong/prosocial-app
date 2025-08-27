@@ -7,6 +7,7 @@ interface UseNotificacionesRealtimeReturn {
     notificaciones: any[]
     nuevasNotificaciones: number
     recargarNotificaciones: () => void
+    ocultarNotificacionOptimistic: (notificacionId: string) => void
 }
 
 export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
@@ -84,18 +85,26 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
                             case 'UPDATE':
                                 // Notificación actualizada (cambio de status)
                                 const notifActualizada = payload.new
+                                console.log('📝 UPDATE detectado:', notifActualizada)
+                                
                                 if (notifActualizada && notifActualizada.id) {
                                     // ✅ Si la notificación fue ocultada, removerla del estado
                                     if (notifActualizada.status === 'oculta') {
-                                        setNotificaciones(prev =>
-                                            prev.filter(n => n.id !== notifActualizada.id)
-                                        )
+                                        console.log('🗑️ Notificación ocultada via realtime:', notifActualizada.id)
+                                        setNotificaciones(prev => {
+                                            const filtered = prev.filter(n => n.id !== notifActualizada.id)
+                                            console.log(`📊 Notificaciones antes: ${prev.length}, después: ${filtered.length}`)
+                                            return filtered
+                                        })
+                                        
                                         // Decrementar contador si era una notificación no leída
                                         const notifAnterior = notificaciones.find(n => n.id === notifActualizada.id)
                                         if (notifAnterior && notifAnterior.status !== 'leida') {
+                                            console.log('📉 Decrementando contador de nuevas notificaciones')
                                             setNuevasNotificaciones(prev => Math.max(0, prev - 1))
                                         }
                                     } else {
+                                        console.log('📝 Actualizando notificación:', notifActualizada.id)
                                         // Actualizar la notificación en el estado
                                         setNotificaciones(prev =>
                                             prev.map(n =>
@@ -138,6 +147,9 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
                     }, 2000)
                 } else {
                     console.log('✅ Suscripción de notificaciones:', status)
+                    if (status === 'SUBSCRIBED') {
+                        console.log('🎯 Canal realtime activo y escuchando cambios en Notificacion')
+                    }
                 }
             })
 
@@ -147,6 +159,22 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
             supabase.removeChannel(channel)
         }
     }, [recargarNotificaciones])
+
+    // Función para ocultar notificación inmediatamente (optimistic update)
+    const ocultarNotificacionOptimistic = useCallback((notificacionId: string) => {
+        console.log('🗑️ Optimistic update: Ocultando notificación inmediatamente', notificacionId)
+        
+        // Encontrar la notificación antes de removerla para actualizar contador
+        const notifAnterior = notificaciones.find(n => n.id === notificacionId)
+        
+        // Remover inmediatamente del estado
+        setNotificaciones(prev => prev.filter(n => n.id !== notificacionId))
+        
+        // Actualizar contador si era una notificación no leída
+        if (notifAnterior && notifAnterior.status !== 'leida') {
+            setNuevasNotificaciones(prev => Math.max(0, prev - 1))
+        }
+    }, [notificaciones])
 
     // Solicitar permisos de notificación del navegador
     useEffect(() => {
@@ -160,6 +188,7 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
     return {
         notificaciones,
         nuevasNotificaciones,
-        recargarNotificaciones
+        recargarNotificaciones,
+        ocultarNotificacionOptimistic
     }
 }

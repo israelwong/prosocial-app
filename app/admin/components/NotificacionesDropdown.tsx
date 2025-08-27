@@ -29,7 +29,8 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
     const {
         notificaciones,
         nuevasNotificaciones,
-        recargarNotificaciones
+        recargarNotificaciones,
+        ocultarNotificacionOptimistic
     } = useNotificacionesRealtime()
 
     // Cerrar dropdown al hacer clic fuera
@@ -58,15 +59,18 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
     const handleOcultar = async (notificacionId: string) => {
         try {
             console.log('🗑️ Ocultando notificación:', notificacionId)
-            await ocultarNotificacion(notificacionId)
-            console.log('✅ Notificación ocultada correctamente')
             
-            // ✅ Optimistic update: Remover inmediatamente de la UI
-            // El realtime confirmará el cambio después
-            // setNotificaciones(prev => prev.filter(n => n.id !== notificacionId))
+            // ✅ OPTIMISTIC UPDATE: Ocultar inmediatamente en la UI
+            ocultarNotificacionOptimistic(notificacionId)
+            
+            // Ejecutar la acción en background - el realtime confirmará el cambio
+            await ocultarNotificacion(notificacionId)
+            console.log('✅ Notificación ocultada correctamente en BD')
             
         } catch (error) {
             console.error('❌ Error al ocultar notificación:', error)
+            // En caso de error, recargar notificaciones para revertir el optimistic update
+            recargarNotificaciones()
         }
     }
 
@@ -128,7 +132,7 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                     <div className="px-4 py-3 border-b border-zinc-700">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-semibold text-white">
-                                Notificaciones
+                                Notificaciones ({notificaciones.length})
                             </h3>
                             <div className="flex items-center space-x-2">
                                 {nuevasNotificaciones > 0 && (
