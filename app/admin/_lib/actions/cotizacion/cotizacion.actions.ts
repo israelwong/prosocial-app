@@ -1290,7 +1290,7 @@ export async function verificarEstadoAutorizacion(cotizacionId: string) {
 
 /**
  * Cancela una cotización aprobada y revierte el evento a pendiente
- * Incluye cancelación de pagos y eliminación de agenda si existe
+ * Incluye cancelación de pagos, eliminación de agenda si existe, y reseteo del descuento
  */
 export async function cancelarCotizacion(cotizacionId: string) {
     try {
@@ -1334,11 +1334,12 @@ export async function cancelarCotizacion(cotizacionId: string) {
 
         // Usar transacción para garantizar consistencia
         await prisma.$transaction(async (tx) => {
-            // 1. Actualizar status de la cotización a pendiente
+            // 1. Actualizar status de la cotización a pendiente y resetear descuento
             await tx.cotizacion.update({
                 where: { id: cotizacionId },
                 data: {
                     status: COTIZACION_STATUS.PENDIENTE,
+                    descuento: null, // 🔄 Resetear descuento al cancelar
                     updatedAt: new Date()
                 }
             });
@@ -1392,7 +1393,8 @@ export async function cancelarCotizacion(cotizacionId: string) {
             cotizacionId,
             eventoId,
             pagosAfectados,
-            agendaEliminada
+            agendaEliminada,
+            descuentoReseteado: true // 🔄 Indicar que el descuento fue reseteado
         });
 
         return {

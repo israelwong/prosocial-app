@@ -60,9 +60,12 @@ export default function FormularioPagoStripe({
             numMSI: paymentData.numMSI
         });
 
-        const confirmParams: any = {
-            return_url: returnUrl || `${window.location.origin}/checkout/success?cotizacion=${cotizacionId}&payment_intent={PAYMENT_INTENT_ID}`,
-        };
+        const confirmParams: any = {};
+
+        // 🎯 Solo agregar return_url si está definido explícitamente
+        if (returnUrl) {
+            confirmParams.return_url = returnUrl;
+        }
 
         // 🎯 MSI: Configurar plan específico durante confirmación
         if (paymentData.tipoPago === 'card' && paymentData.esMSI && paymentData.numMSI > 0) {
