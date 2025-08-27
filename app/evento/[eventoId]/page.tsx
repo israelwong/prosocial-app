@@ -4,8 +4,8 @@ import { redirect } from 'next/navigation'
 import { obtenerCotizacionesParaEvento } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento.actions'
 // Nuevos componentes
-import EventoHeader from '../components/layout/EventoHeader'
-import EventoFooter from '../components/layout/EventoFooter'
+import EventoHeaderWrapper from '../components/layout/EventoHeaderWrapper'
+import EventoFooterWrapper from '../components/layout/EventoFooterWrapper'
 import HeroSection from './components/sections/HeroSection'
 import CotizacionesSection from './components/sections/CotizacionesSection'
 import PaquetesSection from './components/sections/PaquetesSection'
@@ -125,7 +125,7 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                         }}
                     />
 
-                    <EventoHeader
+                    <EventoHeaderWrapper
                         showShareButton={true}
                         shareTitle={`${evento.Cliente?.nombre} - Cotización de evento`}
                         shareDescription={`Revisa la cotización para tu ${evento.EventoTipo?.nombre?.toLowerCase()}`}
@@ -145,7 +145,7 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                             evento.EventoTipo?.nombre?.toLowerCase().includes('15') ? 'xv' : 'boda'}
                     />
                     <TestimoniosSection />
-                    <EventoFooter />
+                    <EventoFooterWrapper />
                 </div>
             )
         }
@@ -153,7 +153,7 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
         // Si no hay paquetes ni cotizaciones, mostrar mensaje
         return (
             <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
-                <EventoHeader
+                <EventoHeaderWrapper
                     showShareButton={false}
                 />
                 <HeroSection
@@ -197,7 +197,7 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                     </div>
                 </section>
 
-                <EventoFooter />
+                <EventoFooterWrapper />
             </div>
         )
     }
@@ -214,7 +214,7 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                 }}
             />
 
-            <EventoHeader
+            <EventoHeaderWrapper
                 showShareButton={true}
                 shareTitle={`${evento.Cliente?.nombre} - Cotización de evento`}
                 shareDescription={`Revisa la cotización para tu ${evento.EventoTipo?.nombre?.toLowerCase()}`}
@@ -250,7 +250,7 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                 />
             )}
 
-            <EventoFooter />
+            <EventoFooterWrapper />
         </div>
     )
 }
