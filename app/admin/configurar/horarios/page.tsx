@@ -1,19 +1,11 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { Clock, Save, ToggleLeft, ToggleRight } from 'lucide-react'
-
-interface HorarioData {
-    id?: string
-    diaSemana: number
-    horaInicio?: string
-    horaFin?: string
-    cerrado: boolean
-    notas?: string
-}
+import { Clock, Save, ToggleLeft, ToggleRight, AlertCircle, CheckCircle } from 'lucide-react'
+import { obtenerHorarios, guardarHorarios, type NegocioHorariosData } from '@/app/admin/_lib/actions/negocio/negocio.actions'
 
 const DIAS_SEMANA = [
     'Domingo',
-    'Lunes', 
+    'Lunes',
     'Martes',
     'Miércoles',
     'Jueves',
@@ -22,31 +14,45 @@ const DIAS_SEMANA = [
 ]
 
 export default function HorariosPage() {
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const [horarios, setHorarios] = useState<HorarioData[]>([
-        { diaSemana: 0, cerrado: true },      // Domingo
-        { diaSemana: 1, horaInicio: '09:00', horaFin: '18:00', cerrado: false }, // Lunes
-        { diaSemana: 2, horaInicio: '09:00', horaFin: '18:00', cerrado: false }, // Martes
-        { diaSemana: 3, horaInicio: '09:00', horaFin: '18:00', cerrado: false }, // Miércoles
-        { diaSemana: 4, horaInicio: '09:00', horaFin: '18:00', cerrado: false }, // Jueves
-        { diaSemana: 5, horaInicio: '09:00', horaFin: '18:00', cerrado: false }, // Viernes
-        { diaSemana: 6, cerrado: true }       // Sábado
-    ])
+    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+    const [horarios, setHorarios] = useState<NegocioHorariosData[]>([])
 
-    const handleHorarioChange = (diaSemana: number, field: keyof HorarioData, value: any) => {
-        setHorarios(prev => prev.map(horario => 
-            horario.diaSemana === diaSemana 
+    // Cargar datos al montar el componente
+    useEffect(() => {
+        const cargarDatos = async () => {
+            try {
+                setLoading(true)
+                const datos = await obtenerHorarios()
+                setHorarios(datos)
+            } catch (error) {
+                console.error('Error al cargar horarios:', error)
+                setMessage({
+                    type: 'error',
+                    text: 'Error al cargar los horarios'
+                })
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        cargarDatos()
+    }, [])
+
+    const handleHorarioChange = (diaSemana: number, field: keyof NegocioHorariosData, value: any) => {
+        setHorarios(prev => prev.map(horario =>
+            horario.diaSemana === diaSemana
                 ? { ...horario, [field]: value }
                 : horario
         ))
     }
 
     const toggleDia = (diaSemana: number) => {
-        setHorarios(prev => prev.map(horario => 
-            horario.diaSemana === diaSemana 
-                ? { 
-                    ...horario, 
+        setHorarios(prev => prev.map(horario =>
+            horario.diaSemana === diaSemana
+                ? {
+                    ...horario,
                     cerrado: !horario.cerrado,
                     horaInicio: !horario.cerrado ? undefined : '09:00',
                     horaFin: !horario.cerrado ? undefined : '18:00'
@@ -56,8 +62,8 @@ export default function HorariosPage() {
     }
 
     const aplicarATodos = (horaInicio: string, horaFin: string) => {
-        setHorarios(prev => prev.map(horario => 
-            !horario.cerrado 
+        setHorarios(prev => prev.map(horario =>
+            !horario.cerrado
                 ? { ...horario, horaInicio, horaFin }
                 : horario
         ))
@@ -65,12 +71,28 @@ export default function HorariosPage() {
 
     const handleSave = async () => {
         setSaving(true)
+        setMessage(null)
+
         try {
-            // TODO: Implementar llamada a API
-            console.log('Guardando horarios:', horarios)
-            // await guardarHorarios(horarios)
+            const resultado = await guardarHorarios(horarios)
+            
+            if (resultado.success) {
+                setMessage({
+                    type: 'success',
+                    text: resultado.message || 'Horarios guardados correctamente'
+                })
+            } else {
+                setMessage({
+                    type: 'error',
+                    text: resultado.error || 'Error al guardar los horarios'
+                })
+            }
         } catch (error) {
             console.error('Error al guardar horarios:', error)
+            setMessage({
+                type: 'error',
+                text: 'Error inesperado al guardar los horarios'
+            })
         } finally {
             setSaving(false)
         }
@@ -82,16 +104,40 @@ export default function HorariosPage() {
 
     return (
         <div className="max-w-4xl mx-auto p-6">
-            {/* Header */}
-            <div className="mb-8">
-                <div className="flex items-center space-x-3 mb-2">
-                    <Clock className="w-8 h-8 text-blue-500" />
-                    <h1 className="text-3xl font-bold text-white">Horarios de Atención</h1>
+            {/* Loading State */}
+            {loading ? (
+                <div className="flex items-center justify-center min-h-96">
+                    <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                    <span className="ml-3 text-zinc-400">Cargando horarios...</span>
                 </div>
-                <p className="text-zinc-400">
-                    Define los horarios en que tu negocio está disponible para atender clientes
-                </p>
-            </div>
+            ) : (
+                <>
+                    {/* Header */}
+                    <div className="mb-8">
+                        <div className="flex items-center space-x-3 mb-2">
+                            <Clock className="w-8 h-8 text-blue-500" />
+                            <h1 className="text-3xl font-bold text-white">Horarios de Atención</h1>
+                        </div>
+                        <p className="text-zinc-400">
+                            Define los horarios en que tu negocio está disponible para atender clientes
+                        </p>
+                    </div>
+
+                    {/* Mensaje de feedback */}
+                    {message && (
+                        <div className={`mb-6 p-4 rounded-lg flex items-center space-x-3 ${
+                            message.type === 'success' 
+                                ? 'bg-green-900/30 border border-green-700 text-green-300' 
+                                : 'bg-red-900/30 border border-red-700 text-red-300'
+                        }`}>
+                            {message.type === 'success' ? (
+                                <CheckCircle className="w-5 h-5" />
+                            ) : (
+                                <AlertCircle className="w-5 h-5" />
+                            )}
+                            <span>{message.text}</span>
+                        </div>
+                    )}
 
             <div className="space-y-6">
                 {/* Acciones Rápidas */}
@@ -122,11 +168,11 @@ export default function HorariosPage() {
                 {/* Configuración de Horarios */}
                 <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
                     <h2 className="text-xl font-semibold text-white mb-6">Configurar por Día</h2>
-                    
+
                     <div className="space-y-4">
                         {DIAS_SEMANA.map((nombreDia, index) => {
                             const horario = getHorario(index)
-                            
+
                             return (
                                 <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-4 bg-zinc-800 rounded-lg">
                                     {/* Nombre del día */}
@@ -140,11 +186,10 @@ export default function HorariosPage() {
                                     <div className="md:col-span-2">
                                         <button
                                             onClick={() => toggleDia(index)}
-                                            className={`flex items-center space-x-2 px-3 py-1 rounded-full transition-colors ${
-                                                horario.cerrado 
-                                                    ? 'bg-red-900 text-red-300' 
+                                            className={`flex items-center space-x-2 px-3 py-1 rounded-full transition-colors ${horario.cerrado
+                                                    ? 'bg-red-900 text-red-300'
                                                     : 'bg-green-900 text-green-300'
-                                            }`}
+                                                }`}
                                         >
                                             {horario.cerrado ? (
                                                 <>
@@ -211,17 +256,16 @@ export default function HorariosPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {horarios.map((horario) => {
                             const nombreDia = DIAS_SEMANA[horario.diaSemana]
-                            
+
                             return (
                                 <div key={horario.diaSemana} className="flex justify-between items-center p-3 bg-zinc-800 rounded">
                                     <span className="font-medium text-white">
                                         {nombreDia}
                                     </span>
-                                    <span className={`text-sm ${
-                                        horario.cerrado ? 'text-red-400' : 'text-green-400'
-                                    }`}>
-                                        {horario.cerrado 
-                                            ? 'Cerrado' 
+                                    <span className={`text-sm ${horario.cerrado ? 'text-red-400' : 'text-green-400'
+                                        }`}>
+                                        {horario.cerrado
+                                            ? 'Cerrado'
                                             : `${horario.horaInicio} - ${horario.horaFin}`
                                         }
                                         {horario.notas && (
@@ -248,6 +292,8 @@ export default function HorariosPage() {
                     </button>
                 </div>
             </div>
+                </>
+            )}
         </div>
     )
 }

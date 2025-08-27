@@ -1,6 +1,7 @@
 'use client'
-import React, { useState } from 'react'
-import { Share2, Save, Plus, Trash2, Eye, EyeOff, GripVertical } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Share2, Save, Plus, Trash2, Eye, EyeOff, GripVertical, AlertCircle, CheckCircle } from 'lucide-react'
+import { obtenerRedesSociales, guardarRedesSociales, type NegocioRRSSData } from '@/app/admin/_lib/actions/negocio/negocio.actions'
 
 interface RedSocialData {
     id?: string
@@ -26,43 +27,50 @@ const PLATAFORMAS = {
 }
 
 export default function RedesSocialesPage() {
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const [redesSociales, setRedesSociales] = useState<RedSocialData[]>([
-        {
-            plataforma: 'facebook',
-            username: 'prosocialevents',
-            url: 'https://facebook.com/prosocialevents',
-            activo: true,
-            orden: 1
-        },
-        {
-            plataforma: 'instagram',
-            username: '@prosocialevents',
-            url: 'https://instagram.com/prosocialevents',
-            activo: true,
-            orden: 2
-        }
-    ])
+    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+    const [redesSociales, setRedesSociales] = useState<NegocioRRSSData[]>([])
 
-    const [nuevaRed, setNuevaRed] = useState<Partial<RedSocialData>>({
+    const [nuevaRed, setNuevaRed] = useState<Partial<NegocioRRSSData>>({
         plataforma: 'facebook',
         username: '',
         url: '',
         activo: true,
-        orden: redesSociales.length + 1
+        orden: 1
     })
 
     const [mostrarFormulario, setMostrarFormulario] = useState(false)
 
-    const handleInputChange = (index: number, field: keyof RedSocialData, value: any) => {
+    // Cargar datos al montar el componente
+    useEffect(() => {
+        const cargarDatos = async () => {
+            try {
+                setLoading(true)
+                const datos = await obtenerRedesSociales()
+                setRedesSociales(datos)
+            } catch (error) {
+                console.error('Error al cargar redes sociales:', error)
+                setMessage({
+                    type: 'error',
+                    text: 'Error al cargar las redes sociales'
+                })
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        cargarDatos()
+    }, [])
+
+    const handleInputChange = (index: number, field: keyof NegocioRRSSData, value: any) => {
         setRedesSociales(prev => prev.map((red, i) => 
             i === index ? { ...red, [field]: value } : red
         ))
     }
 
     const toggleActivo = (index: number) => {
-        setRedesSociales(prev => prev.map((red, i) => 
+        setRedesSociales(prev => prev.map((red, i) =>
             i === index ? { ...red, activo: !red.activo } : red
         ))
     }
@@ -74,7 +82,7 @@ export default function RedesSocialesPage() {
     const agregarRed = () => {
         if (!nuevaRed.url) return
 
-        const redCompleta: RedSocialData = {
+        const redCompleta: NegocioRRSSData = {
             plataforma: nuevaRed.plataforma!,
             username: nuevaRed.username || '',
             url: nuevaRed.url!,
@@ -95,12 +103,28 @@ export default function RedesSocialesPage() {
 
     const handleSave = async () => {
         setSaving(true)
+        setMessage(null)
+
         try {
-            // TODO: Implementar llamada a API
-            console.log('Guardando redes sociales:', redesSociales)
-            // await guardarRedesSociales(redesSociales)
+            const resultado = await guardarRedesSociales(redesSociales)
+            
+            if (resultado.success) {
+                setMessage({
+                    type: 'success',
+                    text: resultado.message || 'Redes sociales guardadas correctamente'
+                })
+            } else {
+                setMessage({
+                    type: 'error',
+                    text: resultado.error || 'Error al guardar las redes sociales'
+                })
+            }
         } catch (error) {
             console.error('Error al guardar redes sociales:', error)
+            setMessage({
+                type: 'error',
+                text: 'Error inesperado al guardar las redes sociales'
+            })
         } finally {
             setSaving(false)
         }
@@ -116,16 +140,40 @@ export default function RedesSocialesPage() {
 
     return (
         <div className="max-w-4xl mx-auto p-6">
-            {/* Header */}
-            <div className="mb-8">
-                <div className="flex items-center space-x-3 mb-2">
-                    <Share2 className="w-8 h-8 text-blue-500" />
-                    <h1 className="text-3xl font-bold text-white">Redes Sociales</h1>
+            {/* Loading State */}
+            {loading ? (
+                <div className="flex items-center justify-center min-h-96">
+                    <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                    <span className="ml-3 text-zinc-400">Cargando redes sociales...</span>
                 </div>
-                <p className="text-zinc-400">
-                    Configura los enlaces a las redes sociales de tu negocio
-                </p>
-            </div>
+            ) : (
+                <>
+                    {/* Header */}
+                    <div className="mb-8">
+                        <div className="flex items-center space-x-3 mb-2">
+                            <Share2 className="w-8 h-8 text-blue-500" />
+                            <h1 className="text-3xl font-bold text-white">Redes Sociales</h1>
+                        </div>
+                        <p className="text-zinc-400">
+                            Configura los enlaces a las redes sociales de tu negocio
+                        </p>
+                    </div>
+
+                    {/* Mensaje de feedback */}
+                    {message && (
+                        <div className={`mb-6 p-4 rounded-lg flex items-center space-x-3 ${
+                            message.type === 'success' 
+                                ? 'bg-green-900/30 border border-green-700 text-green-300' 
+                                : 'bg-red-900/30 border border-red-700 text-red-300'
+                        }`}>
+                            {message.type === 'success' ? (
+                                <CheckCircle className="w-5 h-5" />
+                            ) : (
+                                <AlertCircle className="w-5 h-5" />
+                            )}
+                            <span>{message.text}</span>
+                        </div>
+                    )}
 
             <div className="space-y-6">
                 {/* Lista de Redes Sociales */}
@@ -145,7 +193,7 @@ export default function RedesSocialesPage() {
                     <div className="space-y-4">
                         {redesSociales.map((red, index) => {
                             const platformInfo = getPlatformInfo(red.plataforma)
-                            
+
                             return (
                                 <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-4 bg-zinc-800 rounded-lg">
                                     {/* Drag handle */}
@@ -190,11 +238,10 @@ export default function RedesSocialesPage() {
                                         {/* Toggle activo */}
                                         <button
                                             onClick={() => toggleActivo(index)}
-                                            className={`p-2 rounded transition-colors ${
-                                                red.activo 
-                                                    ? 'text-green-400 hover:bg-green-900' 
+                                            className={`p-2 rounded transition-colors ${red.activo
+                                                    ? 'text-green-400 hover:bg-green-900'
                                                     : 'text-zinc-500 hover:bg-zinc-700'
-                                            }`}
+                                                }`}
                                             title={red.activo ? 'Ocultar' : 'Mostrar'}
                                         >
                                             {red.activo ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -227,7 +274,7 @@ export default function RedesSocialesPage() {
                 {mostrarFormulario && (
                     <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 border-l-4 border-l-blue-500">
                         <h3 className="text-lg font-semibold text-white mb-4">Agregar Nueva Red Social</h3>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                                 <label className="block text-sm font-medium text-zinc-300 mb-2">
@@ -235,7 +282,7 @@ export default function RedesSocialesPage() {
                                 </label>
                                 <select
                                     value={nuevaRed.plataforma}
-                                    onChange={(e) => setNuevaRed(prev => ({...prev, plataforma: e.target.value}))}
+                                    onChange={(e) => setNuevaRed(prev => ({ ...prev, plataforma: e.target.value }))}
                                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 >
                                     {Object.entries(PLATAFORMAS).map(([key, info]) => (
@@ -253,7 +300,7 @@ export default function RedesSocialesPage() {
                                 <input
                                     type="text"
                                     value={nuevaRed.username || ''}
-                                    onChange={(e) => setNuevaRed(prev => ({...prev, username: e.target.value}))}
+                                    onChange={(e) => setNuevaRed(prev => ({ ...prev, username: e.target.value }))}
                                     placeholder="@usuario"
                                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
@@ -266,7 +313,7 @@ export default function RedesSocialesPage() {
                                 <input
                                     type="url"
                                     value={nuevaRed.url || ''}
-                                    onChange={(e) => setNuevaRed(prev => ({...prev, url: e.target.value}))}
+                                    onChange={(e) => setNuevaRed(prev => ({ ...prev, url: e.target.value }))}
                                     placeholder="https://..."
                                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
@@ -295,14 +342,14 @@ export default function RedesSocialesPage() {
                 <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
                     <h2 className="text-xl font-semibold text-white mb-4">Vista Previa</h2>
                     <p className="text-zinc-400 mb-4">Así se verán tus redes sociales en el sitio web:</p>
-                    
+
                     <div className="flex flex-wrap gap-3">
                         {redesSociales
                             .filter(red => red.activo)
                             .sort((a, b) => a.orden - b.orden)
                             .map((red, index) => {
                                 const platformInfo = getPlatformInfo(red.plataforma)
-                                
+
                                 return (
                                     <a
                                         key={index}
@@ -317,7 +364,7 @@ export default function RedesSocialesPage() {
                                 )
                             })
                         }
-                        
+
                         {redesSociales.filter(red => red.activo).length === 0 && (
                             <p className="text-zinc-500 italic">No hay redes sociales activas</p>
                         )}
@@ -336,6 +383,8 @@ export default function RedesSocialesPage() {
                     </button>
                 </div>
             </div>
+                </>
+            )}
         </div>
     )
 }

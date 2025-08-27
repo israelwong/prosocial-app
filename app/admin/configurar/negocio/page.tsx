@@ -1,25 +1,12 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { Building2, Upload, Save, Globe, Mail, Phone, MapPin } from 'lucide-react'
-
-interface NegocioData {
-    id?: string
-    nombre: string
-    descripcion?: string
-    direccion?: string
-    telefono?: string
-    email?: string
-    sitioWeb?: string
-    logoUrl?: string
-    isotipoUrl?: string
-    moneda: string
-    timezone: string
-    idioma: string
-}
+import { Building2, Upload, Save, Globe, Mail, Phone, MapPin, AlertCircle, CheckCircle } from 'lucide-react'
+import { obtenerNegocio, guardarNegocio, type NegocioData } from '@/app/admin/_lib/actions/negocio/negocio.actions'
 
 export default function NegocioPage() {
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
     const [negocio, setNegocio] = useState<NegocioData>({
         nombre: '',
         descripcion: '',
@@ -34,6 +21,29 @@ export default function NegocioPage() {
         idioma: 'es'
     })
 
+    // Cargar datos al montar el componente
+    useEffect(() => {
+        const cargarDatos = async () => {
+            try {
+                setLoading(true)
+                const datos = await obtenerNegocio()
+                if (datos) {
+                    setNegocio(datos)
+                }
+            } catch (error) {
+                console.error('Error al cargar datos:', error)
+                setMessage({
+                    type: 'error',
+                    text: 'Error al cargar la información del negocio'
+                })
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        cargarDatos()
+    }, [])
+
     const handleInputChange = (field: keyof NegocioData, value: string) => {
         setNegocio(prev => ({
             ...prev,
@@ -42,13 +52,41 @@ export default function NegocioPage() {
     }
 
     const handleSave = async () => {
+        if (!negocio.nombre.trim()) {
+            setMessage({
+                type: 'error',
+                text: 'El nombre del negocio es obligatorio'
+            })
+            return
+        }
+
         setSaving(true)
+        setMessage(null)
+
         try {
-            // TODO: Implementar llamada a API
-            console.log('Guardando datos del negocio:', negocio)
-            // await guardarNegocio(negocio)
+            const resultado = await guardarNegocio(negocio)
+            
+            if (resultado.success) {
+                setMessage({
+                    type: 'success',
+                    text: resultado.message || 'Información guardada correctamente'
+                })
+                // Si es un nuevo negocio, actualizar el estado con el ID
+                if (resultado.data && !negocio.id) {
+                    setNegocio(prev => ({ ...prev, id: resultado.data.id }))
+                }
+            } else {
+                setMessage({
+                    type: 'error',
+                    text: resultado.error || 'Error al guardar la información'
+                })
+            }
         } catch (error) {
             console.error('Error al guardar:', error)
+            setMessage({
+                type: 'error',
+                text: 'Error inesperado al guardar la información'
+            })
         } finally {
             setSaving(false)
         }
@@ -61,23 +99,47 @@ export default function NegocioPage() {
 
     return (
         <div className="max-w-4xl mx-auto p-6">
-            {/* Header */}
-            <div className="mb-8">
-                <div className="flex items-center space-x-3 mb-2">
-                    <Building2 className="w-8 h-8 text-blue-500" />
-                    <h1 className="text-3xl font-bold text-white">Información del Negocio</h1>
+            {/* Loading State */}
+            {loading ? (
+                <div className="flex items-center justify-center min-h-96">
+                    <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                    <span className="ml-3 text-zinc-400">Cargando información...</span>
                 </div>
-                <p className="text-zinc-400">
-                    Configura la información básica de tu empresa, logotipos y datos de contacto
-                </p>
-            </div>
+            ) : (
+                <>
+                    {/* Header */}
+                    <div className="mb-8">
+                        <div className="flex items-center space-x-3 mb-2">
+                            <Building2 className="w-8 h-8 text-blue-500" />
+                            <h1 className="text-3xl font-bold text-white">Información del Negocio</h1>
+                        </div>
+                        <p className="text-zinc-400">
+                            Configura la información básica de tu empresa, logotipos y datos de contacto
+                        </p>
+                    </div>
+
+                    {/* Mensaje de feedback */}
+                    {message && (
+                        <div className={`mb-6 p-4 rounded-lg flex items-center space-x-3 ${
+                            message.type === 'success' 
+                                ? 'bg-green-900/30 border border-green-700 text-green-300' 
+                                : 'bg-red-900/30 border border-red-700 text-red-300'
+                        }`}>
+                            {message.type === 'success' ? (
+                                <CheckCircle className="w-5 h-5" />
+                            ) : (
+                                <AlertCircle className="w-5 h-5" />
+                            )}
+                            <span>{message.text}</span>
+                        </div>
+                    )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Información Básica */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
                         <h2 className="text-xl font-semibold text-white mb-4">Datos Generales</h2>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-zinc-300 mb-2">
@@ -91,7 +153,7 @@ export default function NegocioPage() {
                                     placeholder="Ej: ProSocial Events"
                                 />
                             </div>
-                            
+
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-zinc-300 mb-2">
                                     Descripción
@@ -104,7 +166,7 @@ export default function NegocioPage() {
                                     placeholder="Describe tu negocio brevemente..."
                                 />
                             </div>
-                            
+
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-zinc-300 mb-2">
                                     <MapPin className="w-4 h-4 inline mr-1" />
@@ -118,7 +180,7 @@ export default function NegocioPage() {
                                     placeholder="Dirección completa"
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-zinc-300 mb-2">
                                     <Phone className="w-4 h-4 inline mr-1" />
@@ -132,7 +194,7 @@ export default function NegocioPage() {
                                     placeholder="+52 55 1234 5678"
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-zinc-300 mb-2">
                                     <Mail className="w-4 h-4 inline mr-1" />
@@ -146,7 +208,7 @@ export default function NegocioPage() {
                                     placeholder="contacto@empresa.com"
                                 />
                             </div>
-                            
+
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-zinc-300 mb-2">
                                     <Globe className="w-4 h-4 inline mr-1" />
@@ -166,7 +228,7 @@ export default function NegocioPage() {
                     {/* Configuración Regional */}
                     <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
                         <h2 className="text-xl font-semibold text-white mb-4">Configuración Regional</h2>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-zinc-300 mb-2">
@@ -182,7 +244,7 @@ export default function NegocioPage() {
                                     <option value="EUR">EUR - Euro</option>
                                 </select>
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-zinc-300 mb-2">
                                     Zona Horaria
@@ -197,7 +259,7 @@ export default function NegocioPage() {
                                     <option value="America/New_York">Estados Unidos Este</option>
                                 </select>
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-zinc-300 mb-2">
                                     Idioma
@@ -223,9 +285,9 @@ export default function NegocioPage() {
                         <div className="space-y-4">
                             <div className="w-full h-32 bg-zinc-800 rounded-lg border-2 border-dashed border-zinc-600 flex items-center justify-center">
                                 {negocio.logoUrl ? (
-                                    <img 
-                                        src={negocio.logoUrl} 
-                                        alt="Logo" 
+                                    <img
+                                        src={negocio.logoUrl}
+                                        alt="Logo"
                                         className="max-h-full max-w-full object-contain"
                                     />
                                 ) : (
@@ -251,9 +313,9 @@ export default function NegocioPage() {
                         <div className="space-y-4">
                             <div className="w-full h-32 bg-zinc-800 rounded-lg border-2 border-dashed border-zinc-600 flex items-center justify-center">
                                 {negocio.isotipoUrl ? (
-                                    <img 
-                                        src={negocio.isotipoUrl} 
-                                        alt="Isotipo" 
+                                    <img
+                                        src={negocio.isotipoUrl}
+                                        alt="Isotipo"
                                         className="max-h-full max-w-full object-contain"
                                     />
                                 ) : (
@@ -286,6 +348,8 @@ export default function NegocioPage() {
                     </button>
                 </div>
             </div>
+                </>
+            )}
         </div>
     )
 }

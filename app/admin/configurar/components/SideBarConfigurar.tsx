@@ -37,21 +37,21 @@ const navCategories: NavCategory[] = [
     {
         title: 'Negocio',
         items: [
-            { 
-                href: '/admin/configurar/negocio', 
-                label: 'Información general', 
+            {
+                href: '/admin/configurar/negocio',
+                label: 'Información general',
                 Icon: Building2,
                 description: 'Datos del negocio, logotipo e isotipo'
             },
-            { 
-                href: '/admin/configurar/horarios', 
-                label: 'Horarios de atención', 
+            {
+                href: '/admin/configurar/horarios',
+                label: 'Horarios de atención',
                 Icon: Clock,
                 description: 'Configurar horarios de trabajo'
             },
-            { 
-                href: '/admin/configurar/redes-sociales', 
-                label: 'Redes sociales', 
+            {
+                href: '/admin/configurar/redes-sociales',
+                label: 'Redes sociales',
                 Icon: Share2,
                 description: 'Enlaces de redes sociales'
             }
@@ -60,21 +60,21 @@ const navCategories: NavCategory[] = [
     {
         title: 'Servicios y Productos',
         items: [
-            { 
-                href: '/admin/configurar/paquetes', 
-                label: 'Paquetes', 
+            {
+                href: '/admin/configurar/paquetes',
+                label: 'Paquetes',
                 Icon: Boxes,
                 description: 'Gestionar paquetes de servicios'
             },
-            { 
-                href: '/admin/configurar/tipoEvento', 
-                label: 'Tipo de eventos', 
+            {
+                href: '/admin/configurar/tipoEvento',
+                label: 'Tipo de eventos',
                 Icon: CalendarClock,
                 description: 'Categorías de eventos'
             },
-            { 
-                href: '/admin/configurar/catalogo', 
-                label: 'Catálogo', 
+            {
+                href: '/admin/configurar/catalogo',
+                label: 'Catálogo',
                 Icon: Layers,
                 description: 'Servicios individuales'
             }
@@ -83,15 +83,15 @@ const navCategories: NavCategory[] = [
     {
         title: 'Recursos Humanos',
         items: [
-            { 
-                href: '/admin/configurar/usuarios', 
-                label: 'Personal', 
+            {
+                href: '/admin/configurar/usuarios',
+                label: 'Personal',
                 Icon: Users,
                 description: 'Gestión de usuarios y empleados'
             },
-            { 
-                href: '/admin/configurar/pipeline', 
-                label: 'Pipeline', 
+            {
+                href: '/admin/configurar/pipeline',
+                label: 'Pipeline',
                 Icon: Users,
                 description: 'Flujo de trabajo'
             }
@@ -100,15 +100,15 @@ const navCategories: NavCategory[] = [
     {
         title: 'Comercial y Pagos',
         items: [
-            { 
-                href: '/admin/configurar/condicionesComerciales', 
-                label: 'Condiciones', 
+            {
+                href: '/admin/configurar/condicionesComerciales',
+                label: 'Condiciones',
                 Icon: Scale,
                 description: 'Términos comerciales'
             },
-            { 
-                href: '/admin/configurar/metodoPago', 
-                label: 'Métodos de pago', 
+            {
+                href: '/admin/configurar/metodoPago',
+                label: 'Métodos de pago',
                 Icon: CreditCard,
                 description: 'Configurar formas de pago'
             }
@@ -117,9 +117,9 @@ const navCategories: NavCategory[] = [
     {
         title: 'Sistema',
         items: [
-            { 
-                href: '/admin/configurar/parametros', 
-                label: 'Parámetros', 
+            {
+                href: '/admin/configurar/parametros',
+                label: 'Parámetros',
                 Icon: SlidersHorizontal,
                 description: 'Configuración avanzada'
             }
@@ -188,7 +188,7 @@ function SideBarConfigurar() {
                             <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-3 lg:hidden xl:block">
                                 {category.title}
                             </h3>
-                            
+
                             {/* Items de la categoría */}
                             <div className="space-y-1">
                                 {category.items.map((item) => {
@@ -227,7 +227,7 @@ function SideBarConfigurar() {
                                     );
                                 })}
                             </div>
-                            
+
                             {/* Separador entre categorías (excepto la última) */}
                             {categoryIndex < navCategories.length - 1 && (
                                 <div className="border-t border-zinc-800 pt-4 lg:hidden xl:block" />
