@@ -467,14 +467,10 @@ export default function CotizacionDetalle({
                 throw new Error(data.error || 'Error al preparar el pago.')
             }
 
-            // 🚨 MODO DEBUG: NO ABRIR MODAL - SOLO MOSTRAR DATOS
-            console.log('🛑 MODO DEBUG ACTIVO - Modal NO se abrirá')
-            console.log('🔑 ClientSecret recibido:', data.clientSecret ? 'SÍ' : 'NO')
-            console.log('🚨 === FIN ANÁLISIS DEBUG ===')
-
-            alert('🔍 MODO DEBUG ACTIVADO\n\nRevisa la consola del navegador para ver todos los datos que se enviaron a la API.\n\nEl modal NO se abrirá en este modo.')
-
-        } catch (error: any) {
+            // 🎨 Abrir modal con el clientSecret
+            console.log('✅ Abriendo modal de pago con clientSecret')
+            setClientSecret(data.clientSecret)
+            setModalPagoAbierto(true)        } catch (error: any) {
             console.error('❌ Error al crear Payment Intent:', error)
             alert(error.message || 'Error al preparar el pago. Por favor inténtalo de nuevo.')
         }
