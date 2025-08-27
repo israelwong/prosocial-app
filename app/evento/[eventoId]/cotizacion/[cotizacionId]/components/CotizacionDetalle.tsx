@@ -361,7 +361,7 @@ export default function CotizacionDetalle({
         // Aquí iría la llamada real para obtener costos
     }
 
-    // 🚀 NUEVA FUNCIÓN PAYMENT INTENTS - Reemplaza create-session
+    // 🚀 NUEVA FUNCIÓN PAYMENT INTENTS - MODO DEBUG PARA ANÁLISIS DE DATOS
     const iniciarPago = async () => {
         if (!fechaDisponible) {
             alert('Lo sentimos, la fecha ya ha sido ocupada por otro cliente.')
@@ -416,7 +416,39 @@ export default function CotizacionDetalle({
                 console.log('❌ Sin descuento (0% o undefined)')
             }
 
-            // 🎯 LLAMADA A PAYMENT INTENT API CON SEPARACIÓN DE COMISIONES
+            // 🔍 DEBUG MODE: MOSTRAR TODOS LOS DATOS QUE SE ENVIARÁN
+            console.log('🚨 === MODO DEBUG - ANÁLISIS DE DATOS ===')
+            console.log('📦 Datos que se enviarán a la API:')
+            console.table(datosPaymentIntent)
+
+            console.log('📊 Información adicional del contexto:')
+            console.log('• Condición Activa:', {
+                id: condicionActiva?.id,
+                nombre: condicionActiva?.nombre,
+                descuento: condicionActiva?.descuento,
+                porcentaje_anticipo: condicionActiva?.porcentaje_anticipo,
+                status: condicionActiva?.status
+            })
+
+            console.log('• Método de Pago Activo:', {
+                id: metodoActivo?.metodoPagoId,
+                nombre: metodoActivo?.metodo_pago,
+                payment_method: metodoActivo?.payment_method,
+                num_msi: metodoActivo?.num_msi,
+                comision_porcentaje_base: metodoActivo?.comision_porcentaje_base,
+                comision_fija_monto: metodoActivo?.comision_fija_monto,
+                comision_msi_porcentaje: metodoActivo?.comision_msi_porcentaje
+            })
+
+            console.log('💰 Cálculos realizados:', {
+                totalCotizacion: totalCotizacion,
+                montoBaseCliente: montoBaseCliente,
+                precioFinalStripe: precioFinalStripe,
+                diferencia: precioFinalStripe - montoBaseCliente
+            })
+
+            // 🎯 LLAMADA A PAYMENT INTENT API PARA DEBUG (SIN MODAL)
+            console.log('🔄 Enviando datos a la API...')
             const response = await fetch('/api/cotizacion/payments/create-payment-intent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -425,13 +457,22 @@ export default function CotizacionDetalle({
 
             const data = await response.json()
 
+            console.log('📥 Respuesta de la API:')
+            console.log('• Status:', response.status)
+            console.log('• Response OK:', response.ok)
+            console.log('• Data recibida:', data)
+
             if (!response.ok) {
+                console.error('❌ Error en la respuesta:', data.error)
                 throw new Error(data.error || 'Error al preparar el pago.')
             }
 
-            // 🎨 Abrir modal con el clientSecret
-            setClientSecret(data.clientSecret)
-            setModalPagoAbierto(true)
+            // 🚨 MODO DEBUG: NO ABRIR MODAL - SOLO MOSTRAR DATOS
+            console.log('🛑 MODO DEBUG ACTIVO - Modal NO se abrirá')
+            console.log('🔑 ClientSecret recibido:', data.clientSecret ? 'SÍ' : 'NO')
+            console.log('🚨 === FIN ANÁLISIS DEBUG ===')
+
+            alert('🔍 MODO DEBUG ACTIVADO\n\nRevisa la consola del navegador para ver todos los datos que se enviaron a la API.\n\nEl modal NO se abrirá en este modo.')
 
         } catch (error: any) {
             console.error('❌ Error al crear Payment Intent:', error)
