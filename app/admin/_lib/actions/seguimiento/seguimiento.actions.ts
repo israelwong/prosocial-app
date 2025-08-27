@@ -2,7 +2,7 @@
 
 'use server';
 
-import { EVENTO_STATUS, COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
+import { EVENTO_STATUS, COTIZACION_STATUS, PAGO_STATUS } from '@/app/admin/_lib/constants/status';
 import prisma from '@/app/admin/_lib/prismaClient';
 import { revalidatePath } from 'next/cache';
 import {
@@ -75,16 +75,38 @@ export async function obtenerEventosSeguimientoPorEtapa(
         // PASO 3: Procesar y transformar datos
         const eventosTransformados: EventoSeguimiento[] = eventosEtapasEspecificas.map(evento => {
             const cotizacion = evento.Cotizacion[0]; // Primera cotización
-            const totalPagado = cotizacion?.Pago.reduce((sum: number, pago: { monto: number }) => sum + pago.monto, 0) || 0;
-            const precio = cotizacion?.Servicio.reduce(
-                (sum: number, cs: { precio_unitario_snapshot: number; cantidad: number }) => sum + (cs.precio_unitario_snapshot * cs.cantidad), 0
-            ) || cotizacion?.precio || 0; // Usar precio de cotización como fallback
+
+            // ✅ CALCULAR TOTAL PAGADO - Solo pagos con status válidos
+            const pagosValidos = cotizacion?.Pago.filter(pago =>
+                pago.status === PAGO_STATUS.PAID ||
+                pago.status === PAGO_STATUS.COMPLETADO ||
+                pago.status === 'succeeded'
+            ) || [];
+            const totalPagado = pagosValidos.reduce((sum: number, pago: { monto: number }) => sum + pago.monto, 0);
+
+            // ✅ CALCULAR PRECIO TOTAL - Considerando descuentos
+            const precioServicios = cotizacion?.Servicio.reduce(
+                (sum: number, cs: { precio_unitario_snapshot: number; cantidad: number }) =>
+                    sum + (cs.precio_unitario_snapshot * cs.cantidad), 0
+            ) || 0;
+
+            // Usar precio base de cotización si no hay servicios
+            const precioBase = precioServicios > 0 ? precioServicios : (cotizacion?.precio || 0);
+
+            // Aplicar descuento si existe
+            const descuento = cotizacion?.descuento || 0;
+            const precio = precioBase - descuento;
+
+            // ✅ CALCULAR BALANCE FINAL
             const balance = precio - totalPagado;
 
             // Calcular días restantes hasta el evento
             const hoy = new Date();
             const fechaEvento = new Date(evento.fecha_evento);
             const diasRestantes = Math.ceil((fechaEvento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+
+            // Debug logging para verificar cálculos
+            console.log(`- ${evento.nombre} | Cliente: ${evento.Cliente?.nombre} | Precio Servicios: $${precioServicios} | Precio Base: $${precioBase} | Descuento: $${descuento} | Precio Final: $${precio} | Pagos Válidos: ${pagosValidos.length} | Total Pagado: $${totalPagado} | Balance: $${balance}`);
 
             return {
                 id: evento.id,
@@ -212,16 +234,30 @@ export async function obtenerEventosSeguimientoPorEtapaListaAprobados(
         // PASO 3: Procesar y transformar datos
         const eventosTransformados: EventoSeguimiento[] = eventosEtapasEspecificas.map(evento => {
             const cotizacionAprobada = evento.Cotizacion[0]; // Primera cotización aprobada
-            const totalPagado = cotizacionAprobada?.Pago.reduce((sum: number, pago: { monto: number }) => sum + pago.monto, 0) || 0;
 
-            // CORREGIDO: Usar únicamente el precio de la cotización aprobada
-            const precio = cotizacionAprobada?.precio || 0;
+            // ✅ CALCULAR TOTAL PAGADO - Solo pagos con status válidos
+            const pagosValidos = cotizacionAprobada?.Pago.filter(pago =>
+                pago.status === PAGO_STATUS.PAID ||
+                pago.status === PAGO_STATUS.COMPLETADO ||
+                pago.status === 'succeeded'
+            ) || [];
+            const totalPagado = pagosValidos.reduce((sum: number, pago: { monto: number }) => sum + pago.monto, 0);
+
+            // ✅ CALCULAR PRECIO FINAL - Considerando descuentos
+            const precioBase = cotizacionAprobada?.precio || 0;
+            const descuento = cotizacionAprobada?.descuento || 0;
+            const precio = precioBase - descuento;
+
+            // ✅ CALCULAR BALANCE FINAL
             const balance = precio - totalPagado;
 
             // Calcular días restantes hasta el evento
             const hoy = new Date();
             const fechaEvento = new Date(evento.fecha_evento);
             const diasRestantes = Math.ceil((fechaEvento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+
+            // Debug logging para verificar cálculos
+            console.log(`- ${evento.nombre} | Cliente: ${evento.Cliente.nombre} | Etapa: ${evento.EventoEtapa?.nombre} | Precio Cotización: $${precioBase} | Descuento: $${descuento} | Precio Final: $${precio} | Pagos Válidos: ${pagosValidos.length} | Total Pagado: $${totalPagado} | Balance: $${balance}`);
 
             return {
                 id: evento.id,
