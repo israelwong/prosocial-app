@@ -665,3 +665,74 @@ model Gasto {
   @@index([eventoId])
 }
 
+// ========================================
+// CONFIGURACIÓN DE NEGOCIO
+// ========================================
+
+model Negocio {
+  id          String   @id @default(cuid())
+  nombre      String   // Nombre del negocio
+  descripcion String?  // Descripción breve
+  direccion   String?  // Dirección física
+  telefono    String?  // Teléfono principal
+  email       String?  // Email de contacto
+  sitioWeb    String?  // URL del sitio web
+  
+  // Imágenes
+  logoUrl     String?  // URL del logotipo
+  isotipoUrl  String?  // URL del isotipo (icono)
+  
+  // Configuración adicional
+  moneda      String   @default("MXN")   // Moneda por defecto
+  timezone    String   @default("America/Mexico_City") // Zona horaria
+  idioma      String   @default("es")    // Idioma por defecto
+  
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relaciones
+  NegocioRRSS     NegocioRRSS[]
+  NegocioHorarios NegocioHorarios[]
+}
+
+model NegocioRRSS {
+  id          String   @id @default(cuid())
+  negocioId   String
+  Negocio     Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  
+  plataforma  String   // facebook, instagram, twitter, linkedin, tiktok, youtube, etc.
+  username    String?  // Nombre de usuario o handle
+  url         String   // URL completa del perfil
+  activo      Boolean  @default(true)
+  orden       Int      @default(0) // Para ordenar en la UI
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([negocioId, plataforma])
+  @@index([negocioId, activo])
+}
+
+model NegocioHorarios {
+  id          String   @id @default(cuid())
+  negocioId   String
+  Negocio     Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  
+  diaSemana   Int      // 0=Domingo, 1=Lunes, ..., 6=Sábado
+  horaInicio  String?  // "09:00" - null si está cerrado
+  horaFin     String?  // "18:00" - null si está cerrado
+  cerrado     Boolean  @default(false) // Si está cerrado todo el día
+  
+  // Para horarios especiales (opcional)
+  fechaEspecial DateTime? // Para días específicos (feriados, etc.)
+  notas       String?     // "Solo citas", "Horario reducido", etc.
+  
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([negocioId, diaSemana])
+  @@index([negocioId, activo])
+}
+

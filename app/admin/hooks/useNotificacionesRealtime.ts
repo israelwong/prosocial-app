@@ -19,7 +19,7 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
         try {
             const { obtenerNotificaciones } = await import('../_lib/notificacion.actions')
             const result = await obtenerNotificaciones()
-            
+
             // ✅ Filtrar notificaciones ocultas por seguridad extra
             const notificacionesVisibles = result.filter((n: any) => n.status !== 'oculta')
             setNotificaciones(notificacionesVisibles || [])
@@ -86,7 +86,7 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
                                 // Notificación actualizada (cambio de status)
                                 const notifActualizada = payload.new
                                 console.log('📝 UPDATE detectado:', notifActualizada)
-                                
+
                                 if (notifActualizada && notifActualizada.id) {
                                     // ✅ Si la notificación fue ocultada, removerla del estado
                                     if (notifActualizada.status === 'oculta') {
@@ -96,7 +96,7 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
                                             console.log(`📊 Notificaciones antes: ${prev.length}, después: ${filtered.length}`)
                                             return filtered
                                         })
-                                        
+
                                         // Decrementar contador si era una notificación no leída
                                         const notifAnterior = notificaciones.find(n => n.id === notifActualizada.id)
                                         if (notifAnterior && notifAnterior.status !== 'leida') {
@@ -163,13 +163,13 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
     // Función para ocultar notificación inmediatamente (optimistic update)
     const ocultarNotificacionOptimistic = useCallback((notificacionId: string) => {
         console.log('🗑️ Optimistic update: Ocultando notificación inmediatamente', notificacionId)
-        
+
         // Encontrar la notificación antes de removerla para actualizar contador
         const notifAnterior = notificaciones.find(n => n.id === notificacionId)
-        
+
         // Remover inmediatamente del estado
         setNotificaciones(prev => prev.filter(n => n.id !== notificacionId))
-        
+
         // Actualizar contador si era una notificación no leída
         if (notifAnterior && notifAnterior.status !== 'leida') {
             setNuevasNotificaciones(prev => Math.max(0, prev - 1))

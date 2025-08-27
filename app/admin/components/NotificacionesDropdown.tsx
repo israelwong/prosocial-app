@@ -59,14 +59,14 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
     const handleOcultar = async (notificacionId: string) => {
         try {
             console.log('🗑️ Ocultando notificación:', notificacionId)
-            
+
             // ✅ OPTIMISTIC UPDATE: Ocultar inmediatamente en la UI
             ocultarNotificacionOptimistic(notificacionId)
-            
+
             // Ejecutar la acción en background - el realtime confirmará el cambio
             await ocultarNotificacion(notificacionId)
             console.log('✅ Notificación ocultada correctamente en BD')
-            
+
         } catch (error) {
             console.error('❌ Error al ocultar notificación:', error)
             // En caso de error, recargar notificaciones para revertir el optimistic update
