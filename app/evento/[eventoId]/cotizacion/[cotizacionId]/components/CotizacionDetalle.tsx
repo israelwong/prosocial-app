@@ -143,15 +143,12 @@ export default function CotizacionDetalle({
 
     const cargarCondicionesComerciales = async () => {
         try {
-            console.log('🏪 === CARGANDO CONDICIONES COMERCIALES ===')
             const condicionesActivas = await obtenerCondicionesComerciales()
 
             // Filtrar solo las condiciones activas
             const condicionesFiltradas = condicionesActivas.filter(condicion => {
                 return condicion.status === 'active' || condicion.status === 'activa'
             })
-
-            console.log('Condiciones comerciales encontradas:', condicionesFiltradas.length)
 
             // Obtener métodos de pago para cada condición comercial
             const condicionesConMetodos = await Promise.all(
@@ -191,32 +188,7 @@ export default function CotizacionDetalle({
                 })
             )
 
-            console.log('Condiciones comerciales con métodos de pago:', condicionesConMetodos)
-
-            // 🔍 DEBUG: Mostrar datos detallados de cada condición
-            condicionesConMetodos.forEach((condicion, index) => {
-                console.log(`🏪 Condición ${index + 1}:`, {
-                    id: condicion.id,
-                    nombre: condicion.nombre,
-                    descuento: condicion.descuento,
-                    porcentaje_anticipo: condicion.porcentaje_anticipo,
-                    status: condicion.status,
-                    metodosPago: condicion.metodosPago.map(m => ({
-                        metodoPagoId: m.metodoPagoId,
-                        metodo_pago: m.metodo_pago,
-                        num_msi: m.num_msi,
-                        comision_porcentaje_base: m.comision_porcentaje_base,
-                        payment_method: m.payment_method
-                    }))
-                })
-            })
-
             setCondicionesComerciales(condicionesConMetodos)
-
-            // Si hay condiciones, seleccionar la primera por defecto
-            if (condicionesConMetodos.length > 0) {
-                setCondicionSeleccionada(condicionesConMetodos[0].id)
-            }
         } catch (error) {
             console.error('Error al cargar condiciones comerciales:', error)
             setCondicionesComerciales([])
@@ -409,7 +381,6 @@ export default function CotizacionDetalle({
         if (procesandoPago) return
 
         setProcesandoPago(true)
-        console.log('🚀 Iniciando creación de Payment Intent con separación de comisiones...')
 
         try {
             // Obtener información del método de pago seleccionado
@@ -426,27 +397,30 @@ export default function CotizacionDetalle({
                 metodoPago = metodoActivo.payment_method || metodoActivo.metodo_pago || 'card'
             }
 
-            console.log('💰 Enviando al API con separación de comisiones:', {
+            // 🎯 Preparar datos para enviar - SOLO incluir descuento si es > 0
+            const datosPaymentIntent: any = {
                 cotizacionId: cotizacion.id,
-                montoBase: montoBaseCliente.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                montoConComision: precioFinalStripe.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                comisionStripe: (precioFinalStripe - montoBaseCliente).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                metodoPago
-            })
+                metodoPago: metodoPago,
+                montoBase: montoBaseCliente, // 🆕 Monto sin comisión para el cliente
+                montoConComision: precioFinalStripe, // 🆕 Monto total para Stripe
+                metodoPagoId: metodoPagoSeleccionado,
+                condicionId: condicionSeleccionada,
+                numMsi: metodoActivo.num_msi || 0,
+            }
+
+            // 🔍 SOLO agregar descuento si es mayor a 0
+            if (condicionActiva?.descuento && condicionActiva.descuento > 0) {
+                datosPaymentIntent.descuento = condicionActiva.descuento
+                console.log(`✅ Descuento incluido: ${condicionActiva.descuento}%`)
+            } else {
+                console.log('❌ Sin descuento (0% o undefined)')
+            }
 
             // 🎯 LLAMADA A PAYMENT INTENT API CON SEPARACIÓN DE COMISIONES
             const response = await fetch('/api/cotizacion/payments/create-payment-intent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    cotizacionId: cotizacion.id,
-                    metodoPago: metodoPago,
-                    montoBase: montoBaseCliente, // 🆕 Monto sin comisión para el cliente
-                    montoConComision: precioFinalStripe, // 🆕 Monto total para Stripe
-                    metodoPagoId: metodoPagoSeleccionado,
-                    condicionId: condicionSeleccionada,
-                    numMsi: metodoActivo.num_msi || 0,
-                }),
+                body: JSON.stringify(datosPaymentIntent),
             })
 
             const data = await response.json()
@@ -454,15 +428,6 @@ export default function CotizacionDetalle({
             if (!response.ok) {
                 throw new Error(data.error || 'Error al preparar el pago.')
             }
-
-            console.log('✅ Payment Intent creado con separación de comisiones:', {
-                paymentIntentId: data.paymentIntentId,
-                metodoPago: data.metodoPago,
-                montoBase: data.montoBase,
-                montoFinal: data.montoFinal,
-                comisionStripe: data.comisionStripe,
-                clientSecret: data.clientSecret ? '***RECIBIDO***' : 'NO_RECIBIDO'
-            })
 
             // 🎨 Abrir modal con el clientSecret
             setClientSecret(data.clientSecret)
@@ -513,14 +478,42 @@ export default function CotizacionDetalle({
         setProcesandoPago(false)
     }
 
-    const onPagoExitoso = () => {
-        console.log('✅ Pago procesado exitosamente')
+    const onPagoExitoso = (paymentIntent?: any) => {
+        console.log('✅ Pago procesado exitosamente', paymentIntent)
+
+        // Cerrar el modal
         setModalPagoAbierto(false)
         setClientSecret(null)
-        // Aquí podrías actualizar el estado de la cotización, mostrar mensaje de éxito, etc.
+        setProcesandoPago(false)
+
+        // Para SPEI, mostrar mensaje específico
+        const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
+        const metodoActivo = condicionActiva?.metodosPago.find((m: any) => m.metodoPagoId === metodoPagoSeleccionado)
+        const esSpei = metodoActivo?.payment_method === 'customer_balance' ||
+            metodoActivo?.metodo_pago?.toLowerCase().includes('spei');
+
+        if (esSpei) {
+            console.log('🏦 Pago SPEI procesado - Instrucciones bancarias enviadas')
+            alert('¡Perfecto! Recibirás las instrucciones bancarias para realizar tu pago SPEI por correo electrónico.')
+        } else {
+            console.log('💳 Pago con tarjeta procesado exitosamente')
+            alert('¡Pago procesado exitosamente!')
+        }
+
+        // Opcional: Actualizar el estado de la cotización o recargar los datos
+        // setCotizacion(prevState => ({ ...prevState, status: 'PAGADO' }))
     }
 
     const handleCondicionChange = (condicionId: string) => {
+        // Buscar los detalles de la condición seleccionada
+        const condicionSeleccionadaDetalles = condicionesComerciales.find(c => c.id === condicionId)
+
+        console.log('------')
+        console.log('Condicion comercial:')
+        console.log(`porcentaje_anticipo: ${condicionSeleccionadaDetalles?.porcentaje_anticipo || 0}%`)
+        console.log(`descuento: ${condicionSeleccionadaDetalles?.descuento || 0}%`)
+        console.log('------')
+
         setCondicionSeleccionada(condicionId)
         // Limpiar método de pago cuando cambie la condición
         setMetodoPagoSeleccionado('')
@@ -534,6 +527,14 @@ export default function CotizacionDetalle({
         // Buscar información detallada del método de pago
         const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
         const metodoActivo = condicionActiva?.metodosPago.find((m: any) => m.metodoPagoId === metodoPagoId)
+
+        // Detectar si es SPEI
+        const esSpei = metodoActivo?.payment_method === 'customer_balance' ||
+            metodoActivo?.metodo_pago?.toLowerCase().includes('spei');
+
+        console.log('Metodo Pago:')
+        console.log(esSpei ? 'spei' : 'tctd')
+        console.log('------')
 
         if (metodoActivo) {
             // 🆕 CALCULAR SEPARACIÓN DE COMISIONES
@@ -589,18 +590,6 @@ export default function CotizacionDetalle({
                 numMSI: metodoActivo.num_msi,
                 esAnticipo,
                 montoPorPago
-            })
-
-            console.log('💳 Método de pago seleccionado (con separación):', {
-                metodoPagoId,
-                montoBase: montoBase.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                montoConComision: montoConComision.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                comisionStripe: (montoConComision - montoBase).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }),
-                esSpei,
-                esMSI,
-                numMSI: metodoActivo.num_msi,
-                esAnticipo,
-                montoPorPago: montoPorPago.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
             })
         }
     }
@@ -776,7 +765,7 @@ export default function CotizacionDetalle({
                                         tipo: infoMetodoPago?.esMSI ? 'msi' : 'single'
                                     }
                                 }}
-                                returnUrl={`${window.location.origin}/checkout/success?cotizacion=${cotizacion.id}&payment_intent={PAYMENT_INTENT_ID}`}
+                                returnUrl={undefined} // 🎯 SIEMPRE usar callback (nunca redirección)
                                 onSuccess={onPagoExitoso}
                                 onCancel={cerrarModalPago}
                             />

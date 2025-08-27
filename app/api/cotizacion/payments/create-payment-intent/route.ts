@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
             montoBase,
             montoConComision,
             condicionId, // 🆕 ID de condiciones comerciales (viene como condicionId del frontend)
-            metodoPagoId
+            metodoPagoId,
+            descuento // 🆕 Descuento viene del frontend solo si es > 0
         } = await request.json()
 
         console.log('🚀 CREATE-PAYMENT-INTENT COTIZACIONES (App Router)')
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
             montoConComision, // 🆕 Monto que se cobra en Stripe
             condicionId, // 🆕 ID de condiciones comerciales
             metodoPagoId, // 🆕 ID del método de pago
+            descuento: descuento || 'No enviado' // 🆕 Solo viene si es > 0
         })
 
         if (!cotizacionId) {
@@ -54,21 +56,28 @@ export async function POST(request: NextRequest) {
             }, { status: 404 })
         }
 
-        // 🆕 1.5 Obtener y calcular descuento desde condiciones comerciales
+        // 🆕 1.5 Obtener descuento - PRIORITARIO desde frontend
         let descuentoPorcentaje = 0
 
-        if (condicionId) {
-            // Si viene condicionId en el request, usar esas condiciones
+        if (descuento && descuento > 0) {
+            // ✅ PRIORITARIO: Si viene descuento del frontend (solo cuando es > 0)
+            descuentoPorcentaje = descuento
+            console.log('✅ Usando descuento del frontend:', descuento + '%')
+        } else if (condicionId) {
+            // 🔄 FALLBACK: Si viene condicionId pero no descuento, consultar BD
             const condicionesElegidas = await prisma.condicionesComerciales.findUnique({
                 where: { id: condicionId }
             })
             descuentoPorcentaje = condicionesElegidas?.descuento || 0
+            console.log('🔄 Descuento desde BD por condicionId:', descuentoPorcentaje + '%')
         } else if (cotizacion.CondicionesComerciales) {
-            // Si no viene condicionId, usar las condiciones de la cotización
+            // 🔄 FALLBACK: Si no viene nada, usar las condiciones de la cotización
             descuentoPorcentaje = cotizacion.CondicionesComerciales.descuento || 0
+            console.log('🔄 Descuento desde cotización existente:', descuentoPorcentaje + '%')
         }
 
-        console.log('🎯 Descuento aplicado:', {
+        console.log('🎯 Descuento final aplicado:', {
+            fuente: descuento && descuento > 0 ? 'FRONTEND' : 'BASE_DATOS',
             condicionId,
             descuentoPorcentaje,
             precioOriginal: cotizacion.precio,
