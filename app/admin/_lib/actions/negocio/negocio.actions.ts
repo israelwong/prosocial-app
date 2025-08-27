@@ -17,9 +17,10 @@ export interface NegocioData {
     sitioWeb?: string
     logoUrl?: string
     isotipoUrl?: string
-    moneda: string
-    timezone: string
-    idioma: string
+    // Campos con valores por defecto (no se muestran en UI)
+    moneda?: string
+    timezone?: string
+    idioma?: string
 }
 
 export interface NegocioRRSSData {
@@ -62,13 +63,13 @@ export async function obtenerNegocio(): Promise<NegocioData | null> {
         return {
             id: negocio.id,
             nombre: negocio.nombre,
-            descripcion: negocio.descripcion,
-            direccion: negocio.direccion,
-            telefono: negocio.telefono,
-            email: negocio.email,
-            sitioWeb: negocio.sitioWeb,
-            logoUrl: negocio.logoUrl,
-            isotipoUrl: negocio.isotipoUrl,
+            descripcion: negocio.descripcion || undefined,
+            direccion: negocio.direccion || undefined,
+            telefono: negocio.telefono || undefined,
+            email: negocio.email || undefined,
+            sitioWeb: negocio.sitioWeb || undefined,
+            logoUrl: negocio.logoUrl || undefined,
+            isotipoUrl: negocio.isotipoUrl || undefined,
             moneda: negocio.moneda,
             timezone: negocio.timezone,
             idioma: negocio.idioma
@@ -104,9 +105,9 @@ export async function guardarNegocio(data: NegocioData) {
                     sitioWeb: data.sitioWeb,
                     logoUrl: data.logoUrl,
                     isotipoUrl: data.isotipoUrl,
-                    moneda: data.moneda,
-                    timezone: data.timezone,
-                    idioma: data.idioma,
+                    moneda: data.moneda || 'MXN',
+                    timezone: data.timezone || 'America/Mexico_City',
+                    idioma: data.idioma || 'es',
                     updatedAt: new Date()
                 }
             })
@@ -122,9 +123,9 @@ export async function guardarNegocio(data: NegocioData) {
                     sitioWeb: data.sitioWeb,
                     logoUrl: data.logoUrl,
                     isotipoUrl: data.isotipoUrl,
-                    moneda: data.moneda,
-                    timezone: data.timezone,
-                    idioma: data.idioma,
+                    moneda: data.moneda || 'MXN',
+                    timezone: data.timezone || 'America/Mexico_City',
+                    idioma: data.idioma || 'es',
                     status: 'active'
                 }
             })
@@ -172,7 +173,7 @@ export async function obtenerRedesSociales(): Promise<NegocioRRSSData[]> {
         return negocio.NegocioRRSS.map(red => ({
             id: red.id,
             plataforma: red.plataforma,
-            username: red.username,
+            username: red.username || undefined,
             url: red.url,
             activo: red.activo,
             orden: red.orden
@@ -266,10 +267,10 @@ export async function obtenerHorarios(): Promise<NegocioHorariosData[]> {
         return negocio.NegocioHorarios.map(horario => ({
             id: horario.id,
             diaSemana: horario.diaSemana,
-            horaInicio: horario.horaInicio,
-            horaFin: horario.horaFin,
+            horaInicio: horario.horaInicio || undefined,
+            horaFin: horario.horaFin || undefined,
             cerrado: horario.cerrado,
-            notas: horario.notas
+            notas: horario.notas || undefined
         }))
     } catch (error) {
         console.error('Error al obtener horarios:', error)

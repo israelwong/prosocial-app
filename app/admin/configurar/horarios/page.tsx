@@ -4,14 +4,17 @@ import { Clock, Save, ToggleLeft, ToggleRight, AlertCircle, CheckCircle } from '
 import { obtenerHorarios, guardarHorarios, type NegocioHorariosData } from '@/app/admin/_lib/actions/negocio/negocio.actions'
 
 const DIAS_SEMANA = [
-    'Domingo',
-    'Lunes',
-    'Martes',
-    'Miércoles',
-    'Jueves',
-    'Viernes',
-    'Sábado'
+    'Domingo',    // 0
+    'Lunes',      // 1 
+    'Martes',     // 2
+    'Miércoles',  // 3
+    'Jueves',     // 4
+    'Viernes',    // 5
+    'Sábado'      // 6
 ]
+
+// Orden para mostrar en UI (Lunes primero)
+const ORDEN_DIAS = [1, 2, 3, 4, 5, 6, 0] // Lunes a Domingo
 
 export default function HorariosPage() {
     const [loading, setLoading] = useState(true)
@@ -75,7 +78,7 @@ export default function HorariosPage() {
 
         try {
             const resultado = await guardarHorarios(horarios)
-            
+
             if (resultado.success) {
                 setMessage({
                     type: 'success',
@@ -125,11 +128,10 @@ export default function HorariosPage() {
 
                     {/* Mensaje de feedback */}
                     {message && (
-                        <div className={`mb-6 p-4 rounded-lg flex items-center space-x-3 ${
-                            message.type === 'success' 
-                                ? 'bg-green-900/30 border border-green-700 text-green-300' 
-                                : 'bg-red-900/30 border border-red-700 text-red-300'
-                        }`}>
+                        <div className={`mb-6 p-4 rounded-lg flex items-center space-x-3 ${message.type === 'success'
+                            ? 'bg-green-900/30 border border-green-700 text-green-300'
+                            : 'bg-red-900/30 border border-red-700 text-red-300'
+                            }`}>
                             {message.type === 'success' ? (
                                 <CheckCircle className="w-5 h-5" />
                             ) : (
@@ -139,159 +141,130 @@ export default function HorariosPage() {
                         </div>
                     )}
 
-            <div className="space-y-6">
-                {/* Acciones Rápidas */}
-                <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-                    <h2 className="text-xl font-semibold text-white mb-4">Acciones Rápidas</h2>
-                    <div className="flex flex-wrap gap-4">
-                        <button
-                            onClick={() => aplicarATodos('09:00', '18:00')}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
-                        >
-                            Aplicar 9:00-18:00 a todos
-                        </button>
-                        <button
-                            onClick={() => aplicarATodos('08:00', '20:00')}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
-                        >
-                            Aplicar 8:00-20:00 a todos
-                        </button>
-                        <button
-                            onClick={() => aplicarATodos('10:00', '19:00')}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
-                        >
-                            Aplicar 10:00-19:00 a todos
-                        </button>
-                    </div>
-                </div>
+                    <div className="space-y-6">
+                        {/* Acciones Rápidas */}
+                        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+                            <h2 className="text-xl font-semibold text-white mb-4">Acciones Rápidas</h2>
+                            <div className="flex flex-wrap gap-4">
+                                <button
+                                    onClick={() => aplicarATodos('09:00', '18:00')}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
+                                >
+                                    Aplicar 9:00-18:00 a todos
+                                </button>
+                                <button
+                                    onClick={() => aplicarATodos('08:00', '20:00')}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
+                                >
+                                    Aplicar 8:00-20:00 a todos
+                                </button>
+                                <button
+                                    onClick={() => aplicarATodos('10:00', '19:00')}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
+                                >
+                                    Aplicar 10:00-19:00 a todos
+                                </button>
+                            </div>
+                        </div>
 
-                {/* Configuración de Horarios */}
-                <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-                    <h2 className="text-xl font-semibold text-white mb-6">Configurar por Día</h2>
+                        {/* Configuración de Horarios */}
+                        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+                            <h2 className="text-xl font-semibold text-white mb-6">Configurar por Día</h2>
 
-                    <div className="space-y-4">
-                        {DIAS_SEMANA.map((nombreDia, index) => {
-                            const horario = getHorario(index)
+                            <div className="space-y-4">
+                                {ORDEN_DIAS.map((diaSemana) => {
+                                    const nombreDia = DIAS_SEMANA[diaSemana]
+                                    const horario = getHorario(diaSemana)
 
-                            return (
-                                <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-4 bg-zinc-800 rounded-lg">
-                                    {/* Nombre del día */}
-                                    <div className="md:col-span-2">
-                                        <span className="font-medium text-white">
-                                            {nombreDia}
-                                        </span>
-                                    </div>
+                                    return (
+                                        <div key={diaSemana} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-4 bg-zinc-800 rounded-lg">
+                                            {/* Nombre del día */}
+                                            <div className="md:col-span-2">
+                                                <span className="font-medium text-white">
+                                                    {nombreDia}
+                                                </span>
+                                            </div>
 
-                                    {/* Toggle Abierto/Cerrado */}
-                                    <div className="md:col-span-2">
-                                        <button
-                                            onClick={() => toggleDia(index)}
-                                            className={`flex items-center space-x-2 px-3 py-1 rounded-full transition-colors ${horario.cerrado
-                                                    ? 'bg-red-900 text-red-300'
-                                                    : 'bg-green-900 text-green-300'
-                                                }`}
-                                        >
-                                            {horario.cerrado ? (
+                                            {/* Toggle Abierto/Cerrado */}
+                                            <div className="md:col-span-2">
+                                                <button
+                                                    onClick={() => toggleDia(diaSemana)}
+                                                    className={`flex items-center space-x-2 px-3 py-1 rounded-full transition-colors ${horario.cerrado
+                                                        ? 'bg-red-900 text-red-300'
+                                                        : 'bg-green-900 text-green-300'
+                                                        }`}
+                                                >
+                                                    {horario.cerrado ? (
+                                                        <>
+                                                            <ToggleLeft className="w-4 h-4" />
+                                                            <span className="text-sm">Cerrado</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <ToggleRight className="w-4 h-4" />
+                                                            <span className="text-sm">Abierto</span>
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+
+                                            {/* Horarios */}
+                                            {!horario.cerrado ? (
                                                 <>
-                                                    <ToggleLeft className="w-4 h-4" />
-                                                    <span className="text-sm">Cerrado</span>
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-xs text-zinc-400 mb-1">Inicio</label>
+                                                        <input
+                                                            type="time"
+                                                            value={horario.horaInicio || ''}
+                                                            onChange={(e) => handleHorarioChange(diaSemana, 'horaInicio', e.target.value)}
+                                                            className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                        />
+                                                    </div>
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-xs text-zinc-400 mb-1">Fin</label>
+                                                        <input
+                                                            type="time"
+                                                            value={horario.horaFin || ''}
+                                                            onChange={(e) => handleHorarioChange(diaSemana, 'horaFin', e.target.value)}
+                                                            className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                        />
+                                                    </div>
+                                                    <div className="md:col-span-4">
+                                                        <label className="block text-xs text-zinc-400 mb-1">Notas (opcional)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={horario.notas || ''}
+                                                            onChange={(e) => handleHorarioChange(diaSemana, 'notas', e.target.value)}
+                                                            placeholder="Ej: Solo citas"
+                                                            className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                        />
+                                                    </div>
                                                 </>
                                             ) : (
-                                                <>
-                                                    <ToggleRight className="w-4 h-4" />
-                                                    <span className="text-sm">Abierto</span>
-                                                </>
+                                                <div className="md:col-span-8 flex items-center">
+                                                    <span className="text-zinc-500 italic">
+                                                        Día no laborable
+                                                    </span>
+                                                </div>
                                             )}
-                                        </button>
-                                    </div>
-
-                                    {/* Horarios */}
-                                    {!horario.cerrado ? (
-                                        <>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-xs text-zinc-400 mb-1">Inicio</label>
-                                                <input
-                                                    type="time"
-                                                    value={horario.horaInicio || ''}
-                                                    onChange={(e) => handleHorarioChange(index, 'horaInicio', e.target.value)}
-                                                    className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-xs text-zinc-400 mb-1">Fin</label>
-                                                <input
-                                                    type="time"
-                                                    value={horario.horaFin || ''}
-                                                    onChange={(e) => handleHorarioChange(index, 'horaFin', e.target.value)}
-                                                    className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-4">
-                                                <label className="block text-xs text-zinc-400 mb-1">Notas (opcional)</label>
-                                                <input
-                                                    type="text"
-                                                    value={horario.notas || ''}
-                                                    onChange={(e) => handleHorarioChange(index, 'notas', e.target.value)}
-                                                    placeholder="Ej: Solo citas"
-                                                    className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                />
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="md:col-span-8 flex items-center">
-                                            <span className="text-zinc-500 italic">
-                                                Día no laborable
-                                            </span>
                                         </div>
-                                    )}
-                                </div>
-                            )
-                        })}
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Botón Guardar */}
+                        <div className="flex justify-end">
+                            <button
+                                onClick={handleSave}
+                                disabled={saving}
+                                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                            >
+                                <Save className="w-4 h-4" />
+                                <span>{saving ? 'Guardando...' : 'Guardar Horarios'}</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-
-                {/* Vista Previa */}
-                <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-                    <h2 className="text-xl font-semibold text-white mb-4">Vista Previa</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {horarios.map((horario) => {
-                            const nombreDia = DIAS_SEMANA[horario.diaSemana]
-
-                            return (
-                                <div key={horario.diaSemana} className="flex justify-between items-center p-3 bg-zinc-800 rounded">
-                                    <span className="font-medium text-white">
-                                        {nombreDia}
-                                    </span>
-                                    <span className={`text-sm ${horario.cerrado ? 'text-red-400' : 'text-green-400'
-                                        }`}>
-                                        {horario.cerrado
-                                            ? 'Cerrado'
-                                            : `${horario.horaInicio} - ${horario.horaFin}`
-                                        }
-                                        {horario.notas && (
-                                            <span className="text-zinc-500 ml-2">
-                                                ({horario.notas})
-                                            </span>
-                                        )}
-                                    </span>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-
-                {/* Botón Guardar */}
-                <div className="flex justify-end">
-                    <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
-                    >
-                        <Save className="w-4 h-4" />
-                        <span>{saving ? 'Guardando...' : 'Guardar Horarios'}</span>
-                    </button>
-                </div>
-            </div>
                 </>
             )}
         </div>
