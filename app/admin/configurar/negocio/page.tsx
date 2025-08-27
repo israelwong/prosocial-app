@@ -1,7 +1,8 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { Building2, Upload, Save, Globe, Mail, Phone, MapPin, AlertCircle, CheckCircle } from 'lucide-react'
+import { Building2, Save, Globe, Mail, Phone, MapPin, AlertCircle, CheckCircle } from 'lucide-react'
 import { obtenerNegocio, guardarNegocio, type NegocioData } from '@/app/admin/_lib/actions/negocio/negocio.actions'
+import ImageUploader from '@/app/admin/components/shared/ImageUploader'
 
 export default function NegocioPage() {
     const [loading, setLoading] = useState(true)
@@ -89,9 +90,18 @@ export default function NegocioPage() {
         }
     }
 
-    const handleImageUpload = async (type: 'logo' | 'isotipo', file: File) => {
-        // TODO: Implementar subida de imágenes
-        console.log(`Subiendo ${type}:`, file.name)
+    const handleLogoChange = (url: string | null) => {
+        setNegocio(prev => ({
+            ...prev,
+            logoUrl: url || ''
+        }))
+    }
+
+    const handleIsotipoChange = (url: string | null) => {
+        setNegocio(prev => ({
+            ...prev,
+            isotipoUrl: url || ''
+        }))
     }
 
     return (
@@ -227,59 +237,35 @@ export default function NegocioPage() {
                             {/* Logotipo */}
                             <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
                                 <h3 className="text-lg font-semibold text-white mb-4">Logotipo</h3>
-                                <div className="space-y-4">
-                                    <div className="w-full h-32 bg-zinc-800 rounded-lg border-2 border-dashed border-zinc-600 flex items-center justify-center">
-                                        {negocio.logoUrl ? (
-                                            <img
-                                                src={negocio.logoUrl}
-                                                alt="Logo"
-                                                className="max-h-full max-w-full object-contain"
-                                            />
-                                        ) : (
-                                            <div className="text-center text-zinc-500">
-                                                <Upload className="w-8 h-8 mx-auto mb-2" />
-                                                <p className="text-sm">Subir logotipo</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700"
-                                        onChange={(e) => e.target.files?.[0] && handleImageUpload('logo', e.target.files[0])}
-                                    />
-                                    <p className="text-xs text-zinc-500">Recomendado: PNG o SVG, máximo 2MB</p>
-                                </div>
+                                <ImageUploader
+                                    category="negocio"
+                                    subcategory="logotipo"
+                                    currentImageUrl={negocio.logoUrl}
+                                    onImageChange={handleLogoChange}
+                                    maxSize={5}
+                                    aspectRatio="auto"
+                                    placeholder="Subir logotipo"
+                                    className="mb-2"
+                                />
+                                <p className="text-xs text-zinc-500">Recomendado: PNG o SVG, máximo 5MB</p>
                             </div>
 
                             {/* Isotipo */}
                             <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
                                 <h3 className="text-lg font-semibold text-white mb-4">Isotipo (Icono)</h3>
-                                <div className="space-y-4">
-                                    <div className="w-full h-32 bg-zinc-800 rounded-lg border-2 border-dashed border-zinc-600 flex items-center justify-center">
-                                        {negocio.isotipoUrl ? (
-                                            <img
-                                                src={negocio.isotipoUrl}
-                                                alt="Isotipo"
-                                                className="max-h-full max-w-full object-contain"
-                                            />
-                                        ) : (
-                                            <div className="text-center text-zinc-500">
-                                                <Upload className="w-8 h-8 mx-auto mb-2" />
-                                                <p className="text-sm">Subir isotipo</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700"
-                                        onChange={(e) => e.target.files?.[0] && handleImageUpload('isotipo', e.target.files[0])}
-                                    />
-                                    <p className="text-xs text-zinc-500">
-                                        Para favicon y apps. Cuadrado, PNG o ICO, máximo 1MB
-                                    </p>
-                                </div>
+                                <ImageUploader
+                                    category="negocio"
+                                    subcategory="isotipo"
+                                    currentImageUrl={negocio.isotipoUrl}
+                                    onImageChange={handleIsotipoChange}
+                                    maxSize={2}
+                                    aspectRatio="square"
+                                    placeholder="Subir isotipo"
+                                    className="mb-2"
+                                />
+                                <p className="text-xs text-zinc-500">
+                                    Para favicon y apps. Cuadrado, PNG o ICO, máximo 2MB
+                                </p>
                             </div>
 
                             {/* Botón Guardar */}
