@@ -299,14 +299,42 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
     }
 
     // 🏦 Función específica para cerrar modal SPEI sin eliminar Payment Intent
-    const handleSPEIClose = () => {
-        console.log('🏦 SPEI: Cerrando modal sin eliminar Payment Intent:', currentPaymentIntentId)
+    const handleSPEIClose = async () => {
+        console.log('🏦 SPEI: Cerrando modal y cancelando Payment Intent:', currentPaymentIntentId)
 
-        // Solo cerrar modal y limpiar estado local, preservar Payment Intent
+        setCancelandoPago(true) // 🔄 Mostrar estado de cancelación
+
+        // 🗑️ Cancelar Payment Intent igual que con tarjetas
+        if (currentPaymentIntentId) {
+            try {
+                console.log('🗑️ Cancelando Payment Intent SPEI:', currentPaymentIntentId)
+
+                const response = await fetch('/api/cliente/cancel-payment-intent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        paymentIntentId: currentPaymentIntentId
+                    }),
+                })
+
+                const data = await response.json()
+
+                if (response.ok) {
+                    console.log('✅ Payment Intent SPEI limpiado:', data)
+                } else {
+                    console.error('⚠️ Error al limpiar Payment Intent SPEI:', data.error)
+                }
+            } catch (error) {
+                console.error('❌ Error en limpieza de Payment Intent SPEI:', error)
+            }
+        }
+
+        // Limpiar estado del componente
         setShowStripeModal(false)
         setClientSecret(null)
         setCurrentPaymentIntentId(null)
         setProcesandoPago(false)
+        setProcesandoConfirmacion(false)
         setCancelandoPago(false)
     }
 
@@ -488,150 +516,105 @@ export default function CompletarPago({ cotizacionId, eventoId, saldoPendiente, 
                 </CardContent>
             </Card>
 
-            {/* Modal de Stripe con Elements */}
+            {/* Modal de Stripe con Elements - RESPONSIVO */}
             {showStripeModal && clientSecret && (
-                <div className="fixed inset-0 bg-zinc-900 z-50 overflow-y-auto">
-                    <div className="min-h-screen p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-white text-2xl font-bold">
-                                {cancelandoPago
-                                    ? '🔄 Cancelando pago...'
-                                    : metodoPago === 'spei' ? 'Transferencia SPEI' : 'Completar Pago'
-                                }
-                            </h2>
-                            {/* Ocultar botón X cuando es SPEI para evitar confusión */}
-                            {metodoPago !== 'spei' && (
-                                <button
-                                    onClick={handleStripeCancel}
-                                    disabled={cancelandoPago || procesandoPago}
-                                    className={`text-3xl transition-all duration-200 ${(cancelandoPago || procesandoPago)
-                                        ? 'text-zinc-600 cursor-not-allowed'
-                                        : 'text-zinc-400 hover:text-white'
-                                        }`}
-                                    title={cancelandoPago ? 'Procesando...' : procesandoPago ? 'Procesando pago...' : 'Cancelar pago'}
-                                >
-                                    {(cancelandoPago || procesandoPago) ? (
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-6 h-6 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></div>
-                                        </div>
-                                    ) : (
-                                        '×'
-                                    )}
-                                </button>
-                            )}
-                        </div>
-
-                        <Elements
-                            stripe={stripePromise}
-                            options={{
-                                clientSecret,
-                                appearance: {
-                                    theme: 'night',
-                                    variables: {
-                                        colorPrimary: '#3b82f6',
-                                        colorBackground: '#27272a',
-                                        colorText: '#ffffff',
-                                        colorDanger: '#ef4444',
-                                        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-                                        spacingUnit: '4px',
-                                        borderRadius: '8px',
-                                    }
-                                }
-                            }}
-                        >
-                            {/* Ficha informativa detallada para SPEI */}
-                            {metodoPago === 'spei' && (
-                                <div className="mb-6 space-y-4">
-                                    {/* Información principal */}
-                                    <div className="p-5 bg-blue-900/20 border border-blue-700 rounded-lg">
-                                        <div className="flex items-start space-x-3">
-                                            <div className="bg-blue-600 rounded-full p-2">
-                                                <Building2 className="h-5 w-5 text-white" />
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto">
+                    <div className="min-h-screen py-6 px-4 flex items-start justify-center">
+                        <div className="w-full max-w-2xl mx-auto bg-zinc-900 rounded-lg border border-zinc-700 shadow-2xl">
+                            <div className="p-6">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-white text-xl md:text-2xl font-bold">
+                                        {cancelandoPago
+                                            ? '🔄 Cancelando pago...'
+                                            : metodoPago === 'spei' ? 'Transferencia SPEI' : 'Completar Pago'
+                                        }
+                                    </h2>
+                                    {/* Botón cerrar para todos los métodos de pago */}
+                                    <button
+                                        onClick={metodoPago === 'spei' ? handleSPEIClose : handleStripeCancel}
+                                        disabled={cancelandoPago || procesandoPago}
+                                        className={`text-2xl md:text-3xl transition-all duration-200 ${(cancelandoPago || procesandoPago)
+                                            ? 'text-zinc-600 cursor-not-allowed'
+                                            : 'text-zinc-400 hover:text-white'
+                                            }`}
+                                        title={cancelandoPago ? 'Procesando...' : procesandoPago ? 'Procesando pago...' : 'Cancelar pago'}
+                                    >
+                                        {(cancelandoPago || procesandoPago) ? (
+                                            <div className="flex items-center space-x-2">
+                                                <div className="w-5 h-5 md:w-6 md:h-6 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></div>
                                             </div>
-                                            <div className="flex-1">
-                                                <h3 className="text-blue-300 font-semibold text-lg mb-2">Transferencia SPEI - Información importante</h3>
-                                                <div className="text-blue-100 text-sm space-y-2">
-                                                    <p className="font-medium text-blue-200">Al confirmar obtener los datos bancarios:</p>
-                                                    <div className="pl-4 space-y-1">
-                                                        <p>• Se generarán los datos bancarios para tu transferencia</p>
-                                                        <p>• Tu pago quedará registrado como <span className="font-semibold text-yellow-300">"PENDIENTE"</span></p>
-                                                        <p>• Irás a una página con instrucciones detalladas</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Estado y proceso */}
-                                    <div className="p-4 bg-yellow-900/20 border border-yellow-700 rounded-lg">
-                                        <div className="flex items-start space-x-3">
-                                            <div className="bg-yellow-600 rounded-full p-1.5">
-                                                <Clock className="h-4 w-4 text-white" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <h4 className="text-yellow-300 font-medium mb-1">Estado del pago</h4>
-                                                <div className="text-yellow-100 text-sm space-y-1">
-                                                    <p>• El estatus será <span className="font-semibold">"PENDIENTE"</span> hasta realizar la transferencia</p>
-                                                    <p>• Se actualizará automáticamente cuando tu banco notifique la transacción</p>
-                                                    <p>• Recibirás confirmación por email una vez procesado</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Proceso paso a paso */}
-                                    <div className="p-4 bg-green-900/20 border border-green-700 rounded-lg">
-                                        <div className="flex items-start space-x-3">
-                                            <div className="bg-green-600 rounded-full p-1.5">
-                                                <CheckCircle className="h-4 w-4 text-white" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <h4 className="text-green-300 font-medium mb-2">Proceso de pago</h4>
-                                                <div className="text-green-100 text-sm space-y-1">
-                                                    <div className="flex items-center space-x-2">
-                                                        <span className="bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">1</span>
-                                                        <span>Obtener datos bancarios (CLABE interbancaria)</span>
-                                                    </div>
-                                                    <div className="flex items-center space-x-2">
-                                                        <span className="bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">2</span>
-                                                        <span>Realizar transferencia desde tu banco o app bancaria</span>
-                                                    </div>
-                                                    <div className="flex items-center space-x-2">
-                                                        <span className="bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">3</span>
-                                                        <span>El pago se reflejará automáticamente (puede tardar unos minutos)</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                        ) : (
+                                            '×'
+                                        )}
+                                    </button>
                                 </div>
-                            )}
 
-                            <FormularioPagoStripe
-                                cotizacionId={cotizacionId}
-                                paymentData={{
-                                    montoFinal: metodoPago === 'spei' ? parseFloat(montoAPagar) : montoConComision,
-                                    esMSI: false, // Por ahora sin MSI para pagos de cliente
-                                    numMSI: 0,
-                                    tipoPago: metodoPago === 'spei' ? 'spei' : 'card',
-                                    cotizacion: {
-                                        nombre: `Pago parcial - ${formatMoney(parseFloat(montoAPagar))}`,
-                                        cliente: cliente?.nombre || 'Cliente'
-                                    },
-                                    metodo: {
-                                        nombre: metodoPago === 'spei'
-                                            ? 'Transferencia SPEI (sin comisión)'
-                                            : 'Pago con tarjeta (incluye comisión)',
-                                        tipo: 'single'
-                                    }
-                                }}
-                                onSuccess={handleStripeSuccess}
-                                onCancel={metodoPago === 'spei' ? handleSPEIClose : handleStripeCancel}
-                                isCanceling={cancelandoPago}
-                                isProcessingPayment={procesandoPago}
-                                isProcessingConfirmation={procesandoConfirmacion}
-                            />
-                        </Elements>
+                                <Elements
+                                    stripe={stripePromise}
+                                    options={{
+                                        clientSecret,
+                                        appearance: {
+                                            theme: 'night',
+                                            variables: {
+                                                colorPrimary: '#3b82f6',
+                                                colorBackground: '#27272a',
+                                                colorText: '#ffffff',
+                                                colorDanger: '#ef4444',
+                                                fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                                                spacingUnit: '4px',
+                                                borderRadius: '8px',
+                                            }
+                                        }
+                                    }}
+                                >
+                                    {/* Ficha informativa simplificada para SPEI */}
+                                    {metodoPago === 'spei' && (
+                                        <div className="mb-6">
+                                            <div className="p-4 bg-blue-900/20 border border-blue-700 rounded-lg">
+                                                <div className="flex items-start space-x-3">
+                                                    <div className="bg-blue-600 rounded-full p-2">
+                                                        <Building2 className="h-4 w-4 md:h-5 md:w-5 text-white" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h3 className="text-blue-300 font-semibold text-base md:text-lg mb-2">Transferencia SPEI</h3>
+                                                        <div className="text-blue-100 text-sm space-y-2">
+                                                            <p>• Obtendrás los datos bancarios para realizar tu transferencia</p>
+                                                            <p>• El pago estará <span className="font-semibold text-yellow-300">"PENDIENTE"</span> hasta que se complete la transferencia</p>
+                                                            <p>• Se actualizará automáticamente cuando tu banco notifique el pago</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <FormularioPagoStripe
+                                        cotizacionId={cotizacionId}
+                                        paymentData={{
+                                            montoFinal: metodoPago === 'spei' ? parseFloat(montoAPagar) : montoConComision,
+                                            esMSI: false, // Por ahora sin MSI para pagos de cliente
+                                            numMSI: 0,
+                                            tipoPago: metodoPago === 'spei' ? 'spei' : 'card',
+                                            cotizacion: {
+                                                nombre: `Pago parcial - ${formatMoney(parseFloat(montoAPagar))}`,
+                                                cliente: cliente?.nombre || 'Cliente'
+                                            },
+                                            metodo: {
+                                                nombre: metodoPago === 'spei'
+                                                    ? 'Transferencia SPEI (sin comisión)'
+                                                    : 'Pago con tarjeta (incluye comisión)',
+                                                tipo: 'single'
+                                            }
+                                        }}
+                                        onSuccess={handleStripeSuccess}
+                                        onCancel={metodoPago === 'spei' ? handleSPEIClose : handleStripeCancel}
+                                        isCanceling={cancelandoPago}
+                                        isProcessingPayment={procesandoPago}
+                                        isProcessingConfirmation={procesandoConfirmacion}
+                                    />
+                                </Elements>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
