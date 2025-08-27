@@ -14,12 +14,8 @@ export default function Page() {
         setIsClient(true)
     }, [])
 
-    const handleVolverACotizacion = () => {
-        if (cotizacionId) {
-            window.location.href = `/evento/cotizacion/${cotizacionId}`
-        } else {
-            window.location.href = '/'
-        }
+    const handleAccederAlPortal = () => {
+        window.location.href = '/cliente/auth/login'
     }
 
     const getPendingMessage = () => {
@@ -64,14 +60,14 @@ export default function Page() {
                 </div>
 
                 <p className='mb-10 leading-6 text-zinc-400'>
-                    Mientras tanto, puedes revisar los detalles de tu cotización.
+                    Accede a tu portal de cliente para seguir el estado de tu cotización y pagos.
                 </p>
 
                 <button
                     className="bg-zinc-700 hover:bg-zinc-600 text-white font-bold py-3 px-6 rounded mb-10"
-                    onClick={handleVolverACotizacion}
+                    onClick={handleAccederAlPortal}
                 >
-                    Ver mi cotización
+                    Acceder al portal
                 </button>
 
                 <p className='text-zinc-300'>
