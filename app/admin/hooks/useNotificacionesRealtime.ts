@@ -18,10 +18,13 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
         try {
             const { obtenerNotificaciones } = await import('../_lib/notificacion.actions')
             const result = await obtenerNotificaciones()
-            setNotificaciones(result || [])
+            
+            // ✅ Filtrar notificaciones ocultas por seguridad extra
+            const notificacionesVisibles = result.filter((n: any) => n.status !== 'oculta')
+            setNotificaciones(notificacionesVisibles || [])
 
-            // Contar nuevas notificaciones
-            const noLeidas = result.filter((n: any) => n.status !== 'leida')
+            // Contar nuevas notificaciones (pendientes/no leídas)
+            const noLeidas = notificacionesVisibles.filter((n: any) => n.status !== 'leida')
             setNuevasNotificaciones(noLeidas.length)
         } catch (error) {
             console.error('Error al recargar notificaciones:', error)
@@ -52,8 +55,8 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
                 {
                     event: '*',
                     schema: 'public',
-                    table: 'Notificacion',
-                    filter: 'status=neq.oculta'
+                    table: 'Notificacion'
+                    // ✅ Removido filtro para escuchar TODOS los cambios
                 },
                 async (payload) => {
                     console.log('🔔 Evento realtime en notificaciones:', payload.eventType, payload)
@@ -82,16 +85,28 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
                                 // Notificación actualizada (cambio de status)
                                 const notifActualizada = payload.new
                                 if (notifActualizada && notifActualizada.id) {
-                                    setNotificaciones(prev =>
-                                        prev.map(n =>
-                                            n.id === notifActualizada.id
-                                                ? { ...n, ...notifActualizada }
-                                                : n
+                                    // ✅ Si la notificación fue ocultada, removerla del estado
+                                    if (notifActualizada.status === 'oculta') {
+                                        setNotificaciones(prev =>
+                                            prev.filter(n => n.id !== notifActualizada.id)
                                         )
-                                    )
-
-                                    // Recalcular contador de nuevas
-                                    setTimeout(() => recargarNotificaciones(), 500)
+                                        // Decrementar contador si era una notificación no leída
+                                        const notifAnterior = notificaciones.find(n => n.id === notifActualizada.id)
+                                        if (notifAnterior && notifAnterior.status !== 'leida') {
+                                            setNuevasNotificaciones(prev => Math.max(0, prev - 1))
+                                        }
+                                    } else {
+                                        // Actualizar la notificación en el estado
+                                        setNotificaciones(prev =>
+                                            prev.map(n =>
+                                                n.id === notifActualizada.id
+                                                    ? { ...n, ...notifActualizada }
+                                                    : n
+                                            )
+                                        )
+                                        // Recalcular contador de nuevas
+                                        setTimeout(() => recargarNotificaciones(), 500)
+                                    }
                                 }
                                 break
 

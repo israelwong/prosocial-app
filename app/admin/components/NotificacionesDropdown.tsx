@@ -57,10 +57,16 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
     // Ocultar notificación
     const handleOcultar = async (notificacionId: string) => {
         try {
+            console.log('🗑️ Ocultando notificación:', notificacionId)
             await ocultarNotificacion(notificacionId)
-            // El realtime se encargará de actualizar el estado automáticamente
+            console.log('✅ Notificación ocultada correctamente')
+            
+            // ✅ Optimistic update: Remover inmediatamente de la UI
+            // El realtime confirmará el cambio después
+            // setNotificaciones(prev => prev.filter(n => n.id !== notificacionId))
+            
         } catch (error) {
-            console.error('Error al ocultar notificación:', error)
+            console.error('❌ Error al ocultar notificación:', error)
         }
     }
 
