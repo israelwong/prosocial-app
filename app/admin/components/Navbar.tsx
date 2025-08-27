@@ -8,6 +8,7 @@ import { User } from '@/app/admin/_lib/types';
 import { verifyToken, cerrarSesion } from '@/app/lib/auth';
 import { Bell, Menu, X, LogOut, ChevronDown, User as UserIcon, Settings, LayoutDashboard } from 'lucide-react'
 import { supabase } from '../_lib/supabase';
+import NotificacionesDropdown from './NotificacionesDropdown';
 
 function Navbar() {
     const [user, setUser] = useState<User | null>(null);
@@ -132,11 +133,8 @@ function Navbar() {
                     {/* Right Side - Desktop */}
                     <div className='hidden md:flex items-center space-x-4'>
 
-                        {/* Notifications */}
-                        <button className='relative p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 rounded-lg transition-all duration-200'>
-                            <Bell size={20} />
-                            <span className='absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full'></span>
-                        </button>
+                        {/* Notifications Dropdown */}
+                        <NotificacionesDropdown userId={user?.id} />
 
                         {/* User Menu */}
                         <div className='relative' ref={userMenuRef}>
@@ -225,12 +223,15 @@ function Navbar() {
                                 </div>
                             </div>
                             <div className='mt-3 px-2 space-y-1'>
+                                {/* Notificaciones en móvil */}
+                                <div className="px-3 py-2">
+                                    <NotificacionesDropdown userId={user?.id} />
+                                </div>
                                 <button
                                     className='flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 w-full text-left transition-all duration-200'
                                 >
                                     <Bell size={18} />
                                     <span>Notificaciones</span>
-                                    <span className='ml-auto w-2 h-2 bg-red-500 rounded-full'></span>
                                 </button>
                                 <button
                                     onClick={handleCerrarSesion}
