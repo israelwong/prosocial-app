@@ -128,11 +128,30 @@ export default function FormularioPagoStripe({
                     } else {
                         setMensaje("Un error inesperado ocurrió. Inténtalo de nuevo.");
                     }
-                } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-                    console.log('✅ Pago procesado correctamente (callback)');
-                    onSuccess?.(paymentIntent);
+                } else if (paymentIntent) {
+                    // 🏦 LÓGICA ESPECÍFICA PARA SPEI
+                    if (paymentData.tipoPago === 'spei') {
+                        // Para SPEI, considerar exitoso si está en processing, requires_action, o succeeded
+                        if (['succeeded', 'processing', 'requires_action'].includes(paymentIntent.status)) {
+                            console.log('✅ Pago SPEI procesado correctamente:', paymentIntent.status);
+                            onSuccess?.(paymentIntent);
+                        } else {
+                            console.log('⏳ Pago SPEI en estado:', paymentIntent.status);
+                            setMensaje('Tu pago SPEI está siendo procesado. Recibirás las instrucciones bancarias por correo.');
+                        }
+                    } else {
+                        // 💳 LÓGICA PARA TARJETAS (solo succeeded)
+                        if (paymentIntent.status === 'succeeded') {
+                            console.log('✅ Pago con tarjeta procesado correctamente (callback)');
+                            onSuccess?.(paymentIntent);
+                        } else {
+                            console.log('⏳ Pago en proceso...', paymentIntent.status);
+                            setMensaje('Tu pago está siendo procesado...');
+                        }
+                    }
                 } else {
-                    console.log('⏳ Pago en proceso...', paymentIntent?.status);
+                    console.log('⚠️ No se recibió payment intent');
+                    setMensaje('Error procesando el pago. Por favor inténtalo de nuevo.');
                 }
             }
         } catch (err: any) {

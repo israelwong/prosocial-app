@@ -485,29 +485,29 @@ export default function CotizacionDetalle({
     }
 
     const onPagoExitoso = (paymentIntent?: any) => {
-        console.log('✅ Pago procesado exitosamente', paymentIntent)
-
         // Cerrar el modal
         setModalPagoAbierto(false)
         setClientSecret(null)
         setProcesandoPago(false)
 
-        // Para SPEI, mostrar mensaje específico
+        // Determinar el tipo de pago
         const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
         const metodoActivo = condicionActiva?.metodosPago.find((m: any) => m.metodoPagoId === metodoPagoSeleccionado)
         const esSpei = metodoActivo?.payment_method === 'customer_balance' ||
             metodoActivo?.metodo_pago?.toLowerCase().includes('spei');
 
-        if (esSpei) {
-            console.log('🏦 Pago SPEI procesado - Instrucciones bancarias enviadas')
-            alert('¡Perfecto! Recibirás las instrucciones bancarias para realizar tu pago SPEI por correo electrónico.')
-        } else {
-            console.log('💳 Pago con tarjeta procesado exitosamente')
-            alert('¡Pago procesado exitosamente!')
-        }
+        // � Redirigir a la página de checkout apropiada
+        const paymentIntentId = paymentIntent?.id || 'unknown'
+        const cotizacionId = cotizacion.id
 
-        // Opcional: Actualizar el estado de la cotización o recargar los datos
-        // setCotizacion(prevState => ({ ...prevState, status: 'PAGADO' }))
+        if (esSpei) {
+            // SPEI: Redirigir a página de pending con información SPEI
+            const estado = paymentIntent?.status || 'processing'
+            router.push(`/checkout/pending?cotizacion=${cotizacionId}&payment_intent=${paymentIntentId}&method=spei&status=${estado}`)
+        } else {
+            // Tarjetas: Redirigir a página de success
+            router.push(`/checkout/success?cotizacion=${cotizacionId}&payment_intent=${paymentIntentId}&method=card`)
+        }
     }
 
     const handleCondicionChange = (condicionId: string) => {
