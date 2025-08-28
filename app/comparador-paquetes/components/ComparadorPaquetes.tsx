@@ -238,21 +238,6 @@ export default function ComparadorPaquetes() {
     }
 
     // Funciones para manejo de filtros de columnas
-    const inicializarColumnasVisibles = (paquetesList: Paquete[]) => {
-        const columnasIniciales: { [key: string]: boolean } = {}
-
-        // Solo mostrar cotización si existe
-        if (cotizacion) {
-            columnasIniciales.cotizacion = true
-        }
-
-        paquetesList.forEach(paquete => {
-            columnasIniciales[paquete.id] = true // Todas visibles por defecto
-        })
-
-        setColumnasVisibles(columnasIniciales)
-    }
-
     const toggleColumnaVisible = (columnaId: string) => {
         setColumnasVisibles(prev => ({
             ...prev,
@@ -298,8 +283,19 @@ export default function ComparadorPaquetes() {
                     const paquetesData = await paquetesResponse.json()
                     setPaquetes(paquetesData)
 
-                    // Inicializar columnas visibles
-                    inicializarColumnasVisibles(paquetesData)
+                    // Inicializar columnas visibles DESPUÉS de establecer la cotización
+                    const columnasIniciales: { [key: string]: boolean } = {}
+                    
+                    // Solo mostrar cotización si existe
+                    if (cotizacionPrincipal) {
+                        columnasIniciales.cotizacion = true
+                    }
+
+                    paquetesData.forEach((paquete: any) => {
+                        columnasIniciales[paquete.id] = true // Todas visibles por defecto
+                    })
+
+                    setColumnasVisibles(columnasIniciales)
 
                     // Agrupar servicios de cada paquete
                     const serviciosPaquetesMap: { [key: string]: ServiciosAgrupados } = {}
@@ -417,19 +413,21 @@ export default function ComparadorPaquetes() {
 
                     {mostrarFiltros && (
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {/* Toggle para cotización */}
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    id="cotizacion-toggle"
-                                    checked={columnasVisibles.cotizacion || false}
-                                    onChange={() => toggleColumnaVisible('cotizacion')}
-                                    className="w-4 h-4 text-green-600 bg-zinc-700 border-zinc-600 rounded focus:ring-green-500"
-                                />
-                                <label htmlFor="cotizacion-toggle" className="text-sm text-green-400 font-medium">
-                                    Tu Cotización
-                                </label>
-                            </div>
+                            {/* Toggle para cotización - Solo si existe */}
+                            {cotizacion && (
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="cotizacion-toggle"
+                                        checked={columnasVisibles.cotizacion || false}
+                                        onChange={() => toggleColumnaVisible('cotizacion')}
+                                        className="w-4 h-4 text-green-600 bg-zinc-700 border-zinc-600 rounded focus:ring-green-500"
+                                    />
+                                    <label htmlFor="cotizacion-toggle" className="text-sm text-green-400 font-medium">
+                                        Tu Cotización
+                                    </label>
+                                </div>
+                            )}
 
                             {/* Toggles para paquetes */}
                             {paquetes.map(paquete => (
