@@ -45,7 +45,11 @@ export async function obtenerPaquetesParaCliente() {
                             status: 'active',
                             visible_cliente: true
                         },
-                        orderBy: { posicion: 'asc' }
+                        orderBy: [
+                            { ServicioCategoria: { seccionCategoria: { Seccion: { posicion: 'asc' } } } },
+                            { ServicioCategoria: { posicion: 'asc' } },
+                            { Servicio: { posicion: 'asc' } }
+                        ]
                     }
                 }
             },

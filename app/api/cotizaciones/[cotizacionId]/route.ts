@@ -43,7 +43,12 @@ export async function GET(
                                 }
                             }
                         }
-                    }
+                    },
+                    orderBy: [
+                        { Servicio: { ServicioCategoria: { seccionCategoria: { Seccion: { posicion: 'asc' } } } } },
+                        { Servicio: { ServicioCategoria: { posicion: 'asc' } } },
+                        { Servicio: { posicion: 'asc' } }
+                    ]
                 }
             }
         })

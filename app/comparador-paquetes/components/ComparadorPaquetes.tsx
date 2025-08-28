@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
-import { ArrowLeft, Check, X, Package, CreditCard, MessageCircle } from 'lucide-react'
+import { ArrowLeft, Check, X, Package, CreditCard, MessageCircle, Filter, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 // Tipos
@@ -66,6 +66,10 @@ export default function ComparadorPaquetes() {
     const [serviciosPaquetes, setServiciosPaquetes] = useState<{ [key: string]: ServiciosAgrupados }>({})
     const [loading, setLoading] = useState(true)
     const [eventoTipoId, setEventoTipoId] = useState<string | null>(null)
+
+    // Estados para el filtro de columnas
+    const [columnasVisibles, setColumnasVisibles] = useState<{ [key: string]: boolean }>({})
+    const [mostrarFiltros, setMostrarFiltros] = useState(false)
 
     // Función para agrupar servicios (VERSIÓN ORIGINAL)
     const agruparServicios = (servicios: any[]): ServiciosAgrupados => {
@@ -201,6 +205,33 @@ export default function ComparadorPaquetes() {
         }
     }
 
+    // Funciones para manejo de filtros de columnas
+    const inicializarColumnasVisibles = (paquetesList: Paquete[]) => {
+        const columnasIniciales: { [key: string]: boolean } = {
+            cotizacion: true // La cotización siempre visible
+        }
+
+        paquetesList.forEach(paquete => {
+            columnasIniciales[paquete.id] = true // Todas visibles por defecto
+        })
+
+        setColumnasVisibles(columnasIniciales)
+    }
+
+    const toggleColumnaVisible = (columnaId: string) => {
+        setColumnasVisibles(prev => ({
+            ...prev,
+            [columnaId]: !prev[columnaId]
+        }))
+    }
+
+    const formatearPrecio = (precio: number): string => {
+        return new Intl.NumberFormat('es-MX', {
+            style: 'currency',
+            currency: 'MXN'
+        }).format(precio)
+    }
+
     useEffect(() => {
         if (!cotizacionId) return
 
@@ -226,6 +257,9 @@ export default function ComparadorPaquetes() {
 
                     const paquetesData = await paquetesResponse.json()
                     setPaquetes(paquetesData)
+
+                    // Inicializar columnas visibles
+                    inicializarColumnasVisibles(paquetesData)
 
                     // Agrupar servicios de cada paquete
                     const serviciosPaquetesMap: { [key: string]: ServiciosAgrupados } = {}
@@ -295,7 +329,7 @@ export default function ComparadorPaquetes() {
                 </div>
 
                 {/* Header con precios */}
-                <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700 mb-6">
+                {/* <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700 mb-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {cotizacion && (
                             <div className="text-center p-4 bg-zinc-700 rounded-lg">
@@ -314,6 +348,57 @@ export default function ComparadorPaquetes() {
                             </div>
                         ))}
                     </div>
+                </div> */}
+
+                {/* Filtros de columnas */}
+                <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <Filter className="w-5 h-5 text-zinc-400" />
+                            <h3 className="text-lg font-semibold text-white">Filtrar</h3>
+                        </div>
+                        <button
+                            onClick={() => setMostrarFiltros(!mostrarFiltros)}
+                            className="flex items-center gap-2 px-3 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition-colors text-white text-sm"
+                        >
+                            {mostrarFiltros ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            {mostrarFiltros ? 'Ocultar' : 'Mostrar'}
+                        </button>
+                    </div>
+
+                    {mostrarFiltros && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {/* Toggle para cotización */}
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="cotizacion-toggle"
+                                    checked={columnasVisibles.cotizacion || false}
+                                    onChange={() => toggleColumnaVisible('cotizacion')}
+                                    className="w-4 h-4 text-green-600 bg-zinc-700 border-zinc-600 rounded focus:ring-green-500"
+                                />
+                                <label htmlFor="cotizacion-toggle" className="text-sm text-green-400 font-medium">
+                                    Tu Cotización
+                                </label>
+                            </div>
+
+                            {/* Toggles para paquetes */}
+                            {paquetes.map(paquete => (
+                                <div key={paquete.id} className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id={`paquete-${paquete.id}`}
+                                        checked={columnasVisibles[paquete.id] || false}
+                                        onChange={() => toggleColumnaVisible(paquete.id)}
+                                        className="w-4 h-4 text-blue-600 bg-zinc-700 border-zinc-600 rounded focus:ring-blue-500"
+                                    />
+                                    <label htmlFor={`paquete-${paquete.id}`} className="text-sm text-blue-400 font-medium truncate">
+                                        {paquete.nombre}
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Tabla de comparación anidada */}
@@ -326,21 +411,26 @@ export default function ComparadorPaquetes() {
                                     <th className="text-left p-4 text-white font-semibold min-w-[300px]">
                                         Servicios
                                     </th>
-                                    {cotizacion && (
-                                        <th className="text-center p-3 text-white font-semibold min-w-[120px]">
-                                            <div className="text-green-400">Tu Cotización</div>
+                                    {cotizacion && columnasVisibles.cotizacion && (
+                                        <th className="text-center p-3 text-white font-semibold min-w-[140px]">
+                                            <div className="text-green-400 font-bold">Tu Cotización</div>
+                                            <div className="text-green-300 text-sm font-normal">
+                                                {formatearPrecio(cotizacion.precio || 0)}
+                                            </div>
                                         </th>
                                     )}
-                                    {paquetes.map(paquete => (
-                                        <th key={paquete.id} className="text-center p-3 text-white font-semibold min-w-[120px]">
-                                            <div className="text-blue-400">{paquete.nombre}</div>
+                                    {paquetes.filter(paquete => columnasVisibles[paquete.id]).map(paquete => (
+                                        <th key={paquete.id} className="text-center p-3 text-white font-semibold min-w-[140px]">
+                                            <div className="text-blue-400 font-bold">{paquete.nombre}</div>
+                                            <div className="text-blue-300 text-sm font-normal">
+                                                {formatearPrecio(paquete.precio || 0)}
+                                            </div>
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
                                 {Array.from(todasSecciones.entries())
-                                    .sort(([, a], [, b]) => (a.posicion || 0) - (b.posicion || 0))
                                     .map(([seccionNombre, seccionData]) => (
                                         <React.Fragment key={seccionNombre}>
                                             {/* Header de Sección */}
@@ -353,12 +443,11 @@ export default function ComparadorPaquetes() {
                                             </tr>
 
                                             {Array.from(seccionData.categorias.entries())
-                                                .sort(([, a], [, b]) => (a.posicion || 0) - (b.posicion || 0))
                                                 .map(([categoriaNombre, categoriaData]) => (
                                                     <React.Fragment key={categoriaNombre}>
                                                         {/* Header de Categoría */}
                                                         <tr className="bg-zinc-700/70">
-                                                            <td colSpan={1 + (cotizacion ? 1 : 0) + paquetes.length} className="p-3">
+                                                            <td colSpan={1 + (cotizacion && columnasVisibles.cotizacion ? 1 : 0) + paquetes.filter(p => columnasVisibles[p.id]).length} className="p-3">
                                                                 <div className="flex items-center gap-2">
                                                                     <div className="w-1 h-4 bg-blue-500 rounded"></div>
                                                                     <h4 className="text-blue-300 font-semibold text-sm">
@@ -382,7 +471,7 @@ export default function ComparadorPaquetes() {
                                                                         </td>
 
                                                                         {/* Comparación - Tu Cotización */}
-                                                                        {cotizacion && (
+                                                                        {cotizacion && columnasVisibles.cotizacion && (
                                                                             <td className="p-3 text-center">
                                                                                 {servicioEstaIncluido(servicioId, serviciosCotizacion) ? (
                                                                                     <Check className="w-5 h-5 text-green-400 mx-auto" />
@@ -393,7 +482,7 @@ export default function ComparadorPaquetes() {
                                                                         )}
 
                                                                         {/* Comparación - Paquetes */}
-                                                                        {paquetes.map(paquete => (
+                                                                        {paquetes.filter(paquete => columnasVisibles[paquete.id]).map(paquete => (
                                                                             <td key={paquete.id} className="p-3 text-center">
                                                                                 {servicioEstaIncluido(servicioId, serviciosPaquetes[paquete.id] || {}) ? (
                                                                                     <Check className="w-5 h-5 text-green-400 mx-auto" />
@@ -413,30 +502,30 @@ export default function ComparadorPaquetes() {
                                 {/* Fila de botones de acción */}
                                 <tr className="bg-zinc-700 border-t-2 border-zinc-600">
                                     <td className="p-4">
-                                        <div className="text-white font-semibold text-lg">
-                                            🎯 Acciones
+                                        <div className="text-white font-medium">
+                                            Acciones
                                         </div>
                                     </td>
-                                    {cotizacion && (
+                                    {cotizacion && columnasVisibles.cotizacion && (
                                         <td className="p-3 text-center">
                                             <Link
                                                 href={`/evento/${cotizacion.evento.id}/cotizacion/${cotizacionId}`}
-                                                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                                                className="inline-flex items-center gap-1 bg-green-600/80 hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
                                             >
-                                                <CreditCard className="w-4 h-4" />
-                                                Continuar Reservación
+                                                <CreditCard className="w-3.5 h-3.5" />
+                                                Pagar
                                             </Link>
                                         </td>
                                     )}
-                                    {paquetes.map(paquete => (
+                                    {paquetes.filter(paquete => columnasVisibles[paquete.id]).map(paquete => (
                                         <td key={paquete.id} className="p-3 text-center">
-                                            <Button
+                                            <button
                                                 onClick={() => handleSolicitarPaquete(paquete.id)}
-                                                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
+                                                className="inline-flex items-center gap-1 bg-purple-600/80 hover:bg-purple-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
                                             >
-                                                <MessageCircle className="w-4 h-4" />
-                                                Solicitar Paquete
-                                            </Button>
+                                                <MessageCircle className="w-3.5 h-3.5" />
+                                                Solicitar
+                                            </button>
                                         </td>
                                     ))}
                                 </tr>
