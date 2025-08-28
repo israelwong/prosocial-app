@@ -191,6 +191,7 @@ model Cotizacion {
   Costos                             CotizacionCosto[]
   Pago                               Pago[]
   CotizacionVisita                   CotizacionVisita[]
+  SolicitudPaquete                   SolicitudPaquete[]
 }
 
 model CotizacionServicio {
@@ -368,6 +369,7 @@ model Paquete {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   PaqueteServicio PaqueteServicio[]
+  SolicitudPaquete SolicitudPaquete[]
 }
 
 model PaqueteServicio {
@@ -734,5 +736,42 @@ model NegocioHorarios {
   
   @@unique([negocioId, diaSemana])
   @@index([negocioId, activo])
+}
+
+model SolicitudPaquete {
+  id              String    @id @default(cuid())
+  cotizacionId    String
+  Cotizacion      Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
+  paqueteId       String
+  Paquete         Paquete   @relation(fields: [paqueteId], references: [id])
+  
+  // Datos del cliente
+  clienteNombre   String
+  clienteEmail    String
+  clienteTelefono String?
+  mensaje         String?
+  
+  // Datos del paquete (snapshot para referencia)
+  paqueteNombre   String
+  precioPaquete   Float
+  diferenciaPrecio Float? // Diferencia con cotización original
+  
+  // Datos del evento (para referencia rápida)
+  eventoFecha     DateTime?
+  eventoLugar     String?
+  
+  // Estado de la solicitud
+  estado          String    @default("pendiente") // pendiente, procesando, completada, rechazada
+  notas           String?   // Notas del asesor
+  fechaSolicitud  DateTime  @default(now())
+  fechaProcesada  DateTime?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([cotizacionId])
+  @@index([paqueteId])
+  @@index([estado])
+  @@index([fechaSolicitud])
 }
 

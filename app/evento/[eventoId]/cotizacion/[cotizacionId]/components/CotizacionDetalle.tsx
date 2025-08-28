@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { suscribirCotizacion, desuscribirCotizacion, ESTADOS_COTIZACION } from '@/lib/supabase-realtime'
@@ -9,6 +9,8 @@ import { obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condi
 import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions'
 import type { EventoExtendido, ServicioDetalle, EventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.schemas'
 import { verificarDisponibilidadFecha } from '@/app/admin/_lib/agenda.actions'
+import { obtenerPaquetesParaCliente } from '@/app/admin/_lib/actions/paquetes/paquetes.actions'
+import { Package } from 'lucide-react'
 import type { Cliente, EventoTipo, Cotizacion, Evento } from '@/app/admin/_lib/types'
 
 // 🔥 STRIPE ELEMENTS INTEGRATION
@@ -79,7 +81,21 @@ export default function CotizacionDetalle({
     const [procesandoPago, setProcesandoPago] = useState(false)
     const [cancelandoPago, setCancelandoPago] = useState(false) // 🆕 Estado para cancelación
 
+    // 🎁 Estado para verificar si hay paquetes disponibles
+    const [hayPaquetesDisponibles, setHayPaquetesDisponibles] = useState(false)
+
     const router = useRouter()
+
+    // 📊 Verificar si hay paquetes disponibles
+    const verificarPaquetesDisponibles = useCallback(async () => {
+        try {
+            const paquetes = await obtenerPaquetesParaCliente();
+            setHayPaquetesDisponibles(paquetes.length > 0);
+        } catch (error) {
+            console.error("Error al verificar paquetes:", error);
+            setHayPaquetesDisponibles(false);
+        }
+    }, []);
 
     // Función para obtener el total de la cotización
     const calcularTotalCotizacion = () => {
@@ -94,6 +110,7 @@ export default function CotizacionDetalle({
         cargarServiciosAgrupados()
         cargarCondicionesComerciales()
         verificarDisponibilidadReal()
+        verificarPaquetesDisponibles() // 🎁 Verificar paquetes disponibles
 
         if (esRealtime) {
             console.log('Iniciando sesión de tiempo real...')
@@ -680,6 +697,32 @@ export default function CotizacionDetalle({
                     loading={loading}
                     esRealtime={esRealtime}
                 />
+
+                {/* 🎁 Botón minimalista para comparar paquetes */}
+                {hayPaquetesDisponibles && (
+                    <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                                    <Package className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-white">Explora otros paquetes</h3>
+                                    <p className="text-sm text-zinc-300">Compara tu cotización con paquetes disponibles</p>
+                                </div>
+                            </div>
+                            <Link
+                                href={`/comparador-paquetes?cotizacionId=${cotizacion.id}`}
+                                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
+                            >
+                                Ver comparación
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </Link>
+                        </div>
+                    </div>
+                )}
 
                 {/* Condiciones comerciales */}
                 <CondicionesComerciales
