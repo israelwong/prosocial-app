@@ -6,6 +6,7 @@ import { crearNotificacion } from '../_lib/notificacion.actions'
 interface UseNotificacionesRealtimeReturn {
     notificaciones: any[]
     nuevasNotificaciones: number
+    conexionRealtime: 'connecting' | 'connected' | 'disconnected'
     recargarNotificaciones: () => void
     ocultarNotificacionOptimistic: (notificacionId: string) => void
 }
@@ -13,6 +14,9 @@ interface UseNotificacionesRealtimeReturn {
 export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
     const [notificaciones, setNotificaciones] = useState<any[]>([])
     const [nuevasNotificaciones, setNuevasNotificaciones] = useState(0)
+    const [conexionRealtime, setConexionRealtime] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
+    const [reintentos, setReintentos] = useState(0)
+    const maxReintentos = 5
 
     // Función para recargar notificaciones
     const recargarNotificaciones = useCallback(async () => {
@@ -32,22 +36,23 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
         }
     }, [])
 
-    // Configurar suscripción realtime
-    useEffect(() => {
+    // Configurar suscripción realtime con reconexión automática
+    const configurarSuscripcion = useCallback(() => {
         console.log('🔔 Configurando suscripción realtime de notificaciones')
+        setConexionRealtime('connecting')
 
         // Cargar notificaciones iniciales
         recargarNotificaciones()
 
         // Configurar canal realtime con configuración mejorada
         const channel = supabase
-            .channel('notificaciones-changes', {
+            .channel(`notificaciones-realtime-${Date.now()}`, {
                 config: {
                     presence: {
-                        key: 'notifications'
+                        key: 'admin-notifications'
                     },
                     broadcast: {
-                        self: true
+                        self: false // Evitar duplicados
                     }
                 }
             })
@@ -57,26 +62,35 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
                     event: '*',
                     schema: 'public',
                     table: 'Notificacion'
-                    // ✅ Removido filtro para escuchar TODOS los cambios
                 },
                 async (payload) => {
-                    console.log('🔔 Evento realtime en notificaciones:', payload.eventType, payload)
+                    console.log('🔔 Evento realtime en notificaciones:', payload.eventType, payload.new || payload.old)
 
                     try {
                         switch (payload.eventType) {
                             case 'INSERT':
                                 // Nueva notificación creada
                                 const nuevaNotificacion = payload.new
-                                if (nuevaNotificacion && nuevaNotificacion.id) {
-                                    setNotificaciones(prev => [nuevaNotificacion, ...prev])
+                                if (nuevaNotificacion && nuevaNotificacion.id && nuevaNotificacion.status !== 'oculta') {
+                                    console.log('✅ Nueva notificación recibida:', nuevaNotificacion.titulo)
+
+                                    setNotificaciones(prev => {
+                                        // Evitar duplicados
+                                        const existe = prev.find(n => n.id === nuevaNotificacion.id)
+                                        if (existe) return prev
+
+                                        return [nuevaNotificacion, ...prev]
+                                    })
+
                                     setNuevasNotificaciones(prev => prev + 1)
 
-                                    // Mostrar notificación toast (opcional)
+                                    // Mostrar notificación del navegador
                                     if ('Notification' in window && Notification.permission === 'granted') {
                                         new Notification(nuevaNotificacion.titulo, {
                                             body: nuevaNotificacion.mensaje,
                                             icon: '/favicon.ico',
-                                            tag: `notif-${nuevaNotificacion.id}`
+                                            tag: `notif-${nuevaNotificacion.id}`,
+                                            requireInteraction: true
                                         })
                                     }
                                 }
@@ -140,25 +154,51 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
             .subscribe((status, err) => {
                 if (err) {
                     console.error('❌ Error en suscripción de notificaciones:', err)
-                    // En caso de error, recargar notificaciones manualmente
-                    setTimeout(() => {
-                        console.log('🔄 Recargando notificaciones tras error')
-                        recargarNotificaciones()
-                    }, 2000)
+                    setConexionRealtime('disconnected')
+
+                    // Reintentar conexión con backoff exponencial
+                    if (reintentos < maxReintentos) {
+                        const tiempoEspera = Math.min(1000 * Math.pow(2, reintentos), 30000) // Max 30 segundos
+                        console.log(`🔄 Reintentando conexión en ${tiempoEspera / 1000}s (intento ${reintentos + 1}/${maxReintentos})`)
+
+                        setTimeout(() => {
+                            setReintentos(prev => prev + 1)
+                            configurarSuscripcion()
+                        }, tiempoEspera)
+                    } else {
+                        console.log('💥 Máximo número de reintentos alcanzado. Recarga manual necesaria.')
+                    }
                 } else {
                     console.log('✅ Suscripción de notificaciones:', status)
                     if (status === 'SUBSCRIBED') {
                         console.log('🎯 Canal realtime activo y escuchando cambios en Notificacion')
+                        setConexionRealtime('connected')
+                        setReintentos(0) // Reset reintentos en conexión exitosa
+                    } else if (status === 'CHANNEL_ERROR') {
+                        setConexionRealtime('disconnected')
+                    } else if (status === 'TIMED_OUT') {
+                        setConexionRealtime('disconnected')
+                        // Reintentar conexión
+                        setTimeout(() => configurarSuscripcion(), 3000)
                     }
                 }
             })
 
+        return channel
+    }, [recargarNotificaciones, reintentos])
+
+    // Configurar suscripción realtime
+    useEffect(() => {
+        const channel = configurarSuscripcion()
+
         // Cleanup
         return () => {
             console.log('🧹 Limpiando suscripción de notificaciones')
-            supabase.removeChannel(channel)
+            if (channel) {
+                supabase.removeChannel(channel)
+            }
         }
-    }, [recargarNotificaciones])
+    }, [configurarSuscripcion])
 
     // Función para ocultar notificación inmediatamente (optimistic update)
     const ocultarNotificacionOptimistic = useCallback((notificacionId: string) => {
@@ -188,6 +228,7 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
     return {
         notificaciones,
         nuevasNotificaciones,
+        conexionRealtime,
         recargarNotificaciones,
         ocultarNotificacionOptimistic
     }

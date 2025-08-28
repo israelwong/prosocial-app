@@ -40,6 +40,8 @@ export async function crearNotificacion(data: Notificacion) {
             userId: data.userId,
             titulo: data.titulo,
             mensaje: data.mensaje,
+            tipo: data.tipo || 'general',
+            metadata: data.metadata || null,
             status: 'pendiente',
             cotizacionId: data.cotizacionId
         }

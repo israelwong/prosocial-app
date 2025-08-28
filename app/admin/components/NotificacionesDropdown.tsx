@@ -10,6 +10,8 @@ interface Notificacion {
     userId: string | null
     titulo: string
     mensaje: string
+    tipo: string
+    metadata: any
     status: string
     cotizacionId: string | null
     createdAt: Date
@@ -29,6 +31,7 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
     const {
         notificaciones,
         nuevasNotificaciones,
+        conexionRealtime,
         recargarNotificaciones,
         ocultarNotificacionOptimistic
     } = useNotificacionesRealtime()
@@ -74,13 +77,83 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
         }
     }
 
+    // Función para obtener la ruta destino basada en el tipo y metadata
+    const obtenerRutaDestino = (notificacion: Notificacion) => {
+        if (!notificacion.metadata) return null
+
+        const metadata = notificacion.metadata as any
+
+        switch (notificacion.tipo) {
+            case 'solicitud_paquete':
+                return metadata.eventoId
+                    ? `/admin/dashboard/eventos/${metadata.eventoId}`
+                    : null
+
+            case 'pago_confirmado':
+            case 'pago_recibido':
+                return metadata.eventoId
+                    ? `/admin/dashboard/seguimiento/${metadata.eventoId}`
+                    : null
+
+            default:
+                return metadata.rutaDestino || null
+        }
+    }
+
+    // Función para agregar nota a bitácora automáticamente
+    const procesarAccionBitacora = async (notificacion: Notificacion) => {
+        if (!notificacion.metadata) return
+
+        const metadata = notificacion.metadata as any
+
+        if (metadata.accionBitacora?.habilitada && metadata.eventoId) {
+            try {
+                console.log(`📝 Agregando nota a bitácora del evento ${metadata.eventoId}:`, metadata.accionBitacora.mensaje)
+
+                const response = await fetch('/api/admin/eventos/bitacora', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        eventoId: metadata.eventoId,
+                        mensaje: metadata.accionBitacora.mensaje,
+                        importancia: '2'
+                    })
+                })
+
+                if (response.ok) {
+                    console.log('✅ Nota agregada a bitácora exitosamente')
+                } else {
+                    console.error('❌ Error al agregar nota a bitácora:', response.statusText)
+                }
+            } catch (error) {
+                console.error('Error al agregar nota a bitácora:', error)
+            }
+        }
+    }
+
     // Manejar click en notificación
     const handleNotificacionClick = async (notificacion: Notificacion) => {
         // Marcar como leída si no lo está
         if (notificacion.status !== 'leida') {
             await handleMarcarLeida(notificacion.id)
         }
-        setIsOpen(false)
+
+        // Procesar acción de bitácora si está configurada
+        await procesarAccionBitacora(notificacion)
+
+        // Obtener ruta destino y navegar
+        const rutaDestino = obtenerRutaDestino(notificacion)
+        if (rutaDestino) {
+            // Cerrar dropdown
+            setIsOpen(false)
+            // Navegar a la ruta destino
+            window.location.href = rutaDestino
+        } else {
+            console.log('No se encontró ruta destino para la notificación:', notificacion.tipo)
+            setIsOpen(false)
+        }
     }
 
     // Formatear fecha
@@ -118,8 +191,15 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                 className='relative p-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 rounded-lg transition-all duration-200'
             >
                 <Bell size={20} />
+
+                {/* Indicador de conexión realtime */}
+                <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-zinc-800 ${conexionRealtime === 'connected' ? 'bg-green-400' :
+                        conexionRealtime === 'connecting' ? 'bg-yellow-400 animate-pulse' :
+                            'bg-red-400'
+                    }`} />
+
                 {nuevasNotificaciones > 0 && (
-                    <span className='absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium animate-pulse'>
+                    <span className='absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium animate-pulse z-10'>
                         {nuevasNotificaciones > 9 ? '9+' : nuevasNotificaciones}
                     </span>
                 )}
@@ -131,14 +211,44 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                     {/* Header */}
                     <div className="px-4 py-3 border-b border-zinc-700">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-white">
-                                Notificaciones ({notificaciones.length})
-                            </h3>
+                            <div className="flex items-center space-x-2">
+                                <h3 className="text-sm font-semibold text-white">
+                                    Notificaciones ({notificaciones.length})
+                                </h3>
+                                {/* Indicador de conexión realtime */}
+                                <div className={`flex items-center space-x-1 text-xs px-2 py-1 rounded-full ${conexionRealtime === 'connected' ? 'bg-green-500/20 text-green-400' :
+                                        conexionRealtime === 'connecting' ? 'bg-yellow-500/20 text-yellow-400' :
+                                            'bg-red-500/20 text-red-400'
+                                    }`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${conexionRealtime === 'connected' ? 'bg-green-400' :
+                                            conexionRealtime === 'connecting' ? 'bg-yellow-400 animate-pulse' :
+                                                'bg-red-400'
+                                        }`} />
+                                    <span>
+                                        {conexionRealtime === 'connected' ? 'En vivo' :
+                                            conexionRealtime === 'connecting' ? 'Conectando...' :
+                                                'Desconectado'}
+                                    </span>
+                                </div>
+                            </div>
                             <div className="flex items-center space-x-2">
                                 {nuevasNotificaciones > 0 && (
                                     <span className="text-xs text-zinc-400">
                                         {nuevasNotificaciones} nuevas
                                     </span>
+                                )}
+                                {/* Botón de reconexión si está desconectado */}
+                                {conexionRealtime === 'disconnected' && (
+                                    <button
+                                        onClick={() => {
+                                            console.log('🔄 Reconectando manualmente...')
+                                            recargarNotificaciones()
+                                        }}
+                                        className="text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-red-500/10 rounded border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                                        title="Reconectar"
+                                    >
+                                        Reconectar
+                                    </button>
                                 )}
                                 <button
                                     onClick={() => setIsOpen(false)}

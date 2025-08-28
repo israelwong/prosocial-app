@@ -77,10 +77,27 @@ export async function POST(request: NextRequest) {
 
         // Crear notificación para el administrador
         try {
+            // Preparar metadata estructurada
+            const metadata = {
+                eventoId: cotizacion.Evento?.id,
+                paqueteId: paquete.id,
+                clienteId: cotizacion.Evento?.Cliente?.id,
+                paqueteNombre: paquete.nombre,
+                clienteNombre: cotizacion.Evento?.Cliente?.nombre,
+                rutaDestino: `/admin/dashboard/eventos/${cotizacion.Evento?.id}`,
+                accionBitacora: {
+                    habilitada: true,
+                    mensaje: `Cliente ${cotizacion.Evento?.Cliente?.nombre} solicitó el paquete: ${paquete.nombre}`
+                }
+            }
+
+            // Ahora usar directamente prisma con las nuevas propiedades
             const notificacion = await prisma.notificacion.create({
                 data: {
                     titulo: `Nueva solicitud de paquete: ${paquete.nombre}`,
-                    mensaje: `${cotizacion.Evento?.Cliente?.nombre || 'Cliente'} ha solicitado información sobre el paquete "${paquete.nombre}" para ${paquete.EventoTipo?.nombre || 'su evento'}`,
+                    mensaje: `${cotizacion.Evento?.Cliente?.nombre || 'Cliente'} ha solicitado el paquete "${paquete.nombre}" para ${paquete.EventoTipo?.nombre || 'su evento'}`,
+                    tipo: 'solicitud_paquete',
+                    metadata: metadata,
                     status: 'active',
                     cotizacionId: cotizacion.id
                 }

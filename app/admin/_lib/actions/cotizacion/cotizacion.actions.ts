@@ -191,8 +191,21 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
             }
         });
 
+        console.log('🔍 Buscando cotización:', { cotizacionId, found: !!cotizacion });
+
         if (!cotizacion) {
-            throw new Error(`Cotización con ID ${cotizacionId} no encontrada`);
+            // Log adicional para debugging
+            console.error('❌ Cotización no encontrada:', {
+                cotizacionId,
+                isValidFormat: /^[a-z0-9]+$/.test(cotizacionId),
+                containsDummy: cotizacionId.includes('dummy')
+            });
+
+            if (cotizacionId.includes('dummy')) {
+                throw new Error(`El ID de cotización "${cotizacionId}" parece ser un ID de prueba/dummy. Usa un ID de cotización real de la base de datos.`);
+            }
+
+            throw new Error(`Cotización con ID ${cotizacionId} no encontrada en la base de datos`);
         }
 
         // 🔍 DEBUG: Verificar ordenamiento de servicios en cotización pública

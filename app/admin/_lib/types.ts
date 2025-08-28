@@ -438,6 +438,8 @@ export interface Notificacion {
     userId: string
     titulo: string
     mensaje: string
+    tipo?: string
+    metadata?: any
     status: string
     cotizacionId?: string
     createdAt?: Date

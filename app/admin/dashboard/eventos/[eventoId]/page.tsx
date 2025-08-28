@@ -14,7 +14,7 @@ export default async function Page({ params }: PageProps) {
 
     // Cargar datos iniciales del evento completo
     const eventoCompleto = await obtenerEventoCompleto(eventoId);
-    console.log('Evento completo:', eventoCompleto);
+    // console.log('Evento completo:', eventoCompleto);
 
     if (!eventoCompleto) {
         return (

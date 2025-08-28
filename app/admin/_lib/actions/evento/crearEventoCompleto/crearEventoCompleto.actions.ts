@@ -245,9 +245,9 @@ export async function crearEventoCompleto(data: CrearEventoCompleto): Promise<Re
 
         // 3. Obtener etapa inicial (etapa 1)
         const etapa1 = await obtenerEtapa1()
-        console.log('Etapa 1 obtenida:', etapa1)
+        // console.log('Etapa 1 obtenida:', etapa1)
         const eventoEtapaId = etapa1 || null
-        console.log('eventoEtapaId asignado:', eventoEtapaId)
+        // console.log('eventoEtapaId asignado:', eventoEtapaId)
 
         // 4. Crear evento
         const nuevoEvento = await prisma.evento.create({

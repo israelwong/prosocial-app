@@ -539,6 +539,8 @@ model Notificacion {
   userId       String?
   titulo       String
   mensaje      String
+  tipo         String   @default("general")  // 🆕 NUEVO: tipo de notificación
+  metadata     Json?                         // 🆕 NUEVO: datos estructurados
   status       String   @default("active")
   cotizacionId String?
   createdAt    DateTime @default(now())
