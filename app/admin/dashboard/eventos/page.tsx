@@ -17,7 +17,7 @@ export default async function page() {
         getEventosPorEtapaConCotizaciones(filtroEtapas)
     ])
 
-    console.log({ eventos, etapas })
+    // console.log({ eventos, etapas })
 
     return (
         <ListaEventosSimple

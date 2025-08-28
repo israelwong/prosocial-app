@@ -9,6 +9,7 @@ import FichaClienteUnificadaV2 from './FichaClienteUnificadaV2'
 import FichaEventoUnificadaV2 from './FichaEventoUnificadaV2'
 import FichaBitacoraUnificada from './FichaBitacoraUnificada'
 import FichaCotizacionesUnificada from './FichaCotizacionesUnificada'
+import FichaPaquetesCompartir from './FichaPaquetesCompartir'
 import EventoMobileNavigation from './EventoMobileNavigation'
 
 interface Props {
@@ -117,6 +118,7 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
 
                     {/* Columna 3: Cotizaciones */}
                     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+                        <FichaPaquetesCompartir eventoCompleto={eventoCompleto} />
                         <FichaCotizacionesUnificada
                             eventoCompleto={eventoCompleto}
                             eventoAsignado={eventoData.eventoAsignado}
@@ -143,6 +145,7 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
                     }
                     cotizacionesContent={
                         <div className="p-4">
+                            <FichaPaquetesCompartir eventoCompleto={eventoCompleto} />
                             <FichaCotizacionesUnificada
                                 eventoCompleto={eventoCompleto}
                                 eventoAsignado={eventoData.eventoAsignado}

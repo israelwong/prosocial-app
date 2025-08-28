@@ -4,18 +4,21 @@ import prisma from '@/app/admin/_lib/prismaClient'
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { eventoId, mensaje, importancia = '2' } = body
+        const { eventoId, comentario, mensaje, importancia = '2' } = body
 
-        console.log('📝 Nueva nota de bitácora desde notificación:', {
+        console.log('📝 Nueva nota de bitácora:', {
             eventoId,
-            mensaje,
+            comentario: comentario || mensaje,
             importancia
         })
 
+        // Usar comentario o mensaje (compatibilidad)
+        const textoComentario = comentario || mensaje
+
         // Validar datos requeridos
-        if (!eventoId || !mensaje) {
+        if (!eventoId || !textoComentario) {
             return NextResponse.json(
-                { error: 'Datos requeridos: eventoId, mensaje' },
+                { error: 'Datos requeridos: eventoId, comentario/mensaje' },
                 { status: 400 }
             )
         }
@@ -36,7 +39,7 @@ export async function POST(request: NextRequest) {
         const bitacora = await prisma.eventoBitacora.create({
             data: {
                 eventoId: eventoId,
-                comentario: mensaje,
+                comentario: textoComentario,
                 importancia: importancia,
                 status: 'active',
                 createdAt: new Date(),

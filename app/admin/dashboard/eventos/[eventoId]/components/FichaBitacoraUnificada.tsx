@@ -166,8 +166,11 @@ export default function FichaBitacoraUnificada({ eventoCompleto }: Props) {
                 </div>
             </div>
 
-            {/* Contenido */}
-            <div>
+            {/* Contenido con scroll limitado */}
+            <div className="max-h-96 overflow-y-auto pr-2" style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#4a5568 #1a202c'
+            }}>
                 {bitacora && bitacora.length > 0 ? (
                     bitacora.map((entrada: EventoBitacora, index: number) => (
                         <div key={entrada.id} className="py-3 mb-3 flex justify-between items-center bg-zinc-900 p-5">
