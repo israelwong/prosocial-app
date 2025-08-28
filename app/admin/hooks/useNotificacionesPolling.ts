@@ -25,14 +25,14 @@ export function useNotificacionesPolling(): UseNotificacionesPollingReturn {
 
             // Filtrar notificaciones ocultas
             const notificacionesVisibles = result.filter((n: any) => n.status !== 'oculta')
-            
+
             setNotificaciones(notificacionesVisibles || [])
             setUltimaActualizacion(new Date())
 
             // Contar nuevas notificaciones
             const noLeidas = notificacionesVisibles.filter((n: any) => n.status !== 'leida')
             setNuevasNotificaciones(noLeidas.length)
-            
+
             console.log('🔄 [POLLING] Notificaciones actualizadas:', {
                 total: notificacionesVisibles.length,
                 noLeidas: noLeidas.length,
@@ -48,7 +48,7 @@ export function useNotificacionesPolling(): UseNotificacionesPollingReturn {
     // Función para ocultar notificación (optimistic update)
     const ocultarNotificacionOptimistic = useCallback((notificacionId: string) => {
         const notifAnterior = notificaciones.find(n => n.id === notificacionId)
-        
+
         // Remover inmediatamente del estado
         setNotificaciones(prev => prev.filter(n => n.id !== notificacionId))
 

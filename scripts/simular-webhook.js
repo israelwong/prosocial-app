@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 // Script simple para crear notificaciones como lo hace el webhook de Stripe
-const { PrismaClient } = require('@prisma/client')
+const { PrismaClient } = require("@prisma/client");
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function simularWebhookStripe() {
-  console.log('🎯 Simulando webhook de Stripe - creando notificación...')
-  
+  console.log("🎯 Simulando webhook de Stripe - creando notificación...");
+
   try {
     const notificacion = await prisma.notificacion.create({
       data: {
@@ -27,25 +27,26 @@ async function simularWebhookStripe() {
             mensaje: `Pago confirmado: $5,000.00 MXN - Stripe Test`,
           },
         },
-        status: "active"
+        status: "active",
       },
-    })
+    });
 
-    console.log("✅ Notificación creada exitosamente:")
-    console.log(`   - ID: ${notificacion.id}`)
-    console.log(`   - Título: ${notificacion.titulo}`)
-    console.log(`   - Tipo: ${notificacion.tipo}`)
-    console.log(`   - Status: ${notificacion.status}`)
-    console.log(`   - Hora: ${notificacion.createdAt}`)
-    
-    console.log('\n🔔 La notificación debería aparecer en tiempo real en el admin.')
-    console.log('   Si no aparece inmediatamente, es un problema de realtime.')
-    
+    console.log("✅ Notificación creada exitosamente:");
+    console.log(`   - ID: ${notificacion.id}`);
+    console.log(`   - Título: ${notificacion.titulo}`);
+    console.log(`   - Tipo: ${notificacion.tipo}`);
+    console.log(`   - Status: ${notificacion.status}`);
+    console.log(`   - Hora: ${notificacion.createdAt}`);
+
+    console.log(
+      "\n🔔 La notificación debería aparecer en tiempo real en el admin."
+    );
+    console.log("   Si no aparece inmediatamente, es un problema de realtime.");
   } catch (error) {
-    console.error('❌ Error creando notificación:', error)
+    console.error("❌ Error creando notificación:", error);
   } finally {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   }
 }
 
-simularWebhookStripe()
+simularWebhookStripe();

@@ -27,7 +27,7 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
 
             // ✅ Filtrar notificaciones ocultas por seguridad extra
             const notificacionesVisibles = result.filter((n: any) => n.status !== 'oculta')
-            
+
             // Actualizar última vez que se recargaron
             setUltimaActualizacion(new Date())
             setNotificaciones(notificacionesVisibles || [])
@@ -35,7 +35,7 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
             // Contar nuevas notificaciones (pendientes/no leídas)
             const noLeidas = notificacionesVisibles.filter((n: any) => n.status !== 'leida')
             setNuevasNotificaciones(noLeidas.length)
-            
+
             console.log('🔄 Notificaciones recargadas:', {
                 total: notificacionesVisibles.length,
                 noLeidas: noLeidas.length,
@@ -74,25 +74,12 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
         // Cargar notificaciones iniciales
         recargarNotificaciones()
 
-        // Configurar canal realtime con configuración mejorada
+        // Configurar canal realtime con el mismo patrón que funciona en CotizacionVisita
         const channel = supabase
-            .channel(`notif-admin-${Math.random().toString(36).substr(2, 9)}`, {
-                config: {
-                    presence: {
-                        key: 'admin-notifications'
-                    },
-                    broadcast: {
-                        self: false
-                    }
-                }
-            })
+            .channel('realtime:Notificacion')
             .on(
                 'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'Notificacion'
-                },
+                { event: '*', schema: 'public', table: 'Notificacion' },
                 async (payload) => {
                     console.log('🔔 [REALTIME DEBUG] Evento recibido:', {
                         eventType: payload.eventType,
@@ -196,16 +183,16 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
             )
             .subscribe((status, err) => {
                 console.log(`🔔 [REALTIME] Estado: ${status}`, err ? `Error: ${err.message}` : '')
-                
+
                 if (err) {
                     console.error('❌ Error en suscripción de notificaciones:', err)
                     setConexionRealtime('disconnected')
-                    
+
                     // Reintentar conexión con backoff exponencial
                     if (reintentos < maxReintentos) {
                         const tiempoEspera = Math.min(1000 * Math.pow(2, reintentos), 30000)
-                        console.log(`🔄 Reintentando conexión en ${tiempoEspera/1000}s (intento ${reintentos + 1}/${maxReintentos})`)
-                        
+                        console.log(`🔄 Reintentando conexión en ${tiempoEspera / 1000}s (intento ${reintentos + 1}/${maxReintentos})`)
+
                         setTimeout(() => {
                             setReintentos(prev => prev + 1)
                             configurarSuscripcion()
@@ -223,7 +210,7 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
                     } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
                         console.log(`⚠️ Problema de conexión: ${status}`)
                         setConexionRealtime('disconnected')
-                        
+
                         // Reintentar después de un tiempo
                         setTimeout(() => {
                             console.log('🔄 Reintentando por timeout/error...')
@@ -234,7 +221,7 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
                     }
                 }
             })
-        
+
         return channel
     }, [recargarNotificaciones, reintentos])
 

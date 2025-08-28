@@ -1,10 +1,9 @@
 'use client'
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Bell, X, Eye, ExternalLink, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
-import { marcarComoLeida, ocultarNotificacion } from '../_lib/notificacion.actions'
-import { useNotificacionesRealtime } from '../hooks/useNotificacionesRealtime'
-import { useNotificacionesPolling } from '../hooks/useNotificacionesPolling'
+import { marcarComoLeida, ocultarNotificacion, obtenerNotificaciones } from '../_lib/notificacion.actions'
+import { supabase } from '../_lib/supabase'
 
 interface Notificacion {
     id: string
@@ -25,22 +24,70 @@ interface NotificacionesDropdownProps {
 
 export default function NotificacionesDropdown({ userId }: NotificacionesDropdownProps) {
     const [isOpen, setIsOpen] = useState(false)
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [notificaciones, setNotificaciones] = useState<Notificacion[]>([])
+    const [nuevasNotificaciones, setNuevasNotificaciones] = useState(0)
     const dropdownRef = useRef<HTMLDivElement>(null)
 
-    // 🔔 Intentar usar realtime, pero tener polling como respaldo
-    const realtime = useNotificacionesRealtime()
-    const polling = useNotificacionesPolling()
-    
-    // Usar realtime si está conectado, sino usar polling
-    const {
-        notificaciones,
-        nuevasNotificaciones,
-        recargarNotificaciones,
-        ocultarNotificacionOptimistic
-    } = realtime.conexionRealtime === 'connected' ? realtime : polling
+    // Cargar notificaciones iniciales
+    const cargarNotificaciones = useCallback(async () => {
+        try {
+            setLoading(true)
+            const result = await obtenerNotificaciones()
+            const notificacionesVisibles = result.filter((n: any) => n.status !== 'oculta')
 
-    const conexionRealtime = realtime.conexionRealtime
+            setNotificaciones(notificacionesVisibles || [])
+
+            // Contar nuevas notificaciones
+            const noLeidas = notificacionesVisibles.filter((n: any) => n.status !== 'leida')
+            setNuevasNotificaciones(noLeidas.length)
+
+            console.log('🔄 Notificaciones cargadas:', {
+                total: notificacionesVisibles.length,
+                noLeidas: noLeidas.length
+            })
+        } catch (error) {
+            console.error('❌ Error al cargar notificaciones:', error)
+        } finally {
+            setLoading(false)
+        }
+    }, [])
+
+    // Suscripción en tiempo real (igual que FichaCotizacionesUnificada)
+    const suscripcionSupabase = useCallback(() => {
+        const subscription = supabase
+            .channel('realtime:Notificacion')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'Notificacion' },
+                async (payload) => {
+                    console.log('🔔 Cambio detectado en Notificacion:', payload)
+                    // Recargar todas las notificaciones cuando hay un cambio
+                    await cargarNotificaciones()
+                }
+            ).subscribe((status, err) => {
+                if (err) {
+                    console.error('❌ Error en la suscripción Notificacion:', err)
+                } else {
+                    console.log('✅ Estado de la suscripción en Notificacion:', status)
+                }
+            })
+
+        return () => {
+            subscription.unsubscribe()
+        }
+    }, [cargarNotificaciones])
+
+    // Cargar notificaciones iniciales
+    useEffect(() => {
+        cargarNotificaciones()
+    }, [cargarNotificaciones])
+
+    // Configurar suscripción realtime
+    useEffect(() => {
+        const unsubscribe = suscripcionSupabase()
+        return unsubscribe
+    }, [suscripcionSupabase])
 
     // Cerrar dropdown al hacer clic fuera
     useEffect(() => {
@@ -69,17 +116,22 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
         try {
             console.log('🗑️ Ocultando notificación:', notificacionId)
 
-            // ✅ OPTIMISTIC UPDATE: Ocultar inmediatamente en la UI
-            ocultarNotificacionOptimistic(notificacionId)
+            // Optimistic update: remover inmediatamente
+            const notifAnterior = notificaciones.find(n => n.id === notificacionId)
+            setNotificaciones(prev => prev.filter(n => n.id !== notificacionId))
 
-            // Ejecutar la acción en background - el realtime confirmará el cambio
+            if (notifAnterior && notifAnterior.status !== 'leida') {
+                setNuevasNotificaciones(prev => Math.max(0, prev - 1))
+            }
+
+            // Ejecutar la acción en background
             await ocultarNotificacion(notificacionId)
-            console.log('✅ Notificación ocultada correctamente en BD')
+            console.log('✅ Notificación ocultada correctamente')
 
         } catch (error) {
             console.error('❌ Error al ocultar notificación:', error)
-            // En caso de error, recargar notificaciones para revertir el optimistic update
-            recargarNotificaciones()
+            // En caso de error, recargar notificaciones
+            cargarNotificaciones()
         }
     }
 
@@ -199,10 +251,7 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                 <Bell size={20} />
 
                 {/* Indicador de conexión realtime */}
-                <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-zinc-800 ${conexionRealtime === 'connected' ? 'bg-green-400' :
-                        conexionRealtime === 'connecting' ? 'bg-yellow-400 animate-pulse' :
-                            'bg-red-400'
-                    }`} />
+                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-zinc-800 bg-green-400" />
 
                 {nuevasNotificaciones > 0 && (
                     <span className='absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium animate-pulse z-10'>
@@ -221,20 +270,10 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                 <h3 className="text-sm font-semibold text-white">
                                     Notificaciones ({notificaciones.length})
                                 </h3>
-                                {/* Indicador de conexión realtime */}
-                                <div className={`flex items-center space-x-1 text-xs px-2 py-1 rounded-full ${conexionRealtime === 'connected' ? 'bg-green-500/20 text-green-400' :
-                                        conexionRealtime === 'connecting' ? 'bg-yellow-500/20 text-yellow-400' :
-                                            'bg-blue-500/20 text-blue-400'
-                                    }`}>
-                                    <div className={`w-1.5 h-1.5 rounded-full ${conexionRealtime === 'connected' ? 'bg-green-400' :
-                                            conexionRealtime === 'connecting' ? 'bg-yellow-400 animate-pulse' :
-                                                'bg-blue-400 animate-pulse'
-                                        }`} />
-                                    <span>
-                                        {conexionRealtime === 'connected' ? 'En vivo' :
-                                            conexionRealtime === 'connecting' ? 'Conectando...' :
-                                                'Polling'}
-                                    </span>
+                                {/* Indicador simple de realtime activo */}
+                                <div className="flex items-center space-x-1 text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                    <span>En vivo</span>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -242,31 +281,18 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                 <button
                                     onClick={() => {
                                         console.log('🔄 Recarga manual de notificaciones')
-                                        recargarNotificaciones()
+                                        cargarNotificaciones()
                                     }}
                                     className="text-xs text-zinc-400 hover:text-zinc-200 px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-600 transition-colors"
                                     title="Recargar notificaciones"
                                 >
                                     ⟳
                                 </button>
-                                
+
                                 {nuevasNotificaciones > 0 && (
                                     <span className="text-xs text-zinc-400">
                                         {nuevasNotificaciones} nuevas
                                     </span>
-                                )}
-                                {/* Botón de reconexión si está desconectado */}
-                                {conexionRealtime === 'disconnected' && (
-                                    <button
-                                        onClick={() => {
-                                            console.log('🔄 Reconectando manualmente...')
-                                            recargarNotificaciones()
-                                        }}
-                                        className="text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-red-500/10 rounded border border-red-500/20 hover:bg-red-500/20 transition-colors"
-                                        title="Reconectar"
-                                    >
-                                        Reconectar
-                                    </button>
                                 )}
                                 <button
                                     onClick={() => setIsOpen(false)}
@@ -374,7 +400,7 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                         <div className="px-4 py-2 border-t border-zinc-700 bg-zinc-800/50">
                             <button
                                 onClick={() => {
-                                    recargarNotificaciones()
+                                    cargarNotificaciones()
                                     setIsOpen(false)
                                 }}
                                 className="text-xs text-zinc-400 hover:text-white w-full text-center py-1"
