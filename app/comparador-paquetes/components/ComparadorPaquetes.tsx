@@ -58,7 +58,7 @@ type TodasSecciones = Map<string, { posicion: number, categorias: Map<string, { 
 
 export default function ComparadorPaquetes() {
     const searchParams = useSearchParams()
-    const cotizacionId = searchParams?.get('cotizacionId')
+    const eventoId = searchParams?.get('eventoId')
 
     const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null)
     const [paquetes, setPaquetes] = useState<Paquete[]>([])
@@ -205,7 +205,7 @@ export default function ComparadorPaquetes() {
                 },
                 body: JSON.stringify({
                     paqueteId: paqueteSeleccionado.id,
-                    cotizacionId,
+                    eventoId,
                     clienteId: cotizacion?.cliente?.email
                 })
             })
@@ -264,21 +264,25 @@ export default function ComparadorPaquetes() {
     }
 
     useEffect(() => {
-        if (!cotizacionId) return
+        if (!eventoId) return
 
         const cargarDatos = async () => {
             try {
-                // Cargar cotización
-                const cotizacionResponse = await fetch(`/api/cotizaciones/${cotizacionId}`)
-                if (!cotizacionResponse.ok) throw new Error('Error al cargar cotización')
+                // Cargar datos del evento con todas sus cotizaciones
+                const eventoResponse = await fetch(`/api/comparador/evento/${eventoId}`)
+                if (!eventoResponse.ok) throw new Error('Error al cargar datos del evento')
 
-                const cotizacionData = await cotizacionResponse.json()
-                setCotizacion(cotizacionData)
+                const eventoData = await eventoResponse.json()
+                
+                // Usar la primera cotización como principal (o la que esté marcada como principal)
+                const cotizacionPrincipal = eventoData.cotizaciones?.[0]
+                if (cotizacionPrincipal) {
+                    setCotizacion(cotizacionPrincipal)
+                    const serviciosAgrupadosCotizacion = agruparServicios(cotizacionPrincipal.servicios)
+                    setServiciosCotizacion(serviciosAgrupadosCotizacion)
+                }
 
-                const serviciosAgrupadosCotizacion = agruparServicios(cotizacionData.servicios)
-                setServiciosCotizacion(serviciosAgrupadosCotizacion)
-
-                const eventoTipo = cotizacionData.evento?.eventoTipoId
+                const eventoTipo = eventoData.eventoTipoId
                 setEventoTipoId(eventoTipo)
 
                 if (eventoTipo) {
@@ -298,21 +302,17 @@ export default function ComparadorPaquetes() {
                         serviciosPaquetesMap[paquete.id] = agruparServicios(paquete.PaqueteServicio || [])
                     })
                     setServiciosPaquetes(serviciosPaquetesMap)
-                } else {
-                    console.warn('⚠️ No se encontró eventoTipoId en la cotización')
-                    toast.error('No se pudo determinar el tipo de evento para cargar paquetes')
                 }
-
             } catch (error) {
                 console.error('Error al cargar datos:', error)
-                toast.error('Error al cargar los datos de comparación')
+                toast.error('Error al cargar los datos del evento')
             } finally {
                 setLoading(false)
             }
         }
 
         cargarDatos()
-    }, [cotizacionId])
+    }, [eventoId])
 
     const todasSecciones = obtenerTodasSecciones()
 
@@ -332,7 +332,8 @@ export default function ComparadorPaquetes() {
             <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="text-center">
                     <X className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                    <p className="text-white text-xl">Error al cargar la cotización</p>
+                    <p className="text-white text-xl">Error al cargar los datos del evento</p>
+                    <p className="text-gray-400 mt-2">No se encontraron cotizaciones para este evento</p>
                 </div>
             </div>
         )
@@ -344,7 +345,7 @@ export default function ComparadorPaquetes() {
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
                     <Link
-                        href={`/evento/${cotizacion.evento.id}/cotizacion/${cotizacionId}`}
+                        href={`/evento/${cotizacion.evento.id}/cotizacion/${cotizacion.id}`}
                         className="text-zinc-400 hover:text-white transition-colors"
                     >
                         <ArrowLeft className="w-6 h-6" />
@@ -540,7 +541,7 @@ export default function ComparadorPaquetes() {
                                     {cotizacion && columnasVisibles.cotizacion && (
                                         <td className="p-3 text-center">
                                             <Link
-                                                href={`/evento/${cotizacion.evento.id}/cotizacion/${cotizacionId}`}
+                                                href={`/evento/${cotizacion.evento.id}/cotizacion/${cotizacion.id}`}
                                                 className="inline-flex items-center gap-1 bg-green-600/80 hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
                                             >
                                                 <CreditCard className="w-3.5 h-3.5" />

@@ -120,18 +120,6 @@ export default function PaqueteCard({ paquete, eventoId, index, isPopular = fals
                     <div className={`w-1.5 h-1.5 rounded-full bg-green-400`} />
                     <span>Paquete pre-diseñado</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-zinc-300">
-                    <div className={`w-1.5 h-1.5 rounded-full bg-green-400`} />
-                    <span>Servicios incluidos</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-zinc-300">
-                    <div className={`w-1.5 h-1.5 rounded-full bg-green-400`} />
-                    <span>Precio fijo</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-zinc-300">
-                    <div className={`w-1.5 h-1.5 rounded-full bg-green-400`} />
-                    <span>Disponible inmediatamente</span>
-                </div>
             </div>
 
             {/* Botón de acción */}
