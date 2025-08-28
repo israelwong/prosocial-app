@@ -308,8 +308,15 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                 {notificaciones.map((notificacion) => (
                                     <div
                                         key={notificacion.id}
-                                        className={`p-4 hover:bg-zinc-800/50 transition-colors group ${notificacion.status === 'leida' ? '' : 'bg-blue-900/10'
+                                        className={`p-4 hover:bg-zinc-800/50 transition-colors group cursor-pointer ${notificacion.status === 'leida' ? '' : 'bg-blue-900/10'
                                             }`}
+                                        onClick={() => {
+                                            // Solo navegar si hay ruta destino, sino no hacer nada
+                                            const ruta = obtenerRutaDestino(notificacion)
+                                            if (ruta) {
+                                                handleNotificacionClick(notificacion)
+                                            }
+                                        }}
                                     >
                                         <div className="flex items-start space-x-3">
                                             {/* Icono */}
@@ -341,16 +348,22 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                                 {/* Acciones */}
                                                 <div className="flex items-center justify-between mt-3">
                                                     <div className="flex items-center space-x-2">
-                                                        {/* Botón ir a evento */}
-                                                        {(notificacion as any).eventoId && (
-                                                            <Link
-                                                                href={`/admin/dashboard/seguimiento/${(notificacion as any).eventoId}`}
-                                                                onClick={() => handleNotificacionClick(notificacion)}
-                                                                className="text-xs text-blue-400 hover:text-blue-300 flex items-center space-x-1"
+                                                        {/* Botón ir a ruta destino basado en tipo y metadata */}
+                                                        {obtenerRutaDestino(notificacion) && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    handleNotificacionClick(notificacion)
+                                                                }}
+                                                                className="text-xs text-blue-400 hover:text-blue-300 flex items-center space-x-1 cursor-pointer"
                                                             >
                                                                 <ExternalLink size={12} />
-                                                                <span>Ver evento</span>
-                                                            </Link>
+                                                                <span>
+                                                                    {notificacion.tipo === 'solicitud_paquete' ? 'Ver evento' :
+                                                                        notificacion.tipo === 'solicitud_personalizada' ? 'Ver seguimiento' :
+                                                                            'Ver detalles'}
+                                                                </span>
+                                                            </button>
                                                         )}
                                                     </div>
 
@@ -358,7 +371,10 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                                     <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         {notificacion.status !== 'leida' && (
                                                             <button
-                                                                onClick={() => handleMarcarLeida(notificacion.id)}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    handleMarcarLeida(notificacion.id)
+                                                                }}
                                                                 className="p-1 text-zinc-500 hover:text-blue-400 rounded"
                                                                 title="Marcar como leída"
                                                             >
@@ -366,7 +382,10 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                                             </button>
                                                         )}
                                                         <button
-                                                            onClick={() => handleOcultar(notificacion.id)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                handleOcultar(notificacion.id)
+                                                            }}
                                                             className="p-1 text-zinc-500 hover:text-red-400 rounded"
                                                             title="Ocultar notificación"
                                                         >
