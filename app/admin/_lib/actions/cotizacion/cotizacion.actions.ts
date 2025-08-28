@@ -196,17 +196,17 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
         }
 
         // 🔍 DEBUG: Verificar ordenamiento de servicios en cotización pública
-        console.log('🔍 DEBUG Cotización Pública - Servicios ordenados:', {
-            cotizacionId: cotizacion.id,
-            totalServicios: cotizacion.Servicio.length,
-            serviciosOrden: cotizacion.Servicio.map((s: any, index: number) => ({
-                index: index + 1,
-                nombre: s.nombre_snapshot || s.Servicio?.nombre,
-                posicion_cotizacion: s.posicion,
-                posicion_servicio_original: s.Servicio?.posicion,
-                categoria: s.categoria_nombre_snapshot || s.Servicio?.ServicioCategoria?.nombre
-            }))
-        });
+        // console.log('🔍 DEBUG Cotización Pública - Servicios ordenados:', {
+        //     cotizacionId: cotizacion.id,
+        //     totalServicios: cotizacion.Servicio.length,
+        //     serviciosOrden: cotizacion.Servicio.map((s: any, index: number) => ({
+        //         index: index + 1,
+        //         nombre: s.nombre_snapshot || s.Servicio?.nombre,
+        //         posicion_cotizacion: s.posicion,
+        //         posicion_servicio_original: s.Servicio?.posicion,
+        //         categoria: s.categoria_nombre_snapshot || s.Servicio?.ServicioCategoria?.nombre
+        //     }))
+        // });
 
         // También obtener datos necesarios para edición
         const [tiposEvento, catalogo, configuracion, condiciones, metodosPago] = await Promise.all([
@@ -246,16 +246,16 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
  */
 export async function crearCotizacionNueva(data: CotizacionNueva) {
     try {
-        console.log('=== INICIO crearCotizacionNueva ===');
-        console.log('Data raw recibida:', JSON.stringify(data, null, 2));
+        // console.log('=== INICIO crearCotizacionNueva ===');
+        // console.log('Data raw recibida:', JSON.stringify(data, null, 2));
 
         // Validar datos con schema
-        console.log('🔍 Validando datos con schema...');
+        // console.log('🔍 Validando datos con schema...');
         const validatedData = CotizacionNuevaSchema.parse(data);
-        console.log('✅ Datos validados exitosamente');
-        console.log('Data validada:', JSON.stringify(validatedData, null, 2));
+        // console.log('✅ Datos validados exitosamente');
+        // console.log('Data validada:', JSON.stringify(validatedData, null, 2));
 
-        console.log('🗃️ Creando cotización principal...');
+        // console.log('🗃️ Creando cotización principal...');
         const nuevaCotizacion = await prisma.cotizacion.create({
             data: {
                 eventoId: validatedData.eventoId,
@@ -268,7 +268,7 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
                 visible_cliente: true
             }
         });
-        console.log('✅ Cotización principal creada:', { id: nuevaCotizacion.id, nombre: nuevaCotizacion.nombre });
+        // console.log('✅ Cotización principal creada:', { id: nuevaCotizacion.id, nombre: nuevaCotizacion.nombre });
 
         // Crear servicios por separado para evitar problemas de tipos
         if (validatedData.servicios.length > 0) {
@@ -305,8 +305,8 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
 
         // Crear costos por separado
         if (validatedData.costos.length > 0) {
-            console.log('💰 Creando costos adicionales...');
-            console.log('Cantidad de costos a crear:', validatedData.costos.length);
+            // console.log('💰 Creando costos adicionales...');
+            // console.log('Cantidad de costos a crear:', validatedData.costos.length);
 
             await prisma.cotizacionCosto.createMany({
                 data: validatedData.costos.map((costo, index) => ({
@@ -331,9 +331,9 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
             }
         });
 
-        console.log('✅ Cotización completa obtenida');
-        console.log('🎉 PROCESO COMPLETADO EXITOSAMENTE');
-        console.log('Cotización final:', { id: nuevaCotizacion.id, nombre: nuevaCotizacion.nombre });
+        // console.log('✅ Cotización completa obtenida');
+        // console.log('🎉 PROCESO COMPLETADO EXITOSAMENTE');
+        // console.log('Cotización final:', { id: nuevaCotizacion.id, nombre: nuevaCotizacion.nombre });
         return cotizacionCompleta;
 
     } catch (error: any) {
@@ -361,9 +361,9 @@ export async function editarCotizacion(data: CotizacionEditar) {
         console.log('🔥 editarCotizacion - Datos recibidos:', JSON.stringify(data, null, 2));
 
         // Validar datos con schema
-        console.log('🔥 editarCotizacion - Validando con schema...');
+        // console.log('🔥 editarCotizacion - Validando con schema...');
         const validatedData = CotizacionEditarSchema.parse(data);
-        console.log('🔥 editarCotizacion - Validación exitosa:', JSON.stringify(validatedData, null, 2));
+        // console.log('🔥 editarCotizacion - Validación exitosa:', JSON.stringify(validatedData, null, 2));
 
         const cotizacionActualizada = await prisma.cotizacion.update({
             where: { id: validatedData.id },

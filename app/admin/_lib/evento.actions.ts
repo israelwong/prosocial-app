@@ -110,7 +110,7 @@ export async function actualizarEvento(evento: Evento) {
 
 export async function eliminarEvento(id: string) {
     try {
-        console.log('Buscando evento con id:', id);
+        // console.log('Buscando evento con id:', id);
         const evento = await prisma.evento.findUnique({
             where: { id }
         });

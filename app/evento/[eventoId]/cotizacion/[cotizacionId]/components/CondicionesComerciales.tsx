@@ -63,15 +63,15 @@ export default function CondicionesComerciales({
         let precioFinal = monto
 
         // Debug: Ver qué comisiones vienen en los datos
-        console.log('💳 Método de pago:', {
-            nombre: metodo.metodo_pago,
-            num_msi: metodo.num_msi,
-            comision_porcentaje_base: metodo.comision_porcentaje_base,
-            comision_fija_monto: metodo.comision_fija_monto,
-            comision_msi_porcentaje: metodo.comision_msi_porcentaje,
-            payment_method: metodo.payment_method,
-            monto_a_procesar: monto
-        })
+        // console.log('💳 Método de pago:', {
+        //     nombre: metodo.metodo_pago,
+        //     num_msi: metodo.num_msi,
+        //     comision_porcentaje_base: metodo.comision_porcentaje_base,
+        //     comision_fija_monto: metodo.comision_fija_monto,
+        //     comision_msi_porcentaje: metodo.comision_msi_porcentaje,
+        //     payment_method: metodo.payment_method,
+        //     monto_a_procesar: monto
+        // })
 
         // SPEI: No aplicar comisiones (se absorben)
         if (metodo.payment_method === 'spei' || metodo.metodo_pago?.toLowerCase().includes('spei')) {
@@ -83,12 +83,12 @@ export default function CondicionesComerciales({
         if (metodo.comision_porcentaje_base) {
             const comisionPorcentual = monto * (metodo.comision_porcentaje_base / 100)
             precioFinal += comisionPorcentual
-            console.log('💰 Comisión porcentual aplicada:', {
-                base: monto,
-                porcentaje: metodo.comision_porcentaje_base,
-                comision: comisionPorcentual,
-                resultado: precioFinal
-            })
+            // console.log('💰 Comisión porcentual aplicada:', {
+            //     base: monto,
+            //     porcentaje: metodo.comision_porcentaje_base,
+            //     comision: comisionPorcentual,
+            //     resultado: precioFinal
+            // })
         }
 
         // Aplicar comisión fija
@@ -100,12 +100,12 @@ export default function CondicionesComerciales({
         if (metodo.num_msi > 0 && metodo.comision_msi_porcentaje) {
             const comisionMSI = monto * (metodo.comision_msi_porcentaje / 100)
             precioFinal += comisionMSI
-            console.log('💳 Comisión MSI aplicada:', {
-                base: monto,
-                porcentaje: metodo.comision_msi_porcentaje,
-                comision: comisionMSI,
-                resultado: precioFinal
-            })
+            // console.log('💳 Comisión MSI aplicada:', {
+            //     base: monto,
+            //     porcentaje: metodo.comision_msi_porcentaje,
+            //     comision: comisionMSI,
+            //     resultado: precioFinal
+            // })
         }
 
         return precioFinal
@@ -119,16 +119,16 @@ export default function CondicionesComerciales({
         const aDiferir = precioBase - anticipo
 
         // Debug: Verificar cálculo del anticipo
-        if (condicion.porcentaje_anticipo) {
-            console.log('🧮 Cálculo de anticipo corregido:', {
-                montoTotal,
-                descuento: condicion.descuento || 0,
-                precioBase,
-                porcentaje_anticipo: condicion.porcentaje_anticipo,
-                anticipo_calculado: anticipo,
-                formula: `${precioBase} × ${condicion.porcentaje_anticipo}% = ${anticipo}`
-            })
-        }
+        // if (condicion.porcentaje_anticipo) {
+        //     console.log('🧮 Cálculo de anticipo corregido:', {
+        //         montoTotal,
+        //         descuento: condicion.descuento || 0,
+        //         precioBase,
+        //         porcentaje_anticipo: condicion.porcentaje_anticipo,
+        //         anticipo_calculado: anticipo,
+        //         formula: `${precioBase} × ${condicion.porcentaje_anticipo}% = ${anticipo}`
+        //     })
+        // }
 
         return {
             precioBase,

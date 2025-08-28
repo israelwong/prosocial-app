@@ -154,7 +154,7 @@ export async function crearCotizacionAutorizada(data: Cotizacion) {
 export async function actualizarCotizacion(data: Cotizacion) {
 
     try {
-        // console.log('Updating cotizacion with id:', data.id);
+        //// console.log('Updating cotizacion with id:', data.id);
         await prisma.cotizacion.update({
             where: {
                 id: data.id
@@ -169,17 +169,17 @@ export async function actualizarCotizacion(data: Cotizacion) {
                 status: data.status,
             }
         });
-        // console.log('Cotizacion updated successfully');
+        //// console.log('Cotizacion updated successfully');
 
         if (data.servicios) {
-            // console.log('Deleting existing cotizacionServicios for cotizacionId:', data.id);
+            //// console.log('Deleting existing cotizacionServicios for cotizacionId:', data.id);
             await prisma.cotizacionServicio.deleteMany({
                 where: {
                     cotizacionId: data.id
                 }
             });
 
-            // console.log('Creating new cotizacionServicios');
+            //// console.log('Creating new cotizacionServicios');
             for (const servicio of data.servicios) {
                 try {
                     await prisma.cotizacionServicio.create({
@@ -192,7 +192,7 @@ export async function actualizarCotizacion(data: Cotizacion) {
                             userId: servicio.userId || undefined
                         }
                     });
-                    // console.log('Created cotizacionServicio for servicioId:', servicio.id);
+                    //// console.log('Created cotizacionServicio for servicioId:', servicio.id);
                 } catch (error: unknown) {
                     if (error instanceof Error) {
                         console.error('Error creating cotizacionServicio for servicioId:', servicio.id, error.message);
@@ -241,7 +241,7 @@ export async function actualizarCotizacionStatus(cotizacionId: string, status: s
  */
 export async function archivarCotizacion(cotizacionId: string) {
     try {
-        console.log(`📁 Archivando cotización ${cotizacionId}...`);
+        //console.log(`📁 Archivando cotización ${cotizacionId}...`);
 
         // Verificar que la cotización existe
         const cotizacion = await prisma.cotizacion.findUnique({
@@ -268,7 +268,7 @@ export async function archivarCotizacion(cotizacionId: string) {
             data: { archivada: true }
         });
 
-        console.log(`✅ Cotización "${cotizacion.nombre}" archivada exitosamente`);
+        //console.log(`✅ Cotización "${cotizacion.nombre}" archivada exitosamente`);
         return {
             success: true,
             message: `Cotización "${cotizacion.nombre}" archivada exitosamente`
@@ -286,7 +286,7 @@ export async function archivarCotizacion(cotizacionId: string) {
  */
 export async function desarchivarCotizacion(cotizacionId: string) {
     try {
-        console.log(`📂 Desarchivando cotización ${cotizacionId}...`);
+        //console.log(`📂 Desarchivando cotización ${cotizacionId}...`);
 
         const cotizacion = await prisma.cotizacion.findUnique({
             where: { id: cotizacionId },
@@ -311,7 +311,7 @@ export async function desarchivarCotizacion(cotizacionId: string) {
             data: { archivada: false }
         });
 
-        console.log(`✅ Cotización "${cotizacion.nombre}" desarchivada exitosamente`);
+        //console.log(`✅ Cotización "${cotizacion.nombre}" desarchivada exitosamente`);
         return {
             success: true,
             message: `Cotización "${cotizacion.nombre}" desarchivada exitosamente`
@@ -396,22 +396,22 @@ export async function eliminarCotizacion(cotizacionId: string) {
             });
         });
 
-        console.log(`🔍 Analizando dependencias para cotización ${cotizacionId}:`);
-        console.log(`- Cotización: "${cotizacion.nombre}" ($${cotizacion.precio.toLocaleString('es-MX')}) - Status: ${cotizacion.status}`);
-        console.log(`- ${serviciosCount} servicios`);
-        console.log(`- ${visitasCount} visitas`);
-        console.log(`- ${pagosCount} pagos`);
-        console.log(`- ${costosCount} costos adicionales`);
-        console.log(`- ${agendasCount} agendas en el evento`);
-        console.log(`- ${nominasCount} nóminas asociadas (${nominasActivas.length} activas)`);
+        //console.log(`🔍 Analizando dependencias para cotización ${cotizacionId}:`);
+        //console.log(`- Cotización: "${cotizacion.nombre}" ($${cotizacion.precio.toLocaleString('es-MX')}) - Status: ${cotizacion.status}`);
+        //console.log(`- ${serviciosCount} servicios`);
+        //console.log(`- ${visitasCount} visitas`);
+        //console.log(`- ${pagosCount} pagos`);
+        //console.log(`- ${costosCount} costos adicionales`);
+        //console.log(`- ${agendasCount} agendas en el evento`);
+        //console.log(`- ${nominasCount} nóminas asociadas (${nominasActivas.length} activas)`);
 
         // 3. Verificar si hay dependencias críticas que bloqueen eliminación
 
         // BLOQUEO: Cotización aprobada con nóminas activas
         if (cotizacion.status === COTIZACION_STATUS.APROBADA && nominasActivas.length > 0) {
-            console.log('❌ Eliminación bloqueada: Cotización aprobada con nóminas activas');
+            //console.log('❌ Eliminación bloqueada: Cotización aprobada con nóminas activas');
             nominasActivas.forEach((nomina, index) => {
-                console.log(`   ${index + 1}. ${nomina.concepto} (${nomina.status}) - ${nomina.responsable}`);
+                //console.log(`   ${index + 1}. ${nomina.concepto} (${nomina.status}) - ${nomina.responsable}`);
             });
 
             return {
@@ -426,26 +426,26 @@ export async function eliminarCotizacion(cotizacionId: string) {
 
         // 4. Mostrar advertencias informativas (no bloquean eliminación)
         if (nominasActivas.length > 0) {
-            console.log(`💼 Info: ${nominasActivas.length} nómina(s) activa(s) serán preservadas como registros independientes:`);
+            //console.log(`💼 Info: ${nominasActivas.length} nómina(s) activa(s) serán preservadas como registros independientes:`);
             nominasActivas.forEach((nomina, index) => {
-                console.log(`   ${index + 1}. ${nomina.concepto} (${nomina.status}) - ${nomina.responsable}`);
+                //console.log(`   ${index + 1}. ${nomina.concepto} (${nomina.status}) - ${nomina.responsable}`);
             });
         }
 
         if (agendasCount > 0) {
-            console.log(`⚠️  Advertencia: ${agendasCount} agenda(s) en el evento (no se eliminarán)`);
+            //console.log(`⚠️  Advertencia: ${agendasCount} agenda(s) en el evento (no se eliminarán)`);
         }
 
         if (pagosCount > 0) {
-            console.log(`💰 Info: ${pagosCount} pago(s) serán desvinculados (se preservan como registros)`);
+            //console.log(`💰 Info: ${pagosCount} pago(s) serán desvinculados (se preservan como registros)`);
         }
 
         // 5. Proceder con la eliminación
-        console.log('✅ Verificaciones pasadas. Procediendo con eliminación...');
+        //console.log('✅ Verificaciones pasadas. Procediendo con eliminación...');
 
         // Actualizar pagos para desvincularlos (SetNull ya está configurado en esquema)
         if (pagosCount > 0) {
-            console.log('🔄 Desvinculando pagos...');
+            //console.log('🔄 Desvinculando pagos...');
             await prisma.pago.updateMany({
                 where: { cotizacionId },
                 data: { cotizacionId: null }
@@ -456,12 +456,12 @@ export async function eliminarCotizacion(cotizacionId: string) {
         // - CotizacionServicio (las nóminas asociadas se preservan como registros huérfanos)
         // - CotizacionVisita  
         // - CotizacionCosto
-        console.log('🗑️  Eliminando cotización principal...');
+        //console.log('🗑️  Eliminando cotización principal...');
         await prisma.cotizacion.delete({
             where: { id: cotizacionId }
         });
 
-        console.log('✅ Cotización eliminada exitosamente');
+        //console.log('✅ Cotización eliminada exitosamente');
         return {
             success: true,
             eliminados: {

@@ -101,7 +101,7 @@ export default function CotizacionDetalle({
     const calcularTotalCotizacion = () => {
         // Usar directamente el precio de la cotización
         const precio = cotizacion.precio || 0
-        console.log('� Precio de cotización:', precio)
+        // console.log('� Precio de cotización:', precio)
         return precio
     }
 
@@ -144,7 +144,7 @@ export default function CotizacionDetalle({
     useEffect(() => {
         const total = calcularTotalCotizacion()
         setTotalCotizacion(total)
-        console.log('💰 Total de cotización actualizado:', total)
+        // console.log('💰 Total de cotización actualizado:', total)
     }, [cotizacion.precio])
 
     const verificarDisponibilidadReal = async () => {
@@ -223,7 +223,7 @@ export default function CotizacionDetalle({
             // console.log('3. Usando servicios de cotización directamente...')
 
             if (!cotizacion.Servicio || cotizacion.Servicio.length === 0) {
-                console.log('❌ No hay servicios en la cotización')
+                // console.log('❌ No hay servicios en la cotización')
                 setServiciosAgrupados({})
                 return
             }
@@ -231,24 +231,24 @@ export default function CotizacionDetalle({
             // console.log('✅ Servicios encontrados:', cotizacion.Servicio.length)
 
             // Mostrar cada servicio detalladamente
-            cotizacion.Servicio.forEach((cotizacionServicio: any, index: number) => {
-                console.log(`\n📦 SERVICIO ${index + 1}:`)
-                console.log('  - ID:', cotizacionServicio.id)
-                console.log('  - Servicio:', cotizacionServicio.Servicio?.nombre)
-                console.log('  - Snapshot nombre:', cotizacionServicio.nombre_snapshot)
-                console.log('  - Categoría:', cotizacionServicio.ServicioCategoria?.nombre)
-                console.log('  - Snapshot categoría:', cotizacionServicio.categoria_nombre_snapshot)
-                console.log('  - Sección snapshot:', cotizacionServicio.seccion_nombre_snapshot)
-                console.log('  - Precio:', cotizacionServicio.precioUnitario)
-                console.log('  - Cantidad:', cotizacionServicio.cantidad)
-                console.log('  - Subtotal:', cotizacionServicio.subtotal)
-            })
+            // cotizacion.Servicio.forEach((cotizacionServicio: any, index: number) => {
+            //     console.log(`\n📦 SERVICIO ${index + 1}:`)
+            //     console.log('  - ID:', cotizacionServicio.id)
+            //     console.log('  - Servicio:', cotizacionServicio.Servicio?.nombre)
+            //     console.log('  - Snapshot nombre:', cotizacionServicio.nombre_snapshot)
+            //     console.log('  - Categoría:', cotizacionServicio.ServicioCategoria?.nombre)
+            //     console.log('  - Snapshot categoría:', cotizacionServicio.categoria_nombre_snapshot)
+            //     console.log('  - Sección snapshot:', cotizacionServicio.seccion_nombre_snapshot)
+            //     console.log('  - Precio:', cotizacionServicio.precioUnitario)
+            //     console.log('  - Cantidad:', cotizacionServicio.cantidad)
+            //     console.log('  - Subtotal:', cotizacionServicio.subtotal)
+            // })
 
             // Procesar agrupación usando los datos de la cotización
             const agrupados: ServiciosAgrupados = {}
 
             cotizacion.Servicio.forEach((cotizacionServicio: any, index: number) => {
-                console.log(`\n--- Servicio ${index + 1} ---`)
+                // console.log(`\n--- Servicio ${index + 1} ---`)
 
                 // Usar primero los snapshots, luego los datos relacionados como fallback
                 const nombreServicio = cotizacionServicio.nombre_snapshot && cotizacionServicio.nombre_snapshot !== 'Servicio migrado'
@@ -277,8 +277,8 @@ export default function CotizacionDetalle({
                 const categoriaPosicion = cotizacionServicio.Servicio?.ServicioCategoria?.posicion ||
                     cotizacionServicio.ServicioCategoria?.posicion || 0
 
-                console.log(`\nProcesando: Sección="${seccionNombre}" (pos:${seccionPosicion}), Categoría="${categoriaNombre}" (pos:${categoriaPosicion}), Servicio="${nombreServicio}"`)
-                console.log(`Cantidad: ${cantidad}, Precio: ${precio}, Subtotal: ${subtotal}`)
+                // console.log(`\nProcesando: Sección="${seccionNombre}" (pos:${seccionPosicion}), Categoría="${categoriaNombre}" (pos:${categoriaPosicion}), Servicio="${nombreServicio}"`)
+                // console.log(`Cantidad: ${cantidad}, Precio: ${precio}, Subtotal: ${subtotal}`)
 
                 // Inicializar sección si no existe
                 if (!agrupados[seccionNombre]) {
@@ -328,15 +328,15 @@ export default function CotizacionDetalle({
             })
 
             // 🔧 ORDENAMIENTO DESHABILITADO TEMPORALMENTE PARA DIAGNÓSTICO
-            console.log('🔍 COTIZACIÓN PÚBLICA - Servicios sin ordenar frontend:');
+            // console.log('🔍 COTIZACIÓN PÚBLICA - Servicios sin ordenar frontend:');
             Object.entries(agrupados).forEach(([seccionNombre, seccionData]) => {
-                console.log(`\n📁 Sección: ${seccionNombre} (posicion: ${seccionData.posicion})`);
+                // console.log(`\n📁 Sección: ${seccionNombre} (posicion: ${seccionData.posicion})`);
                 Object.entries(seccionData.categorias).forEach(([categoriaNombre, categoriaData]) => {
-                    console.log(`  📂 Categoría: ${categoriaNombre} (posicion: ${categoriaData.posicion})`);
+                    // console.log(`  📂 Categoría: ${categoriaNombre} (posicion: ${categoriaData.posicion})`);
                     categoriaData.servicios.forEach((servicio: any, index: number) => {
                         const posicion = servicio.posicion || 'sin posición';
                         const nombre = servicio.nombre;
-                        console.log(`    ${index + 1}. [${posicion}] ${nombre}`);
+                        // console.log(`    ${index + 1}. [${posicion}] ${nombre}`);
                     });
                 });
             });
@@ -350,20 +350,20 @@ export default function CotizacionDetalle({
             //     });
             // });
 
-            console.log('\n=== SERVICIOS AGRUPADOS RESULTADO ===')
-            console.log('Secciones encontradas:', Object.keys(agrupados))
-            Object.entries(agrupados).forEach(([seccion, datos]) => {
-                console.log(`\nSección: ${seccion}`)
-                console.log(`  Categorías: ${Object.keys(datos.categorias)}`)
-                Object.entries(datos.categorias).forEach(([categoria, catDatos]) => {
-                    console.log(`    Categoría: ${categoria} - ${catDatos.servicios.length} servicios`)
-                    catDatos.servicios.forEach((servicio, idx) => {
-                        console.log(`      ${idx + 1}. ${servicio.nombre} (Cant: ${servicio.cantidad}, Precio: $${servicio.precio})`)
-                    })
-                })
-            })
+            // console.log('\n=== SERVICIOS AGRUPADOS RESULTADO ===')
+            // console.log('Secciones encontradas:', Object.keys(agrupados))
+            // Object.entries(agrupados).forEach(([seccion, datos]) => {
+            //     console.log(`\nSección: ${seccion}`)
+            //     console.log(`  Categorías: ${Object.keys(datos.categorias)}`)
+            //     Object.entries(datos.categorias).forEach(([categoria, catDatos]) => {
+            //         console.log(`    Categoría: ${categoria} - ${catDatos.servicios.length} servicios`)
+            //         catDatos.servicios.forEach((servicio, idx) => {
+            //             console.log(`      ${idx + 1}. ${servicio.nombre} (Cant: ${servicio.cantidad}, Precio: $${servicio.precio})`)
+            //         })
+            //     })
+            // })
 
-            console.log('🔍 === FIN DEBUG DE SERVICIOS ===')
+            // console.log('🔍 === FIN DEBUG DE SERVICIOS ===')
             setServiciosAgrupados(agrupados)
         } catch (error) {
             console.error('Error al cargar servicios agrupados:', error)
@@ -662,22 +662,16 @@ export default function CotizacionDetalle({
                         </div>
                     </div>
 
-                    <button className="text-zinc-400 hover:text-white">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                        </svg>
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <BadgeDisponibilidad fechaDisponible={fechaDisponible} />
+                    </div>
                 </div>
             </div>
 
             {/* Estado de la cotización */}
             <div className="p-4">
-                <div className="flex items-center justify-center mt-4">
-                    <BadgeDisponibilidad fechaDisponible={fechaDisponible} />
-                </div>
-
                 {esRealtime && !esAdmin && (
-                    <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-3 mt-4">
+                    <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-3">
                         <div className="flex items-center space-x-2 mb-1">
                             <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                             <span className="text-blue-400 font-medium text-sm">Sesión en tiempo real</span>
@@ -698,25 +692,20 @@ export default function CotizacionDetalle({
                     esRealtime={esRealtime}
                 />
 
-                {/* 🎁 Botón minimalista para comparar paquetes */}
+                {/* 🎁 Botón minimalista para comparar paquetes con gradiente morado */}
                 {hayPaquetesDisponibles && (
-                    <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 rounded-lg p-4">
+                    <div className="border border-zinc-700 rounded-lg p-3 bg-gradient-to-r from-purple-900/20 to-purple-800/20">
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-                                    <Package className="w-5 h-5 text-white" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-white">Explora otros paquetes</h3>
-                                    <p className="text-sm text-zinc-300">Compara tu cotización con paquetes disponibles</p>
-                                </div>
+                            <div className="flex items-center gap-2">
+                                <Package className="w-4 h-4 text-zinc-400" />
+                                <span className="text-sm text-zinc-300">¿Quieres ver otros paquetes?</span>
                             </div>
                             <Link
                                 href={`/comparador-paquetes?cotizacionId=${cotizacion.id}`}
-                                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
+                                className="text-sm text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1"
                             >
-                                Ver comparación
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                Comparar
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                             </Link>

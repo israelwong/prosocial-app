@@ -29,7 +29,7 @@ interface AutorizarCotizacionResult {
  */
 export async function autorizarCotizacion(cotizacionId: string): Promise<AutorizarCotizacionResult> {
     try {
-        console.log('🔥 Iniciando autorización de cotización:', cotizacionId);
+        //console.log('🔥 Iniciando autorización de cotización:', cotizacionId);
 
         // 1. Obtener la cotización completa
         const cotizacion = await prisma.cotizacion.findUnique({
@@ -70,7 +70,7 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
             return { error: 'No se encontró la etapa de autorización en el sistema' };
         }
 
-        console.log('📋 Etapa de autorización encontrada:', etapaAutorizado.nombre);
+        //console.log('📋 Etapa de autorización encontrada:', etapaAutorizado.nombre);
 
         // 3. Realizar las actualizaciones en una transacción
         const result = await prisma.$transaction(async (tx) => {
@@ -106,7 +106,7 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
                 }
             });
 
-            console.log(`🗃️ ${archivadas.count} cotizaciones del evento archivadas automáticamente`);
+            //console.log(`🗃️ ${archivadas.count} cotizaciones del evento archivadas automáticamente`);
 
             // Actualizar etapa del evento
             await tx.evento.update({
@@ -136,9 +136,9 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
                         updatedAt: new Date()
                     }
                 });
-                console.log('📅 Evento agregado a la agenda');
+                //console.log('📅 Evento agregado a la agenda');
             } else {
-                console.log('📅 Evento ya existe en la agenda');
+                //console.log('📅 Evento ya existe en la agenda');
             }
 
             // Crear entrada en bitácora del evento
@@ -171,12 +171,12 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
         revalidatePath(`/admin/dashboard/eventos/${evento.id}`);
         revalidatePath(`/admin/dashboard/eventos/${evento.id}/cotizacion`);
 
-        console.log('✅ Cotización autorizada exitosamente:', {
-            cotizacion: cotizacionId,
-            evento: evento.id,
-            etapa: result.etapaNombre,
-            archivadas: result.cotizacionesArchivadas
-        });
+        //console.log('✅ Cotización autorizada exitosamente:', {
+        //     cotizacion: cotizacionId,
+        //         evento: evento.id,
+        //             etapa: result.etapaNombre,
+        //                 archivadas: result.cotizacionesArchivadas
+        // });
 
         const mensaje = `Cotización autorizada exitosamente. El evento fue movido a la etapa: ${result.etapaNombre}` +
             (result.cotizacionesArchivadas > 0 ? `. ${result.cotizacionesArchivadas} cotización(es) adicional(es) fueron archivadas automáticamente.` : '');

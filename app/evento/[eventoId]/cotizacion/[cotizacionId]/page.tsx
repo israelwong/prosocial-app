@@ -22,17 +22,17 @@ export default async function CotizacionDetallePage({ params, searchParams }: Pa
     const { realtime, admin, legacy } = await searchParams
 
     try {
-        console.log('🔍 PAGE: Cargando página con IDs:', { eventoId, cotizacionId })
+        // console.log('🔍 PAGE: Cargando página con IDs:', { eventoId, cotizacionId })
 
         // Obtener la cotización completa directamente (igual que en el admin)
         const datosCotizacion = await obtenerCotizacionCompleta(cotizacionId)
 
-        console.log('🔍 PAGE: Cotización obtenida:', {
-            cotizacionId: datosCotizacion?.cotizacion?.id,
-            eventoId: datosCotizacion?.cotizacion?.Evento?.id,
-            clienteNombre: datosCotizacion?.cotizacion?.Evento?.Cliente?.nombre,
-            totalServicios: datosCotizacion?.cotizacion?.Servicio?.length || 0
-        })
+        // console.log('🔍 PAGE: Cotización obtenida:', {
+        //     cotizacionId: datosCotizacion?.cotizacion?.id,
+        //     eventoId: datosCotizacion?.cotizacion?.Evento?.id,
+        //     clienteNombre: datosCotizacion?.cotizacion?.Evento?.Cliente?.nombre,
+        //     totalServicios: datosCotizacion?.cotizacion?.Servicio?.length || 0
+        // })
 
         if (!datosCotizacion.cotizacion || !datosCotizacion.cotizacion.Evento) {
             console.log('❌ PAGE: No se encontró cotización o evento')
@@ -47,19 +47,19 @@ export default async function CotizacionDetallePage({ params, searchParams }: Pa
 
         // 🎯 VALIDACIÓN: Verificar primero si hay pagos paid/pending
         const estadoPagos = await verificarEstadoPagosCotizacion(cotizacionId);
-        
+
         if (estadoPagos.requiereLogin) {
-            console.log('🔄 Cotización con pago detectado, redirigiendo al login del cliente:', {
-                estadoPago: estadoPagos.estadoPago,
-                esPendiente: estadoPagos.esPendiente,
-                esPagado: estadoPagos.esPagado
-            });
-            
-            return <RedirectCliente 
-                motivo={estadoPagos.esPendiente 
-                    ? "Tu pago SPEI está siendo procesado" 
+            // console.log('🔄 Cotización con pago detectado, redirigiendo al login del cliente:', {
+            //     estadoPago: estadoPagos.estadoPago,
+            //     esPendiente: estadoPagos.esPendiente,
+            //     esPagado: estadoPagos.esPagado
+            // });
+
+            return <RedirectCliente
+                motivo={estadoPagos.esPendiente
+                    ? "Tu pago SPEI está siendo procesado"
                     : "Pago completado - Accede a tu cuenta"
-                } 
+                }
                 redirigirA="/cliente/auth/login"
             />
         }
@@ -70,8 +70,8 @@ export default async function CotizacionDetallePage({ params, searchParams }: Pa
 
         if (eventoAprobado) {
             console.log('🔄 Evento aprobado/contratado, mostrando redirección al cliente');
-            return <RedirectCliente 
-                motivo="Evento ya aprobado/contratado" 
+            return <RedirectCliente
+                motivo="Evento ya aprobado/contratado"
                 redirigirA="/cliente/auth/login"
             />
         }
