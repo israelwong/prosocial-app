@@ -25,7 +25,7 @@ export default function PaquetesSection({ paquetes, eventoId, showAsAlternative 
     const handleCompararpaquetes = () => {
         // Abrir en nueva pestaña el comparador de paquetes público
         const url = `/comparador-paquetes?eventoId=${eventoId}`
-        window.open(url, '_blank')
+        window.location.href = url
     }
 
     // Función para solicitar paquete personalizado
@@ -118,10 +118,10 @@ export default function PaquetesSection({ paquetes, eventoId, showAsAlternative 
                             onClick={handleSolicitarPersonalizado}
                             disabled={enviandoSolicitud || solicitudEnviada}
                             className={`inline-flex items-center gap-3 font-medium py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl group ${solicitudEnviada
-                                    ? 'bg-gradient-to-r from-green-600 to-green-700 text-white'
-                                    : enviandoSolicitud
-                                        ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white'
+                                ? 'bg-gradient-to-r from-green-600 to-green-700 text-white'
+                                : enviandoSolicitud
+                                    ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white'
                                 }`}
                         >
                             {solicitudEnviada ? (

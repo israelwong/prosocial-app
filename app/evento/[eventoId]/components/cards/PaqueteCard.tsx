@@ -120,22 +120,29 @@ export default function PaqueteCard({ paquete, eventoId, index, isPopular = fals
                     <div className={`w-1.5 h-1.5 rounded-full bg-green-400`} />
                     <span>Paquete pre-diseñado</span>
                 </div>
+                <div className="flex items-center gap-2 text-sm text-zinc-300">
+                    <div className={`w-1.5 h-1.5 rounded-full bg-green-400`} />
+                    <span>Servicios incluidos optimizados</span>
+                </div>
             </div>
 
-            {/* Botón de acción */}
-            <Link href={`/evento/paquetes/${paquete.id}`}>
-                <button className={`
-                    w-full py-4 px-6 rounded-xl font-semibold text-white 
-                    transition-all duration-200 border-2
-                    bg-zinc-700 hover:bg-zinc-600 border-zinc-600 hover:border-zinc-500
-                    flex items-center justify-center gap-2
-                    shadow-lg hover:shadow-xl
-                    transform active:scale-[0.98]
-                `}>
-                    <span>Ver paquete</span>
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </button>
-            </Link>
+            {/* Botones de acción */}
+            <div className="space-y-3">
+                {/* Botón ver detalles */}
+                <Link href={`/evento/paquetes/${paquete.id}?eventoId=${eventoId}`}>
+                    <button className={`
+                        w-full py-3 px-6 rounded-xl font-semibold text-white 
+                        transition-all duration-200 border-2
+                        bg-zinc-700 hover:bg-zinc-600 border-zinc-600 hover:border-zinc-500
+                        flex items-center justify-center gap-2
+                        shadow-lg hover:shadow-xl
+                        transform active:scale-[0.98]
+                    `}>
+                        <span>Ver detalles</span>
+                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </button>
+                </Link>
+            </div>
 
             {/* Indicador de tipo */}
             <div className="absolute top-4 right-4">
