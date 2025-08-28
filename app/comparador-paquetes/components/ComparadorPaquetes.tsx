@@ -285,7 +285,7 @@ export default function ComparadorPaquetes() {
 
                     // Inicializar columnas visibles DESPUÉS de establecer la cotización
                     const columnasIniciales: { [key: string]: boolean } = {}
-                    
+
                     // Solo mostrar cotización si existe
                     if (cotizacionPrincipal) {
                         columnasIniciales.cotizacion = true
