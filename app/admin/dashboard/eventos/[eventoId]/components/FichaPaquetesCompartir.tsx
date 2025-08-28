@@ -40,7 +40,7 @@ export default function FichaPaquetesCompartir({ eventoCompleto }: Props) {
 
     const handleCompartirWhatsApp = async () => {
         setCompartiendo(true)
-        
+
         try {
             // 1. Abrir WhatsApp
             const whatsappUrl = `https://wa.me/${eventoCompleto.Cliente?.telefono?.replace(/\D/g, '')}?text=${encodeURIComponent(mensajeWhatsApp)}`
@@ -63,7 +63,7 @@ export default function FichaPaquetesCompartir({ eventoCompleto }: Props) {
             }
 
             console.log('✅ Compartición registrada en bitácora')
-            
+
         } catch (error) {
             console.error('❌ Error al compartir por WhatsApp:', error)
         } finally {
@@ -88,11 +88,10 @@ export default function FichaPaquetesCompartir({ eventoCompleto }: Props) {
                 <button
                     onClick={handleCopiarLink}
                     disabled={copiandoLink}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs transition-all duration-200 ${
-                        copiandoLink 
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                    className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs transition-all duration-200 ${copiandoLink
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                             : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-600'
-                    }`}
+                        }`}
                     title="Copiar enlace al portapapeles"
                 >
                     {copiandoLink ? (
@@ -109,13 +108,12 @@ export default function FichaPaquetesCompartir({ eventoCompleto }: Props) {
                 <button
                     onClick={handleCompartirWhatsApp}
                     disabled={compartiendo || !eventoCompleto.Cliente?.telefono}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs transition-all duration-200 ${
-                        compartiendo 
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                    className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs transition-all duration-200 ${compartiendo
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                             : eventoCompleto.Cliente?.telefono
                                 ? 'bg-green-600 hover:bg-green-700 text-white border border-green-500'
                                 : 'bg-zinc-700 text-zinc-500 border border-zinc-600 cursor-not-allowed'
-                    }`}
+                        }`}
                     title={eventoCompleto.Cliente?.telefono ? 'Compartir por WhatsApp' : 'Sin teléfono registrado'}
                 >
                     {compartiendo ? (

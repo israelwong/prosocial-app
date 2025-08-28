@@ -53,8 +53,15 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
         }
     }, [])
 
-    // Suscripción en tiempo real (igual que FichaCotizacionesUnificada)
-    const suscripcionSupabase = useCallback(() => {
+    // Cargar notificaciones iniciales
+    useEffect(() => {
+        cargarNotificaciones()
+    }, [cargarNotificaciones])
+
+    // Suscripción en tiempo real con cleanup adecuado
+    useEffect(() => {
+        console.log('🔌 Conectando suscripción de notificaciones...')
+        
         const subscription = supabase
             .channel('realtime:Notificacion')
             .on(
@@ -65,7 +72,8 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                     // Recargar todas las notificaciones cuando hay un cambio
                     await cargarNotificaciones()
                 }
-            ).subscribe((status, err) => {
+            )
+            .subscribe((status, err) => {
                 if (err) {
                     console.error('❌ Error en la suscripción Notificacion:', err)
                 } else {
@@ -73,21 +81,12 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                 }
             })
 
+        // Cleanup function para evitar memory leaks
         return () => {
+            console.log('🧹 Desconectando suscripción de notificaciones...')
             subscription.unsubscribe()
         }
     }, [cargarNotificaciones])
-
-    // Cargar notificaciones iniciales
-    useEffect(() => {
-        cargarNotificaciones()
-    }, [cargarNotificaciones])
-
-    // Configurar suscripción realtime
-    useEffect(() => {
-        const unsubscribe = suscripcionSupabase()
-        return unsubscribe
-    }, [suscripcionSupabase])
 
     // Cerrar dropdown al hacer clic fuera
     useEffect(() => {

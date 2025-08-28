@@ -54,6 +54,7 @@ const ListaCotizaciones: React.FC<Props> = ({ eventoId, eventoTipoId, eventoAsig
     }, [eventoId]);
 
     useEffect(() => {
+        console.log('🔌 Configurando datos y suscripción realtime...')
 
         const fetchData = async () => {
             setLoading(true)
@@ -68,7 +69,15 @@ const ListaCotizaciones: React.FC<Props> = ({ eventoId, eventoTipoId, eventoAsig
         }
 
         fetchData()
-        suscripcionSupabase()
+        
+        // Configurar suscripción realtime con cleanup
+        const unsubscribe = suscripcionSupabase()
+        
+        // Cleanup function para evitar memory leaks
+        return () => {
+            console.log('🧹 Limpiando suscripción de cotizaciones...')
+            unsubscribe()
+        }
 
     }, [eventoId, eventoTipoId, suscripcionSupabase])
 
