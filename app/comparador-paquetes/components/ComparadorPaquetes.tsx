@@ -369,7 +369,7 @@ export default function ComparadorPaquetes() {
                             {cotizacion ? 'Comparar Paquetes' : 'Paquetes Disponibles'}
                         </h1>
                         <p className="text-zinc-400">
-                            {cotizacion 
+                            {cotizacion
                                 ? `${cotizacion.nombre} • ${cotizacion.evento.nombre}`
                                 : `${eventoData?.nombre || 'Evento'} • ${eventoData?.eventoTipo?.nombre || 'Sin tipo'}`
                             }

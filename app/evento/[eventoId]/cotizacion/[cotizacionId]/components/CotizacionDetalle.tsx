@@ -701,7 +701,7 @@ export default function CotizacionDetalle({
                                 <span className="text-sm text-zinc-300">¿Quieres ver otros paquetes?</span>
                             </div>
                             <Link
-                                href={`/comparador-paquetes?cotizacionId=${cotizacion.id}`}
+                                href={`/comparador-paquetes?eventoId=${evento.id}`}
                                 className="text-sm text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1"
                             >
                                 Comparar
