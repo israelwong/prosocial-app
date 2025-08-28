@@ -37,7 +37,7 @@ export default function FichaBitacoraUnificada({ eventoCompleto }: Props) {
     // Suscripción realtime para EventoBitacora (patrón probado)
     useEffect(() => {
         console.log('🔔 Configurando suscripción realtime para EventoBitacora')
-        
+
         const subscription = supabase
             .channel('realtime:EventoBitacora')
             .on(
@@ -133,7 +133,7 @@ export default function FichaBitacoraUnificada({ eventoCompleto }: Props) {
             <div className="space-y-3">
                 <div className="flex items-center justify-between border-b border-zinc-700 pb-2">
                     <h3 className="text-lg font-semibold text-zinc-200">Seguimiento</h3>
-                    
+
                     {/* Indicadores y controles */}
                     <div className="flex items-center gap-3">
                         {/* Indicador realtime */}
@@ -141,7 +141,7 @@ export default function FichaBitacoraUnificada({ eventoCompleto }: Props) {
                             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                             <span>En vivo</span>
                         </div>
-                        
+
                         {/* Botón de recarga manual */}
                         <button
                             onClick={recargarBitacora}
