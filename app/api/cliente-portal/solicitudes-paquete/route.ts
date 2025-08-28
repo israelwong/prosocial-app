@@ -4,7 +4,7 @@ import prisma from '@/app/admin/_lib/prismaClient'
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { paqueteId, cotizacionId, eventoId, clienteId } = body
+        let { paqueteId, cotizacionId, eventoId, clienteId } = body
 
         console.log('📝 Nueva solicitud de paquete recibida:', {
             paqueteId,
@@ -68,7 +68,13 @@ export async function POST(request: NextRequest) {
             evento = await prisma.evento.findUnique({
                 where: { id: eventoId },
                 include: {
-                    Cliente: true
+                    Cliente: true,
+                    Cotizacion: {
+                        orderBy: {
+                            createdAt: 'desc'
+                        },
+                        take: 1
+                    }
                 }
             })
 
@@ -80,6 +86,23 @@ export async function POST(request: NextRequest) {
             }
 
             cliente = evento.Cliente
+            
+            // Si el evento tiene cotizaciones, usar la más reciente
+            if (evento.Cotizacion && evento.Cotizacion.length > 0) {
+                cotizacionId = evento.Cotizacion[0].id
+            } else {
+                // Si no hay cotización, crear una básica para este evento
+                const nuevaCotizacion = await prisma.cotizacion.create({
+                    data: {
+                        eventoId: evento.id,
+                        eventoTipoId: evento.eventoTipoId || paquete.eventoTipoId,
+                        nombre: `Cotización para ${evento.nombre}`,
+                        precio: 0,
+                        status: 'borrador'
+                    }
+                })
+                cotizacionId = nuevaCotizacion.id
+            }
         }
 
         if (!cliente) {
@@ -89,22 +112,40 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        // Asegurar que cotizacionId no sea undefined
+        if (!cotizacionId) {
+            console.error('❌ cotizacionId es undefined después del procesamiento')
+            return NextResponse.json(
+                { error: 'No se pudo obtener o crear cotización para el evento' },
+                { status: 500 }
+            )
+        }
+
+        console.log('✅ Datos validados:', {
+            paqueteId,
+            cotizacionId,
+            eventoId,
+            clienteNombre: cliente?.nombre,
+            paqueteNombre: paquete.nombre
+        })
+
         // Crear la solicitud de paquete
         const solicitud = await prisma.solicitudPaquete.create({
             data: {
                 paqueteId: paqueteId,
-                cotizacionId: cotizacionId, // Puede ser null
+                cotizacionId: cotizacionId, // Ahora validado que no sea undefined
                 clienteNombre: cliente?.nombre || 'Cliente',
                 clienteEmail: cliente?.email || clienteId,
                 clienteTelefono: cliente?.telefono,
                 mensaje: `Solicitud desde el comparador de paquetes`,
+                // Datos del paquete (snapshot)
                 paqueteNombre: paquete.nombre,
                 precioPaquete: paquete.precio || 0,
-                diferenciaPrecio: (paquete.precio || 0) - (cotizacion?.precio || 0),
+                diferenciaPrecio: null, // Se calculará después si es necesario
+                // Datos del evento
                 eventoFecha: evento?.fecha_evento,
                 eventoLugar: evento?.sede,
-                estado: 'pendiente',
-                fechaSolicitud: new Date()
+                estado: 'pendiente'
             }
         })
 
