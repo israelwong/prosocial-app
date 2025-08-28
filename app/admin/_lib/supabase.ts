@@ -18,7 +18,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     },
     global: {
         headers: {
-            'x-client-info': 'prosocial-app'
+            'x-client-info': 'prosocial-app-admin'
         }
+    },
+    auth: {
+        persistSession: false // Para admin no necesitamos sesiones persistentes
     }
 });

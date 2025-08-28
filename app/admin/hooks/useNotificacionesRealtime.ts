@@ -16,6 +16,7 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
     const [nuevasNotificaciones, setNuevasNotificaciones] = useState(0)
     const [conexionRealtime, setConexionRealtime] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
     const [reintentos, setReintentos] = useState(0)
+    const [ultimaActualizacion, setUltimaActualizacion] = useState<Date>(new Date())
     const maxReintentos = 5
 
     // Función para recargar notificaciones
@@ -26,15 +27,44 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
 
             // ✅ Filtrar notificaciones ocultas por seguridad extra
             const notificacionesVisibles = result.filter((n: any) => n.status !== 'oculta')
+            
+            // Actualizar última vez que se recargaron
+            setUltimaActualizacion(new Date())
             setNotificaciones(notificacionesVisibles || [])
 
             // Contar nuevas notificaciones (pendientes/no leídas)
             const noLeidas = notificacionesVisibles.filter((n: any) => n.status !== 'leida')
             setNuevasNotificaciones(noLeidas.length)
+            
+            console.log('🔄 Notificaciones recargadas:', {
+                total: notificacionesVisibles.length,
+                noLeidas: noLeidas.length,
+                timestamp: new Date().toISOString()
+            })
         } catch (error) {
             console.error('Error al recargar notificaciones:', error)
         }
     }, [])
+
+    // Sistema de polling de respaldo
+    useEffect(() => {
+        let pollingInterval: NodeJS.Timeout
+
+        // Si el realtime no está conectado, usar polling cada 30 segundos
+        if (conexionRealtime !== 'connected') {
+            console.log('🔄 Iniciando polling de respaldo para notificaciones')
+            pollingInterval = setInterval(() => {
+                console.log('📡 Polling: Verificando nuevas notificaciones...')
+                recargarNotificaciones()
+            }, 30000) // 30 segundos
+        }
+
+        return () => {
+            if (pollingInterval) {
+                clearInterval(pollingInterval)
+            }
+        }
+    }, [conexionRealtime, recargarNotificaciones])
 
     // Configurar suscripción realtime con reconexión automática
     const configurarSuscripcion = useCallback(() => {
@@ -46,13 +76,13 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
 
         // Configurar canal realtime con configuración mejorada
         const channel = supabase
-            .channel(`notificaciones-realtime-${Date.now()}`, {
+            .channel(`notif-admin-${Math.random().toString(36).substr(2, 9)}`, {
                 config: {
                     presence: {
                         key: 'admin-notifications'
                     },
                     broadcast: {
-                        self: false // Evitar duplicados
+                        self: false
                     }
                 }
             })
@@ -64,7 +94,20 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
                     table: 'Notificacion'
                 },
                 async (payload) => {
-                    console.log('🔔 Evento realtime en notificaciones:', payload.eventType, payload.new || payload.old)
+                    console.log('🔔 [REALTIME DEBUG] Evento recibido:', {
+                        eventType: payload.eventType,
+                        timestamp: new Date().toISOString(),
+                        newData: payload.new && (payload.new as any)?.id ? {
+                            id: (payload.new as any).id,
+                            titulo: (payload.new as any).titulo,
+                            tipo: (payload.new as any).tipo,
+                            status: (payload.new as any).status
+                        } : null,
+                        oldData: payload.old && (payload.old as any)?.id ? {
+                            id: (payload.old as any).id,
+                            status: (payload.old as any).status
+                        } : null
+                    })
 
                     try {
                         switch (payload.eventType) {
@@ -152,38 +195,46 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
                 }
             )
             .subscribe((status, err) => {
+                console.log(`🔔 [REALTIME] Estado: ${status}`, err ? `Error: ${err.message}` : '')
+                
                 if (err) {
                     console.error('❌ Error en suscripción de notificaciones:', err)
                     setConexionRealtime('disconnected')
-
+                    
                     // Reintentar conexión con backoff exponencial
                     if (reintentos < maxReintentos) {
-                        const tiempoEspera = Math.min(1000 * Math.pow(2, reintentos), 30000) // Max 30 segundos
-                        console.log(`🔄 Reintentando conexión en ${tiempoEspera / 1000}s (intento ${reintentos + 1}/${maxReintentos})`)
-
+                        const tiempoEspera = Math.min(1000 * Math.pow(2, reintentos), 30000)
+                        console.log(`🔄 Reintentando conexión en ${tiempoEspera/1000}s (intento ${reintentos + 1}/${maxReintentos})`)
+                        
                         setTimeout(() => {
                             setReintentos(prev => prev + 1)
                             configurarSuscripcion()
                         }, tiempoEspera)
                     } else {
-                        console.log('💥 Máximo número de reintentos alcanzado. Recarga manual necesaria.')
+                        console.log('💥 Máximo número de reintentos alcanzado. Usando polling de respaldo.')
+                        // Activar polling de respaldo más frecuente
+                        setConexionRealtime('disconnected')
                     }
                 } else {
-                    console.log('✅ Suscripción de notificaciones:', status)
                     if (status === 'SUBSCRIBED') {
-                        console.log('🎯 Canal realtime activo y escuchando cambios en Notificacion')
+                        console.log('🎯 Canal realtime conectado exitosamente')
                         setConexionRealtime('connected')
                         setReintentos(0) // Reset reintentos en conexión exitosa
-                    } else if (status === 'CHANNEL_ERROR') {
+                    } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                        console.log(`⚠️ Problema de conexión: ${status}`)
                         setConexionRealtime('disconnected')
-                    } else if (status === 'TIMED_OUT') {
+                        
+                        // Reintentar después de un tiempo
+                        setTimeout(() => {
+                            console.log('🔄 Reintentando por timeout/error...')
+                            configurarSuscripcion()
+                        }, 5000)
+                    } else if (status === 'CLOSED') {
                         setConexionRealtime('disconnected')
-                        // Reintentar conexión
-                        setTimeout(() => configurarSuscripcion(), 3000)
                     }
                 }
             })
-
+        
         return channel
     }, [recargarNotificaciones, reintentos])
 

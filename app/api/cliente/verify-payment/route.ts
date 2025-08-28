@@ -94,6 +94,36 @@ export async function GET(request: NextRequest) {
                     categoria_transaccion: 'abono'
                 }
             });
+
+            // 🔔 Crear notificación para el equipo admin
+            try {
+                await prisma.notificacion.create({
+                    data: {
+                        cotizacionId: cotizacionId,
+                        titulo: `💰 Pago recibido - ${cotizacion.Evento.Cliente?.nombre || 'Cliente'}`,
+                        mensaje: `Se ha recibido un pago de ${monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })} para la cotización "${cotizacion.nombre}".`,
+                        tipo: "pago_confirmado",
+                        metadata: {
+                            eventoId: cotizacion.Evento.id,
+                            pagoId: pago.id,
+                            monto: monto,
+                            metodoPago: "stripe_portal",
+                            clienteId: cotizacion.Evento.clienteId,
+                            clienteNombre: cotizacion.Evento.Cliente?.nombre,
+                            rutaDestino: `/admin/dashboard/seguimiento/${cotizacion.Evento.id}`,
+                            accionBitacora: {
+                                habilitada: true,
+                                mensaje: `Pago recibido: ${monto.toLocaleString("es-MX", { style: "currency", currency: "MXN" })} - Portal Cliente`,
+                            },
+                        },
+                        status: "active",
+                    },
+                });
+
+                console.log("🔔 Notificación creada para pago desde portal del cliente");
+            } catch (notifError) {
+                console.error("❌ Error creando notificación de pago:", notifError);
+            }
         }
 
         // Obtener información del evento

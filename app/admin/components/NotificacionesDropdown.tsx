@@ -4,6 +4,7 @@ import { Bell, X, Eye, ExternalLink, Clock, CheckCircle, AlertCircle } from 'luc
 import Link from 'next/link'
 import { marcarComoLeida, ocultarNotificacion } from '../_lib/notificacion.actions'
 import { useNotificacionesRealtime } from '../hooks/useNotificacionesRealtime'
+import { useNotificacionesPolling } from '../hooks/useNotificacionesPolling'
 
 interface Notificacion {
     id: string
@@ -27,14 +28,19 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
     const [loading, setLoading] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
 
-    // 🔔 Usar hook de realtime
+    // 🔔 Intentar usar realtime, pero tener polling como respaldo
+    const realtime = useNotificacionesRealtime()
+    const polling = useNotificacionesPolling()
+    
+    // Usar realtime si está conectado, sino usar polling
     const {
         notificaciones,
         nuevasNotificaciones,
-        conexionRealtime,
         recargarNotificaciones,
         ocultarNotificacionOptimistic
-    } = useNotificacionesRealtime()
+    } = realtime.conexionRealtime === 'connected' ? realtime : polling
+
+    const conexionRealtime = realtime.conexionRealtime
 
     // Cerrar dropdown al hacer clic fuera
     useEffect(() => {
@@ -218,20 +224,32 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                 {/* Indicador de conexión realtime */}
                                 <div className={`flex items-center space-x-1 text-xs px-2 py-1 rounded-full ${conexionRealtime === 'connected' ? 'bg-green-500/20 text-green-400' :
                                         conexionRealtime === 'connecting' ? 'bg-yellow-500/20 text-yellow-400' :
-                                            'bg-red-500/20 text-red-400'
+                                            'bg-blue-500/20 text-blue-400'
                                     }`}>
                                     <div className={`w-1.5 h-1.5 rounded-full ${conexionRealtime === 'connected' ? 'bg-green-400' :
                                             conexionRealtime === 'connecting' ? 'bg-yellow-400 animate-pulse' :
-                                                'bg-red-400'
+                                                'bg-blue-400 animate-pulse'
                                         }`} />
                                     <span>
                                         {conexionRealtime === 'connected' ? 'En vivo' :
                                             conexionRealtime === 'connecting' ? 'Conectando...' :
-                                                'Desconectado'}
+                                                'Polling'}
                                     </span>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-2">
+                                {/* Botón de recarga manual */}
+                                <button
+                                    onClick={() => {
+                                        console.log('🔄 Recarga manual de notificaciones')
+                                        recargarNotificaciones()
+                                    }}
+                                    className="text-xs text-zinc-400 hover:text-zinc-200 px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-600 transition-colors"
+                                    title="Recargar notificaciones"
+                                >
+                                    ⟳
+                                </button>
+                                
                                 {nuevasNotificaciones > 0 && (
                                     <span className="text-xs text-zinc-400">
                                         {nuevasNotificaciones} nuevas
