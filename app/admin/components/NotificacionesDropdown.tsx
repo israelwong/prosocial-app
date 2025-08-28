@@ -61,7 +61,7 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
     // Suscripción en tiempo real con cleanup adecuado
     useEffect(() => {
         console.log('🔌 Conectando suscripción de notificaciones...')
-        
+
         const subscription = supabase
             .channel('realtime:Notificacion')
             .on(

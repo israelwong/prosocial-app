@@ -69,10 +69,10 @@ const ListaCotizaciones: React.FC<Props> = ({ eventoId, eventoTipoId, eventoAsig
         }
 
         fetchData()
-        
+
         // Configurar suscripción realtime con cleanup
         const unsubscribe = suscripcionSupabase()
-        
+
         // Cleanup function para evitar memory leaks
         return () => {
             console.log('🧹 Limpiando suscripción de cotizaciones...')

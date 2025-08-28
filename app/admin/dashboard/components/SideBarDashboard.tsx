@@ -155,13 +155,13 @@ function DashboardSideBar() {
     //! Función para obtener los conteos de eventos en seguimiento y aprobados
     useEffect(() => {
         console.log('🔌 Configurando suscripciones de conteo y pagos...')
-        
+
         // Configurar suscripción de conteos
         const unsubscribeConteos = suscripionConteos()
-        
+
         // Configurar suscripción de pagos
         const unsubscribePagos = suscripcionPagos()
-        
+
         // Cleanup function para evitar memory leaks
         return () => {
             console.log('🧹 Limpiando suscripciones de conteo y pagos...')
