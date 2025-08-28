@@ -4,7 +4,7 @@ import prisma from '@/app/admin/_lib/prismaClient'
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { eventoId, tipo, mensaje } = body
+        const { eventoId, tipo, mensaje, metadata: metadataAdicional } = body
 
         // Validar datos requeridos
         if (!eventoId) {
@@ -49,7 +49,13 @@ export async function POST(request: NextRequest) {
                     tipoSolicitud: tipo || 'paquete_personalizado',
                     mensajePersonalizado: mensaje,
                     fechaSolicitud: new Date().toISOString(),
-                    origen: 'vista_publica_paquetes'
+                    origen: 'vista_publica_paquetes',
+                    // Información para el sistema de notificaciones
+                    rutaDestino: metadataAdicional?.rutaDestino || `/admin/dashboard/seguimiento/${evento.id}`,
+                    accionBitacora: metadataAdicional?.accionBitacora || {
+                        habilitada: true,
+                        mensaje: `📝 ${evento.Cliente?.nombre || 'Cliente'} solicitó cotización personalizada desde vista pública de paquetes`
+                    }
                 }
             }
         })

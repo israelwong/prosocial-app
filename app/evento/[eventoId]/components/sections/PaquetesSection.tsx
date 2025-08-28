@@ -41,7 +41,17 @@ export default function PaquetesSection({ paquetes, eventoId, showAsAlternative 
                 body: JSON.stringify({
                     eventoId: eventoId,
                     tipo: 'paquete_personalizado',
-                    mensaje: 'Cliente solicita cotización personalizada desde vista pública de paquetes'
+                    mensaje: 'Cliente solicita cotización personalizada desde vista pública de paquetes',
+                    // Metadata adicional para el sistema de notificaciones
+                    metadata: {
+                        rutaDestino: `/admin/dashboard/seguimiento/${eventoId}`,
+                        accionBitacora: {
+                            habilitada: true,
+                            mensaje: '📝 Cliente solicitó cotización personalizada desde vista pública de paquetes'
+                        },
+                        origen: 'vista_publica_paquetes',
+                        tipoSolicitud: 'paquete_personalizado'
+                    }
                 })
             })
 

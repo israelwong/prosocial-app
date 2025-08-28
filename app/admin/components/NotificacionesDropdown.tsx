@@ -146,6 +146,11 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                     ? `/admin/dashboard/eventos/${metadata.eventoId}`
                     : null
 
+            case 'solicitud_personalizada':
+                return metadata.eventoId
+                    ? `/admin/dashboard/seguimiento/${metadata.eventoId}`
+                    : metadata.rutaDestino || null
+
             case 'pago_confirmado':
             case 'pago_recibido':
                 return metadata.eventoId
