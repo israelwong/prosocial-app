@@ -61,6 +61,7 @@ export default function ComparadorPaquetes() {
     const eventoId = searchParams?.get('eventoId')
 
     const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null)
+    const [eventoData, setEventoData] = useState<any>(null) // Datos del evento
     const [paquetes, setPaquetes] = useState<Paquete[]>([])
     const [serviciosCotizacion, setServiciosCotizacion] = useState<ServiciosAgrupados>({})
     const [serviciosPaquetes, setServiciosPaquetes] = useState<{ [key: string]: ServiciosAgrupados }>({})
@@ -206,7 +207,7 @@ export default function ComparadorPaquetes() {
                 body: JSON.stringify({
                     paqueteId: paqueteSeleccionado.id,
                     eventoId,
-                    clienteId: cotizacion?.cliente?.email
+                    clienteId: cotizacion?.cliente?.email || eventoData?.cliente?.email
                 })
             })
             // console.log({ response })
@@ -238,8 +239,11 @@ export default function ComparadorPaquetes() {
 
     // Funciones para manejo de filtros de columnas
     const inicializarColumnasVisibles = (paquetesList: Paquete[]) => {
-        const columnasIniciales: { [key: string]: boolean } = {
-            cotizacion: true // La cotización siempre visible
+        const columnasIniciales: { [key: string]: boolean } = {}
+
+        // Solo mostrar cotización si existe
+        if (cotizacion) {
+            columnasIniciales.cotizacion = true
         }
 
         paquetesList.forEach(paquete => {
@@ -272,17 +276,18 @@ export default function ComparadorPaquetes() {
                 const eventoResponse = await fetch(`/api/comparador/evento/${eventoId}`)
                 if (!eventoResponse.ok) throw new Error('Error al cargar datos del evento')
 
-                const eventoData = await eventoResponse.json()
-                
-                // Usar la primera cotización como principal (o la que esté marcada como principal)
-                const cotizacionPrincipal = eventoData.cotizaciones?.[0]
+                const eventoDataResponse = await eventoResponse.json()
+                setEventoData(eventoDataResponse)
+
+                // Si hay cotizaciones, usar la primera como principal
+                const cotizacionPrincipal = eventoDataResponse.cotizaciones?.[0]
                 if (cotizacionPrincipal) {
                     setCotizacion(cotizacionPrincipal)
                     const serviciosAgrupadosCotizacion = agruparServicios(cotizacionPrincipal.servicios)
                     setServiciosCotizacion(serviciosAgrupadosCotizacion)
                 }
 
-                const eventoTipo = eventoData.eventoTipoId
+                const eventoTipo = eventoDataResponse.eventoTipoId
                 setEventoTipoId(eventoTipo)
 
                 if (eventoTipo) {
@@ -327,13 +332,13 @@ export default function ComparadorPaquetes() {
         )
     }
 
-    if (!cotizacion) {
+    if (!cotizacion && (!eventoData || !paquetes || paquetes.length === 0)) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="text-center">
                     <X className="w-16 h-16 text-red-500 mx-auto mb-4" />
                     <p className="text-white text-xl">Error al cargar los datos del evento</p>
-                    <p className="text-gray-400 mt-2">No se encontraron cotizaciones para este evento</p>
+                    <p className="text-gray-400 mt-2">No se encontraron datos para mostrar</p>
                 </div>
             </div>
         )
@@ -344,18 +349,30 @@ export default function ComparadorPaquetes() {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
-                    <Link
-                        href={`/evento/${cotizacion.evento.id}/cotizacion/${cotizacion.id}`}
-                        className="text-zinc-400 hover:text-white transition-colors"
-                    >
-                        <ArrowLeft className="w-6 h-6" />
-                    </Link>
+                    {cotizacion ? (
+                        <Link
+                            href={`/evento/${cotizacion.evento.id}/cotizacion/${cotizacion.id}`}
+                            className="text-zinc-400 hover:text-white transition-colors"
+                        >
+                            <ArrowLeft className="w-6 h-6" />
+                        </Link>
+                    ) : (
+                        <Link
+                            href={`/evento/${eventoData?.id || '#'}`}
+                            className="text-zinc-400 hover:text-white transition-colors"
+                        >
+                            <ArrowLeft className="w-6 h-6" />
+                        </Link>
+                    )}
                     <div>
                         <h1 className="text-2xl font-bold text-white">
-                            Comparar Paquetes
+                            {cotizacion ? 'Comparar Paquetes' : 'Paquetes Disponibles'}
                         </h1>
                         <p className="text-zinc-400">
-                            {cotizacion.nombre} • {cotizacion.evento.nombre}
+                            {cotizacion 
+                                ? `${cotizacion.nombre} • ${cotizacion.evento.nombre}`
+                                : `${eventoData?.nombre || 'Evento'} • ${eventoData?.eventoTipo?.nombre || 'Sin tipo'}`
+                            }
                         </p>
                     </div>
                 </div>

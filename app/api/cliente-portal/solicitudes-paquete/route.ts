@@ -4,18 +4,19 @@ import prisma from '@/app/admin/_lib/prismaClient'
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { paqueteId, cotizacionId, clienteId } = body
+        const { paqueteId, cotizacionId, eventoId, clienteId } = body
 
         console.log('📝 Nueva solicitud de paquete recibida:', {
             paqueteId,
             cotizacionId,
+            eventoId,
             clienteId
         })
 
-        // Validar datos requeridos
-        if (!paqueteId || !cotizacionId || !clienteId) {
+        // Validar datos requeridos - ahora cotizacionId es opcional si hay eventoId
+        if (!paqueteId || !clienteId || (!cotizacionId && !eventoId)) {
             return NextResponse.json(
-                { error: 'Datos requeridos: paqueteId, cotizacionId, clienteId' },
+                { error: 'Datos requeridos: paqueteId, clienteId y (cotizacionId o eventoId)' },
                 { status: 400 }
             )
         }
@@ -35,21 +36,55 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Obtener información de la cotización y cliente
-        const cotizacion = await prisma.cotizacion.findUnique({
-            where: { id: cotizacionId },
-            include: {
-                Evento: {
-                    include: {
-                        Cliente: true
+        // Obtener información del evento y cliente
+        let cotizacion = null
+        let evento = null
+        let cliente = null
+
+        if (cotizacionId) {
+            // Si hay cotizacionId, obtener por cotización
+            cotizacion = await prisma.cotizacion.findUnique({
+                where: { id: cotizacionId },
+                include: {
+                    Evento: {
+                        include: {
+                            Cliente: true
+                        }
                     }
                 }
-            }
-        })
+            })
 
-        if (!cotizacion) {
+            if (!cotizacion) {
+                return NextResponse.json(
+                    { error: 'Cotización no encontrada' },
+                    { status: 404 }
+                )
+            }
+
+            evento = cotizacion.Evento
+            cliente = cotizacion.Evento?.Cliente
+        } else if (eventoId) {
+            // Si no hay cotización pero sí eventoId, obtener por evento
+            evento = await prisma.evento.findUnique({
+                where: { id: eventoId },
+                include: {
+                    Cliente: true
+                }
+            })
+
+            if (!evento) {
+                return NextResponse.json(
+                    { error: 'Evento no encontrado' },
+                    { status: 404 }
+                )
+            }
+
+            cliente = evento.Cliente
+        }
+
+        if (!cliente) {
             return NextResponse.json(
-                { error: 'Cotización no encontrada' },
+                { error: 'Cliente no encontrado' },
                 { status: 404 }
             )
         }
@@ -58,16 +93,16 @@ export async function POST(request: NextRequest) {
         const solicitud = await prisma.solicitudPaquete.create({
             data: {
                 paqueteId: paqueteId,
-                cotizacionId: cotizacionId,
-                clienteNombre: cotizacion.Evento?.Cliente?.nombre || 'Cliente',
-                clienteEmail: cotizacion.Evento?.Cliente?.email || clienteId,
-                clienteTelefono: cotizacion.Evento?.Cliente?.telefono,
+                cotizacionId: cotizacionId, // Puede ser null
+                clienteNombre: cliente?.nombre || 'Cliente',
+                clienteEmail: cliente?.email || clienteId,
+                clienteTelefono: cliente?.telefono,
                 mensaje: `Solicitud desde el comparador de paquetes`,
                 paqueteNombre: paquete.nombre,
                 precioPaquete: paquete.precio || 0,
-                diferenciaPrecio: (paquete.precio || 0) - (cotizacion.precio || 0),
-                eventoFecha: cotizacion.Evento?.fecha_evento,
-                eventoLugar: cotizacion.Evento?.sede,
+                diferenciaPrecio: (paquete.precio || 0) - (cotizacion?.precio || 0),
+                eventoFecha: evento?.fecha_evento,
+                eventoLugar: evento?.sede,
                 estado: 'pendiente',
                 fechaSolicitud: new Date()
             }
@@ -79,15 +114,15 @@ export async function POST(request: NextRequest) {
         try {
             // Preparar metadata estructurada
             const metadata = {
-                eventoId: cotizacion.Evento?.id,
+                eventoId: evento?.id,
                 paqueteId: paquete.id,
-                clienteId: cotizacion.Evento?.Cliente?.id,
+                clienteId: cliente?.id,
                 paqueteNombre: paquete.nombre,
-                clienteNombre: cotizacion.Evento?.Cliente?.nombre,
-                rutaDestino: `/admin/dashboard/eventos/${cotizacion.Evento?.id}`,
+                clienteNombre: cliente?.nombre,
+                rutaDestino: `/admin/dashboard/eventos/${evento?.id}`,
                 accionBitacora: {
                     habilitada: true,
-                    mensaje: `Cliente ${cotizacion.Evento?.Cliente?.nombre} solicitó el paquete: ${paquete.nombre}`
+                    mensaje: `Cliente ${cliente?.nombre} solicitó el paquete: ${paquete.nombre}`
                 }
             }
 
@@ -95,11 +130,11 @@ export async function POST(request: NextRequest) {
             const notificacion = await prisma.notificacion.create({
                 data: {
                     titulo: `Nueva solicitud de paquete: ${paquete.nombre}`,
-                    mensaje: `${cotizacion.Evento?.Cliente?.nombre || 'Cliente'} ha solicitado el paquete "${paquete.nombre}" para ${paquete.EventoTipo?.nombre || 'su evento'}`,
+                    mensaje: `${cliente?.nombre || 'Cliente'} ha solicitado el paquete "${paquete.nombre}" para ${paquete.EventoTipo?.nombre || 'su evento'}`,
                     tipo: 'solicitud_paquete',
                     metadata: metadata,
                     status: 'active',
-                    cotizacionId: cotizacion.id
+                    cotizacionId: cotizacion?.id || null
                 }
             })
 

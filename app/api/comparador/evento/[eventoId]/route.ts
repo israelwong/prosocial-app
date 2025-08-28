@@ -5,10 +5,10 @@ const prisma = new PrismaClient()
 
 export async function GET(
     request: Request,
-    { params }: { params: { eventoId: string } }
+    { params }: { params: Promise<{ eventoId: string }> }
 ) {
     try {
-        const { eventoId } = params
+        const { eventoId } = await params
 
         // Obtener evento básico
         const evento = await prisma.evento.findUnique({
@@ -28,7 +28,7 @@ export async function GET(
 
         // Obtener cotizaciones por separado
         const cotizaciones = await prisma.cotizacion.findMany({
-            where: { 
+            where: {
                 eventoId: eventoId,
                 status: {
                     in: ['pendiente', 'aprobada', 'en_revision']
