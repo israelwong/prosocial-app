@@ -74,8 +74,8 @@ export default function HeroSection({
             case 'paquetes':
                 return {
                     titulo: `${evento.Cliente?.nombre}`,
-                    subtitulo: 'Tenemos paquetes especiales para ti',
-                    descripcion: `Elige el paquete perfecto para tu ${evento.EventoTipo?.nombre?.toLowerCase()}`
+                    subtitulo: 'Te compartimos los paquetes pre-diseñados para tu evento',
+                    descripcion: `Descubre nuestras mejores opciones para tu ${evento.EventoTipo?.nombre?.toLowerCase()}`
                 }
             case 'preparando':
                 return {

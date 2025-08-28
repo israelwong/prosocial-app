@@ -1,6 +1,7 @@
 'use client'
-import React from 'react'
+import React, { useState } from 'react'
 import PaqueteCard from '../cards/PaqueteCard'
+import { Package, Scale, MessageSquare } from 'lucide-react'
 
 interface Paquete {
     id: string
@@ -15,7 +16,51 @@ interface Props {
 }
 
 export default function PaquetesSection({ paquetes, eventoId, showAsAlternative = false }: Props) {
+    const [enviandoSolicitud, setEnviandoSolicitud] = useState(false)
+    const [solicitudEnviada, setSolicitudEnviada] = useState(false)
+
     if (!paquetes.length) return null
+
+    // Función para abrir comparador de paquetes (sin cotización)
+    const handleCompararpaquetes = () => {
+        // Abrir en nueva pestaña el comparador de paquetes público
+        const url = `/comparador-paquetes?eventoId=${eventoId}`
+        window.open(url, '_blank')
+    }
+
+    // Función para solicitar paquete personalizado
+    const handleSolicitarPersonalizado = async () => {
+        setEnviandoSolicitud(true)
+
+        try {
+            const response = await fetch('/api/cliente-portal/solicitud-personalizada', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    eventoId: eventoId,
+                    tipo: 'paquete_personalizado',
+                    mensaje: 'Cliente solicita cotización personalizada desde vista pública de paquetes'
+                })
+            })
+
+            if (response.ok) {
+                setSolicitudEnviada(true)
+                // Mostrar mensaje de éxito por 3 segundos
+                setTimeout(() => {
+                    setSolicitudEnviada(false)
+                }, 3000)
+            } else {
+                throw new Error('Error al enviar solicitud')
+            }
+        } catch (error) {
+            console.error('Error al solicitar paquete personalizado:', error)
+            alert('Error al enviar la solicitud. Por favor intenta de nuevo.')
+        } finally {
+            setEnviandoSolicitud(false)
+        }
+    }
 
     // Determinar cuál es el más popular (el del medio o el segundo más caro)
     const paquetesOrdenados = [...paquetes].sort((a, b) => {
@@ -55,6 +100,53 @@ export default function PaquetesSection({ paquetes, eventoId, showAsAlternative 
                         />
                     ))}
                 </div>
+
+                {/* Botones de acción - Solo cuando NO es alternativa (sin cotizaciones) */}
+                {!showAsAlternative && (
+                    <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        {/* Botón Comparar Paquetes */}
+                        <button
+                            onClick={handleCompararpaquetes}
+                            className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl group"
+                        >
+                            <Scale className="w-5 h-5 group-hover:rotate-6 transition-transform" />
+                            Comparar Paquetes
+                        </button>
+
+                        {/* Botón Solicitar Paquete Personalizado */}
+                        <button
+                            onClick={handleSolicitarPersonalizado}
+                            disabled={enviandoSolicitud || solicitudEnviada}
+                            className={`inline-flex items-center gap-3 font-medium py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl group ${solicitudEnviada
+                                    ? 'bg-gradient-to-r from-green-600 to-green-700 text-white'
+                                    : enviandoSolicitud
+                                        ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white'
+                                }`}
+                        >
+                            {solicitudEnviada ? (
+                                <>
+                                    <svg className="w-5 h-5 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    ¡Solicitud Enviada!
+                                </>
+                            ) : enviandoSolicitud ? (
+                                <>
+                                    <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Enviando...
+                                </>
+                            ) : (
+                                <>
+                                    <MessageSquare className="w-5 h-5 group-hover:rotate-6 transition-transform" />
+                                    Solicitar Paquete Personalizado
+                                </>
+                            )}
+                        </button>
+                    </div>
+                )}
 
                 {/* Información adicional para paquetes */}
                 <div className="mt-8 text-center">
