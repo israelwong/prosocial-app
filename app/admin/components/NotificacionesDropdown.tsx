@@ -281,23 +281,6 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                 </div>
                             </div>
                             <div className="flex items-center space-x-2">
-                                {/* Botón de recarga manual */}
-                                <button
-                                    onClick={() => {
-                                        console.log('🔄 Recarga manual de notificaciones')
-                                        cargarNotificaciones()
-                                    }}
-                                    className="text-xs text-zinc-400 hover:text-zinc-200 px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-600 transition-colors"
-                                    title="Recargar notificaciones"
-                                >
-                                    ⟳
-                                </button>
-
-                                {nuevasNotificaciones > 0 && (
-                                    <span className="text-xs text-zinc-400">
-                                        {nuevasNotificaciones} nuevas
-                                    </span>
-                                )}
                                 <button
                                     onClick={() => setIsOpen(false)}
                                     className="text-zinc-400 hover:text-white"
