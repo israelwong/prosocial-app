@@ -94,11 +94,40 @@ export async function obtenerPaqueteDetalleParaCliente(paqueteId: string) {
                 where: {
                     status: 'active',
                     visible_cliente: true
-                },
-                orderBy: { posicion: 'asc' }
+                }
             }
         }
     });
+
+    if (!paquete) {
+        throw new Error('Paquete no encontrado');
+    }
+
+    // Ordenar por jerarquía: Sección -> Categoría -> Servicio (posición)
+    paquete.PaqueteServicio.sort((a, b) => {
+        // 1. Obtener posiciones de sección
+        const seccionA = a.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
+            a.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 0;
+        const seccionB = b.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
+            b.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 0;
+
+        if (seccionA !== seccionB) {
+            return seccionA - seccionB;
+        }
+
+        // 2. Si están en la misma sección, ordenar por categoría
+        const categoriaA = a.Servicio?.ServicioCategoria?.posicion || a.ServicioCategoria?.posicion || 0;
+        const categoriaB = b.Servicio?.ServicioCategoria?.posicion || b.ServicioCategoria?.posicion || 0;
+
+        if (categoriaA !== categoriaB) {
+            return categoriaA - categoriaB;
+        }
+
+        // 3. Si están en la misma categoría, ordenar por posición del servicio
+        return (a.posicion || 0) - (b.posicion || 0);
+    });
+
+    return paquete;
 
     if (!paquete) {
         throw new Error('Paquete no encontrado');

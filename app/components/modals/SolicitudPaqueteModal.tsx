@@ -59,9 +59,8 @@ export default function SolicitudPaqueteModal({
 
             if (response.ok) {
                 setMostrarExito(true)
-                if (onSuccess) {
-                    onSuccess()
-                }
+                // NO llamar onSuccess() aquí - dejamos que el usuario vea el mensaje
+                // onSuccess se llamará cuando cierre el modal de éxito
             } else {
                 toast.error('Error al enviar la solicitud')
             }
@@ -75,6 +74,9 @@ export default function SolicitudPaqueteModal({
 
     const cerrarModalExito = () => {
         setMostrarExito(false)
+        if (onSuccess) {
+            onSuccess()
+        }
         onClose()
     }
 
@@ -109,9 +111,8 @@ export default function SolicitudPaqueteModal({
                                 </span>
                             </div>
                             <p className="text-sm text-zinc-300 leading-relaxed">
-                                Tu solicitud para el paquete <strong className="text-blue-400">{paquete.nombre}</strong> ha
-                                sido enviada correctamente. Pronto deberías verla en tus opciones de paquetes
-                                para poder reservarla.
+                                Hemos enviado tu solicitud del paquete <strong className="text-blue-400">{paquete.nombre}</strong>.
+                                Pronto un asesor la revisará y podrás verla lista para poder reservarla.
                             </p>
                         </div>
 

@@ -7,6 +7,11 @@ import { obtenerConfiguracionCompleta } from '@/app/admin/_lib/actions/negocio/n
 export async function obtenerConfiguracionNegocio() {
     try {
         const config = await obtenerConfiguracionCompleta()
+        console.log('🔍 Config obtenida:', {
+            negocio: !!config.negocio,
+            redesSocialesCount: config.redesSociales?.length || 0,
+            redesSociales: config.redesSociales
+        })
 
         if (!config.negocio) {
             // Configuración por defecto si no hay datos en la BD

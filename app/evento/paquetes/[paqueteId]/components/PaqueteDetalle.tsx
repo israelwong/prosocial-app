@@ -181,7 +181,6 @@ export default function PaqueteDetalle({ paquete, eventoInfo, eventoId }: Props)
 
                 <div className="p-6 space-y-6">
                     {Object.entries(serviciosAgrupados)
-                        .sort(([, a], [, b]) => (a.posicion || 0) - (b.posicion || 0))
                         .map(([seccionNombre, seccionData]) => (
                             <div key={seccionNombre} className="border border-zinc-600 rounded-lg overflow-hidden">
                                 {/* Header de la sección */}
@@ -194,7 +193,6 @@ export default function PaqueteDetalle({ paquete, eventoInfo, eventoId }: Props)
                                 {/* Contenido de la sección */}
                                 <div className="bg-zinc-700/30 p-4 space-y-4">
                                     {Object.entries(seccionData.categorias)
-                                        .sort(([, a], [, b]) => (a.posicion || 0) - (b.posicion || 0))
                                         .map(([categoriaNombre, categoriaData]) => (
                                             <div key={categoriaNombre} className="space-y-3">
                                                 {/* Header de la categoría */}

@@ -44,6 +44,13 @@ export default function EventoFooterDynamic({
     redesSociales = []
 }: Props) {
 
+    // Debug: Log de redes sociales recibidas
+    console.log('🔍 EventoFooterDynamic - Redes sociales recibidas:', {
+        redesSociales,
+        count: redesSociales?.length || 0,
+        activas: redesSociales?.filter(red => red.activo)?.length || 0
+    })
+
     // Usar el teléfono como WhatsApp si no se especifica uno diferente
     const whatsappNumber = whatsapp || telefono
 
