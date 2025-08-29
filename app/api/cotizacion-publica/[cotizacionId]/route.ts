@@ -3,10 +3,10 @@ import { obtenerCotizacionParaRedireccion } from '@/app/lib/cotizacion-publica.a
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { cotizacionId: string } }
+    { params }: { params: Promise<{ cotizacionId: string }> }
 ) {
     try {
-        const { cotizacionId } = params
+        const { cotizacionId } = await params
 
         console.log('🔍 API: Consultando cotización pública:', cotizacionId)
 
