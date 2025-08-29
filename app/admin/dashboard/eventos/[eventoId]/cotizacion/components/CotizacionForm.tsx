@@ -106,7 +106,20 @@ export default function CotizacionForm({
 
     // Estado para controlar precio total personalizado
     const [editandoPrecioTotal, setEditandoPrecioTotal] = useState<boolean>(false);
-    const [precioTotalPersonalizado, setPrecioTotalPersonalizado] = useState<number | null>(null);
+    const [precioTotalPersonalizado, setPrecioTotalPersonalizado] = useState<number | null>(() => {
+        // Si estamos creando una cotización basada en paquete, inicializar con precio del paquete
+        if (modo === 'crear' && paqueteBase && paqueteBase.precio) {
+            console.log('🎯 INIT: Inicializando precioTotalPersonalizado con precio del paquete:', paqueteBase.precio);
+            return parseFloat(paqueteBase.precio.toFixed(2));
+        }
+        return null;
+    });
+
+    // Flag para controlar si ya se inicializó con el precio del paquete
+    const [yaInicializadoConPaquete, setYaInicializadoConPaquete] = useState<boolean>(() => {
+        // Marcar como inicializado si estamos creando desde paquete
+        return modo === 'crear' && paqueteBase && paqueteBase.precio ? true : false;
+    });
 
     // Inicializar precios personalizados para cotizaciones existentes
     useEffect(() => {
@@ -489,19 +502,50 @@ export default function CotizacionForm({
         ? parseFloat(precioTotalPersonalizado.toFixed(2))
         : parseFloat((precioSistema + totalCostosAdicionales).toFixed(2));
 
+    // Debug logging para verificar el comportamiento
+    useEffect(() => {
+        if (paqueteBase) {
+            console.log('📊 Estado actual de precios:', {
+                paqueteBasePresente: !!paqueteBase,
+                precioPaquete: paqueteBase.precio,
+                precioSistemaSubtotal: precioSistema.toFixed(2),
+                totalCostosAdicionales: totalCostosAdicionales.toFixed(2),
+                precioTotalPersonalizado: precioTotalPersonalizado?.toFixed(2) || 'null',
+                precioFinalMostrado: precioFinal.toFixed(2),
+                modo,
+                serviciosCount: watchedServicios?.length || 0
+            });
+        }
+    }, [paqueteBase, precioSistema, totalCostosAdicionales, precioTotalPersonalizado, precioFinal, modo, watchedServicios]);
+
     // Precio base para mostrar (sin costos adicionales para comparación visual)
     const precioBase = precioSistema;
 
     // Precio dinámico que se actualiza automáticamente (para mostrar cuando no hay personalización activa)
     const precioDinamico = parseFloat((precioSistema + totalCostosAdicionales).toFixed(2));
 
-    // Effect para resetear precio personalizado cuando cambian los servicios o costos
+    // Effect para manejar el precio total en cotizaciones basadas en paquete
     useEffect(() => {
-        // Si hay precio personalizado y los servicios/costos han cambiado, resetear a dinámico
+        if (modo === 'crear' && paqueteBase && paqueteBase.precio) {
+            // Si ya se inicializó con el precio del paquete y hay cambios en servicios/costos, 
+            // actualizar total = subtotal + costos
+            if (yaInicializadoConPaquete && (watchedServicios?.length > 0 || watchedCostos?.length > 0)) {
+                const nuevoTotal = parseFloat((precioSistema + totalCostosAdicionales).toFixed(2));
+                console.log('🔄 Actualizando total = subtotal + costos:', {
+                    subtotal: precioSistema,
+                    costos: totalCostosAdicionales,
+                    nuevoTotal
+                });
+                setPrecioTotalPersonalizado(nuevoTotal);
+            }
+            return;
+        }
+
+        // Para cotizaciones normales (sin paquete), resetear cuando cambian servicios/costos
         if (precioTotalPersonalizado !== null && (watchedServicios || watchedCostos)) {
             setPrecioTotalPersonalizado(null);
         }
-    }, [watchedServicios, watchedCostos]); // Se ejecuta cuando cambian servicios o costos
+    }, [watchedServicios, watchedCostos, modo, paqueteBase, precioSistema, totalCostosAdicionales, yaInicializadoConPaquete, precioTotalPersonalizado]);
 
     // Agrupar servicios seleccionados por sección y categoría
     const serviciosAgrupadosSeleccionados = useMemo(() => {
