@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
                     fechaSolicitud: new Date().toISOString(),
                     origen: 'vista_publica_paquetes',
                     // Información para el sistema de notificaciones
-                    rutaDestino: metadataAdicional?.rutaDestino || `/admin/dashboard/seguimiento/${evento.id}`,
+                    rutaDestino: metadataAdicional?.rutaDestino || `/admin/dashboard/eventos/${evento.id}`,
                     accionBitacora: metadataAdicional?.accionBitacora || {
                         habilitada: true,
                         mensaje: `📝 ${evento.Cliente?.nombre || 'Cliente'} solicitó cotización personalizada desde vista pública de paquetes`

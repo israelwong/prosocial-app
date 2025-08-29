@@ -44,7 +44,7 @@ export default function PaquetesSection({ paquetes, eventoId, showAsAlternative 
                     mensaje: 'Cliente solicita cotización personalizada desde vista pública de paquetes',
                     // Metadata adicional para el sistema de notificaciones
                     metadata: {
-                        rutaDestino: `/admin/dashboard/seguimiento/${eventoId}`,
+                        rutaDestino: `/admin/dashboard/eventos/${eventoId}`,
                         accionBitacora: {
                             habilitada: true,
                             mensaje: '📝 Cliente solicitó cotización personalizada desde vista pública de paquetes'

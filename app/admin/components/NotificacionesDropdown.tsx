@@ -141,17 +141,15 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
 
         switch (notificacion.tipo) {
             case 'solicitud_paquete':
+            case 'solicitud_personalizada':
+                // Ambos tipos van a dashboard/eventos para gestión
                 return metadata.eventoId
                     ? `/admin/dashboard/eventos/${metadata.eventoId}`
                     : null
 
-            case 'solicitud_personalizada':
-                return metadata.eventoId
-                    ? `/admin/dashboard/seguimiento/${metadata.eventoId}`
-                    : metadata.rutaDestino || null
-
             case 'pago_confirmado':
             case 'pago_recibido':
+                // Pagos van a seguimiento
                 return metadata.eventoId
                     ? `/admin/dashboard/seguimiento/${metadata.eventoId}`
                     : null
@@ -303,16 +301,15 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                 <p className="text-sm">No hay notificaciones</p>
                             </div>
                         ) : (
-                                <div className="divide-y divide-zinc-700">
+                            <div className="divide-y divide-zinc-700">
                                 {notificaciones.map((notificacion) => {
                                     const rutaDestino = obtenerRutaDestino(notificacion)
-                                    
+
                                     return (
                                         <div
                                             key={notificacion.id}
-                                            className={`p-4 transition-colors group cursor-pointer ${
-                                                notificacion.status === 'leida' ? '' : 'bg-blue-900/10'
-                                            } ${rutaDestino ? 'hover:bg-zinc-800/50' : ''}`}
+                                            className={`p-4 transition-colors group cursor-pointer ${notificacion.status === 'leida' ? '' : 'bg-blue-900/10'
+                                                } ${rutaDestino ? 'hover:bg-zinc-800/50' : ''}`}
                                             onClick={() => rutaDestino && handleNotificacionClick(notificacion)}
                                         >
                                             <div className="flex items-start space-x-3">
@@ -350,10 +347,10 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                                                 <span className="text-xs text-blue-400 flex items-center space-x-1">
                                                                     <ExternalLink size={12} />
                                                                     <span>
-                                                                        {notificacion.tipo === 'solicitud_paquete' ? 'Ver evento' :
-                                                                         notificacion.tipo === 'solicitud_personalizada' ? 'Ver seguimiento' :
-                                                                         notificacion.tipo.includes('pago') ? 'Ver seguimiento' :
-                                                                         'Ver detalles'}
+                                                                        {(notificacion.tipo === 'solicitud_paquete' ||
+                                                                            notificacion.tipo === 'solicitud_personalizada') ? 'Ver evento' :
+                                                                            notificacion.tipo.includes('pago') ? 'Ver seguimiento' :
+                                                                                'Ver detalles'}
                                                                     </span>
                                                                 </span>
                                                             )}
