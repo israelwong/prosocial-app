@@ -121,6 +121,17 @@ export default function CotizacionForm({
         return modo === 'crear' && paqueteBase && paqueteBase.precio ? true : false;
     });
 
+    // Estado para detectar cambios reales del usuario (no la carga inicial)
+    const [usuarioHaModificado, setUsuarioHaModificado] = useState<boolean>(false);
+
+    // Estado para detectar si el usuario está editando manualmente el precio total
+    const [usuarioEditandoPrecioTotal, setUsuarioEditandoPrecioTotal] = useState<boolean>(false);
+
+    // Debug: Rastrear cambios en usuarioHaModificado
+    useEffect(() => {
+        console.log('🚨 CAMBIO EN usuarioHaModificado:', usuarioHaModificado);
+    }, [usuarioHaModificado]);
+
     // Inicializar precios personalizados para cotizaciones existentes
     useEffect(() => {
         if (modo === 'editar' && cotizacionExistente?.Servicio) {
@@ -248,6 +259,35 @@ export default function CotizacionForm({
         name: "costos",
     });
 
+    // Wrappers para marcar modificaciones del usuario
+    const appendServicio = (servicio: any) => {
+        console.log('🔄 appendServicio ejecutándose - marcando usuario modificó');
+        setUsuarioHaModificado(true);
+        setUsuarioEditandoPrecioTotal(false); // Permitir actualizaciones automáticas al modificar servicios
+        append(servicio);
+    };
+
+    const removeServicio = (index: number) => {
+        console.log('🗑️ removeServicio ejecutándose - marcando usuario modificó');
+        setUsuarioHaModificado(true);
+        setUsuarioEditandoPrecioTotal(false); // Permitir actualizaciones automáticas al modificar servicios
+        remove(index);
+    };
+
+    const appendCostoPersonalizado = (costo: any) => {
+        console.log('💰 appendCostoPersonalizado ejecutándose - marcando usuario modificó');
+        setUsuarioHaModificado(true);
+        setUsuarioEditandoPrecioTotal(false); // Permitir actualizaciones automáticas al modificar costos
+        appendCosto(costo);
+    };
+
+    const removeCostoPersonalizado = (index: number) => {
+        console.log('🗑️ removeCostoPersonalizado ejecutándose - marcando usuario modificó');
+        setUsuarioHaModificado(true);
+        setUsuarioEditandoPrecioTotal(false); // Permitir actualizaciones automáticas al modificar costos
+        removeCosto(index);
+    };
+
     const watchedServicios = useWatch({ control, name: 'servicios' });
     const watchedCostos = useWatch({ control, name: 'costos' });
 
@@ -340,21 +380,38 @@ export default function CotizacionForm({
 
     // Agregar servicio al formulario
     const handleAddServicio = (servicio: any) => {
+        console.log('➕ handleAddServicio ejecutándose:', { servicioNombre: servicio.nombre, usuarioHaModificadoAntes: usuarioHaModificado });
+
         const yaExiste = fields.some(field => field.servicioId === servicio.id);
         if (yaExiste) {
             toast.error('Este servicio ya está agregado');
             return;
         }
 
-        append({
+        appendServicio({
             servicioId: servicio.id,
             cantidad: '1'
         });
+
+        // Ya se marca en appendServicio, pero por consistencia también aquí
+        setUsuarioHaModificado(true);
+        console.log('✅ usuarioHaModificado marcado como true después de agregar servicio');
+
         toast.success(`${servicio.nombre} agregado`);
+    };
+
+    // Wrapper para setValue que marca modificaciones del usuario
+    const setValueWithModificationFlag = (name: any, value: any) => {
+        console.log('📝 setValueWithModificationFlag ejecutándose:', { name, value });
+        setUsuarioHaModificado(true);
+        setUsuarioEditandoPrecioTotal(false); // Permitir actualizaciones automáticas al modificar servicios
+        setValue(name, value);
     };
 
     // Modificar cantidad de un servicio
     const handleModificarCantidad = (index: number, operacion: 'incrementar' | 'decrementar') => {
+        console.log('🔢 handleModificarCantidad ejecutándose:', { index, operacion, usuarioHaModificadoAntes: usuarioHaModificado });
+
         const cantidadActual = parseInt(watchedServicios[index]?.cantidad || '1', 10);
 
         if (operacion === 'decrementar' && cantidadActual <= 1) {
@@ -365,7 +422,8 @@ export default function CotizacionForm({
             ? cantidadActual + 1
             : cantidadActual - 1;
 
-        setValue(`servicios.${index}.cantidad`, nuevaCantidad.toString());
+        setValueWithModificationFlag(`servicios.${index}.cantidad`, nuevaCantidad.toString());
+        console.log('✅ usuarioHaModificado marcado como true después de modificar cantidad');
     };
 
     // Funciones para manejar precio personalizado
@@ -380,7 +438,13 @@ export default function CotizacionForm({
     };
 
     const handleGuardarPrecioPersonalizado = (fieldId: string) => {
+        console.log('💰 handleGuardarPrecioPersonalizado ejecutándose:', { fieldId, usuarioHaModificadoAntes: usuarioHaModificado });
+
         setEditandoPrecio(null);
+        // Marcar que el usuario ha modificado algo
+        setUsuarioHaModificado(true);
+        console.log('✅ usuarioHaModificado marcado como true después de guardar precio personalizado');
+
         toast.success('Precio personalizado aplicado');
     };
 
@@ -396,20 +460,29 @@ export default function CotizacionForm({
 
     // Funciones para manejar precio total personalizado
     const handleActivarPrecioTotal = (precioActual: number) => {
+        console.log('💲 Activando edición de precio total:', { precioActual });
+        setUsuarioEditandoPrecioTotal(true);
         setEditandoPrecioTotal(true);
         setPrecioTotalPersonalizado(precioActual);
     };
 
     const handleCambiarPrecioTotal = (nuevoPrecio: number) => {
+        console.log('📝 Cambiando precio total manual:', { nuevoPrecio });
+        // Marcar que el usuario está editando manualmente el precio total
+        setUsuarioEditandoPrecioTotal(true);
         setPrecioTotalPersonalizado(parseFloat(nuevoPrecio.toFixed(2)));
     };
 
     const handleGuardarPrecioTotal = () => {
+        console.log('✅ Guardando precio total personalizado');
         setEditandoPrecioTotal(false);
+        // NO desactivar usuarioEditandoPrecioTotal aquí - solo cuando modifiquen servicios
         toast.success('Precio total personalizado aplicado');
     };
 
     const handleCancelarPrecioTotal = () => {
+        console.log('❌ Cancelando edición precio total');
+        setUsuarioEditandoPrecioTotal(false);
         setEditandoPrecioTotal(false);
         setPrecioTotalPersonalizado(null);
     };
@@ -463,6 +536,9 @@ export default function CotizacionForm({
             cantidad: '1',
             precioPersonalizado: precioTruncado.toString() // Para servicios personalizados, usar el precio como personalizado
         });
+
+        // Marcar que el usuario ha modificado algo
+        setUsuarioHaModificado(true);
 
         // Limpiar el formulario y cerrar modal
         setServicioPersonalizado({
@@ -526,17 +602,42 @@ export default function CotizacionForm({
 
     // Effect para manejar el precio total en cotizaciones basadas en paquete
     useEffect(() => {
+        console.log('🔍 useEffect ejecutándose:', {
+            modo,
+            paqueteBase: !!paqueteBase,
+            precioPaquete: paqueteBase?.precio,
+            usuarioHaModificado,
+            yaInicializadoConPaquete,
+            usuarioEditandoPrecioTotal,
+            precioSistema,
+            totalCostosAdicionales
+        });
+
         if (modo === 'crear' && paqueteBase && paqueteBase.precio) {
-            // Si ya se inicializó con el precio del paquete y hay cambios en servicios/costos, 
-            // actualizar total = subtotal + costos
-            if (yaInicializadoConPaquete && (watchedServicios?.length > 0 || watchedCostos?.length > 0)) {
+            // PASO 1: Para cotizaciones de paquete, mantener el precio del paquete inicialmente
+            console.log('🎯 PASO 1: Manteniendo precio del paquete como total:', {
+                precioPaquete: paqueteBase.precio,
+                precioTotalPersonalizadoActual: precioTotalPersonalizado,
+                usuarioHaModificado,
+                usuarioEditandoPrecioTotal
+            });
+
+            // PASO 2: Solo actualizar si el usuario ha modificado servicios/cantidades pero NO está editando precio total
+            if (usuarioHaModificado && yaInicializadoConPaquete && !usuarioEditandoPrecioTotal) {
                 const nuevoTotal = parseFloat((precioSistema + totalCostosAdicionales).toFixed(2));
-                console.log('🔄 Actualizando total = subtotal + costos:', {
-                    subtotal: precioSistema,
-                    costos: totalCostosAdicionales,
+                console.log('🔄 PASO 2: Usuario modificó servicios, actualizando precio total:', {
+                    nuevoSubtotal: precioSistema,
+                    costosAdicionales: totalCostosAdicionales,
                     nuevoTotal
                 });
                 setPrecioTotalPersonalizado(nuevoTotal);
+            } else {
+                console.log('❌ PASO 2: NO se ejecuta porque:', {
+                    usuarioHaModificado,
+                    yaInicializadoConPaquete,
+                    usuarioEditandoPrecioTotal,
+                    condicionCumplida: usuarioHaModificado && yaInicializadoConPaquete && !usuarioEditandoPrecioTotal
+                });
             }
             return;
         }
@@ -545,9 +646,7 @@ export default function CotizacionForm({
         if (precioTotalPersonalizado !== null && (watchedServicios || watchedCostos)) {
             setPrecioTotalPersonalizado(null);
         }
-    }, [watchedServicios, watchedCostos, modo, paqueteBase, precioSistema, totalCostosAdicionales, yaInicializadoConPaquete, precioTotalPersonalizado]);
-
-    // Agrupar servicios seleccionados por sección y categoría
+    }, [watchedServicios, watchedCostos, modo, paqueteBase, precioSistema, totalCostosAdicionales, yaInicializadoConPaquete, precioTotalPersonalizado, usuarioHaModificado, usuarioEditandoPrecioTotal]);    // Agrupar servicios seleccionados por sección y categoría
     const serviciosAgrupadosSeleccionados = useMemo(() => {
         const agrupados: any = {};
 
@@ -1080,7 +1179,7 @@ export default function CotizacionForm({
                                                                         <div className="col-span-1 text-center">
                                                                             <button
                                                                                 type="button"
-                                                                                onClick={() => remove(servicio.fieldIndex)}
+                                                                                onClick={() => removeServicio(servicio.fieldIndex)}
                                                                                 className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded"
                                                                                 title="Eliminar servicio"
                                                                             >
@@ -1108,7 +1207,7 @@ export default function CotizacionForm({
                                 </h3>
                                 <button
                                     type="button"
-                                    onClick={() => appendCosto({
+                                    onClick={() => appendCostoPersonalizado({
                                         nombre: "",
                                         costo: "",
                                         tipo: "sesion"
