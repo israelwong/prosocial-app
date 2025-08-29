@@ -57,19 +57,62 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
         cargarNotificaciones()
     }, [cargarNotificaciones])
 
-    // Suscripción en tiempo real SOLO para nuevas notificaciones
+    // Suscripción en tiempo real con cleanup adecuado
     useEffect(() => {
-        console.log('🔌 Conectando suscripción de notificaciones (solo INSERT)...')
+        console.log('🔌 Conectando suscripción de notificaciones...')
 
         const subscription = supabase
             .channel('realtime:Notificacion')
             .on(
                 'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'Notificacion' },
+                { event: '*', schema: 'public', table: 'Notificacion' },
                 async (payload) => {
-                    console.log('🔔 Nueva notificación detectada:', payload)
-                    // Solo recargar para nuevas notificaciones
-                    await cargarNotificaciones()
+                    console.log('🔔 Cambio detectado en Notificacion:', payload)
+
+                    // Optimización: manejar eventos específicos en lugar de recargar todo
+                    if (payload.eventType === 'INSERT') {
+                        // Nueva notificación: recargar para asegurar orden correcto
+                        console.log('📥 Nueva notificación detectada, recargando...')
+                        await cargarNotificaciones()
+                    } else if (payload.eventType === 'UPDATE') {
+                        const { new: updatedNotif, old: oldNotif } = payload
+
+                        if (updatedNotif.status === 'oculta' && oldNotif.status !== 'oculta') {
+                            // Notificación ocultada: confirmar que esté removida del estado local
+                            console.log('👻 Notificación ocultada confirmada:', updatedNotif.id)
+                            setNotificaciones(prev => {
+                                const existe = prev.find(n => n.id === updatedNotif.id)
+                                if (existe) {
+                                    // Si todavía existe, removerla (fallback por si falló el optimistic update)
+                                    console.log('� Removiendo notificación del estado (fallback)')
+                                    const wasUnread = existe.status !== 'leida'
+                                    const newList = prev.filter(n => n.id !== updatedNotif.id)
+                                    if (wasUnread) {
+                                        setNuevasNotificaciones(current => Math.max(0, current - 1))
+                                    }
+                                    return newList
+                                }
+                                return prev // No cambios si ya fue removida
+                            })
+                        } else if (updatedNotif.status === 'leida' && oldNotif.status !== 'leida') {
+                            // Notificación marcada como leída: actualizar estado local
+                            console.log('✅ Notificación marcada como leída:', updatedNotif.id)
+                            setNotificaciones(prev =>
+                                prev.map(n =>
+                                    n.id === updatedNotif.id
+                                        ? { ...n, status: 'leida', updatedAt: new Date(updatedNotif.updatedAt) }
+                                        : n
+                                )
+                            )
+                            setNuevasNotificaciones(prev => Math.max(0, prev - 1))
+                        } else {
+                            // Otros tipos de actualización: recargar
+                            await cargarNotificaciones()
+                        }
+                    } else {
+                        // DELETE u otros eventos: recargar
+                        await cargarNotificaciones()
+                    }
                 }
             )
             .subscribe((status, err) => {
@@ -128,7 +171,7 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
         }
     }
 
-    // Ocultar notificación - SOLO optimistic update, sin suscripción
+    // Ocultar notificación
     const handleOcultar = async (notificacionId: string) => {
         try {
             console.log('🗑️ Ocultando notificación:', notificacionId)
@@ -156,16 +199,18 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                 })
             }
 
-            // Ejecutar la acción en background (sin await para no bloquear UI)
-            ocultarNotificacion(notificacionId).then(() => {
-                console.log('✅ Notificación ocultada correctamente en base de datos')
-            }).catch(error => {
-                console.error('❌ Error al ocultar notificación en BD:', error)
-                // No hacer nada - mantener el optimistic update
-            })
+            // Ejecutar la acción en background
+            await ocultarNotificacion(notificacionId)
+            console.log('✅ Notificación ocultada correctamente en base de datos')
 
         } catch (error) {
             console.error('❌ Error al ocultar notificación:', error)
+
+            // En caso de error, restaurar la notificación en el estado
+            if (notificaciones.find(n => n.id === notificacionId) === undefined) {
+                console.log('🔄 Restaurando notificación por error')
+                await cargarNotificaciones()
+            }
         }
     }
 
