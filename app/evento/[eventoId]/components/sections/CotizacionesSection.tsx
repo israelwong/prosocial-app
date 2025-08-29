@@ -18,19 +18,19 @@ interface Props {
     enableRealtime?: boolean // Nueva prop para controlar el realtime
 }
 
-export default function CotizacionesSection({ 
-    cotizaciones: cotizacionesIniciales, 
+export default function CotizacionesSection({
+    cotizaciones: cotizacionesIniciales,
     eventoId,
     enableRealtime = REALTIME_CONFIG.cotizacionesRealtime // Usar configuración global por defecto
 }: Props) {
     const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>(cotizacionesIniciales)
     const [mostrarNotificacion, setMostrarNotificacion] = useState(false)
     const [mensajeNotificacion, setMensajeNotificacion] = useState('')
-    
+
     // Usar ref para evitar re-creaciones de funciones
     const cotizacionesRef = useRef(cotizacionesIniciales)
     const isLoadingRef = useRef(false)
-    
+
     // Actualizar ref cuando cambian las cotizaciones
     useEffect(() => {
         cotizacionesRef.current = cotizaciones
@@ -85,7 +85,7 @@ export default function CotizacionesSection({
     // Suscripción optimizada en tiempo real (solo si está habilitada)
     useEffect(() => {
         if (!enableRealtime) return // Salir si el realtime está deshabilitado
-        
+
         let subscription: any = null
 
         const connectRealtime = () => {
@@ -114,9 +114,9 @@ export default function CotizacionesSection({
                             const hasSignificantChanges = (
                                 updatedCotizacion.visible_cliente !== oldCotizacion.visible_cliente ||
                                 updatedCotizacion.status !== oldCotizacion.status ||
-                                (updatedCotizacion.visible_cliente && 
-                                 (updatedCotizacion.nombre !== oldCotizacion.nombre || 
-                                  updatedCotizacion.precio !== oldCotizacion.precio))
+                                (updatedCotizacion.visible_cliente &&
+                                    (updatedCotizacion.nombre !== oldCotizacion.nombre ||
+                                        updatedCotizacion.precio !== oldCotizacion.precio))
                             )
 
                             if (hasSignificantChanges) {

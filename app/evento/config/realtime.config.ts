@@ -9,16 +9,16 @@
 export const REALTIME_CONFIG = {
     // Habilitar actualizaciones en tiempo real de cotizaciones
     cotizacionesRealtime: false, // Deshabilitado por problemas de rendimiento
-    
+
     // Habilitar notificaciones visuales de cambios
     notificacionesVisuales: false, // Deshabilitado por problemas de rendimiento
-    
+
     // Tiempo de duración de las notificaciones (ms)
     duracionNotificaciones: 5000,
-    
+
     // Delay para conectar suscripciones (prevenir race conditions)
     delayConexion: 100,
-    
+
     // Timeout para scroll automático después de notificación
     timeoutScroll: 500
 } as const
