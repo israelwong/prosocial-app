@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
             }
 
             cliente = evento.Cliente
-            
+
             // Si el evento tiene cotizaciones, usar la más reciente
             if (evento.Cotizacion && evento.Cotizacion.length > 0) {
                 cotizacionId = evento.Cotizacion[0].id
