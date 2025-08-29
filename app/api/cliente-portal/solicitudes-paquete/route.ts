@@ -91,17 +91,19 @@ export async function POST(request: NextRequest) {
             if (evento.Cotizacion && evento.Cotizacion.length > 0) {
                 cotizacionId = evento.Cotizacion[0].id
             } else {
-                // Si no hay cotización, crear una básica para este evento
+                // Crear cotización temporal solo para la solicitud de paquete
+                // Esta no es una cotización real, solo un placeholder necesario
                 const nuevaCotizacion = await prisma.cotizacion.create({
                     data: {
                         eventoId: evento.id,
                         eventoTipoId: evento.eventoTipoId || paquete.eventoTipoId,
-                        nombre: `Cotización para ${evento.nombre}`,
+                        nombre: `[SOLICITUD] ${evento.nombre}`,
                         precio: 0,
-                        status: 'borrador'
+                        status: 'solicitud_paquete' // Estado especial para solicitudes
                     }
                 })
                 cotizacionId = nuevaCotizacion.id
+                console.log('📝 Cotización temporal creada para solicitud:', cotizacionId)
             }
         }
 
@@ -121,12 +123,13 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        console.log('✅ Datos validados:', {
+        console.log('✅ Datos procesados:', {
             paqueteId,
             cotizacionId,
             eventoId,
             clienteNombre: cliente?.nombre,
-            paqueteNombre: paquete.nombre
+            paqueteNombre: paquete.nombre,
+            tipoSolicitud: 'solicitud_paquete'
         })
 
         // Crear la solicitud de paquete
