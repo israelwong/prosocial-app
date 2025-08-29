@@ -1,7 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Bell, X, Eye, ExternalLink, Clock, CheckCircle, AlertCircle } from 'lucide-react'
-import Link from 'next/link'
 import { marcarComoLeida, ocultarNotificacion, obtenerNotificaciones } from '../_lib/notificacion.actions'
 import { supabase } from '../_lib/supabase'
 
@@ -304,99 +303,93 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                 <p className="text-sm">No hay notificaciones</p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-zinc-700">
-                                {notificaciones.map((notificacion) => (
-                                    <div
-                                        key={notificacion.id}
-                                        className={`p-4 hover:bg-zinc-800/50 transition-colors group cursor-pointer ${notificacion.status === 'leida' ? '' : 'bg-blue-900/10'
-                                            }`}
-                                        onClick={() => {
-                                            // Solo navegar si hay ruta destino, sino no hacer nada
-                                            const ruta = obtenerRutaDestino(notificacion)
-                                            if (ruta) {
-                                                handleNotificacionClick(notificacion)
-                                            }
-                                        }}
-                                    >
-                                        <div className="flex items-start space-x-3">
-                                            {/* Icono */}
-                                            <div className="flex-shrink-0 mt-1">
-                                                {getIconoTipo(notificacion.titulo)}
-                                            </div>
-
-                                            {/* Contenido */}
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex-1">
-                                                        <p className={`text-sm font-medium ${notificacion.status === 'leida'
-                                                            ? 'text-zinc-300'
-                                                            : 'text-white'
-                                                            }`}>
-                                                            {notificacion.titulo}
-                                                        </p>
-                                                        <p className="text-xs text-zinc-400 mt-1 line-clamp-2">
-                                                            {notificacion.mensaje}
-                                                        </p>
-                                                    </div>
-
-                                                    {/* Tiempo */}
-                                                    <span className="text-xs text-zinc-500 ml-2 flex-shrink-0">
-                                                        {formatearFecha(notificacion.createdAt)}
-                                                    </span>
+                                <div className="divide-y divide-zinc-700">
+                                {notificaciones.map((notificacion) => {
+                                    const rutaDestino = obtenerRutaDestino(notificacion)
+                                    
+                                    return (
+                                        <div
+                                            key={notificacion.id}
+                                            className={`p-4 transition-colors group cursor-pointer ${
+                                                notificacion.status === 'leida' ? '' : 'bg-blue-900/10'
+                                            } ${rutaDestino ? 'hover:bg-zinc-800/50' : ''}`}
+                                            onClick={() => rutaDestino && handleNotificacionClick(notificacion)}
+                                        >
+                                            <div className="flex items-start space-x-3">
+                                                {/* Icono */}
+                                                <div className="flex-shrink-0 mt-1">
+                                                    {getIconoTipo(notificacion.titulo)}
                                                 </div>
 
-                                                {/* Acciones */}
-                                                <div className="flex items-center justify-between mt-3">
-                                                    <div className="flex items-center space-x-2">
-                                                        {/* Botón ir a ruta destino basado en tipo y metadata */}
-                                                        {obtenerRutaDestino(notificacion) && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    handleNotificacionClick(notificacion)
-                                                                }}
-                                                                className="text-xs text-blue-400 hover:text-blue-300 flex items-center space-x-1 cursor-pointer"
-                                                            >
-                                                                <ExternalLink size={12} />
-                                                                <span>
-                                                                    {notificacion.tipo === 'solicitud_paquete' ? 'Ver evento' :
-                                                                        notificacion.tipo === 'solicitud_personalizada' ? 'Ver seguimiento' :
-                                                                            'Ver detalles'}
-                                                                </span>
-                                                            </button>
-                                                        )}
+                                                {/* Contenido */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex-1">
+                                                            <p className={`text-sm font-medium ${notificacion.status === 'leida'
+                                                                ? 'text-zinc-300'
+                                                                : 'text-white'
+                                                                }`}>
+                                                                {notificacion.titulo}
+                                                            </p>
+                                                            <p className="text-xs text-zinc-400 mt-1 line-clamp-2">
+                                                                {notificacion.mensaje}
+                                                            </p>
+                                                        </div>
+
+                                                        {/* Tiempo */}
+                                                        <span className="text-xs text-zinc-500 ml-2 flex-shrink-0">
+                                                            {formatearFecha(notificacion.createdAt)}
+                                                        </span>
                                                     </div>
 
-                                                    {/* Acciones de la notificación */}
-                                                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        {notificacion.status !== 'leida' && (
+                                                    {/* Acciones */}
+                                                    <div className="flex items-center justify-between mt-3">
+                                                        <div className="flex items-center space-x-2">
+                                                            {/* Botón dinámico según el tipo */}
+                                                            {rutaDestino && (
+                                                                <span className="text-xs text-blue-400 flex items-center space-x-1">
+                                                                    <ExternalLink size={12} />
+                                                                    <span>
+                                                                        {notificacion.tipo === 'solicitud_paquete' ? 'Ver evento' :
+                                                                         notificacion.tipo === 'solicitud_personalizada' ? 'Ver seguimiento' :
+                                                                         notificacion.tipo.includes('pago') ? 'Ver seguimiento' :
+                                                                         'Ver detalles'}
+                                                                    </span>
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Acciones de la notificación */}
+                                                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            {notificacion.status !== 'leida' && (
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                        handleMarcarLeida(notificacion.id)
+                                                                    }}
+                                                                    className="p-1 text-zinc-500 hover:text-blue-400 rounded"
+                                                                    title="Marcar como leída"
+                                                                >
+                                                                    <Eye size={12} />
+                                                                </button>
+                                                            )}
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation()
-                                                                    handleMarcarLeida(notificacion.id)
+                                                                    handleOcultar(notificacion.id)
                                                                 }}
-                                                                className="p-1 text-zinc-500 hover:text-blue-400 rounded"
-                                                                title="Marcar como leída"
+                                                                className="p-1 text-zinc-500 hover:text-red-400 rounded"
+                                                                title="Ocultar notificación"
                                                             >
-                                                                <Eye size={12} />
+                                                                <X size={12} />
                                                             </button>
-                                                        )}
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                handleOcultar(notificacion.id)
-                                                            }}
-                                                            className="p-1 text-zinc-500 hover:text-red-400 rounded"
-                                                            title="Ocultar notificación"
-                                                        >
-                                                            <X size={12} />
-                                                        </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    )
+                                })}
                             </div>
                         )}
                     </div>
