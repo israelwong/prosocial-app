@@ -68,8 +68,38 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                 { event: '*', schema: 'public', table: 'Notificacion' },
                 async (payload) => {
                     console.log('🔔 Cambio detectado en Notificacion:', payload)
-                    // Recargar todas las notificaciones cuando hay un cambio
-                    await cargarNotificaciones()
+
+                    // Optimización: manejar eventos específicos en lugar de recargar todo
+                    if (payload.eventType === 'INSERT') {
+                        // Nueva notificación: recargar para asegurar orden correcto
+                        console.log('📥 Nueva notificación detectada, recargando...')
+                        await cargarNotificaciones()
+                    } else if (payload.eventType === 'UPDATE') {
+                        const { new: updatedNotif, old: oldNotif } = payload
+
+                        if (updatedNotif.status === 'oculta' && oldNotif.status !== 'oculta') {
+                            // Notificación ocultada: remover del estado local (ya se hizo optimistic update)
+                            console.log('👻 Notificación ocultada confirmada:', updatedNotif.id)
+                            // No hacer nada, el optimistic update ya la removió
+                        } else if (updatedNotif.status === 'leida' && oldNotif.status !== 'leida') {
+                            // Notificación marcada como leída: actualizar estado local
+                            console.log('✅ Notificación marcada como leída:', updatedNotif.id)
+                            setNotificaciones(prev =>
+                                prev.map(n =>
+                                    n.id === updatedNotif.id
+                                        ? { ...n, status: 'leida', updatedAt: new Date(updatedNotif.updatedAt) }
+                                        : n
+                                )
+                            )
+                            setNuevasNotificaciones(prev => Math.max(0, prev - 1))
+                        } else {
+                            // Otros tipos de actualización: recargar
+                            await cargarNotificaciones()
+                        }
+                    } else {
+                        // DELETE u otros eventos: recargar
+                        await cargarNotificaciones()
+                    }
                 }
             )
             .subscribe((status, err) => {
@@ -102,10 +132,29 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
     // Marcar notificación como leída
     const handleMarcarLeida = async (notificacionId: string) => {
         try {
+            console.log('👁️ Marcando como leída:', notificacionId)
+
+            // Optimistic update: marcar inmediatamente como leída
+            const notifAnterior = notificaciones.find(n => n.id === notificacionId)
+            if (notifAnterior && notifAnterior.status !== 'leida') {
+                setNotificaciones(prev =>
+                    prev.map(n =>
+                        n.id === notificacionId
+                            ? { ...n, status: 'leida', updatedAt: new Date() }
+                            : n
+                    )
+                )
+                setNuevasNotificaciones(prev => Math.max(0, prev - 1))
+            }
+
+            // Ejecutar la acción en background
             await marcarComoLeida(notificacionId)
-            // El realtime se encargará de actualizar el estado automáticamente
+            console.log('✅ Notificación marcada como leída correctamente')
+
         } catch (error) {
-            console.error('Error al marcar como leída:', error)
+            console.error('❌ Error al marcar como leída:', error)
+            // En caso de error, recargar notificaciones
+            cargarNotificaciones()
         }
     }
 
