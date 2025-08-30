@@ -13,13 +13,17 @@ import {
     CreditCard,
     AlertCircle,
     Trash2,
-    CheckCircle
+    CheckCircle,
+    X
 } from 'lucide-react';
 import Link from 'next/link';
 import { obtenerPagosEntrantes } from '@/app/admin/_lib/actions/finanzas';
 import { eliminarPago } from '@/app/admin/_lib/actions/pagos';
 import { cambiarStatusPago } from '@/app/admin/_lib/actions/seguimiento/pagos.actions';
 import { PAGO_STATUS } from '@/app/admin/_lib/constants/status';
+import { toast } from 'sonner';
+
+
 
 interface PagoEntrante {
     id: string;
@@ -30,6 +34,7 @@ interface PagoEntrante {
     cliente?: string;
     metodoPago?: string;
     eventoNombre?: string;
+    eventoId?: string;
 }
 
 export default function PagosPage() {
@@ -41,6 +46,15 @@ export default function PagosPage() {
     const [pagosSeleccionados, setPagosSeleccionados] = useState<string[]>([]);
     const [eliminandoMultiples, setEliminandoMultiples] = useState(false);
     const [autorizandoPago, setAutorizandoPago] = useState<string | null>(null);
+
+    // Estados para filtros
+    const [terminoBusqueda, setTerminoBusqueda] = useState<string>('');
+    const [soloPendientes, setSoloPendientes] = useState<boolean>(false);
+
+    // Establecer el título de la página
+    useEffect(() => {
+        document.title = 'Pagos Entrantes';
+    }, []);
 
     // Cargar pagos
     useEffect(() => {
@@ -143,17 +157,17 @@ export default function PagosPage() {
                         if (cambios.agendaActualizada) detalles.push('agenda confirmada');
 
                         if (detalles.length > 0) {
-                            mensaje += `\n\nCambios automáticos aplicados:\n• ${detalles.join('\n• ')}`;
+                            mensaje += ` - Cambios aplicados: ${detalles.join(', ')}`;
                         }
                     }
 
-                    alert(mensaje);
+                    toast.success(mensaje);
                 } else {
-                    alert('Error al autorizar el pago: ' + resultado.error);
+                    toast.error('Error al autorizar el pago: ' + resultado.error);
                 }
             } catch (error) {
                 console.error('Error al autorizar pago:', error);
-                alert('Error al autorizar el pago');
+                toast.error('Error al autorizar el pago');
             } finally {
                 setAutorizandoPago(null);
             }
@@ -173,17 +187,57 @@ export default function PagosPage() {
                 if (resultado.success) {
                     // Recargar la lista de pagos
                     setPagos(pagos.filter(p => p.id !== pagoId));
-                    // Podrías usar una notificación más elegante aquí
-                    alert('Pago eliminado exitosamente');
+                    toast.success('Pago eliminado exitosamente');
                 } else {
-                    alert('Error al eliminar el pago: ' + resultado.error);
+                    toast.error('Error al eliminar el pago: ' + resultado.error);
                 }
             } catch (error) {
                 console.error('Error al eliminar pago:', error);
-                alert('Error al eliminar el pago');
+                toast.error('Error al eliminar el pago');
             } finally {
                 setEliminandoPago(null);
             }
+        }
+    };
+
+    const manejarCancelarPago = async (pagoId: string, concepto: string) => {
+        const confirmacion = confirm(
+            `¿Estás seguro de que deseas cancelar el pago "${concepto}"?`
+        );
+
+        if (confirmacion) {
+            try {
+                setAutorizandoPago(pagoId);
+                const resultado = await cambiarStatusPago(pagoId, PAGO_STATUS.FAILED);
+
+                if (resultado.success) {
+                    // Actualizar el estado local del pago
+                    setPagos(prevPagos =>
+                        prevPagos.map(pago =>
+                            pago.id === pagoId
+                                ? { ...pago, status: PAGO_STATUS.FAILED }
+                                : pago
+                        )
+                    );
+                    toast.success('Pago cancelado exitosamente');
+                } else {
+                    toast.error('Error al cancelar el pago: ' + resultado.error);
+                }
+            } catch (error) {
+                console.error('Error al cancelar pago:', error);
+                toast.error('Error al cancelar el pago');
+            } finally {
+                setAutorizandoPago(null);
+            }
+        }
+    };
+
+    const manejarVerEvento = (eventoId: string | undefined) => {
+        console.log('🔍 manejarVerEvento - eventoId recibido:', eventoId);
+        if (eventoId) {
+            window.open(`/admin/dashboard/seguimiento/${eventoId}`, '_self');
+        } else {
+            toast.error('No hay evento asociado a este pago');
         }
     };
 
@@ -196,9 +250,16 @@ export default function PagosPage() {
     };
 
     const manejarSeleccionarTodos = () => {
-        setPagosSeleccionados(
-            pagosSeleccionados.length === pagos.length ? [] : pagos.map(p => p.id)
-        );
+        const pagosFiltradosIds = pagosFiltrados.map(p => p.id);
+        const todosFiltradosSeleccionados = pagosFiltradosIds.every(id => pagosSeleccionados.includes(id));
+
+        if (todosFiltradosSeleccionados) {
+            // Deseleccionar todos los filtrados
+            setPagosSeleccionados(prev => prev.filter(id => !pagosFiltradosIds.includes(id)));
+        } else {
+            // Seleccionar todos los filtrados
+            setPagosSeleccionados(prev => [...new Set([...prev, ...pagosFiltradosIds])]);
+        }
     };
 
     const manejarEliminarSeleccionados = async () => {
@@ -220,19 +281,34 @@ export default function PagosPage() {
                 // Actualizar la lista
                 setPagos(pagos.filter(p => !pagosSeleccionados.includes(p.id)));
                 setPagosSeleccionados([]);
-                alert(`${pagosSeleccionados.length} pagos eliminados exitosamente`);
+                toast.success(`${pagosSeleccionados.length} pagos eliminados exitosamente`);
             } catch (error) {
                 console.error('Error al eliminar pagos:', error);
-                alert('Error al eliminar algunos pagos');
+                toast.error('Error al eliminar algunos pagos');
             } finally {
                 setEliminandoMultiples(false);
             }
         }
     };
 
-    const totalPagos = pagos.reduce((sum, pago) => sum + pago.monto, 0);
-    const pagosPagados = pagos.filter(p => [PAGO_STATUS.PAID, 'confirmed'].includes(p.status as any));
-    const pagosPendientes = pagos.filter(p => [PAGO_STATUS.PENDING, PAGO_STATUS.PENDIENTE, 'processing'].includes(p.status as any));
+    // Función para filtrar pagos
+    const pagosFiltrados = pagos.filter(pago => {
+        // Filtro de búsqueda por concepto y nombre de evento
+        const cumpleBusqueda = terminoBusqueda === '' ||
+            pago.concepto.toLowerCase().includes(terminoBusqueda.toLowerCase()) ||
+            (pago.eventoNombre && pago.eventoNombre.toLowerCase().includes(terminoBusqueda.toLowerCase())) ||
+            (pago.cliente && pago.cliente.toLowerCase().includes(terminoBusqueda.toLowerCase()));
+
+        // Filtro de solo pendientes
+        const cumplePendientes = !soloPendientes ||
+            [PAGO_STATUS.PENDING, PAGO_STATUS.PENDIENTE, 'processing'].includes(pago.status as any);
+
+        return cumpleBusqueda && cumplePendientes;
+    });
+
+    const totalPagos = pagosFiltrados.reduce((sum, pago) => sum + pago.monto, 0);
+    const pagosPagados = pagosFiltrados.filter(p => [PAGO_STATUS.PAID, 'confirmed'].includes(p.status as any));
+    const pagosPendientes = pagosFiltrados.filter(p => [PAGO_STATUS.PENDING, PAGO_STATUS.PENDIENTE, 'processing'].includes(p.status as any));
 
     return (
         <div className="space-y-6">
@@ -276,6 +352,83 @@ export default function PagosPage() {
                     </Button>
                 </div>
             </div>
+
+            {/* Controles de filtro */}
+            <Card className="bg-zinc-900 border-zinc-800">
+                <CardContent className="pt-6">
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                        {/* Buscador */}
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 w-4 h-4" />
+                            <input
+                                type="text"
+                                placeholder="Buscar por concepto, evento o cliente..."
+                                value={terminoBusqueda}
+                                onChange={(e) => setTerminoBusqueda(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-white placeholder-zinc-400 focus:border-blue-500 focus:outline-none"
+                            />
+                        </div>
+
+                        {/* Toggle para solo pendientes */}
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="solo-pendientes"
+                                checked={soloPendientes}
+                                onChange={(e) => setSoloPendientes(e.target.checked)}
+                                className="rounded border-zinc-600 text-yellow-500 focus:ring-yellow-500 bg-zinc-800"
+                            />
+                            <label htmlFor="solo-pendientes" className="text-sm text-zinc-300 cursor-pointer">
+                                Solo pendientes
+                            </label>
+                        </div>
+
+                        {/* Contador de resultados */}
+                        <div className="text-sm text-zinc-400">
+                            {pagosFiltrados.length} de {pagos.length} pagos
+                        </div>
+                    </div>
+
+                    {/* Indicadores de filtros activos */}
+                    {(terminoBusqueda || soloPendientes) && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            {terminoBusqueda && (
+                                <Badge variant="outline" className="text-blue-400 border-blue-400">
+                                    <Search className="w-3 h-3 mr-1" />
+                                    "{terminoBusqueda}"
+                                    <button
+                                        onClick={() => setTerminoBusqueda('')}
+                                        className="ml-2 hover:text-red-400"
+                                    >
+                                        ×
+                                    </button>
+                                </Badge>
+                            )}
+                            {soloPendientes && (
+                                <Badge variant="outline" className="text-yellow-400 border-yellow-400">
+                                    <Filter className="w-3 h-3 mr-1" />
+                                    Solo pendientes
+                                    <button
+                                        onClick={() => setSoloPendientes(false)}
+                                        className="ml-2 hover:text-red-400"
+                                    >
+                                        ×
+                                    </button>
+                                </Badge>
+                            )}
+                            <button
+                                onClick={() => {
+                                    setTerminoBusqueda('');
+                                    setSoloPendientes(false);
+                                }}
+                                className="text-xs text-zinc-400 hover:text-white underline"
+                            >
+                                Limpiar filtros
+                            </button>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
 
             {/* Resumen */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -376,16 +529,16 @@ export default function PagosPage() {
                             </div>
                         )}
                     </div>
-                    {pagos.length > 0 && (
+                    {pagosFiltrados.length > 0 && (
                         <div className="flex items-center gap-2 mt-2">
                             <input
                                 type="checkbox"
-                                checked={pagosSeleccionados.length === pagos.length}
+                                checked={pagosFiltrados.length > 0 && pagosFiltrados.every(pago => pagosSeleccionados.includes(pago.id))}
                                 onChange={manejarSeleccionarTodos}
                                 className="rounded"
                             />
                             <span className="text-sm text-zinc-400">
-                                Seleccionar todos
+                                Seleccionar todos los filtrados
                             </span>
                         </div>
                     )}
@@ -397,84 +550,148 @@ export default function PagosPage() {
                                 <div key={i} className="h-16 bg-zinc-800 rounded"></div>
                             ))}
                         </div>
-                    ) : pagos.length > 0 ? (
+                    ) : pagosFiltrados.length > 0 ? (
                         <div className="space-y-3">
-                            {pagos.map(pago => (
-                                <div key={pago.id} className="flex items-center gap-3 p-4 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors">
-                                    <input
-                                        type="checkbox"
-                                        checked={pagosSeleccionados.includes(pago.id)}
-                                        onChange={() => manejarSeleccionPago(pago.id)}
-                                        className="rounded"
-                                    />
-                                    <div className="flex-1 flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="font-medium text-white">{pago.concepto}</h3>
-                                                {obtenerBadgeStatus(pago.status)}
+                            {pagosFiltrados.map(pago => {
+                                console.log('🔍 Renderizando pago:', { id: pago.id, eventoId: pago.eventoId, eventoNombre: pago.eventoNombre });
+                                return (
+                                    <div key={pago.id} className="flex items-center gap-3 p-4 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors">
+                                        <input
+                                            type="checkbox"
+                                            checked={pagosSeleccionados.includes(pago.id)}
+                                            onChange={() => manejarSeleccionPago(pago.id)}
+                                            className="rounded"
+                                        />
+                                        <div className="flex-1 flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <h3 className="font-medium text-white">{pago.concepto}</h3>
+                                                    {obtenerBadgeStatus(pago.status)}
+                                                </div>
+                                                <div className="text-sm text-zinc-400 space-y-1">
+                                                    <p>Cliente: {pago.cliente || 'No especificado'}</p>
+                                                    <p>Evento: {pago.eventoNombre || 'No especificado'}</p>
+                                                    <p>Método: {formatearMetodoPago(pago.metodoPago)}</p>
+                                                    <p>Fecha: {formatearFecha(pago.fecha)}</p>
+                                                </div>
                                             </div>
-                                            <div className="text-sm text-zinc-400 space-y-1">
-                                                <p>Cliente: {pago.cliente || 'No especificado'}</p>
-                                                <p>Evento: {pago.eventoNombre || 'No especificado'}</p>
-                                                <p>Método: {formatearMetodoPago(pago.metodoPago)}</p>
-                                                <p>Fecha: {formatearFecha(pago.fecha)}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right space-y-2">
-                                            <p className="text-2xl font-bold text-white">
-                                                {formatearMoneda(pago.monto)}
-                                            </p>
-                                            <div className="flex gap-2">
-                                                {/* Botón de autorizar para pagos SPEI pendientes */}
-                                                {(pago.status === PAGO_STATUS.PENDING || pago.status === PAGO_STATUS.PENDIENTE) &&
-                                                    (pago.metodoPago === 'spei' || pago.metodoPago === 'transferencia interbancaria') && (
+                                            <div className="text-right space-y-2">
+                                                <p className="text-2xl font-bold text-white">
+                                                    {formatearMoneda(pago.monto)}
+                                                </p>
+                                                <div className="flex gap-2">
+                                                    {/* Botón Ver Evento */}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            console.log('🔍 Click en Ver Evento - pago completo:', pago);
+                                                            console.log('🔍 Click en Ver Evento - eventoId específico:', pago.eventoId);
+                                                            manejarVerEvento(pago.eventoId);
+                                                        }}
+                                                        className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
+                                                    >
+                                                        <Eye className="w-4 h-4 mr-2" />
+                                                        Ver Evento
+                                                    </Button>
+
+                                                    {/* Botón de autorizar para pagos SPEI pendientes */}
+                                                    {(pago.status === PAGO_STATUS.PENDING || pago.status === PAGO_STATUS.PENDIENTE) &&
+                                                        (pago.metodoPago === 'spei' || pago.metodoPago === 'transferencia interbancaria') && (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => manejarAutorizarPago(pago.id, pago.concepto)}
+                                                                disabled={autorizandoPago === pago.id}
+                                                                className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white disabled:opacity-50"
+                                                            >
+                                                                {autorizandoPago === pago.id ? (
+                                                                    <>
+                                                                        <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                                                        Autorizando...
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                                                        Autorizar
+                                                                    </>
+                                                                )}
+                                                            </Button>
+                                                        )}
+
+                                                    {/* Botón Cancelar Pago */}
+                                                    {(pago.status === PAGO_STATUS.PENDING || pago.status === PAGO_STATUS.PENDIENTE || pago.status === 'processing' || pago.status === PAGO_STATUS.PAID || pago.status === 'confirmed') && (
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            onClick={() => manejarAutorizarPago(pago.id, pago.concepto)}
+                                                            onClick={() => manejarCancelarPago(pago.id, pago.concepto)}
                                                             disabled={autorizandoPago === pago.id}
-                                                            className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white disabled:opacity-50"
+                                                            className="border-orange-600 text-orange-400 hover:bg-orange-600 hover:text-white disabled:opacity-50"
                                                         >
                                                             {autorizandoPago === pago.id ? (
                                                                 <>
                                                                     <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                                                    Autorizando...
+                                                                    Cancelando...
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <CheckCircle className="w-4 h-4 mr-2" />
-                                                                    Autorizar
+                                                                    <X className="w-4 h-4 mr-2" />
+                                                                    Cancelar
                                                                 </>
                                                             )}
                                                         </Button>
                                                     )}
 
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => manejarEliminarPago(pago.id, pago.concepto)}
-                                                    disabled={eliminandoPago === pago.id}
-                                                    className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white disabled:opacity-50"
-                                                >
-                                                    {eliminandoPago === pago.id ? (
-                                                        <>
-                                                            <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                                            Eliminando...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Trash2 className="w-4 h-4 mr-2" />
-                                                            Eliminar
-                                                        </>
-                                                    )}
-                                                </Button>
+                                                    {/* Botón Eliminar */}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => manejarEliminarPago(pago.id, pago.concepto)}
+                                                        disabled={eliminandoPago === pago.id}
+                                                        className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white disabled:opacity-50"
+                                                    >
+                                                        {eliminandoPago === pago.id ? (
+                                                            <>
+                                                                <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                                                Eliminando...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Trash2 className="w-4 h-4 mr-2" />
+                                                                Eliminar
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                )
+                            })}
+                        </div>
+                    ) : pagos.length > 0 ? (
+                        // Hay pagos pero no coinciden con los filtros
+                        <div className="text-center py-12">
+                            <Filter className="h-16 w-16 mx-auto mb-4 text-zinc-600" />
+                            <h3 className="text-lg font-medium text-zinc-300 mb-2">
+                                No se encontraron pagos
+                            </h3>
+                            <p className="text-zinc-500 mb-4">
+                                No hay pagos que coincidan con los filtros aplicados
+                            </p>
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setTerminoBusqueda('');
+                                    setSoloPendientes(false);
+                                }}
+                                className="text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white"
+                            >
+                                Limpiar filtros
+                            </Button>
                         </div>
                     ) : (
+                        // No hay pagos en absoluto
                         <div className="text-center py-12">
                             <CreditCard className="h-16 w-16 mx-auto mb-4 text-zinc-600" />
                             <h3 className="text-lg font-medium text-zinc-300 mb-2">

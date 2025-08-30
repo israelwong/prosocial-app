@@ -1,11 +1,13 @@
 # 🧪 Plan de Pruebas de Extremo a Extremo (E2E) - v1.5
 
 ## 📅 Fecha: 30 de agosto de 2025
+
 ## 🎯 Objetivo: Validar todo el flujo completo del sistema ProSocial
 
 ## 🔄 Flujo Completo a Probar
 
 ### 1. **ADMINISTRADOR - Creación y Gestión**
+
 - ✅ Crear cotización desde cero
 - ✅ Crear cotización desde paquete base
 - ✅ Editar cotización existente (con sistema de análisis inteligente)
@@ -13,6 +15,7 @@
 - ✅ Compartir cotización con cliente
 
 ### 2. **CLIENTE - Portal y Pagos**
+
 - ✅ Recibir link de cotización
 - ✅ Ver cotización en portal cliente
 - ✅ Aceptar/rechazar cotización
@@ -21,6 +24,7 @@
 - ✅ Realizar abonos adicionales desde portal
 
 ### 3. **SEGUIMIENTO Y GESTIÓN**
+
 - ✅ Ver evento en seguimiento
 - ✅ Gestionar pagos desde admin
 - ✅ Actualizar estado del evento
@@ -31,6 +35,7 @@
 ## 🗂️ Casos de Prueba Específicos
 
 ### **CASO 1: Cotización Nueva desde Cero**
+
 ```
 ADMIN → Eventos → Nuevo Evento → Cotización Nueva
 - Agregar servicios manualmente
@@ -41,6 +46,7 @@ ADMIN → Eventos → Nuevo Evento → Cotización Nueva
 ```
 
 ### **CASO 2: Cotización desde Paquete Base**
+
 ```
 ADMIN → Eventos → Nuevo Evento → Cotización desde Paquete
 - Seleccionar paquete XV Años/Boda
@@ -51,6 +57,7 @@ ADMIN → Eventos → Nuevo Evento → Cotización desde Paquete
 ```
 
 ### **CASO 3: Edición de Cotización (NUEVO)**
+
 ```
 ADMIN → Seguimiento/Eventos → Editar Cotización
 - ✅ Modificar servicios y verificar protección de margen
@@ -60,6 +67,7 @@ ADMIN → Seguimiento/Eventos → Editar Cotización
 ```
 
 ### **CASO 4: Autorización y Compartir**
+
 ```
 ADMIN → Autorizar Cotización → Compartir
 - Autorizar cotización
@@ -69,6 +77,7 @@ ADMIN → Autorizar Cotización → Compartir
 ```
 
 ### **CASO 5: Portal Cliente - Primera Vista**
+
 ```
 CLIENTE → Link de Cotización
 - Ver detalles de cotización
@@ -78,6 +87,7 @@ CLIENTE → Link de Cotización
 ```
 
 ### **CASO 6: Proceso de Pago Inicial**
+
 ```
 CLIENTE → Aceptar Cotización → Pago
 - Aceptar cotización
@@ -88,6 +98,7 @@ CLIENTE → Aceptar Cotización → Pago
 ```
 
 ### **CASO 7: Portal Cliente - Acceso y Abonos**
+
 ```
 CLIENTE → Portal del Cliente
 - Acceder con credenciales
@@ -98,6 +109,7 @@ CLIENTE → Portal del Cliente
 ```
 
 ### **CASO 8: Administración de Seguimiento**
+
 ```
 ADMIN → Seguimiento
 - Ver evento autorizado
@@ -112,12 +124,14 @@ ADMIN → Seguimiento
 ## 🔍 Puntos Críticos a Validar
 
 ### **Navegación (NUEVAS MEJORAS)**
+
 - [ ] Botón "Cancelar" en formularios usa `router.back()`
 - [ ] Guardar en modo edición regresa a pantalla anterior
 - [ ] Funciona desde seguimiento y desde eventos
 - [ ] Timeouts de navegación respetan mensajes de éxito
 
 ### **Sistema de Análisis Inteligente (NUEVO)**
+
 - [ ] Análisis discreto M/U/EST se muestra en modo edición
 - [ ] Protección de margen funciona (≤5% o ≤$1000 Y ≥25%)
 - [ ] Warnings en tiempo real mientras se edita precio
@@ -125,6 +139,7 @@ ADMIN → Seguimiento
 - [ ] Tooltip con información detallada
 
 ### **Flujos de Pago Críticos**
+
 - [ ] Stripe funciona correctamente
 - [ ] PayPal funciona correctamente
 - [ ] Pagos en efectivo se registran
@@ -132,6 +147,7 @@ ADMIN → Seguimiento
 - [ ] Balance se actualiza correctamente
 
 ### **Portal del Cliente**
+
 - [ ] Autenticación funciona
 - [ ] Vista de cotización es clara
 - [ ] Pagos se procesan correctamente
@@ -139,6 +155,7 @@ ADMIN → Seguimiento
 - [ ] Responsive en móvil
 
 ### **Estados y Notificaciones**
+
 - [ ] Estados de cotización se actualizan
 - [ ] Estados de evento son correctos
 - [ ] Emails de notificación se envían
@@ -149,26 +166,31 @@ ADMIN → Seguimiento
 ## 🚀 Plan de Ejecución
 
 ### **Fase 1: Preparación (30 min)**
+
 - [ ] Revisar datos de prueba
 - [ ] Configurar métodos de pago en sandbox
 - [ ] Preparar navegadores y dispositivos
 
 ### **Fase 2: Flujo Administrador (45 min)**
+
 - [ ] Ejecutar CASOS 1, 2, 3, 4
 - [ ] Documentar cualquier issue encontrado
 - [ ] Verificar nuevas funcionalidades
 
 ### **Fase 3: Flujo Cliente (30 min)**
+
 - [ ] Ejecutar CASOS 5, 6, 7
 - [ ] Probar en móvil y desktop
 - [ ] Verificar UX completa
 
 ### **Fase 4: Seguimiento Admin (15 min)**
+
 - [ ] Ejecutar CASO 8
 - [ ] Verificar consistencia de datos
 - [ ] Validar reportes
 
 ### **Fase 5: Casos Edge (30 min)**
+
 - [ ] Probar con datos límite
 - [ ] Verificar manejo de errores
 - [ ] Probar conexión lenta
@@ -178,17 +200,20 @@ ADMIN → Seguimiento
 ## 📊 Criterios de Éxito
 
 ### **✅ PASS: Todo funciona perfectamente**
+
 - Todos los flujos completan sin errores
 - Navegación mejorada funciona correctamente
 - Sistema de análisis inteligente opera como esperado
 - Experiencia de usuario es fluida
 
 ### **⚠️ MINOR: Problemas menores**
+
 - Funcionalidad core funciona
 - Issues menores de UX o cosmético
 - Requiere ajustes pequeños
 
 ### **❌ FAIL: Problemas críticos**
+
 - Funcionalidad core rota
 - Pagos no funcionan
 - Navegación rota
@@ -199,14 +224,16 @@ ADMIN → Seguimiento
 ## 🐛 Tracking de Issues
 
 ### **Issues Encontrados**
-| # | Severidad | Descripción | Estado | Asignado |
-|---|-----------|-------------|--------|----------|
-|   |           |             |        |          |
+
+| #   | Severidad | Descripción | Estado | Asignado |
+| --- | --------- | ----------- | ------ | -------- |
+|     |           |             |        |          |
 
 ### **Mejoras Identificadas**
-| # | Prioridad | Descripción | Estado | Asignado |
-|---|-----------|-------------|--------|----------|
-|   |           |             |        |          |
+
+| #   | Prioridad | Descripción | Estado | Asignado |
+| --- | --------- | ----------- | ------ | -------- |
+|     |           |             |        |          |
 
 ---
 

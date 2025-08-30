@@ -7,6 +7,7 @@ import CrearNominaModal from './CrearNominaModal';
 import { asignarUsuarioAServicio, removerUsuarioDeServicio } from '@/app/admin/_lib/actions/seguimiento/servicios.actions';
 import { crearNominaIndividual, cancelarPago } from '@/app/admin/_lib/actions/seguimiento/nomina.actions';
 import { NOMINA_STATUS } from '@/app/admin/_lib/constants/status';
+import { toast } from 'react-hot-toast';
 
 // Tipos para los datos
 interface UserData {
@@ -74,22 +75,22 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
     const servicios = cotizacionAprobada?.Servicio || [];
 
     // 🔍 DEBUG: Agregar logs para diagnosticar el problema
-    console.log('🔍 SERVICIOS DEBUG:', {
-        evento: evento?.id,
-        cotizacionAprobada: cotizacionAprobada?.id,
-        totalServicios: servicios.length,
-        servicios: servicios.map((s: any) => ({
-            id: s.id,
-            nombre_snapshot: s.nombre_snapshot,
-            nombre: s.nombre,
-            posicion: s.posicion,
-            costo_snapshot: s.costo_snapshot,
-            costo: s.costo,
-            cantidad: s.cantidad,
-            seccion_nombre_snapshot: s.seccion_nombre_snapshot,
-            categoria_nombre_snapshot: s.categoria_nombre_snapshot
-        }))
-    });
+    // console.log('🔍 SERVICIOS DEBUG:', {
+    //     evento: evento?.id,
+    //     cotizacionAprobada: cotizacionAprobada?.id,
+    //     totalServicios: servicios.length,
+    //     servicios: servicios.map((s: any) => ({
+    //         id: s.id,
+    //         nombre_snapshot: s.nombre_snapshot,
+    //         nombre: s.nombre,
+    //         posicion: s.posicion,
+    //         costo_snapshot: s.costo_snapshot,
+    //         costo: s.costo,
+    //         cantidad: s.cantidad,
+    //         seccion_nombre_snapshot: s.seccion_nombre_snapshot,
+    //         categoria_nombre_snapshot: s.categoria_nombre_snapshot
+    //     }))
+    // });
 
     // Calcular totales financieros
     const totales = servicios.reduce((acc: any, servicio: any) => {
@@ -159,15 +160,15 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
     });
 
     // 🔧 ORDENAMIENTO DESHABILITADO TEMPORALMENTE PARA DIAGNÓSTICO
-    console.log('🔍 SERVICIOS SIN ORDENAR - Revisando datos originales del backend:');
+    // console.log('🔍 SERVICIOS SIN ORDENAR - Revisando datos originales del backend:');
     Object.entries(serviciosAgrupados).forEach(([seccionNombre, seccionData]) => {
-        console.log(`\n📁 Sección: ${seccionNombre} (posicion: ${seccionData.posicion})`);
+        // console.log(`\n📁 Sección: ${seccionNombre} (posicion: ${seccionData.posicion})`);
         Object.entries(seccionData.categorias).forEach(([categoriaNombre, categoriaData]) => {
-            console.log(`  📂 Categoría: ${categoriaNombre} (posicion: ${categoriaData.posicion})`);
+            // console.log(`  📂 Categoría: ${categoriaNombre} (posicion: ${categoriaData.posicion})`);
             categoriaData.servicios.forEach((servicio: any, index: number) => {
                 const posicion = servicio.posicion || 'sin posición';
                 const nombre = servicio.nombre_snapshot || servicio.nombre;
-                console.log(`    ${index + 1}. [${posicion}] ${nombre}`);
+                // console.log(`    ${index + 1}. [${posicion}] ${nombre}`);
             });
         });
     });
@@ -219,10 +220,10 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
             if (confirmar) {
                 try {
                     await removerUsuarioDeServicio(servicio.id, evento.id);
-                    alert('Usuario removido exitosamente');
+                    toast.success('Usuario removido exitosamente');
                 } catch (error) {
                     console.error('Error al remover usuario:', error);
-                    alert('Error al remover usuario: ' + (error as Error).message);
+                    toast.error('Error al remover usuario: ' + (error as Error).message);
                 }
             }
         }

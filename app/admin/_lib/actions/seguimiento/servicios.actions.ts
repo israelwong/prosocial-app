@@ -11,7 +11,7 @@ import prisma from '../../prismaClient';
  */
 export async function asignarUsuarioAServicio(servicioId: string, userId: string, eventoId: string) {
     try {
-        console.log('🔄 [SERVER] Iniciando asignación:', { servicioId, userId, eventoId });
+        // console.log('🔄 [SERVER] Iniciando asignación:', { servicioId, userId, eventoId });
 
         const resultado = await prisma.cotizacionServicio.update({
             where: { id: servicioId },
@@ -21,13 +21,13 @@ export async function asignarUsuarioAServicio(servicioId: string, userId: string
             },
         });
 
-        console.log('✅ [SERVER] Usuario asignado exitosamente:', resultado);
+        // console.log('✅ [SERVER] Usuario asignado exitosamente:', resultado);
 
         // Revalida la página de detalle del evento para reflejar el cambio.
-        console.log('🔄 [SERVER] Revalidando ruta:', `/admin/dashboard/seguimiento/${eventoId}`);
+        // console.log('🔄 [SERVER] Revalidando ruta:', `/admin/dashboard/seguimiento/${eventoId}`);
         revalidatePath(`/admin/dashboard/seguimiento/${eventoId}`);
 
-        console.log('✅ [SERVER] Ruta revalidada');
+        // console.log('✅ [SERVER] Ruta revalidada');
         return resultado;
     } catch (error) {
         console.error('❌ [SERVER] Error al asignar usuario al servicio:', error);
@@ -42,7 +42,7 @@ export async function asignarUsuarioAServicio(servicioId: string, userId: string
  */
 export async function removerUsuarioDeServicio(servicioId: string, eventoId: string) {
     try {
-        console.log('🔄 [SERVER] Removiendo asignación:', { servicioId, eventoId });
+        // console.log('🔄 [SERVER] Removiendo asignación:', { servicioId, eventoId });
 
         const resultado = await prisma.cotizacionServicio.update({
             where: { id: servicioId },
@@ -53,10 +53,10 @@ export async function removerUsuarioDeServicio(servicioId: string, eventoId: str
             },
         });
 
-        console.log('✅ [SERVER] Asignación removida exitosamente:', resultado);
+        // console.log('✅ [SERVER] Asignación removida exitosamente:', resultado);
 
         // Revalida la página de detalle del evento para reflejar el cambio.
-        console.log('🔄 [SERVER] Revalidando ruta:', `/admin/dashboard/seguimiento/${eventoId}`);
+        // console.log('🔄 [SERVER] Revalidando ruta:', `/admin/dashboard/seguimiento/${eventoId}`);
         revalidatePath(`/admin/dashboard/seguimiento/${eventoId}`);
 
         console.log('✅ [SERVER] Ruta revalidada');

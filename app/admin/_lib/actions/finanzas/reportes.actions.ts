@@ -386,6 +386,7 @@ export async function obtenerPagosEntrantes(
     cliente?: string;
     metodoPago?: string;
     eventoNombre?: string;
+    eventoId?: string;
 }>> {
     try {
         console.log('🔄 Obteniendo pagos entrantes del mes:', { año, mes });
@@ -410,6 +411,7 @@ export async function obtenerPagosEntrantes(
                     select: {
                         Evento: {
                             select: {
+                                id: true,
                                 nombre: true,
                                 Cliente: {
                                     select: {
@@ -436,7 +438,8 @@ export async function obtenerPagosEntrantes(
             fecha: pago.createdAt,
             cliente: pago.Cliente?.nombre || pago.Cotizacion?.Evento?.Cliente?.nombre || 'Cliente no especificado',
             metodoPago: pago.metodo_pago,
-            eventoNombre: pago.Cotizacion?.Evento?.nombre || 'Evento no especificado'
+            eventoNombre: pago.Cotizacion?.Evento?.nombre || 'Evento no especificado',
+            eventoId: pago.Cotizacion?.Evento?.id || undefined
         }));
 
     } catch (error) {

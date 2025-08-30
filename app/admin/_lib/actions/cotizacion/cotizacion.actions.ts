@@ -1544,12 +1544,12 @@ export async function autorizarCotizacion(cotizacionId: string): Promise<Autoriz
         revalidatePath(`/admin/dashboard/eventos/${evento.id}`);
         revalidatePath(`/admin/dashboard/eventos/${evento.id}/cotizacion`);
 
-        console.log('✅ Cotización aprobada exitosamente:', {
-            cotizacion: cotizacionId,
-            evento: evento.id,
-            etapa: result.etapaNombre,
-            archivadas: result.cotizacionesArchivadas
-        });
+        // console.log('✅ Cotización aprobada exitosamente:', {
+        //     cotizacion: cotizacionId,
+        //     evento: evento.id,
+        //     etapa: result.etapaNombre,
+        //     archivadas: result.cotizacionesArchivadas
+        // });
 
         const mensaje = `Cotización aprobada exitosamente. El evento fue movido a la etapa: ${result.etapaNombre}` +
             (result.cotizacionesArchivadas > 0 ? `. ${result.cotizacionesArchivadas} cotización(es) adicional(es) fueron archivadas automáticamente.` : '') +
@@ -1614,7 +1614,7 @@ export async function verificarEstadoAutorizacion(cotizacionId: string) {
  */
 export async function cancelarCotizacion(cotizacionId: string) {
     try {
-        console.log('🔄 Iniciando cancelación de cotización:', cotizacionId);
+        // console.log('🔄 Iniciando cancelación de cotización:', cotizacionId);
 
         // Obtener datos completos de la cotización
         const cotizacion = await prisma.cotizacion.findUnique({
