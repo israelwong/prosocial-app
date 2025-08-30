@@ -170,16 +170,16 @@ export async function obtenerEventoDetalleCompleto(
         const cotizacion = (evento as any).Cotizacion?.[0] || null;
 
         // 🔍 DEBUG: Veamos qué cotizaciones encontramos
-        console.log('🔍 DEBUG Cotizaciones encontradas:', {
-            total: (evento as any).Cotizacion?.length || 0,
-            cotizaciones: (evento as any).Cotizacion?.map((c: any) => ({
-                id: c.id,
-                status: c.status,
-                precio: c.precio,
-                servicios: c.Servicio?.length || 0,
-                pagos: c.Pago?.length || 0
-            })) || []
-        });
+        // console.log('🔍 DEBUG Cotizaciones encontradas:', {
+        //     total: (evento as any).Cotizacion?.length || 0,
+        //     cotizaciones: (evento as any).Cotizacion?.map((c: any) => ({
+        //         id: c.id,
+        //         status: c.status,
+        //         precio: c.precio,
+        //         servicios: c.Servicio?.length || 0,
+        //         pagos: c.Pago?.length || 0
+        //     })) || []
+        // });
 
         const pagos = procesarPagosDetalle(cotizacion?.Pago || []);
 

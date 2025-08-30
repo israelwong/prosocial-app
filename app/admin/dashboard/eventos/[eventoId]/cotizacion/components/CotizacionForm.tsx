@@ -460,31 +460,67 @@ export default function CotizacionForm({
 
     // Funciones para manejar precio total personalizado
     const handleActivarPrecioTotal = (precioActual: number) => {
-        console.log('💲 Activando edición de precio total:', { precioActual });
+        console.log('💲 Activando edición de precio total:', { precioActual, modo, paqueteBase: !!paqueteBase });
         setUsuarioEditandoPrecioTotal(true);
         setEditandoPrecioTotal(true);
-        setPrecioTotalPersonalizado(precioActual);
+        // Inicializar con precio actual si no hay precio personalizado
+        if (precioTotalPersonalizado === null) {
+            setPrecioTotalPersonalizado(precioActual);
+        }
     };
 
     const handleCambiarPrecioTotal = (nuevoPrecio: number) => {
-        console.log('📝 Cambiando precio total manual:', { nuevoPrecio });
+        console.log('📝 Cambiando precio total manual:', { nuevoPrecio, nuevoPrecioRedondeado: parseFloat(nuevoPrecio.toFixed(2)) });
         // Marcar que el usuario está editando manualmente el precio total
         setUsuarioEditandoPrecioTotal(true);
         setPrecioTotalPersonalizado(parseFloat(nuevoPrecio.toFixed(2)));
     };
 
     const handleGuardarPrecioTotal = () => {
-        console.log('✅ Guardando precio total personalizado');
+        console.log('✅ Guardando precio total personalizado:', {
+            precioGuardado: precioTotalPersonalizado,
+            modo,
+            esPaquete: !!paqueteBase
+        });
         setEditandoPrecioTotal(false);
-        // NO desactivar usuarioEditandoPrecioTotal aquí - solo cuando modifiquen servicios
-        toast.success('Precio total personalizado aplicado');
+        // Mantener usuarioEditandoPrecioTotal activo para preservar la personalización
+        toast.success(`Precio total personalizado aplicado: ${precioTotalPersonalizado?.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`);
     };
 
     const handleCancelarPrecioTotal = () => {
         console.log('❌ Cancelando edición precio total');
-        setUsuarioEditandoPrecioTotal(false);
         setEditandoPrecioTotal(false);
+
+        // Lógica mejorada de cancelación basada en el contexto
+        if (modo === 'crear' && paqueteBase && paqueteBase.precio) {
+            // En paquetes nuevos, volver al precio del paquete
+            console.log('🔄 Restaurando precio del paquete:', paqueteBase.precio);
+            setPrecioTotalPersonalizado(paqueteBase.precio);
+            setUsuarioEditandoPrecioTotal(false);
+        } else if (modo === 'editar' && cotizacionExistente) {
+            // En cotizaciones existentes, volver al precio original
+            console.log('🔄 Restaurando precio original de cotización:', cotizacionExistente.precio);
+            setPrecioTotalPersonalizado(cotizacionExistente.precio);
+            setUsuarioEditandoPrecioTotal(false);
+        } else {
+            // En cotizaciones nuevas sin paquete, volver a automático
+            console.log('🔄 Restaurando precio automático');
+            setPrecioTotalPersonalizado(null);
+            setUsuarioEditandoPrecioTotal(false);
+        }
+    };
+
+    const handleRestaurarPrecioAutomatico = () => {
+        console.log('🔄 Restaurando precio automático explícitamente');
         setPrecioTotalPersonalizado(null);
+        setUsuarioEditandoPrecioTotal(false);
+
+        // Mensaje contextual basado en el tipo de cotización
+        if (paqueteBase) {
+            toast.success('Precio restaurado: ahora se calculará automáticamente basado en servicios seleccionados');
+        } else {
+            toast.success('Precio restaurado a cálculo automático');
+        }
     };
 
     // Funciones para manejar costos adicionales
@@ -602,7 +638,7 @@ export default function CotizacionForm({
 
     // Effect para manejar el precio total en cotizaciones basadas en paquete
     useEffect(() => {
-        console.log('🔍 useEffect ejecutándose:', {
+        console.log('🔍 useEffect precio total ejecutándose:', {
             modo,
             paqueteBase: !!paqueteBase,
             precioPaquete: paqueteBase?.precio,
@@ -610,43 +646,77 @@ export default function CotizacionForm({
             yaInicializadoConPaquete,
             usuarioEditandoPrecioTotal,
             precioSistema,
-            totalCostosAdicionales
+            totalCostosAdicionales,
+            precioTotalPersonalizado
         });
 
+        // CASO 1: Cotización nueva basada en paquete
         if (modo === 'crear' && paqueteBase && paqueteBase.precio) {
-            // PASO 1: Para cotizaciones de paquete, mantener el precio del paquete inicialmente
-            console.log('🎯 PASO 1: Manteniendo precio del paquete como total:', {
-                precioPaquete: paqueteBase.precio,
-                precioTotalPersonalizadoActual: precioTotalPersonalizado,
-                usuarioHaModificado,
-                usuarioEditandoPrecioTotal
-            });
+            console.log('🎯 CASO 1: Cotización nueva con paquete');
 
-            // PASO 2: Solo actualizar si el usuario ha modificado servicios/cantidades pero NO está editando precio total
+            // Inicializar con precio del paquete si no hay precio personalizado aún
+            if (!yaInicializadoConPaquete && precioTotalPersonalizado === null) {
+                console.log('� Inicializando precio del paquete como total personalizado:', paqueteBase.precio);
+                setPrecioTotalPersonalizado(paqueteBase.precio);
+                setYaInicializadoConPaquete(true);
+                return;
+            }
+
+            // Si el usuario modificó servicios/costos y NO está editando precio total manualmente,
+            // actualizar automáticamente al precio calculado
             if (usuarioHaModificado && yaInicializadoConPaquete && !usuarioEditandoPrecioTotal) {
                 const nuevoTotal = parseFloat((precioSistema + totalCostosAdicionales).toFixed(2));
-                console.log('🔄 PASO 2: Usuario modificó servicios, actualizando precio total:', {
+                console.log('🔄 Usuario modificó servicios, actualizando precio automáticamente:', {
                     nuevoSubtotal: precioSistema,
                     costosAdicionales: totalCostosAdicionales,
                     nuevoTotal
                 });
                 setPrecioTotalPersonalizado(nuevoTotal);
-            } else {
-                console.log('❌ PASO 2: NO se ejecuta porque:', {
-                    usuarioHaModificado,
-                    yaInicializadoConPaquete,
-                    usuarioEditandoPrecioTotal,
-                    condicionCumplida: usuarioHaModificado && yaInicializadoConPaquete && !usuarioEditandoPrecioTotal
-                });
             }
             return;
         }
 
-        // Para cotizaciones normales (sin paquete), resetear cuando cambian servicios/costos
-        if (precioTotalPersonalizado !== null && (watchedServicios || watchedCostos)) {
-            setPrecioTotalPersonalizado(null);
+        // CASO 2: Cotización existente (modo editar)
+        if (modo === 'editar' && cotizacionExistente) {
+            console.log('✏️ CASO 2: Cotización existente en modo editar');
+
+            // Inicializar con el precio actual de la cotización si no se ha inicializado
+            if (precioTotalPersonalizado === null && !yaInicializadoConPaquete) {
+                console.log('🏁 Inicializando con precio de cotización existente:', cotizacionExistente.precio);
+                setPrecioTotalPersonalizado(cotizacionExistente.precio);
+                setYaInicializadoConPaquete(true);
+                return;
+            }
+
+            // Si el usuario modificó servicios/costos y NO está editando precio manualmente,
+            // actualizar automáticamente (a menos que tenga una personalización manual activa)
+            if (usuarioHaModificado && yaInicializadoConPaquete && !usuarioEditandoPrecioTotal) {
+                const nuevoTotal = parseFloat((precioSistema + totalCostosAdicionales).toFixed(2));
+                console.log('🔄 Usuario modificó servicios en cotización existente:', {
+                    precioActual: precioTotalPersonalizado,
+                    nuevoCalculado: nuevoTotal,
+                    usuarioEditandoPrecioTotal,
+                    usuarioHaModificado
+                });
+
+                // Actualizar automáticamente el precio basado en los servicios modificados
+                setPrecioTotalPersonalizado(nuevoTotal);
+            }
+            return;
+        }        // CASO 3: Cotización nueva normal (sin paquete)
+        if (modo === 'crear' && !paqueteBase) {
+            console.log('📝 CASO 3: Cotización nueva sin paquete');
+
+            // Para cotizaciones normales, precio se calcula automáticamente
+            // Solo resetear precio personalizado si hay cambios y usuario no está editando
+            if (!usuarioEditandoPrecioTotal && precioTotalPersonalizado !== null) {
+                console.log('🔄 Reseteando precio personalizado para cotización normal');
+                setPrecioTotalPersonalizado(null);
+            }
+            return;
         }
-    }, [watchedServicios, watchedCostos, modo, paqueteBase, precioSistema, totalCostosAdicionales, yaInicializadoConPaquete, precioTotalPersonalizado, usuarioHaModificado, usuarioEditandoPrecioTotal]);    // Agrupar servicios seleccionados por sección y categoría
+
+    }, [watchedServicios, watchedCostos, modo, paqueteBase, precioSistema, totalCostosAdicionales, yaInicializadoConPaquete, precioTotalPersonalizado, usuarioHaModificado, usuarioEditandoPrecioTotal, cotizacionExistente]);    // Agrupar servicios seleccionados por sección y categoría
     const serviciosAgrupadosSeleccionados = useMemo(() => {
         const agrupados: any = {};
 
@@ -1416,38 +1486,69 @@ export default function CotizacionForm({
 
                                         {/* Precio final */}
                                         <div className="p-4 rounded-lg border border-blue-500/60 bg-blue-900/20">
-                                            <div className="text-xs text-blue-200 mb-1">
-                                                Total de Cotización
-                                                {precioTotalPersonalizado !== null && (
-                                                    <span className="ml-1 text-xs">⚡</span>
+                                            <div className="flex items-center justify-between mb-1">
+                                                <div className="text-xs text-blue-200">
+                                                    Total de Cotización
+                                                    {precioTotalPersonalizado !== null && (
+                                                        <span className="ml-1 text-xs">⚡</span>
+                                                    )}
+                                                </div>
+                                                {/* Botón de edición más prominente */}
+                                                {!editandoPrecioTotal && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleActivarPrecioTotal(precioFinal)}
+                                                        className="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                                                        title="Personalizar precio total"
+                                                    >
+                                                        Editar
+                                                    </button>
                                                 )}
                                             </div>
                                             {editandoPrecioTotal ? (
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-blue-300 text-lg">$</span>
-                                                    <input
-                                                        type="number"
-                                                        defaultValue={precioTotalPersonalizado || precioFinal}
-                                                        step="0.01"
-                                                        min="0"
-                                                        className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-600 rounded text-blue-300 text-xl font-bold focus:border-blue-400 focus:outline-none"
-                                                        onBlur={(e) => {
-                                                            const nuevoPrecio = parseFloat((parseFloat(e.target.value) || (precioSistema + totalCostosAdicionales)).toFixed(2));
-                                                            handleCambiarPrecioTotal(nuevoPrecio);
-                                                            handleGuardarPrecioTotal();
-                                                        }}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter') {
-                                                                const nuevoPrecio = parseFloat((parseFloat((e.target as HTMLInputElement).value) || (precioSistema + totalCostosAdicionales)).toFixed(2));
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-blue-300 text-lg">$</span>
+                                                        <input
+                                                            type="number"
+                                                            defaultValue={precioTotalPersonalizado || precioFinal}
+                                                            step="0.01"
+                                                            min="0"
+                                                            className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-600 rounded text-blue-300 text-xl font-bold focus:border-blue-400 focus:outline-none"
+                                                            onBlur={(e) => {
+                                                                const nuevoPrecio = parseFloat((parseFloat(e.target.value) || (precioSistema + totalCostosAdicionales)).toFixed(2));
                                                                 handleCambiarPrecioTotal(nuevoPrecio);
                                                                 handleGuardarPrecioTotal();
-                                                            }
-                                                            if (e.key === 'Escape') {
-                                                                handleCancelarPrecioTotal();
-                                                            }
-                                                        }}
-                                                        autoFocus
-                                                    />
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    const nuevoPrecio = parseFloat((parseFloat((e.target as HTMLInputElement).value) || (precioSistema + totalCostosAdicionales)).toFixed(2));
+                                                                    handleCambiarPrecioTotal(nuevoPrecio);
+                                                                    handleGuardarPrecioTotal();
+                                                                }
+                                                                if (e.key === 'Escape') {
+                                                                    handleCancelarPrecioTotal();
+                                                                }
+                                                            }}
+                                                            autoFocus
+                                                        />
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleGuardarPrecioTotal}
+                                                            className="flex-1 px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs transition-colors"
+                                                        >
+                                                            ✓ Guardar
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleCancelarPrecioTotal}
+                                                            className="flex-1 px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs transition-colors"
+                                                        >
+                                                            ✕ Cancelar
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <div
@@ -1466,10 +1567,21 @@ export default function CotizacionForm({
                                                 </div>
                                             )}
                                             <div className="text-xs text-blue-400 mt-1">
-                                                {precioTotalPersonalizado !== null
-                                                    ? 'Precio personalizado'
-                                                    : (totalCostosAdicionales !== 0 ? 'Incluye costos adicionales' : 'Solo servicios')
-                                                }
+                                                {precioTotalPersonalizado !== null ? (
+                                                    <div className="flex items-center justify-between">
+                                                        <span>Precio personalizado</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleRestaurarPrecioAutomatico}
+                                                            className="text-xs px-1 py-0.5 bg-blue-600/50 hover:bg-blue-600 text-blue-100 rounded transition-colors"
+                                                            title="Restaurar precio automático"
+                                                        >
+                                                            Restaurar auto
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <span>{totalCostosAdicionales !== 0 ? 'Incluye costos adicionales' : 'Solo servicios'}</span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
