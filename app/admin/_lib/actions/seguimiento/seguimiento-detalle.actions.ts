@@ -644,23 +644,23 @@ function procesarServiciosDetalle(servicios: any[], usuarios: any[]): ServicioDe
     });
 
     // 🔍 DEBUG: Servicios ANTES del ordenamiento
-    console.log('🔍 DEBUG Servicios ANTES del sort:', serviciosProcesados.map((s, idx) => ({
-        index: idx,
-        id: s.id,
-        nombre: s.nombre,
-        posicion: s.posicion
-    })));
+    // console.log('🔍 DEBUG Servicios ANTES del sort:', serviciosProcesados.map((s, idx) => ({
+    //     index: idx,
+    //     id: s.id,
+    //     nombre: s.nombre,
+    //     posicion: s.posicion
+    // })));
 
     // ✅ ORDENAR POR POSICIÓN para garantizar el orden correcto
     const serviciosOrdenados = serviciosProcesados.sort((a, b) => (a.posicion || 0) - (b.posicion || 0));
 
     // 🔍 DEBUG: Servicios DESPUÉS del ordenamiento
-    console.log('🔍 DEBUG Servicios DESPUÉS del sort:', serviciosOrdenados.map((s, idx) => ({
-        index: idx,
-        id: s.id,
-        nombre: s.nombre,
-        posicion: s.posicion
-    })));
+    // console.log('🔍 DEBUG Servicios DESPUÉS del sort:', serviciosOrdenados.map((s, idx) => ({
+    //     index: idx,
+    //     id: s.id,
+    //     nombre: s.nombre,
+    //     posicion: s.posicion
+    // })));
 
     return serviciosOrdenados;
 }

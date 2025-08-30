@@ -253,35 +253,39 @@ export default function BotonAutorizarCotizacion({
                 </div>
 
                 {/* Botones de acción */}
-                <div className="flex gap-2 justify-center">
-                    {/* Ir a seguimiento */}
+                <div className="flex flex-wrap gap-2 justify-center w-full">
                     <button
                         onClick={() => router.push(`/admin/dashboard/seguimiento/${eventoId}`)}
-                        className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors"
+                        className="flex-1 min-w-[120px] p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center justify-center"
+                        title="Seguimiento"
+                        aria-label="Seguimiento"
                     >
-                        <Calendar size={14} />
-                        Seguimiento
+                        <svg className="mr-2" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M5 12h14"></path>
+                            <path d="M12 5l7 7-7 7"></path>
+                        </svg>
+                        <span className="text-sm font-medium">Seguimiento</span>
                     </button>
-
-                    {/* Cancelar cotización */}
                     <button
                         onClick={handleCancelarCotizacion}
                         disabled={cancelando}
-                        className="flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
+                        className="flex-1 min-w-[120px] p-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors flex items-center justify-center disabled:opacity-50"
+                        title="Cancelar"
+                        aria-label="Cancelar"
                     >
-                        <XCircle size={14} />
-                        {cancelando ? 'Cancelando...' : 'Cancelar'}
+                        <XCircle size={18} className="mr-2" />
+                        <span className="text-sm font-medium">Cancelar</span>
                     </button>
-
-                    {/* Eliminar */}
                     {cotizacion && (
                         <button
                             onClick={handleEliminarCotizacion}
                             disabled={modalEliminacion.isLoading}
-                            className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
+                            className="flex-1 min-w-[120px] p-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors flex items-center justify-center disabled:opacity-50"
+                            title="Eliminar"
+                            aria-label="Eliminar"
                         >
-                            <Trash2 size={14} />
-                            {modalEliminacion.isLoading ? 'Eliminando...' : 'Eliminar'}
+                            <Trash2 size={18} className="mr-2" />
+                            <span className="text-sm font-medium">Eliminar</span>
                         </button>
                     )}
                 </div>
@@ -311,19 +315,19 @@ export default function BotonAutorizarCotizacion({
                     text-white rounded-lg 
                     transition-colors duration-200
                     disabled:opacity-50 disabled:cursor-not-allowed
-                    text-center
+                    text-center min-w-0
                 "
                 title="Autorizar cotización y mover evento al pipeline de seguimiento"
             >
                 {procesando ? (
                     <>
-                        <Loader2 size={16} className="animate-spin" />
-                        {mostrarTexto && <span className="text-sm font-medium">Autorizando...</span>}
+                        <Loader2 size={16} className="animate-spin flex-shrink-0" />
+                        {mostrarTexto && <span className="text-sm font-medium truncate">Autorizando...</span>}
                     </>
                 ) : (
                     <>
-                        <CheckCircle size={16} />
-                        {mostrarTexto && <span className="text-sm font-medium">Autorizar Cotización</span>}
+                        <CheckCircle size={16} className="flex-shrink-0" />
+                        {mostrarTexto && <span className="text-sm font-medium truncate">Autorizar Cotización</span>}
                     </>
                 )}
             </button>

@@ -623,7 +623,7 @@ export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
 
         // 5. Ejecutar transacción con cambios inteligentes
         console.log('🔄 Iniciando transacción de actualización inteligente...');
-        
+
         const cotizacionActualizada = await prisma.$transaction(async (tx) => {
             // 5.1 Actualizar cotización principal
             console.log('📝 Actualizando datos principales de cotización...');
@@ -683,7 +683,7 @@ export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
                         posicion: nuevo.posicion,
                         precioUnitario: nuevo.precioUnitario,
                         subtotal: nuevo.precioUnitario * nuevo.cantidad,
-                        
+
                         // Campos snapshot actualizados
                         nombre_snapshot: nuevo.nombre_snapshot,
                         descripcion_snapshot: nuevo.descripcion_snapshot,
@@ -695,7 +695,7 @@ export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
                         tipo_utilidad_snapshot: nuevo.tipo_utilidad_snapshot,
                         categoria_nombre_snapshot: nuevo.categoria_nombre_snapshot,
                         seccion_nombre_snapshot: nuevo.seccion_nombre_snapshot,
-                        
+
                         // PRESERVAR EXPLÍCITAMENTE datos operacionales:
                         // userId: NO SE TOCA - mantiene asignación existente
                         // fechaAsignacion: NO SE TOCA - mantiene fecha de asignación
@@ -720,7 +720,7 @@ export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
             await tx.cotizacionCosto.deleteMany({
                 where: { cotizacionId: validatedData.id }
             });
-            
+
             if (validatedData.costos.length > 0) {
                 await tx.cotizacionCosto.createMany({
                     data: validatedData.costos.map((costo, index) => ({

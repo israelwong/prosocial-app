@@ -936,10 +936,10 @@ export default function CotizacionForm({
                 };
 
                 console.log('Payload edición:', payloadEdicion);
-                const cotizacionActualizada = await manejarSubmitCotizacion(payloadEdicion);
+                const resultado = await manejarSubmitCotizacion(payloadEdicion);
 
-                if (cotizacionActualizada?.id) {
-                    console.log('✅ Cotización actualizada con ID:', cotizacionActualizada.id);
+                if (resultado && 'cotizacion' in resultado && resultado.cotizacion?.id) {
+                    console.log('✅ Cotización actualizada con ID:', resultado.cotizacion.id);
                     toast.success('Cotización actualizada exitosamente');
                     router.push(`/admin/dashboard/eventos/${evento.id}`);
                 } else {
@@ -947,10 +947,10 @@ export default function CotizacionForm({
                 }
             } else {
                 // Modo creación
-                const cotizacionCreada = await manejarSubmitCotizacion(payload);
+                const resultado = await manejarSubmitCotizacion(payload);
 
-                if (cotizacionCreada?.id) {
-                    console.log('✅ Cotización creada con ID:', cotizacionCreada.id);
+                if (resultado && 'id' in resultado && resultado.id) {
+                    console.log('✅ Cotización creada con ID:', resultado.id);
                     toast.success('Cotización creada exitosamente');
                     router.push(`/admin/dashboard/eventos/${evento.id}`);
                 } else {
@@ -1488,42 +1488,46 @@ export default function CotizacionForm({
                                         console.log('🔵 Form errors:', errors);
                                         console.log('🔵 Servicios length:', fields.length);
                                     }}
-                                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-0"
                                 >
-                                    {isSubmitting && <Loader2 size={16} className="animate-spin mr-2" />}
-                                    {modo === 'editar' ? 'Actualizar Cotización' : 'Guardar Cotización'}
+                                    {isSubmitting && <Loader2 size={16} className="animate-spin mr-2 flex-shrink-0" />}
+                                    <span className="truncate">
+                                        {modo === 'editar' ? 'Actualizar Cotización' : 'Guardar Cotización'}
+                                    </span>
                                 </button>
 
                                 {/* Botón de Autorización - Solo en modo editar y si hay una cotización existente */}
                                 {modo === 'editar' && cotizacionExistente && (
-                                    <BotonAutorizarCotizacion
-                                        cotizacionId={cotizacionExistente.id}
-                                        eventoId={evento.id}
-                                        estadoInicial={cotizacionExistente.status}
-                                        className="w-full"
-                                        mostrarTexto={true}
-                                        onAutorizado={() => {
-                                            toast.success('Evento autorizado y movido a seguimiento');
-                                        }}
-                                        onEliminado={() => {
-                                            toast.success('Cotización eliminada exitosamente');
-                                            router.push(`/admin/dashboard/eventos/${evento.id}`);
-                                        }}
-                                        cotizacion={{
-                                            id: cotizacionExistente.id,
-                                            nombre: cotizacionExistente.nombre,
-                                            status: cotizacionExistente.status,
-                                            archivada: cotizacionExistente.archivada
-                                        }}
-                                    />
+                                    <div className="w-full">
+                                        <BotonAutorizarCotizacion
+                                            cotizacionId={cotizacionExistente.id}
+                                            eventoId={evento.id}
+                                            estadoInicial={cotizacionExistente.status}
+                                            className="w-full"
+                                            mostrarTexto={true}
+                                            onAutorizado={() => {
+                                                toast.success('Evento autorizado y movido a seguimiento');
+                                            }}
+                                            onEliminado={() => {
+                                                toast.success('Cotización eliminada exitosamente');
+                                                router.push(`/admin/dashboard/eventos/${evento.id}`);
+                                            }}
+                                            cotizacion={{
+                                                id: cotizacionExistente.id,
+                                                nombre: cotizacionExistente.nombre,
+                                                status: cotizacionExistente.status,
+                                                archivada: cotizacionExistente.archivada
+                                            }}
+                                        />
+                                    </div>
                                 )}
 
                                 <button
                                     type="button"
                                     onClick={() => router.push(`/admin/dashboard/eventos/${evento.id}`)}
-                                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-zinc-700 text-zinc-100 hover:bg-zinc-600"
+                                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-zinc-700 text-zinc-100 hover:bg-zinc-600 min-w-0"
                                 >
-                                    Cancelar
+                                    <span className="truncate">Cancelar</span>
                                 </button>
                             </div>
                         </div>
