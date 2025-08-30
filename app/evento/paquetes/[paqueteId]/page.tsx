@@ -22,6 +22,10 @@ export default async function PaqueteDetallePage({ params, searchParams }: PageP
         // Obtener información del paquete
         const rawPaquete = await obtenerPaqueteDetalleParaCliente(paqueteId)
 
+        if (!rawPaquete) {
+            notFound()
+        }
+
         // Obtener información del evento si se proporciona eventoId
         let eventoInfo = null
         if (eventoId) {
@@ -34,7 +38,10 @@ export default async function PaqueteDetallePage({ params, searchParams }: PageP
 
         // Transform rawPaquete to match the expected Paquete type
         const paquete = {
-            ...rawPaquete,
+            id: rawPaquete.id,
+            nombre: rawPaquete.nombre,
+            precio: rawPaquete.precio,
+            EventoTipo: rawPaquete.EventoTipo,
             PaqueteServicio: rawPaquete.PaqueteServicio.map((ps: any) => ({
                 ...ps,
                 Servicio: {

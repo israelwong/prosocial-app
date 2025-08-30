@@ -27,6 +27,7 @@ interface PaqueteServicio {
     Servicio: {
         id: string;
         nombre: string;
+        posicion?: number;
         ServicioCategoria: {
             nombre: string;
             posicion: number;
@@ -68,32 +69,39 @@ interface Props {
 
 export default function PaqueteDetalle({ paquete, eventoInfo, eventoId }: Props) {
     const [mostrarModal, setMostrarModal] = useState(false)
+    const router = useRouter();
 
     // Función para agrupar servicios usando la misma lógica exitosa de cotización y seguimiento
-    const router = useRouter();
     const agruparServicios = (paqueteServicios: PaqueteServicio[]): ServiciosAgrupados => {
         const serviciosAgrupados: ServiciosAgrupados = {};
 
         paqueteServicios.forEach((paqueteServicio) => {
-            // Usar la lógica exitosa: obtener sección y categoría
+            // Usar la lógica exitosa: obtener sección y categoría con la estructura correcta
             const seccionNombre =
-                paqueteServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
-                paqueteServicio.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ||
+                paqueteServicio.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ??
+                paqueteServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.nombre ??
                 'Servicios Generales';
 
             const categoriaNombre =
-                paqueteServicio.Servicio?.ServicioCategoria?.nombre ||
-                paqueteServicio.ServicioCategoria?.nombre ||
+                paqueteServicio.ServicioCategoria?.nombre ??
+                paqueteServicio.Servicio?.ServicioCategoria?.nombre ??
                 'Sin categoría';
 
-            // Obtener posiciones usando las relaciones correctas
+            // ✅ CORREGIR LA LECTURA DE POSICIONES - TRATAR 0 COMO VALOR VÁLIDO
+            // El problema era que posición 0 se evaluaba como falsy con ||
             const seccionPosicion =
-                paqueteServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
-                paqueteServicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 0;
+                paqueteServicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion !== undefined
+                    ? paqueteServicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion
+                    : paqueteServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion !== undefined
+                        ? paqueteServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion
+                        : 999;
 
             const categoriaPosicion =
-                paqueteServicio.Servicio?.ServicioCategoria?.posicion ||
-                paqueteServicio.ServicioCategoria?.posicion || 0;
+                paqueteServicio.ServicioCategoria?.posicion !== undefined
+                    ? paqueteServicio.ServicioCategoria?.posicion
+                    : paqueteServicio.Servicio?.ServicioCategoria?.posicion !== undefined
+                        ? paqueteServicio.Servicio?.ServicioCategoria?.posicion
+                        : 999;
 
             // Inicializar sección si no existe
             if (!serviciosAgrupados[seccionNombre]) {
@@ -115,7 +123,8 @@ export default function PaqueteDetalle({ paquete, eventoInfo, eventoId }: Props)
             serviciosAgrupados[seccionNombre].categorias[categoriaNombre].servicios.push({
                 id: paqueteServicio.id,
                 nombre: paqueteServicio.Servicio.nombre,
-                cantidad: paqueteServicio.cantidad
+                cantidad: paqueteServicio.cantidad,
+                posicionServicio: paqueteServicio.Servicio.posicion ?? 999
             });
         });
 
@@ -181,6 +190,7 @@ export default function PaqueteDetalle({ paquete, eventoInfo, eventoId }: Props)
 
                 <div className="p-6 space-y-6">
                     {Object.entries(serviciosAgrupados)
+                        .sort(([, a], [, b]) => a.posicion - b.posicion)
                         .map(([seccionNombre, seccionData]) => (
                             <div key={seccionNombre} className="border border-zinc-600 rounded-lg overflow-hidden">
                                 {/* Header de la sección */}
@@ -193,6 +203,7 @@ export default function PaqueteDetalle({ paquete, eventoInfo, eventoId }: Props)
                                 {/* Contenido de la sección */}
                                 <div className="bg-zinc-700/30 p-4 space-y-4">
                                     {Object.entries(seccionData.categorias)
+                                        .sort(([, a], [, b]) => a.posicion - b.posicion)
                                         .map(([categoriaNombre, categoriaData]) => (
                                             <div key={categoriaNombre} className="space-y-3">
                                                 {/* Header de la categoría */}
@@ -205,27 +216,29 @@ export default function PaqueteDetalle({ paquete, eventoInfo, eventoId }: Props)
 
                                                 {/* Lista de servicios */}
                                                 <div className="space-y-2">
-                                                    {categoriaData.servicios.map((servicio) => (
-                                                        <div key={servicio.id} className="bg-gradient-to-r from-zinc-900/50 to-zinc-800/50 rounded-lg p-3 border border-zinc-600/30">
-                                                            <div className="flex items-center justify-between gap-4">
-                                                                {/* Información del servicio */}
-                                                                <div className="flex-1 min-w-0">
-                                                                    <h5 className="text-white font-medium text-sm leading-tight">
-                                                                        {servicio.nombre}
-                                                                    </h5>
-                                                                    <div className="text-xs text-zinc-400 mt-1">
-                                                                        Cantidad: {servicio.cantidad}
+                                                    {categoriaData.servicios
+                                                        .sort((a, b) => (a.posicionServicio ?? 999) - (b.posicionServicio ?? 999))
+                                                        .map((servicio) => (
+                                                            <div key={servicio.id} className="bg-gradient-to-r from-zinc-900/50 to-zinc-800/50 rounded-lg p-3 border border-zinc-600/30">
+                                                                <div className="flex items-center justify-between gap-4">
+                                                                    {/* Información del servicio */}
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <h5 className="text-white font-medium text-sm leading-tight">
+                                                                            {servicio.nombre}
+                                                                        </h5>
+                                                                        <div className="text-xs text-zinc-400 mt-1">
+                                                                            Cantidad: {servicio.cantidad}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Indicador de incluido */}
+                                                                    <div className="flex items-center gap-2 text-green-400">
+                                                                        <CheckCircle className="w-4 h-4" />
+                                                                        <span className="text-xs font-medium">Incluido</span>
                                                                     </div>
                                                                 </div>
-
-                                                                {/* Indicador de incluido */}
-                                                                <div className="flex items-center gap-2 text-green-400">
-                                                                    <CheckCircle className="w-4 h-4" />
-                                                                    <span className="text-xs font-medium">Incluido</span>
-                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    ))}
+                                                        ))}
                                                 </div>
                                             </div>
                                         ))}

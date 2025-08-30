@@ -94,7 +94,10 @@ export async function obtenerPaqueteDetalleParaCliente(paqueteId: string) {
                 where: {
                     status: 'active',
                     visible_cliente: true
-                }
+                },
+                orderBy: [
+                    { posicion: 'asc' }
+                ]
             }
         }
     });
@@ -103,35 +106,57 @@ export async function obtenerPaqueteDetalleParaCliente(paqueteId: string) {
         throw new Error('Paquete no encontrado');
     }
 
-    // Ordenar por jerarquía: Sección -> Categoría -> Servicio (posición)
+    // Función para obtener la posición de la sección de forma segura
+    const getSeccionPosicion = (ps: any) => {
+        // Intentar obtener desde Servicio.ServicioCategoria
+        if (ps.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion !== undefined) {
+            return ps.Servicio.ServicioCategoria.seccionCategoria.Seccion.posicion;
+        }
+        // Intentar obtener desde ServicioCategoria directa
+        if (ps.ServicioCategoria?.seccionCategoria?.Seccion?.posicion !== undefined) {
+            return ps.ServicioCategoria.seccionCategoria.Seccion.posicion;
+        }
+        return 999; // Default si no encuentra
+    };
+
+    // Función para obtener la posición de la categoría
+    const getCategoriaPosicion = (ps: any) => {
+        if (ps.Servicio?.ServicioCategoria?.posicion !== undefined) {
+            return ps.Servicio.ServicioCategoria.posicion;
+        }
+        if (ps.ServicioCategoria?.posicion !== undefined) {
+            return ps.ServicioCategoria.posicion;
+        }
+        return 999;
+    };
+
+    // Ordenar manualmente por jerarquía: Sección -> Categoría -> Servicio
     paquete.PaqueteServicio.sort((a, b) => {
-        // 1. Obtener posiciones de sección
-        const seccionA = a.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
-            a.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 0;
-        const seccionB = b.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
-            b.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 0;
+        // 1. Comparar por sección
+        const seccionA = getSeccionPosicion(a);
+        const seccionB = getSeccionPosicion(b);
 
         if (seccionA !== seccionB) {
             return seccionA - seccionB;
         }
 
-        // 2. Si están en la misma sección, ordenar por categoría
-        const categoriaA = a.Servicio?.ServicioCategoria?.posicion || a.ServicioCategoria?.posicion || 0;
-        const categoriaB = b.Servicio?.ServicioCategoria?.posicion || b.ServicioCategoria?.posicion || 0;
+        // 2. Comparar por categoría
+        const categoriaA = getCategoriaPosicion(a);
+        const categoriaB = getCategoriaPosicion(b);
 
         if (categoriaA !== categoriaB) {
             return categoriaA - categoriaB;
         }
 
-        // 3. Si están en la misma categoría, ordenar por posición del servicio
-        return (a.posicion || 0) - (b.posicion || 0);
+        // 3. Comparar por posición del servicio en el paquete
+        return (a.posicion || 999) - (b.posicion || 999);
     });
 
-    return paquete;
-
-    if (!paquete) {
-        throw new Error('Paquete no encontrado');
-    }
+    console.log('🔍 PAQUETE ORDENADO POR JERARQUÍA:', {
+        totalServicios: paquete.PaqueteServicio.length,
+        primeraSeccion: paquete.PaqueteServicio[0] ? getSeccionPosicion(paquete.PaqueteServicio[0]) : null,
+        ultimaSeccion: paquete.PaqueteServicio.length > 0 ? getSeccionPosicion(paquete.PaqueteServicio[paquete.PaqueteServicio.length - 1]) : null
+    });
 
     return paquete;
 }

@@ -84,7 +84,7 @@ export default function ServiciosAgrupados({ serviciosAgrupados, loading, esReal
 
                                                 {/* Lista de servicios */}
                                                 <div className="space-y-2">
-                                                    {/* 🔧 ORDENAMIENTO DESHABILITADO TEMPORALMENTE PARA DIAGNÓSTICO */}
+                                                    {/* ✅ SERVICIOS YA VIENEN ORDENADOS DE LA CONSULTA - No necesario ordenar aquí */}
                                                     {categoriaData.servicios
                                                         .map((cotizacionServicio) => (
                                                             <div key={cotizacionServicio.id} className="bg-gradient-to-r from-zinc-900/50 to-zinc-800/50 rounded-lg p-3 border border-zinc-600/30 hover:border-zinc-500/50 transition-all duration-200">

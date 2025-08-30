@@ -269,16 +269,19 @@ export default function CotizacionDetalle({
                 const cantidad = cotizacionServicio.cantidad || 1
                 const subtotal = cotizacionServicio.subtotal || (cantidad * precio)
 
-                // Obtener posiciones de sección y categoría usando relaciones correctas
+                // Obtener posiciones de sección, categoría y servicio usando relaciones correctas
                 const seccionPosicion = cotizacionServicio.Servicio?.ServicioCategoria?.seccionCategoria?.Seccion?.posicion ||
                     cotizacionServicio.ServicioCategoria?.seccionCategoria?.Seccion?.posicion || 0
-
 
                 const categoriaPosicion = cotizacionServicio.Servicio?.ServicioCategoria?.posicion ||
                     cotizacionServicio.ServicioCategoria?.posicion || 0
 
-                // console.log(`\nProcesando: Sección="${seccionNombre}" (pos:${seccionPosicion}), Categoría="${categoriaNombre}" (pos:${categoriaPosicion}), Servicio="${nombreServicio}"`)
-                // console.log(`Cantidad: ${cantidad}, Precio: ${precio}, Subtotal: ${subtotal}`)
+                // ✅ OBTENER POSICIÓN DEL SERVICIO ORIGINAL DEL CATÁLOGO
+                const servicioPosicion = cotizacionServicio.Servicio?.posicion ||
+                    cotizacionServicio.posicion || 0
+
+                console.log(`\n🔍 Procesando: Sección="${seccionNombre}" (pos:${seccionPosicion}), Categoría="${categoriaNombre}" (pos:${categoriaPosicion}), Servicio="${nombreServicio}" (pos:${servicioPosicion})`)
+                console.log(`📊 Cantidad: ${cantidad}, Precio: ${precio}, Subtotal: ${subtotal}`)
 
                 // Inicializar sección si no existe
                 if (!agrupados[seccionNombre]) {
@@ -317,7 +320,7 @@ export default function CotizacionDetalle({
                     colorStatus: 'gray',
                     fechaAsignacion: cotizacionServicio.fechaAsignacion,
                     FechaEntrega: cotizacionServicio.FechaEntrega,
-                    posicion: cotizacionServicio.posicion,
+                    posicion: servicioPosicion, // ✅ USAR POSICIÓN DEL SERVICIO ORIGINAL
                     es_personalizado: cotizacionServicio.es_personalizado || false,
                     createdAt: cotizacionServicio.createdAt,
                     updatedAt: cotizacionServicio.updatedAt
@@ -327,21 +330,21 @@ export default function CotizacionDetalle({
                 agrupados[seccionNombre].categorias[categoriaNombre].servicios.push(servicioDetalle)
             })
 
-            // 🔧 ORDENAMIENTO DESHABILITADO TEMPORALMENTE PARA DIAGNÓSTICO
-            // console.log('🔍 COTIZACIÓN PÚBLICA - Servicios sin ordenar frontend:');
+            // ✅ SERVICIOS YA VIENEN ORDENADOS DE LA CONSULTA - No necesario ordenar en frontend
+            console.log('🔍 COTIZACIÓN PÚBLICA - Servicios ya ordenados desde consulta:');
             Object.entries(agrupados).forEach(([seccionNombre, seccionData]) => {
-                // console.log(`\n📁 Sección: ${seccionNombre} (posicion: ${seccionData.posicion})`);
+                console.log(`\n📁 Sección: ${seccionNombre} (posicion: ${seccionData.posicion})`);
                 Object.entries(seccionData.categorias).forEach(([categoriaNombre, categoriaData]) => {
-                    // console.log(`  📂 Categoría: ${categoriaNombre} (posicion: ${categoriaData.posicion})`);
+                    console.log(`  📂 Categoría: ${categoriaNombre} (posicion: ${categoriaData.posicion})`);
                     categoriaData.servicios.forEach((servicio: any, index: number) => {
                         const posicion = servicio.posicion || 'sin posición';
                         const nombre = servicio.nombre;
-                        // console.log(`    ${index + 1}. [${posicion}] ${nombre}`);
+                        console.log(`    ${index + 1}. [${posicion}] ${nombre}`);
                     });
                 });
             });
 
-            // COMENTADO TEMPORALMENTE: Ordenamiento frontend
+            // ❌ ORDENAMIENTO FRONTEND REMOVIDO - Los servicios ya vienen ordenados de la consulta
             // Object.keys(agrupados).forEach(seccionNombre => {
             //     Object.keys(agrupados[seccionNombre].categorias).forEach(categoriaNombre => {
             //         agrupados[seccionNombre].categorias[categoriaNombre].servicios.sort(

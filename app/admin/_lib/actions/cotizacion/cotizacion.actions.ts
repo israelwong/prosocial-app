@@ -182,10 +182,28 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
                             }
                         }
                     },
-                    // 🔧 ORDENAMIENTO CORREGIDO: Usar posición del Servicio original, NO de CotizacionServicio
+                    // ✅ ORDENAMIENTO JERÁRQUICO COMPLETO: Sección → Categoría → Servicio
                     orderBy: [
-                        { Servicio: { posicion: 'asc' } },     // Posición del servicio original en el catálogo
-                        { posicion: 'asc' }                    // Fallback: posición en cotización
+                        // 1️⃣ Ordenar por posición de la SECCIÓN
+                        {
+                            Servicio: {
+                                ServicioCategoria: {
+                                    seccionCategoria: {
+                                        Seccion: { posicion: 'asc' }
+                                    }
+                                }
+                            }
+                        },
+                        // 2️⃣ Ordenar por posición de la CATEGORÍA
+                        {
+                            Servicio: {
+                                ServicioCategoria: { posicion: 'asc' }
+                            }
+                        },
+                        // 3️⃣ Ordenar por posición del SERVICIO
+                        { Servicio: { posicion: 'asc' } },
+                        // 4️⃣ Fallback: posición en cotización
+                        { posicion: 'asc' }
                     ]
                 }
             }
