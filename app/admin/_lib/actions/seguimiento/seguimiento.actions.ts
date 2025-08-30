@@ -65,12 +65,12 @@ export async function obtenerEventosSeguimientoPorEtapa(
             orderBy: { fecha_evento: 'asc' }
         });
 
-        console.log('=== DEBUG ETAPAS ESPECÍFICAS ===');
-        console.log('Etapas encontradas:', etapasEspecificas.length);
+        // console.log('=== DEBUG ETAPAS ESPECÍFICAS ===');
+        // console.log('Etapas encontradas:', etapasEspecificas.length);
         etapasEspecificas.forEach(etapa => {
             console.log(`- ${etapa.nombre} (pos: ${etapa.posicion})`);
         });
-        console.log('Eventos en etapas específicas:', eventosEtapasEspecificas.length);
+        // console.log('Eventos en etapas específicas:', eventosEtapasEspecificas.length);
 
         // PASO 3: Procesar y transformar datos
         const eventosTransformados: EventoSeguimiento[] = eventosEtapasEspecificas.map(evento => {
@@ -106,7 +106,7 @@ export async function obtenerEventosSeguimientoPorEtapa(
             const diasRestantes = Math.ceil((fechaEvento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
 
             // Debug logging para verificar cálculos
-            console.log(`- ${evento.nombre} | Cliente: ${evento.Cliente?.nombre} | Precio Servicios: $${precioServicios} | Precio Base: $${precioBase} | Descuento: $${descuento} | Precio Final: $${precio} | Pagos Válidos: ${pagosValidos.length} | Total Pagado: $${totalPagado} | Balance: $${balance}`);
+            // console.log(`- ${evento.nombre} | Cliente: ${evento.Cliente?.nombre} | Precio Servicios: $${precioServicios} | Precio Base: $${precioBase} | Descuento: $${descuento} | Precio Final: $${precio} | Pagos Válidos: ${pagosValidos.length} | Total Pagado: $${totalPagado} | Balance: $${balance}`);
 
             return {
                 id: evento.id,
@@ -144,7 +144,7 @@ export async function obtenerEventosSeguimientoPorEtapa(
             };
         });
 
-        console.log('Eventos transformados:', eventosTransformados.length);
+        // console.log('Eventos transformados:', eventosTransformados.length);
         eventosTransformados.forEach(evento => {
             console.log(`- ${evento.nombre} | Cliente: ${evento.clienteNombre} | Etapa: ${evento.etapaNombre} | Cotización: ${evento.cotizacionAprobada ? 'APROBADA' : 'NO APROBADA'}`);
         });
@@ -224,12 +224,12 @@ export async function obtenerEventosSeguimientoPorEtapaListaAprobados(
             orderBy: { fecha_evento: 'asc' }
         });
 
-        console.log('=== DEBUG ETAPAS ESPECÍFICAS LISTA APROBADOS ===');
-        console.log('Etapas encontradas:', etapasEspecificas.length);
+        // console.log('=== DEBUG ETAPAS ESPECÍFICAS LISTA APROBADOS ===');
+        // console.log('Etapas encontradas:', etapasEspecificas.length);
         etapasEspecificas.forEach(etapa => {
             console.log(`- ${etapa.nombre} (pos: ${etapa.posicion})`);
         });
-        console.log('Eventos en etapas específicas:', eventosEtapasEspecificas.length);
+        // console.log('Eventos en etapas específicas:', eventosEtapasEspecificas.length);
 
         // PASO 3: Procesar y transformar datos
         const eventosTransformados: EventoSeguimiento[] = eventosEtapasEspecificas.map(evento => {
@@ -257,7 +257,7 @@ export async function obtenerEventosSeguimientoPorEtapaListaAprobados(
             const diasRestantes = Math.ceil((fechaEvento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
 
             // Debug logging para verificar cálculos
-            console.log(`- ${evento.nombre} | Cliente: ${evento.Cliente.nombre} | Etapa: ${evento.EventoEtapa?.nombre} | Precio Cotización: $${precioBase} | Descuento: $${descuento} | Precio Final: $${precio} | Pagos Válidos: ${pagosValidos.length} | Total Pagado: $${totalPagado} | Balance: $${balance}`);
+            // console.log(`- ${evento.nombre} | Cliente: ${evento.Cliente.nombre} | Etapa: ${evento.EventoEtapa?.nombre} | Precio Cotización: $${precioBase} | Descuento: $${descuento} | Precio Final: $${precio} | Pagos Válidos: ${pagosValidos.length} | Total Pagado: $${totalPagado} | Balance: $${balance}`);
 
             return {
                 id: evento.id,
@@ -295,7 +295,7 @@ export async function obtenerEventosSeguimientoPorEtapaListaAprobados(
             };
         });
 
-        console.log('Eventos transformados LISTA APROBADOS:', eventosTransformados.length);
+        // console.log('Eventos transformados LISTA APROBADOS:', eventosTransformados.length);
         eventosTransformados.forEach(evento => {
             console.log(`- ${evento.nombre} | Cliente: ${evento.clienteNombre} | Etapa: ${evento.etapaNombre} | Precio Cotización: $${evento.precio} | Balance: $${evento.balance}`);
         });

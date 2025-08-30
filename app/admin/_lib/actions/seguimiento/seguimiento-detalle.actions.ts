@@ -193,31 +193,31 @@ export async function obtenerEventoDetalleCompleto(
         const serviciosDetalle = procesarServiciosDetalle(cotizacion?.Servicio || [], usuarios);
 
         // 🔍 DEBUG: Servicios procesados
-        console.log('🔍 DEBUG Servicios procesados:', {
-            totalServicios: serviciosDetalle.length,
-            servicios: serviciosDetalle.map(s => ({
-                id: s.id,
-                nombre: s.nombre,
-                categoria: s.categoriaNombre,
-                seccion: s.seccion,
-                precio: s.precio,
-                cantidad: s.cantidad,
-                subtotal: s.subtotal,
-                posicion: s.posicion // ✅ Agregar posición al debug
-            }))
-        });
+        // console.log('🔍 DEBUG Servicios procesados:', {
+        //     totalServicios: serviciosDetalle.length,
+        //     servicios: serviciosDetalle.map(s => ({
+        //         id: s.id,
+        //         nombre: s.nombre,
+        //         categoria: s.categoriaNombre,
+        //         seccion: s.seccion,
+        //         precio: s.precio,
+        //         cantidad: s.cantidad,
+        //         subtotal: s.subtotal,
+        //         posicion: s.posicion // ✅ Agregar posición al debug
+        //     }))
+        // });
 
         // 🔍 DEBUG: Servicios RAW desde base de datos
-        console.log('🔍 DEBUG Servicios RAW desde DB:', {
-            totalServicios: (cotizacion?.Servicio || []).length,
-            serviciosRaw: (cotizacion?.Servicio || []).map((s: any) => ({
-                id: s.id,
-                nombre_snapshot: s.nombre_snapshot,
-                posicion_cotizacion: s.posicion,                    // Posición en CotizacionServicio
-                posicion_servicio_original: s.Servicio?.posicion,   // Posición del Servicio original
-                orden_en_array: (cotizacion?.Servicio || []).indexOf(s)
-            }))
-        });
+        // console.log('🔍 DEBUG Servicios RAW desde DB:', {
+        //     totalServicios: (cotizacion?.Servicio || []).length,
+        //     serviciosRaw: (cotizacion?.Servicio || []).map((s: any) => ({
+        //         id: s.id,
+        //         nombre_snapshot: s.nombre_snapshot,
+        //         posicion_cotizacion: s.posicion,                    // Posición en CotizacionServicio
+        //         posicion_servicio_original: s.Servicio?.posicion,   // Posición del Servicio original
+        //         orden_en_array: (cotizacion?.Servicio || []).indexOf(s)
+        //     }))
+        // });
 
         // Procesar agenda con detalles - simplificado
         const agendaDetalle = (evento as any).Agenda.map((item: any) => ({
@@ -560,15 +560,15 @@ function procesarPagosDetalle(pagos: any[]): any[] {
  * Incluye tanto servicios de catálogo como servicios personalizados
  */
 function procesarServiciosDetalle(servicios: any[], usuarios: any[]): ServicioDetalle[] {
-    console.log('🔍 DEBUG procesarServiciosDetalle entrada:', {
-        totalServicios: servicios.length,
-        serviciosOrdenEntrada: servicios.map((s, idx) => ({
-            index: idx,
-            id: s.id,
-            nombre_snapshot: s.nombre_snapshot,
-            posicion: s.posicion
-        }))
-    });
+    // console.log('🔍 DEBUG procesarServiciosDetalle entrada:', {
+    //     totalServicios: servicios.length,
+    //     serviciosOrdenEntrada: servicios.map((s, idx) => ({
+    //         index: idx,
+    //         id: s.id,
+    //         nombre_snapshot: s.nombre_snapshot,
+    //         posicion: s.posicion
+    //     }))
+    // });
 
     const serviciosProcesados = servicios.map(cotizacionServicio => {
         // console.log('🔍 Procesando servicio:', {

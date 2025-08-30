@@ -209,15 +209,15 @@ export async function obtenerCotizacionCompleta(cotizacionId: string) {
             }
         });
 
-        console.log('🔍 Buscando cotización:', { cotizacionId, found: !!cotizacion });
+        // console.log('🔍 Buscando cotización:', { cotizacionId, found: !!cotizacion });
 
         if (!cotizacion) {
             // Log adicional para debugging
-            console.error('❌ Cotización no encontrada:', {
-                cotizacionId,
-                isValidFormat: /^[a-z0-9]+$/.test(cotizacionId),
-                containsDummy: cotizacionId.includes('dummy')
-            });
+            // console.error('❌ Cotización no encontrada:', {
+            //     cotizacionId,
+            //     isValidFormat: /^[a-z0-9]+$/.test(cotizacionId),
+            //     containsDummy: cotizacionId.includes('dummy')
+            // });
 
             if (cotizacionId.includes('dummy')) {
                 throw new Error(`El ID de cotización "${cotizacionId}" parece ser un ID de prueba/dummy. Usa un ID de cotización real de la base de datos.`);
@@ -386,6 +386,8 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
 
 /**
  * Edita una cotización existente usando los nuevos schemas
+ * @deprecated Usar editarCotizacionConPreservacion para preservar asignaciones de personal
+ * Esta función elimina y recrea todos los servicios, perdiendo asignaciones de usuarios y nóminas
  */
 export async function editarCotizacion(data: CotizacionEditar) {
     try {
@@ -458,6 +460,293 @@ export async function editarCotizacion(data: CotizacionEditar) {
 }
 
 /**
+ * Edita una cotización existente PRESERVANDO asignaciones de personal y nóminas
+ * Esta función implementa un merge inteligente en lugar de delete/create
+ */
+export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
+    try {
+        console.log('🔥 editarCotizacionConPreservacion - Datos recibidos:', JSON.stringify(data, null, 2));
+
+        // Validar datos con schema
+        const validatedData = CotizacionEditarSchema.parse(data);
+        console.log('✅ Datos validados correctamente');
+
+        // Definir tipos para los servicios con datos operacionales
+        type ServicioExistente = {
+            id: string;
+            cotizacionId: string;
+            servicioId: string | null;
+            servicioCategoriaId: string | null;
+            cantidad: number;
+            posicion: number;
+            userId: string | null;
+            fechaAsignacion: Date | null;
+            nombre_snapshot: string;
+            descripcion_snapshot: string | null;
+            precio_unitario_snapshot: number;
+            costo_snapshot: number;
+            gasto_snapshot: number;
+            User?: {
+                id: string;
+                username: string | null;
+                email: string | null;
+            } | null;
+            NominaServicio?: Array<{
+                Nomina: {
+                    id: string;
+                    status: string;
+                    concepto: string;
+                    monto_neto: number;
+                };
+            }>;
+        };
+
+        type ServicioNuevo = typeof validatedData.servicios[0] & {
+            indice: number;
+        };
+
+        type ServicioModificado = {
+            existente: ServicioExistente;
+            nuevo: typeof validatedData.servicios[0];
+            indice: number;
+        };
+
+        // 1. Obtener servicios existentes CON datos operacionales
+        const serviciosExistentes = await prisma.cotizacionServicio.findMany({
+            where: { cotizacionId: validatedData.id },
+            include: {
+                User: {
+                    select: {
+                        id: true,
+                        username: true,
+                        email: true
+                    }
+                },
+                NominaServicio: {
+                    include: {
+                        Nomina: {
+                            select: {
+                                id: true,
+                                status: true,
+                                concepto: true,
+                                monto_neto: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        console.log(`📋 Servicios existentes encontrados: ${serviciosExistentes.length}`);
+
+        // 2. Crear mapas para comparación inteligente
+        const serviciosNuevos: ServicioNuevo[] = [];
+        const serviciosModificados: ServicioModificado[] = [];
+        const serviciosAEliminar: ServicioExistente[] = [];
+
+        // Crear mapa de servicios existentes por clave única compuesta
+        const mapExistentes = new Map<string, ServicioExistente>();
+        serviciosExistentes.forEach(servicio => {
+            // Clave única: servicioId + servicioCategoriaId + nombre_snapshot (para servicios personalizados)
+            const clave = `${servicio.servicioId || 'null'}-${servicio.servicioCategoriaId || 'null'}-${servicio.nombre_snapshot}`;
+            mapExistentes.set(clave, servicio as ServicioExistente);
+        });
+
+        // 3. Categorizar servicios del formulario
+        validatedData.servicios.forEach((servicioForm, index) => {
+            const clave = `${servicioForm.servicioId || 'null'}-${servicioForm.servicioCategoriaId || 'null'}-${servicioForm.nombre_snapshot}`;
+
+            if (mapExistentes.has(clave)) {
+                // Servicio existente - verificar si hay cambios
+                const existente = mapExistentes.get(clave)!;
+                const hayCambios = (
+                    existente.cantidad !== servicioForm.cantidad ||
+                    existente.posicion !== servicioForm.posicion ||
+                    existente.precio_unitario_snapshot !== servicioForm.precio_unitario_snapshot ||
+                    existente.costo_snapshot !== servicioForm.costo_snapshot ||
+                    existente.gasto_snapshot !== servicioForm.gasto_snapshot ||
+                    existente.descripcion_snapshot !== servicioForm.descripcion_snapshot
+                );
+
+                if (hayCambios) {
+                    serviciosModificados.push({
+                        existente,
+                        nuevo: servicioForm,
+                        indice: index
+                    });
+                }
+
+                mapExistentes.delete(clave); // Marcar como procesado
+            } else {
+                // Servicio nuevo
+                serviciosNuevos.push({
+                    ...servicioForm,
+                    indice: index
+                });
+            }
+        });
+
+        // Los servicios restantes en el map son para eliminar
+        serviciosAEliminar.push(...Array.from(mapExistentes.values()));
+
+        console.log(`📊 Análisis de cambios:
+            - Nuevos: ${serviciosNuevos.length}
+            - Modificados: ${serviciosModificados.length} 
+            - A eliminar: ${serviciosAEliminar.length}`);
+
+        // 4. Validar eliminaciones críticas
+        const erroresEliminacion: string[] = [];
+        for (const servicio of serviciosAEliminar) {
+            // Verificar si tiene usuario asignado
+            if (servicio.userId && servicio.User) {
+                console.log(`⚠️ Servicio "${servicio.nombre_snapshot}" tiene usuario asignado: ${servicio.User.username}`);
+            }
+
+            // Verificar si tiene nóminas activas
+            const nominasActivas = servicio.NominaServicio?.filter(
+                nomServ => nomServ.Nomina.status === 'pendiente' || nomServ.Nomina.status === 'pagado'
+            ) || [];
+
+            if (nominasActivas.length > 0) {
+                const conceptos = nominasActivas.map(n => n.Nomina.concepto).join(', ');
+                erroresEliminacion.push(
+                    `Servicio "${servicio.nombre_snapshot}": tiene ${nominasActivas.length} nómina(s) activa(s) (${conceptos})`
+                );
+            }
+        }
+
+        if (erroresEliminacion.length > 0) {
+            throw new Error(
+                `No se pueden eliminar los siguientes servicios por tener pagos asociados:\n\n${erroresEliminacion.join('\n')}\n\nCancela primero los pagos pendientes antes de continuar.`
+            );
+        }
+
+        // 5. Ejecutar transacción con cambios inteligentes
+        console.log('🔄 Iniciando transacción de actualización inteligente...');
+        
+        const cotizacionActualizada = await prisma.$transaction(async (tx) => {
+            // 5.1 Actualizar cotización principal
+            console.log('📝 Actualizando datos principales de cotización...');
+            const cotizacion = await tx.cotizacion.update({
+                where: { id: validatedData.id },
+                data: {
+                    nombre: validatedData.nombre,
+                    descripcion: validatedData.descripcion,
+                    precio: validatedData.precio,
+                    condicionesComercialesId: validatedData.condicionesComercialesId,
+                    status: validatedData.status,
+                    visible_cliente: validatedData.visible_cliente
+                }
+            });
+
+            // 5.2 CREAR servicios nuevos
+            console.log(`➕ Creando ${serviciosNuevos.length} servicios nuevos...`);
+            for (const servicioNuevo of serviciosNuevos) {
+                await tx.cotizacionServicio.create({
+                    data: {
+                        cotizacionId: validatedData.id,
+                        servicioId: servicioNuevo.servicioId,
+                        servicioCategoriaId: servicioNuevo.servicioCategoriaId,
+                        cantidad: servicioNuevo.cantidad,
+                        precioUnitario: servicioNuevo.precioUnitario,
+                        subtotal: servicioNuevo.precioUnitario * servicioNuevo.cantidad,
+                        posicion: servicioNuevo.posicion,
+                        status: COTIZACION_STATUS.PENDIENTE,
+                        // Campos snapshot
+                        nombre_snapshot: servicioNuevo.nombre_snapshot,
+                        descripcion_snapshot: servicioNuevo.descripcion_snapshot,
+                        precio_unitario_snapshot: servicioNuevo.precio_unitario_snapshot,
+                        costo_snapshot: servicioNuevo.costo_snapshot,
+                        gasto_snapshot: servicioNuevo.gasto_snapshot,
+                        utilidad_snapshot: servicioNuevo.utilidad_snapshot,
+                        precio_publico_snapshot: servicioNuevo.precio_publico_snapshot,
+                        tipo_utilidad_snapshot: servicioNuevo.tipo_utilidad_snapshot,
+                        categoria_nombre_snapshot: servicioNuevo.categoria_nombre_snapshot,
+                        seccion_nombre_snapshot: servicioNuevo.seccion_nombre_snapshot,
+                        es_personalizado: servicioNuevo.es_personalizado,
+                        servicio_original_id: servicioNuevo.servicio_original_id,
+                        // userId: null (sin asignar inicialmente)
+                        // fechaAsignacion: null (sin asignar inicialmente)
+                    }
+                });
+                console.log(`  ✅ Creado: ${servicioNuevo.nombre_snapshot}`);
+            }
+
+            // 5.3 ACTUALIZAR servicios modificados (PRESERVANDO datos operacionales)
+            console.log(`📝 Actualizando ${serviciosModificados.length} servicios modificados...`);
+            for (const { existente, nuevo } of serviciosModificados) {
+                await tx.cotizacionServicio.update({
+                    where: { id: existente.id },
+                    data: {
+                        // Actualizar solo campos del formulario
+                        cantidad: nuevo.cantidad,
+                        posicion: nuevo.posicion,
+                        precioUnitario: nuevo.precioUnitario,
+                        subtotal: nuevo.precioUnitario * nuevo.cantidad,
+                        
+                        // Campos snapshot actualizados
+                        nombre_snapshot: nuevo.nombre_snapshot,
+                        descripcion_snapshot: nuevo.descripcion_snapshot,
+                        precio_unitario_snapshot: nuevo.precio_unitario_snapshot,
+                        costo_snapshot: nuevo.costo_snapshot,
+                        gasto_snapshot: nuevo.gasto_snapshot,
+                        utilidad_snapshot: nuevo.utilidad_snapshot,
+                        precio_publico_snapshot: nuevo.precio_publico_snapshot,
+                        tipo_utilidad_snapshot: nuevo.tipo_utilidad_snapshot,
+                        categoria_nombre_snapshot: nuevo.categoria_nombre_snapshot,
+                        seccion_nombre_snapshot: nuevo.seccion_nombre_snapshot,
+                        
+                        // PRESERVAR EXPLÍCITAMENTE datos operacionales:
+                        // userId: NO SE TOCA - mantiene asignación existente
+                        // fechaAsignacion: NO SE TOCA - mantiene fecha de asignación
+                        // FechaEntrega: NO SE TOCA - mantiene fechas programadas
+                        // NominaServicio: NO SE TOCA - es relación, se mantiene automáticamente
+                    }
+                });
+                console.log(`  ✅ Actualizado: ${nuevo.nombre_snapshot}${existente.userId ? ' (con personal asignado)' : ''}`);
+            }
+
+            // 5.4 ELIMINAR servicios removidos (ya validados)
+            console.log(`🗑️ Eliminando ${serviciosAEliminar.length} servicios removidos...`);
+            for (const servicioEliminar of serviciosAEliminar) {
+                await tx.cotizacionServicio.delete({
+                    where: { id: servicioEliminar.id }
+                });
+                console.log(`  ✅ Eliminado: ${servicioEliminar.nombre_snapshot}${servicioEliminar.userId ? ' (se liberó personal asignado)' : ''}`);
+            }
+
+            // 5.5 Actualizar costos
+            console.log('💰 Actualizando costos...');
+            await tx.cotizacionCosto.deleteMany({
+                where: { cotizacionId: validatedData.id }
+            });
+            
+            if (validatedData.costos.length > 0) {
+                await tx.cotizacionCosto.createMany({
+                    data: validatedData.costos.map((costo, index) => ({
+                        cotizacionId: validatedData.id,
+                        nombre: costo.nombre,
+                        descripcion: costo.descripcion,
+                        costo: costo.costo,
+                        tipo: costo.tipo,
+                        posicion: costo.posicion || index + 1
+                    }))
+                });
+            }
+
+            return cotizacion;
+        });
+
+        console.log('✅ Transacción completada exitosamente');
+
+        // 6. Retornar cotización completa actualizada
+        return await obtenerCotizacionCompleta(validatedData.id);
+
+    } catch (error: any) {
+        console.error('❌ Error en actualización con preservación:', error);
+        throw new Error(`Error al editar cotización preservando datos: ${error?.message || 'Error desconocido'}`);
+    }
+}/**
  * Agrega un servicio personalizado al vuelo (opcional: guardarlo en catálogo)
  */
 export async function agregarServicioPersonalizado(data: ServicioPersonalizado) {
@@ -586,9 +875,9 @@ export async function manejarSubmitCotizacion(data: any) {
 
     try {
         if (data.id) {
-            // Modo edición
-            console.log('🔄 Modo edición detectado, llamando editarCotizacion...');
-            return await editarCotizacion(data);
+            // Modo edición - Usar función con preservación de asignaciones
+            console.log('🔄 Modo edición detectado, llamando editarCotizacionConPreservacion...');
+            return await editarCotizacionConPreservacion(data);
         } else {
             // Modo creación
             console.log('🆕 Modo creación detectado, llamando crearCotizacionNueva...');

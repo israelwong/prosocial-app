@@ -355,26 +355,38 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg">
                 {/* Cabecera con Información Financiera */}
                 <div className="p-6 border-b border-zinc-800">
-                    {/* Línea 1: Título | Botón toggle */}
+                    {/* Línea 1: Título | Botones */}
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold text-zinc-200">Servicios Asociados</h2>
-                        <button
-                            onClick={() => setMostrarInformacionFinanciera(!mostrarInformacionFinanciera)}
-                            className="flex items-center gap-2 px-3 py-1 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded transition-colors"
-                            title={mostrarInformacionFinanciera ? "Ocultar información financiera" : "Mostrar información financiera"}
-                        >
-                            {mostrarInformacionFinanciera ? (
-                                <>
-                                    <EyeOff className="w-4 h-4" />
-                                    Ocultar
-                                </>
-                            ) : (
-                                <>
-                                    <Eye className="w-4 h-4" />
-                                    Mostrar
-                                </>
-                            )}
-                        </button>
+
+                        <div className="flex items-center gap-3">
+                            <a
+                                href={`/admin/dashboard/eventos/${evento.id}/cotizacion/${cotizacionAprobada?.id}`}
+                                className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+                                title="Editar cotización - Abrir formulario de edición"
+                            >
+                                <FileText className="w-4 h-4" />
+                                Editar
+                            </a>
+
+                            <button
+                                onClick={() => setMostrarInformacionFinanciera(!mostrarInformacionFinanciera)}
+                                className="flex items-center gap-2 px-3 py-2 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg transition-colors"
+                                title={mostrarInformacionFinanciera ? "Ocultar información financiera" : "Mostrar información financiera"}
+                            >
+                                {mostrarInformacionFinanciera ? (
+                                    <>
+                                        <EyeOff className="w-4 h-4" />
+                                        Ocultar
+                                    </>
+                                ) : (
+                                    <>
+                                        <Eye className="w-4 h-4" />
+                                        Mostrar
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Línea 2: Gastos, costos, utilidad */}
