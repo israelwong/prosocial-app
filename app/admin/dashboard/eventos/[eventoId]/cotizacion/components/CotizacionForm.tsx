@@ -127,6 +127,16 @@ export default function CotizacionForm({
     // Estado para detectar si el usuario está editando manualmente el precio total
     const [usuarioEditandoPrecioTotal, setUsuarioEditandoPrecioTotal] = useState<boolean>(false);
 
+    // Estado para información discreta de análisis interno
+    const [analisisInterno, setAnalisisInterno] = useState<{
+        margen: number;
+        utilidadBruta: number;
+        utilidadOriginal: number;
+        deltaUtilidad: number;
+        estado: 'OK' | 'RISK' | 'MANUAL';
+        mensaje?: string;
+    } | null>(null);
+
     // Debug: Rastrear cambios en usuarioHaModificado
     useEffect(() => {
         console.log('🚨 CAMBIO EN usuarioHaModificado:', usuarioHaModificado);
@@ -473,7 +483,20 @@ export default function CotizacionForm({
         console.log('📝 Cambiando precio total manual:', { nuevoPrecio, nuevoPrecioRedondeado: parseFloat(nuevoPrecio.toFixed(2)) });
         // Marcar que el usuario está editando manualmente el precio total
         setUsuarioEditandoPrecioTotal(true);
-        setPrecioTotalPersonalizado(parseFloat(nuevoPrecio.toFixed(2)));
+        const precioFinal = parseFloat(nuevoPrecio.toFixed(2));
+        setPrecioTotalPersonalizado(precioFinal);
+
+        // 🚨 VALIDACIÓN EN TIEMPO REAL: Mostrar análisis y warnings mientras edita
+        if (modo === 'editar' && cotizacionExistente) {
+            const analisis = calcularAnalisisInterno(cotizacionExistente.precio, precioFinal, watchedServicios);
+            setAnalisisInterno({ ...analisis, estado: 'MANUAL' });
+
+            // Mostrar warning inmediato si está fuera de parámetros seguros
+            if (analisis.estado === 'RISK' && analisis.mensaje) {
+                console.log('🚨 WARNING: Precio fuera de parámetros seguros:', analisis.mensaje);
+                // No mostrar toast aquí para no interrumpir la edición, pero sí actualizar el análisis visual
+            }
+        }
     };
 
     const handleGuardarPrecioTotal = () => {
@@ -483,8 +506,24 @@ export default function CotizacionForm({
             esPaquete: !!paqueteBase
         });
         setEditandoPrecioTotal(false);
-        // Mantener usuarioEditandoPrecioTotal activo para preservar la personalización
-        toast.success(`Precio total personalizado aplicado: ${precioTotalPersonalizado?.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`);
+
+        // Actualizar análisis interno y mostrar warnings apropiados
+        if (modo === 'editar' && cotizacionExistente && precioTotalPersonalizado !== null) {
+            const analisis = calcularAnalisisInterno(cotizacionExistente.precio, precioTotalPersonalizado, watchedServicios);
+            setAnalisisInterno({ ...analisis, estado: 'MANUAL' });
+
+            // 🚨 Mostrar warning si el precio guardado está fuera de parámetros seguros
+            if (analisis.estado === 'RISK' && analisis.mensaje) {
+                toast.error(`⚠️ ADVERTENCIA: ${analisis.mensaje}`, {
+                    duration: 6000, // Mostrar más tiempo para que se note
+                });
+            } else {
+                toast.success(`Precio personalizado aplicado: ${precioTotalPersonalizado?.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`);
+            }
+        } else {
+            // Para otros modos (crear, etc.)
+            toast.success(`Precio personalizado aplicado: ${precioTotalPersonalizado?.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}`);
+        }
     };
 
     const handleCancelarPrecioTotal = () => {
@@ -609,6 +648,69 @@ export default function CotizacionForm({
         return parseFloat(total.toFixed(2));
     }, [watchedCostos]);
 
+    // Función para calcular análisis interno discreto con Utilidad Bruta (UB)
+    const calcularAnalisisInterno = (precioOriginal: number, precioActual: number, servicios: any[]): {
+        margen: number;
+        utilidadBruta: number;
+        utilidadOriginal: number;
+        deltaUtilidad: number;
+        estado: 'OK' | 'RISK' | 'MANUAL';
+        mensaje?: string;
+    } => {
+        // Calcular costo total de servicios
+        const costoTotal = servicios.reduce((sum, servicio, index) => {
+            const servicioPersonalizado = serviciosPersonalizados[servicio.servicioId];
+            if (servicioPersonalizado) {
+                return sum; // Los servicios personalizados no tienen costo definido
+            }
+
+            // Buscar servicio en catálogo para obtener costo
+            let costoUnitario = 0;
+            for (const seccion of secciones) {
+                for (const categoria of seccion.seccionCategorias) {
+                    const srv = categoria.ServicioCategoria.Servicio?.find((s: any) => s.id === servicio.servicioId);
+                    if (srv) {
+                        costoUnitario = srv.costo || 0;
+                        break;
+                    }
+                }
+                if (costoUnitario > 0) break;
+            }
+
+            const cantidad = parseInt(servicio.cantidad || '1', 10);
+            return sum + (costoUnitario * cantidad);
+        }, 0);
+
+        // Calcular utilidades
+        const utilidadOriginal = precioOriginal - costoTotal;
+        const utilidadBrutaActual = precioActual - costoTotal;
+        const margenActual = precioActual > 0 ? (utilidadBrutaActual / precioActual) * 100 : 0;
+        const deltaUtilidad = utilidadBrutaActual - utilidadOriginal;
+
+        // Validar si está dentro del margen de protección
+        const diferencia = Math.abs(precioActual - precioOriginal);
+        const porcentajeDiferencia = precioOriginal > 0 ? (diferencia / precioOriginal) * 100 : 0;
+        const dentroDeMargenPrecio = porcentajeDiferencia <= 5 || diferencia <= 1000;
+
+        // Validar margen mínimo del 25%
+        const margenMinimo = margenActual >= 25;
+
+        // El precio es seguro si cumple ambas condiciones: variación aceptable Y margen mínimo
+        const esPrecioSeguro = dentroDeMargenPrecio && margenMinimo;
+
+        return {
+            margen: parseFloat(margenActual.toFixed(1)),
+            utilidadBruta: parseFloat(utilidadBrutaActual.toFixed(0)),
+            utilidadOriginal: parseFloat(utilidadOriginal.toFixed(0)),
+            deltaUtilidad: parseFloat(deltaUtilidad.toFixed(0)),
+            estado: esPrecioSeguro ? 'OK' : 'RISK',
+            mensaje: esPrecioSeguro ? undefined :
+                !dentroDeMargenPrecio ? `UB cambiaría de $${utilidadOriginal.toLocaleString()} a $${utilidadBrutaActual.toLocaleString()} (${deltaUtilidad >= 0 ? '+' : ''}${deltaUtilidad.toLocaleString()})` :
+                    !margenMinimo ? `Margen ${margenActual.toFixed(1)}% por debajo del mínimo 25%` :
+                        'Precio fuera de parámetros seguros'
+        };
+    };
+
     // Precio final incluyendo costos adicionales
     const precioFinal = precioTotalPersonalizado !== null
         ? parseFloat(precioTotalPersonalizado.toFixed(2))
@@ -685,13 +787,18 @@ export default function CotizacionForm({
                 console.log('🏁 Inicializando con precio de cotización existente:', cotizacionExistente.precio);
                 setPrecioTotalPersonalizado(cotizacionExistente.precio);
                 setYaInicializadoConPaquete(true);
+
+                // Calcular análisis inicial
+                const analisis = calcularAnalisisInterno(cotizacionExistente.precio, cotizacionExistente.precio, watchedServicios);
+                setAnalisisInterno({ ...analisis, estado: 'MANUAL' });
                 return;
             }
 
-            // Si el usuario modificó servicios/costos y NO está editando precio manualmente,
-            // actualizar automáticamente (a menos que tenga una personalización manual activa)
+            // Si el usuario modificó servicios/costos y NO está editando precio manualmente
             if (usuarioHaModificado && yaInicializadoConPaquete && !usuarioEditandoPrecioTotal) {
                 const nuevoTotal = parseFloat((precioSistema + totalCostosAdicionales).toFixed(2));
+                const precioOriginal = cotizacionExistente.precio;
+
                 console.log('🔄 Usuario modificó servicios en cotización existente:', {
                     precioActual: precioTotalPersonalizado,
                     nuevoCalculado: nuevoTotal,
@@ -699,8 +806,32 @@ export default function CotizacionForm({
                     usuarioHaModificado
                 });
 
-                // Actualizar automáticamente el precio basado en los servicios modificados
-                setPrecioTotalPersonalizado(nuevoTotal);
+                // 🛡️ PROTECCIÓN DE MARGEN: Calcular análisis interno
+                const analisis = calcularAnalisisInterno(precioOriginal, nuevoTotal, watchedServicios);
+                setAnalisisInterno(analisis);
+
+                if (analisis.estado === 'OK') {
+                    // Dentro del margen - actualizar automáticamente
+                    console.log('✅ Precio dentro del margen de protección - actualizando');
+                    setPrecioTotalPersonalizado(nuevoTotal);
+                } else {
+                    // Fuera del margen - mantener precio original y notificar
+                    console.log('🛡️ Precio fuera del margen de protección - manteniendo original');
+                    setPrecioTotalPersonalizado(precioOriginal);
+
+                    if (analisis.mensaje) {
+                        toast.error(analisis.mensaje + ` (Variación: ${((Math.abs(nuevoTotal - precioOriginal) / precioOriginal) * 100).toFixed(1)}% | $${Math.abs(nuevoTotal - precioOriginal).toFixed(0)})`);
+                    }
+                }
+            } else {
+                // Actualizar análisis sin cambiar precio
+                if (precioTotalPersonalizado !== null) {
+                    const analisis = calcularAnalisisInterno(cotizacionExistente.precio, precioTotalPersonalizado, watchedServicios);
+                    setAnalisisInterno({
+                        ...analisis,
+                        estado: usuarioEditandoPrecioTotal ? 'MANUAL' : analisis.estado
+                    });
+                }
             }
             return;
         }        // CASO 3: Cotización nueva normal (sin paquete)
@@ -1011,7 +1142,11 @@ export default function CotizacionForm({
                 if (resultado && 'cotizacion' in resultado && resultado.cotizacion?.id) {
                     console.log('✅ Cotización actualizada con ID:', resultado.cotizacion.id);
                     toast.success('Cotización actualizada exitosamente');
-                    router.push(`/admin/dashboard/eventos/${evento.id}`);
+
+                    // En modo edición, regresar a la pantalla anterior
+                    setTimeout(() => {
+                        router.back();
+                    }, 1500); // Dar tiempo para que se vea el toast de éxito
                 } else {
                     throw new Error('No se pudo actualizar la cotización');
                 }
@@ -1515,6 +1650,13 @@ export default function CotizacionForm({
                                                             step="0.01"
                                                             min="0"
                                                             className="flex-1 px-2 py-1 bg-zinc-800 border border-zinc-600 rounded text-blue-300 text-xl font-bold focus:border-blue-400 focus:outline-none"
+                                                            onChange={(e) => {
+                                                                // Validación en tiempo real mientras escribe
+                                                                const valor = parseFloat(e.target.value);
+                                                                if (!isNaN(valor) && valor > 0) {
+                                                                    handleCambiarPrecioTotal(valor);
+                                                                }
+                                                            }}
                                                             onBlur={(e) => {
                                                                 const nuevoPrecio = parseFloat((parseFloat(e.target.value) || (precioSistema + totalCostosAdicionales)).toFixed(2));
                                                                 handleCambiarPrecioTotal(nuevoPrecio);
@@ -1583,6 +1725,24 @@ export default function CotizacionForm({
                                                     <span>{totalCostosAdicionales !== 0 ? 'Incluye costos adicionales' : 'Solo servicios'}</span>
                                                 )}
                                             </div>
+
+                                            {/* Análisis interno discreto - solo en modo editar */}
+                                            {modo === 'editar' && analisisInterno && (
+                                                <div className="mt-2 pt-2 border-t border-blue-500/20">
+                                                    <div
+                                                        className={`text-xs font-mono ${analisisInterno.estado === 'OK' ? 'text-zinc-500' :
+                                                            analisisInterno.estado === 'RISK' ? 'text-amber-600' :
+                                                                'text-blue-500'
+                                                            }`}
+                                                        title={`Análisis interno: Margen ${analisisInterno.margen}% | UB actual $${analisisInterno.utilidadBruta.toLocaleString()} (original: $${analisisInterno.utilidadOriginal.toLocaleString()}) | Estado ${analisisInterno.estado}`}
+                                                    >
+
+                                                        M{analisisInterno.margen}% |
+                                                        U{analisisInterno.utilidadBruta} |
+                                                        EST-{analisisInterno.estado}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -1636,7 +1796,7 @@ export default function CotizacionForm({
 
                                 <button
                                     type="button"
-                                    onClick={() => router.push(`/admin/dashboard/eventos/${evento.id}`)}
+                                    onClick={() => router.back()}
                                     className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-zinc-700 text-zinc-100 hover:bg-zinc-600 min-w-0"
                                 >
                                     <span className="truncate">Cancelar</span>

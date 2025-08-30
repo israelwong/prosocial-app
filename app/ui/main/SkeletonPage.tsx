@@ -22,14 +22,13 @@ function SkeletonPage() {
 
                 {/* Header with icon */}
                 <div className='space-y-4'>
-                    <div className='flex items-center justify-center space-x-3 mb-6'>
 
+                    <div className="flex items-center justify-center space-x-3">
+                        <h3 className='text-3xl md:text-4xl font-bold text-zinc-200'>
+                            Un momento por favor
+                        </h3>
                         <Loader2 className='w-6 h-6 text-zinc-400 animate-spin' />
                     </div>
-
-                    <h3 className='text-3xl md:text-4xl font-bold text-zinc-200'>
-                        Un momento por favor
-                    </h3>
                     <p className='text-zinc-500 text-lg md:text-xl font-light leading-relaxed'>
                         Estamos optimizando la página para brindarte la mejor experiencia
                     </p>
@@ -42,8 +41,7 @@ function SkeletonPage() {
                     <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800/50 rounded-xl p-6 shadow-2xl">
                         <div className="animate-pulse flex space-x-4">
                             <div className="relative">
-                                <div className="rounded-full bg-zinc-700 h-12 w-12"></div>
-                                <div className="absolute inset-0 rounded-full bg-zinc-600 animate-pulse opacity-50"></div>
+                                <div className="absolute inset-0 rounded-lg bg-zinc-600 animate-pulse opacity-50"></div>
                             </div>
                             <div className="flex-1 space-y-4 py-1">
                                 <div className="h-3 bg-zinc-700 rounded-full"></div>
