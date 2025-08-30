@@ -66,7 +66,7 @@ export default function PortfolioSection({
                 </div>
 
                 {/* CTA opcional */}
-                <div className="text-center mt-12">
+                {/* <div className="text-center mt-12">
                     <p className="text-gray-600 mb-6">
                         ¿Te gusta lo que ves? Contactanos para crear momentos únicos
                     </p>
@@ -76,7 +76,7 @@ export default function PortfolioSection({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
-                </div>
+                </div> */}
             </div>
         </section>
     )

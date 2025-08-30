@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useRef } from 'react'
-import { Star, Quote } from 'lucide-react'
+import { Star } from 'lucide-react'
 import Glide from '@glidejs/glide'
 
 interface TestimonioData {
@@ -74,26 +74,10 @@ const testimonios: TestimonioData[] = [
 const TestimonioCard = ({ testimonio }: { testimonio: TestimonioData }) => {
     return (
         <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 mx-2">
-            {/* Header con avatar y info */}
-            <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    {testimonio.avatar ? (
-                        <img
-                            src={testimonio.avatar}
-                            alt={testimonio.nombre}
-                            className="w-full h-full rounded-full object-cover"
-                            onError={(e) => {
-                                // Fallback si la imagen no carga
-                                e.currentTarget.style.display = 'none'
-                                e.currentTarget.parentElement!.innerHTML = testimonio.nombre.charAt(0)
-                            }}
-                        />
-                    ) : (
-                        testimonio.nombre.charAt(0)
-                    )}
-                </div>
+            {/* Header con info del cliente */}
+            <div className="flex items-center justify-between mb-6">
                 <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{testimonio.nombre}</h4>
+                    <h4 className="font-semibold text-gray-900 text-lg">{testimonio.nombre}</h4>
                     <p className="text-sm text-gray-600">{testimonio.evento} • {testimonio.fecha}</p>
                 </div>
                 <div className="flex items-center gap-1">
@@ -101,17 +85,12 @@ const TestimonioCard = ({ testimonio }: { testimonio: TestimonioData }) => {
                         <Star
                             key={i}
                             className={`w-4 h-4 ${i < testimonio.rating
-                                    ? 'text-yellow-400 fill-yellow-400'
-                                    : 'text-gray-300'
+                                ? 'text-yellow-400 fill-yellow-400'
+                                : 'text-gray-300'
                                 }`}
                         />
                     ))}
                 </div>
-            </div>
-
-            {/* Quote icon */}
-            <div className="mb-3">
-                <Quote className="w-8 h-8 text-purple-500" />
             </div>
 
             {/* Testimonio */}
@@ -200,7 +179,7 @@ export default function TestimoniosSection({ className = "" }: TestimoniosSectio
                 </div>
 
                 {/* Call to action */}
-                <div className="text-center mt-12">
+                {/* <div className="text-center mt-12">
                     <p className="text-gray-600 mb-6">
                         ¿Quieres ser parte de nuestras historias de éxito?
                     </p>
@@ -210,7 +189,7 @@ export default function TestimoniosSection({ className = "" }: TestimoniosSectio
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
                     </button>
-                </div>
+                </div> */}
             </div>
         </section>
     )
