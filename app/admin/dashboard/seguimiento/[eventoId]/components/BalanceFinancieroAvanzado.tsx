@@ -25,7 +25,9 @@ import {
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import FormularioPago from "./FormularioPago"
+import FormularioCosto from "./FormularioCosto"
 import { crearPago, actualizarPago, eliminarPago } from "@/app/admin/_lib/actions/seguimiento/pagos.actions"
+import { crearCosto, actualizarCosto, eliminarCosto, obtenerCostosPorCotizacion, obtenerTotalCostosPorCotizacion } from "@/app/admin/_lib/actions/seguimiento/costos.actions"
 
 interface BalanceFinancieroAvanzadoProps {
     cotizacion?: {
@@ -45,6 +47,14 @@ interface BalanceFinancieroAvanzadoProps {
                 nombre?: string
             }>
         }
+        Servicio?: Array<{
+            id: string
+            cantidad: number
+            costo_snapshot?: number
+            gasto_snapshot?: number
+            utilidad_snapshot?: number
+            nombre_snapshot?: string
+        }>
     } | null
     pagos?: Array<{
         id?: string
@@ -80,12 +90,19 @@ const METODO_PAGO_ICONS = {
 
 export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFinancieroAvanzadoProps) {
     const router = useRouter()
-    const [vistaActiva, setVistaActiva] = useState<'resumen' | 'pagos' | 'analisis'>('resumen')
+    const [vistaActiva, setVistaActiva] = useState<'resumen' | 'pagos' | 'costos' | 'analisis'>('resumen')
     const [mostrarFormulario, setMostrarFormulario] = useState(false)
     const [pagoEditando, setPagoEditando] = useState<any>(null)
     const [cargando, setCargando] = useState(false)
     const [actualizando, setActualizando] = useState(false)
     const [mensajeExito, setMensajeExito] = useState<string | null>(null)
+
+    // Estados para costos
+    const [mostrarFormularioCosto, setMostrarFormularioCosto] = useState(false)
+    const [costoEditando, setCostoEditando] = useState<any>(null)
+    const [costos, setCostos] = useState<any[]>([])
+    const [totalCostos, setTotalCostos] = useState(0)
+    const [cargandoCostos, setCargandoCostos] = useState(false)
 
     const manejarCrearPago = async (datosPago: any) => {
         setActualizando(true)
@@ -239,6 +256,152 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
         })
     }
 
+    // Cálculos de gastos operativos desde servicios
+    const servicios = cotizacion?.Servicio || []
+    const gastosOperativos = servicios.reduce((total, servicio) => {
+        // El costo_snapshot representa lo que se le paga al empleado (gasto de la empresa)
+        const costoServicio = servicio.costo_snapshot || 0
+        const cantidad = servicio.cantidad || 1
+        return total + (costoServicio * cantidad)
+    }, 0)
+
+    const costosOperativos = servicios.reduce((total, servicio) => {
+        // Los gastos adicionales del servicio
+        const gasto = servicio.gasto_snapshot || 0
+        const cantidad = servicio.cantidad || 1
+        return total + (gasto * cantidad)
+    }, 0)
+
+    const utilidadOperativa = servicios.reduce((total, servicio) => {
+        const utilidad = servicio.utilidad_snapshot || 0
+        const cantidad = servicio.cantidad || 1
+        return total + (utilidad * cantidad)
+    }, 0)
+
+    // Cálculo de utilidad final
+    const utilidadFinal = totalPagado - gastosOperativos - totalCostos
+
+    // Funciones para manejar costos
+    const cargarCostos = async () => {
+        if (!cotizacion?.id) return
+
+        setCargandoCostos(true)
+        try {
+            const [resultadoCostos, resultadoTotal] = await Promise.all([
+                obtenerCostosPorCotizacion(cotizacion.id),
+                obtenerTotalCostosPorCotizacion(cotizacion.id)
+            ])
+
+            if (resultadoCostos.success && resultadoCostos.costos) {
+                setCostos(resultadoCostos.costos)
+            }
+
+            if (resultadoTotal.success) {
+                setTotalCostos(resultadoTotal.total)
+            }
+        } catch (error) {
+            console.error('Error al cargar costos:', error)
+        } finally {
+            setCargandoCostos(false)
+        }
+    }
+
+    const manejarCrearCosto = async (datosCosto: any) => {
+        setActualizando(true)
+        setCargando(true)
+        try {
+            const resultado = await crearCosto(datosCosto)
+
+            if (resultado.success) {
+                setMostrarFormularioCosto(false)
+                setMensajeExito('Costo registrado exitosamente')
+                await cargarCostos()
+                router.refresh()
+                setTimeout(() => setMensajeExito(null), 3000)
+            } else {
+                alert('Error al crear el costo: ' + (resultado.message || 'Error desconocido'))
+            }
+        } catch (error) {
+            console.error('Error al crear costo:', error)
+            alert('Error al crear el costo')
+        } finally {
+            setCargando(false)
+            setTimeout(() => setActualizando(false), 1500)
+        }
+    }
+
+    const manejarEditarCosto = async (datosCosto: any) => {
+        setActualizando(true)
+        setCargando(true)
+
+        try {
+            const resultado = await actualizarCosto(datosCosto)
+
+            if (resultado.success) {
+                setMostrarFormularioCosto(false)
+                setCostoEditando(null)
+                setMensajeExito('Costo actualizado exitosamente')
+                await cargarCostos()
+                router.refresh()
+                setTimeout(() => setMensajeExito(null), 3000)
+            } else {
+                alert('Error al actualizar el costo: ' + (resultado.message || 'Error desconocido'))
+            }
+        } catch (error) {
+            console.error('Error al actualizar costo:', error)
+            alert('Error al actualizar el costo')
+        } finally {
+            setCargando(false)
+            setTimeout(() => setActualizando(false), 1500)
+        }
+    }
+
+    const manejarEliminarCosto = async (costoId: string) => {
+        if (!confirm('¿Estás seguro de que quieres eliminar este costo?')) return
+        setActualizando(true)
+        setCargando(true)
+        try {
+            const resultado = await eliminarCosto(costoId)
+
+            if (resultado.success) {
+                setMensajeExito('Costo eliminado exitosamente')
+                await cargarCostos()
+                router.refresh()
+                setTimeout(() => setMensajeExito(null), 3000)
+            } else {
+                alert('Error al eliminar el costo: ' + (resultado.message || 'Error desconocido'))
+            }
+        } catch (error) {
+            console.error('Error al eliminar costo:', error)
+            alert('Error al eliminar el costo')
+        } finally {
+            setCargando(false)
+            setTimeout(() => setActualizando(false), 1500)
+        }
+    }
+
+    const abrirFormularioCrearCosto = () => {
+        setCostoEditando(null)
+        setMostrarFormularioCosto(true)
+    }
+
+    const abrirFormularioEditarCosto = (costo: any) => {
+        setCostoEditando(costo)
+        setMostrarFormularioCosto(true)
+    }
+
+    const cerrarFormularioCosto = () => {
+        setMostrarFormularioCosto(false)
+        setCostoEditando(null)
+    }
+
+    // Cargar costos cuando se monta el componente o cambia la cotización
+    useEffect(() => {
+        if (cotizacion?.id) {
+            cargarCostos()
+        }
+    }, [cotizacion?.id])
+
     const getStatusColor = (status?: string | null) => {
         if (!status) return STATUS_COLORS.default
         return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || STATUS_COLORS.default
@@ -316,6 +479,18 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                         >
                             <CreditCard className="h-4 w-4 mr-1" />
                             Pagos ({pagos?.length || 0})
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setVistaActiva('costos')}
+                            className={vistaActiva === 'costos' ?
+                                'bg-blue-600 hover:bg-blue-700 text-white' :
+                                'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                            }
+                        >
+                            <DollarSign className="h-4 w-4 mr-1" />
+                            Costos
                         </Button>
                         <Button
                             variant="ghost"
@@ -635,9 +810,341 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                     </div>
                 )}
 
+                {/* Vista Costos */}
+                {vistaActiva === 'costos' && (
+                    <div className="space-y-6">
+                        {/* Header */}
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-medium text-zinc-100">
+                                Centro de Costos
+                            </h3>
+                        </div>
+
+                        {/* Resumen de todos los costos */}
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="p-6 bg-gradient-to-br from-orange-900/30 to-orange-800/20 border border-orange-700/50 rounded-xl text-left">
+                                <div className="space-y-3">
+                                    <div>
+                                        <h5 className="text-orange-200 font-semibold text-base">💼 Nómina de servicios</h5>
+                                        <p className="text-orange-300/70 text-sm"></p>
+                                    </div>
+                                    <div className="text-left">
+                                        <span className="text-orange-100 font-bold text-2xl">{formatearMoneda(gastosOperativos)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-gradient-to-br from-red-900/30 to-red-800/20 border border-red-700/50 rounded-xl text-left">
+                                <div className="space-y-3">
+                                    <div>
+                                        <h5 className="text-red-200 font-semibold text-base">🏭 Gastos adicionales</h5>
+                                    </div>
+                                    <div className="text-left">
+                                        <span className="text-red-100 font-bold text-2xl">{formatearMoneda(totalCostos)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/50 rounded-xl text-left">
+                                <div className="space-y-3">
+                                    <div>
+                                        <h5 className="text-purple-200 font-semibold text-base">📊 Total Costos</h5>
+                                    </div>
+                                    <div className="text-left">
+                                        <span className="text-purple-100 font-bold text-2xl">{formatearMoneda(gastosOperativos + totalCostos)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Sección de Gastos Operativos */}
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between border-b border-zinc-700 pb-3">
+                                <h4 className="text-xl font-semibold text-zinc-100">💼 Lista de costos operativos</h4>
+                                {/* <div className="text-right">
+                                    <span className="text-lg font-bold text-orange-400">{formatearMoneda(gastosOperativos)}</span>
+                                    <p className="text-xs text-zinc-400">Total nómina servicios</p>
+                                </div> */}
+                            </div>
+
+                            {gastosOperativos > 0 ? (
+                                <div className="bg-gradient-to-r from-orange-950/50 to-orange-900/30 border border-orange-800/40 rounded-xl p-6">
+                                    <div className="space-y-4">
+                                        {/* <p className="text-orange-200/80 text-sm font-medium mb-4">
+                                            📋 Desglose por servicio contratado
+                                        </p> */}
+                                        <div className="space-y-3">
+                                            {servicios.filter(s => (s.costo_snapshot || 0) > 0).map((servicio, index) => (
+                                                <div key={index} className="flex items-center justify-between py-3 px-4 bg-zinc-900/40 rounded-lg border border-zinc-700/30">
+                                                    <div className="flex-1">
+                                                        <span className="text-zinc-200 font-medium">{servicio.nombre_snapshot || 'Servicio sin nombre'}</span>
+                                                        <div className="text-xs text-zinc-400 mt-1">
+                                                            ${(servicio.costo_snapshot || 0).toLocaleString()} × {servicio.cantidad || 1}
+                                                            {(servicio.cantidad || 1) > 1 ? ' unidades' : ' unidad'}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-orange-300 font-bold text-lg">
+                                                            {formatearMoneda((servicio.costo_snapshot || 0) * (servicio.cantidad || 1))}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="p-8 bg-zinc-800/30 border border-zinc-700/50 rounded-xl text-center">
+                                    <div className="text-zinc-500 text-4xl mb-3">💼</div>
+                                    <p className="text-zinc-400 font-medium">No hay gastos operativos</p>
+                                    <p className="text-zinc-500 text-sm mt-2">Los costos de nómina de servicios aparecerán aquí</p>
+                                </div>
+                            )}
+                        </div>                        {/* Sección de Costos de Producción */}
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between border-b border-zinc-700 pb-3">
+                                <h4 className="text-xl font-semibold text-zinc-100">🏭 Costos de Producción</h4>
+                                <Button
+                                    onClick={abrirFormularioCrearCosto}
+                                    disabled={cargando}
+                                    size="default"
+                                    className="bg-green-600 hover:bg-green-700 px-6"
+                                >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Agregar Costo
+                                </Button>
+                            </div>
+
+                            {cargandoCostos ? (
+                                <div className="flex justify-center py-12">
+                                    <div className="text-center">
+                                        <Loader2 className="h-8 w-8 animate-spin text-zinc-400 mx-auto mb-3" />
+                                        <p className="text-zinc-400">Cargando costos...</p>
+                                    </div>
+                                </div>
+                            ) : costos.length > 0 ? (
+                                <div className="space-y-4 relative">
+                                    {actualizando && (
+                                        <div className="absolute inset-0 bg-zinc-900/70 rounded-lg flex items-center justify-center z-40">
+                                            <div className="bg-zinc-800 px-6 py-3 rounded-lg flex items-center gap-3 text-zinc-300 border border-zinc-700">
+                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                                <span className="font-medium">Actualizando costos...</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {costos.map((costo, index) => (
+                                        <div
+                                            key={costo.id || index}
+                                            className="flex items-center justify-between p-5 border border-zinc-700/50 rounded-xl bg-gradient-to-r from-zinc-900/50 to-zinc-800/30 hover:from-zinc-800/50 hover:to-zinc-700/30 transition-all duration-200"
+                                        >
+                                            <div className="flex-1">
+                                                <h5 className="font-semibold text-zinc-200 mb-2">
+                                                    {costo.nombre}
+                                                </h5>
+                                                {costo.descripcion && (
+                                                    <p className="text-sm text-zinc-400 mb-3">
+                                                        {costo.descripcion}
+                                                    </p>
+                                                )}
+                                                <p className="text-xs text-zinc-500 font-medium">
+                                                    📅 {costo.fechaFormateada}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-right">
+                                                    <p className="font-bold text-green-400 text-xl">
+                                                        {costo.montoFormateado}
+                                                    </p>
+                                                </div>
+
+                                                {/* Botones de acción */}
+                                                {costo.id && (
+                                                    <div className="flex items-center gap-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => abrirFormularioEditarCosto(costo)}
+                                                            disabled={cargando}
+                                                            className="h-9 w-9 p-0 text-amber-400 hover:text-amber-300 hover:bg-amber-900/30 transition-colors"
+                                                            title="Editar costo"
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => manejarEliminarCosto(costo.id!)}
+                                                            disabled={cargando}
+                                                            className="h-9 w-9 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-colors"
+                                                            title="Eliminar costo"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12 bg-zinc-800/20 rounded-xl border border-zinc-700/50">
+                                    <div className="text-zinc-500 text-5xl mb-4">🏭</div>
+                                    <p className="text-zinc-400 font-semibold text-lg mb-2">No hay costos de producción</p>
+                                    <p className="text-zinc-500 text-sm mb-6">
+                                        Agrega costos adicionales como materiales, equipos o servicios externos
+                                    </p>
+                                    <Button
+                                        onClick={abrirFormularioCrearCosto}
+                                        disabled={cargando}
+                                        variant="outline"
+                                        className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                                    >
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Registrar Primer Costo
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* Vista Análisis */}
                 {vistaActiva === 'analisis' && (
                     <div className="space-y-6">
+                        <h3 className="text-lg font-medium text-zinc-100">Análisis Financiero Integral</h3>
+
+                        {/* Balance completo con todos los factores */}
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-900">
+                                <h5 className="font-medium mb-3 text-zinc-100">Balance Detallado</h5>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-400">Valor Cotización:</span>
+                                        <span className="text-zinc-200">{formatearMoneda(totalCotizacion)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-400">Ingresos Recibidos:</span>
+                                        <span className="text-green-400">{formatearMoneda(totalPagado)}</span>
+                                    </div>
+                                    <div className="border-t border-zinc-700 pt-2 mt-3 mb-2">
+                                        <div className="flex justify-between">
+                                            <span className="text-zinc-400">Gastos Operativos:</span>
+                                            <span className="text-orange-400">{formatearMoneda(gastosOperativos)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-zinc-400">Costos Producción:</span>
+                                            <span className="text-red-400">{formatearMoneda(totalCostos)}</span>
+                                        </div>
+                                        <div className="flex justify-between font-medium">
+                                            <span className="text-zinc-300">Total Costos:</span>
+                                            <span className="text-red-300">{formatearMoneda(gastosOperativos + totalCostos)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="border-t border-zinc-600 pt-2 flex justify-between font-bold text-base">
+                                        <span className="text-zinc-100">Utilidad Final:</span>
+                                        <span className={utilidadFinal >= 0 ? "text-green-400" : "text-red-400"}>
+                                            {formatearMoneda(utilidadFinal)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-900">
+                                <h5 className="font-medium mb-3 text-zinc-100">Métricas de Rentabilidad</h5>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-400">Margen Bruto:</span>
+                                        <span className={totalPagado > 0 ? (utilidadFinal / totalPagado * 100) >= 50 ? "text-green-400" : (utilidadFinal / totalPagado * 100) >= 20 ? "text-yellow-400" : "text-red-400" : "text-zinc-200"}>
+                                            {totalPagado > 0 ? (utilidadFinal / totalPagado * 100).toFixed(1) + '%' : '0%'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-400">% Total Costos:</span>
+                                        <span className={totalPagado > 0 ? ((gastosOperativos + totalCostos) / totalPagado * 100) <= 50 ? "text-green-400" : ((gastosOperativos + totalCostos) / totalPagado * 100) <= 80 ? "text-yellow-400" : "text-red-400" : "text-zinc-200"}>
+                                            {totalPagado > 0 ? ((gastosOperativos + totalCostos) / totalPagado * 100).toFixed(1) + '%' : '0%'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-400">Eficiencia:</span>
+                                        <span className={utilidadFinal >= 0 ? utilidadFinal > (totalPagado * 0.3) ? "text-green-400" : "text-yellow-400" : "text-red-400"}>
+                                            {utilidadFinal >= 0 ? 'Rentable ✓' : 'No Rentable ✗'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-zinc-400">ROI Real:</span>
+                                        <span className={(gastosOperativos + totalCostos) > 0 ? utilidadFinal / (gastosOperativos + totalCostos) > 1 ? "text-green-400" : utilidadFinal / (gastosOperativos + totalCostos) > 0 ? "text-yellow-400" : "text-red-400" : "text-green-400"}>
+                                            {(gastosOperativos + totalCostos) > 0 ? ((utilidadFinal / (gastosOperativos + totalCostos)) * 100).toFixed(0) + '%' : '∞'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Desglose visual de costos */}
+                        {(gastosOperativos > 0 || totalCostos > 0) && (
+                            <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-900">
+                                <h5 className="font-medium mb-3 text-zinc-100">Distribución de Costos</h5>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-sm text-orange-300">Gastos Operativos</span>
+                                            <span className="text-sm font-medium text-orange-100">
+                                                {((gastosOperativos / (gastosOperativos + totalCostos)) * 100).toFixed(1)}%
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-zinc-800 rounded-full h-2">
+                                            <div
+                                                className="bg-orange-500 h-2 rounded-full"
+                                                style={{ width: `${(gastosOperativos / (gastosOperativos + totalCostos)) * 100}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-xs text-orange-200 mt-1">{formatearMoneda(gastosOperativos)}</p>
+                                    </div>
+
+                                    <div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-sm text-red-300">Costos Producción</span>
+                                            <span className="text-sm font-medium text-red-100">
+                                                {((totalCostos / (gastosOperativos + totalCostos)) * 100).toFixed(1)}%
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-zinc-800 rounded-full h-2">
+                                            <div
+                                                className="bg-red-500 h-2 rounded-full"
+                                                style={{ width: `${(totalCostos / (gastosOperativos + totalCostos)) * 100}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-xs text-red-200 mt-1">{formatearMoneda(totalCostos)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Estado de rentabilidad */}
+                        <div className={`p-4 rounded-lg border ${utilidadFinal >= 0
+                            ? 'bg-green-900/20 border-green-800'
+                            : 'bg-red-900/20 border-red-800'
+                            }`}>
+                            <div className="flex items-center gap-2">
+                                {utilidadFinal >= 0 ? (
+                                    <CheckCircle className="h-5 w-5 text-green-400" />
+                                ) : (
+                                    <AlertTriangle className="h-5 w-5 text-red-400" />
+                                )}
+                                <h5 className={`font-medium ${utilidadFinal >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                                    {utilidadFinal >= 0 ? 'Proyecto Rentable' : 'Proyecto No Rentable'}
+                                </h5>
+                            </div>
+                            <p className={`text-sm mt-1 ${utilidadFinal >= 0 ? 'text-green-100' : 'text-red-100'}`}>
+                                {utilidadFinal >= 0
+                                    ? `Excelente, el proyecto genera una utilidad de ${formatearMoneda(utilidadFinal)}`
+                                    : `Atención: El proyecto tiene pérdidas por ${formatearMoneda(Math.abs(utilidadFinal))}`
+                                }
+                            </p>
+                        </div>
+
                         {/* Métodos de pago */}
                         <div>
                             <h4 className="font-medium mb-3 text-zinc-100">Métodos de pago utilizados</h4>
@@ -673,10 +1180,10 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                             </div>
                         </div>
 
-                        {/* Proyecciones */}
+                        {/* Estado actual del proyecto */}
                         <div className="grid md:grid-cols-2 gap-4">
                             <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-900">
-                                <h5 className="font-medium mb-2 text-zinc-100">Estado actual</h5>
+                                <h5 className="font-medium mb-2 text-zinc-100">Estado Actual</h5>
                                 <div className="space-y-1 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-zinc-400">Pagado:</span>
@@ -687,14 +1194,14 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                                         <span className="text-zinc-200">{porcentajePagado.toFixed(1)}%</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-zinc-400">Restante:</span>
+                                        <span className="text-zinc-400">Pendiente:</span>
                                         <span className="text-zinc-200">{formatearMoneda(saldoPendiente)}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-900">
-                                <h5 className="font-medium mb-2 text-zinc-100">Próximo pago</h5>
+                                <h5 className="font-medium mb-2 text-zinc-100">Próximo Pago</h5>
                                 <div className="space-y-1 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-zinc-400">Sugerido:</span>
@@ -720,6 +1227,18 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                     pagoExistente={pagoEditando}
                     onSubmit={pagoEditando ? manejarEditarPago : manejarCrearPago}
                     onCancel={cerrarFormulario}
+                    isLoading={cargando}
+                />
+            )}
+
+            {/* Modal del formulario de costo */}
+            {mostrarFormularioCosto && cotizacion?.id && (
+                <FormularioCosto
+                    cotizacionId={cotizacion.id}
+                    isEditing={!!costoEditando}
+                    costoExistente={costoEditando}
+                    onSubmit={costoEditando ? manejarEditarCosto : manejarCrearCosto}
+                    onCancel={cerrarFormularioCosto}
                     isLoading={cargando}
                 />
             )}

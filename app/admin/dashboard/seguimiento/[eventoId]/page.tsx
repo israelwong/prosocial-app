@@ -31,7 +31,7 @@ export default async function Page({ params }: PageProps) {
 
         // Mostrar datos con componentes V3 simples
         return (
-            <div className="max-w-7xl mx-auto p-6 space-y-6 bg-zinc-950 min-h-screen">
+            <div className="max-w-fit mx-auto p-6 space-y-6 bg-zinc-950 min-h-screen">
                 {/* Header Simple */}
                 <HeaderSimple
                     eventoNombre={datos.evento?.nombre || 'Evento sin nombre'}
@@ -42,11 +42,12 @@ export default async function Page({ params }: PageProps) {
                     fechaEvento={datos.evento?.fecha_evento}
                 />
 
-                {/* Grid de información financiera y servicios */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <div className='space-y-5'>
+                {/* Grid de 3 columnas para distribución equilibrada */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 
-                        {/* Balance Financiero Avanzado */}
+                    {/* Columna 1: Finanzas, Bitácora y Agenda */}
+                    <div className='space-y-5'>
+                        {/* Balance Financiero Avanzado con pestaña de costos integrada */}
                         <BalanceFinancieroAvanzado
                             cotizacion={datos.cotizacion ? {
                                 ...datos.cotizacion,
@@ -61,21 +62,71 @@ export default async function Page({ params }: PageProps) {
                             pagos={datos.pagos as any}
                         />
 
+                        {/* Bitácora del Evento */}
+                        <BitacoraSimple eventoId={eventoId} />
+
+                    </div>
+
+                    {/* Columna 2: Servicios Asociados (completa) */}
+                    <div className='space-y-5'>
+                        <ServiciosAsociados
+                            evento={{
+                                ...datos.evento,
+                                Cotizacion: datos.cotizacion ? [datos.cotizacion] : []
+                            } as any}
+                            usuarios={usuarios}
+                        />
+                    </div>
+
+                    {/* Columna 3: TodoList y Multimedia */}
+                    <div className='space-y-5'>
+
                         {/* Ficha de Agenda V3 */}
                         <FichaAgendaV3 eventoId={eventoId} />
 
-                        {/* Bitácora del Evento */}
-                        <BitacoraSimple eventoId={eventoId} />
-                    </div>
+                        {/* Widget TodoList / Checklist */}
+                        <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-4">
+                            <h3 className="text-lg font-semibold text-zinc-100 mb-4">📋 Lista de Tareas</h3>
+                            <div className="text-zinc-400 text-sm">
+                                Componente TodoList en desarrollo...
+                            </div>
+                        </div>
 
-                    {/* Servicios Asociados */}
-                    <ServiciosAsociados
-                        evento={{
-                            ...datos.evento,
-                            Cotizacion: datos.cotizacion ? [datos.cotizacion] : []
-                        } as any}
-                        usuarios={usuarios}
-                    />
+                        {/* Widget Multimedia - Vista de repositorio */}
+                        <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-4">
+                            <h3 className="text-lg font-semibold text-zinc-100 mb-4">🎬 Repositorio Multimedia</h3>
+                            <div className="space-y-3">
+                                {/* Estructura visual del repositorio */}
+                                <div className="text-sm text-zinc-300">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <span>📁</span>
+                                            <span className="font-medium">Fotografía</span>
+                                        </div>
+                                        <div className="ml-6 space-y-1 text-xs text-zinc-400">
+                                            <div>📷 Fotos Sesión (0 archivos)</div>
+                                            <div>✨ Fotos Retocadas (0 archivos)</div>
+                                            <div>🎉 Fotos Evento (0 archivos)</div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <span>📁</span>
+                                            <span className="font-medium">Video</span>
+                                        </div>
+                                        <div className="ml-6 space-y-1 text-xs text-zinc-400">
+                                            <div>💝 Video Remembranza (0 archivos)</div>
+                                            <div>🎬 Video Extendido (0 archivos)</div>
+                                            <div>📝 Video Resumen (0 archivos)</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button className="w-full mt-3 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm rounded-md transition-colors border border-zinc-700">
+                                    🔧 Gestionar Repositorio
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>

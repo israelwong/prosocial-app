@@ -92,23 +92,6 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
     //     }))
     // });
 
-    // Calcular totales financieros
-    const totales = servicios.reduce((acc: any, servicio: any) => {
-        const costo = servicio.costo_snapshot || servicio.costo || 0;
-        const gasto = servicio.gasto_snapshot || servicio.gasto || 0;
-        const utilidad = servicio.utilidad_snapshot || servicio.utilidad || 0;
-        const cantidad = servicio.cantidad || 1;
-
-        acc.costoTotal += costo * cantidad;
-        acc.gastoTotal += gasto * cantidad;
-        acc.utilidadTotal += utilidad * cantidad;
-
-        return acc;
-    }, { costoTotal: 0, gastoTotal: 0, utilidadTotal: 0 });
-
-    // Calcular total a pagar (para retrocompatibilidad)
-    const totalAPagar = totales.costoTotal;
-
     // 🔧 NUEVA LÓGICA: Usar la misma función de agrupamiento exitosa de la cotización pública
     const serviciosAgrupados: ServiciosAgrupados = {};
 
@@ -373,46 +356,22 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                             <button
                                 onClick={() => setMostrarInformacionFinanciera(!mostrarInformacionFinanciera)}
                                 className="flex items-center gap-2 px-3 py-2 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg transition-colors"
-                                title={mostrarInformacionFinanciera ? "Ocultar información financiera" : "Mostrar información financiera"}
+                                title={mostrarInformacionFinanciera ? "Ocultar información de costos y nómina" : "Mostrar información de costos y nómina"}
                             >
                                 {mostrarInformacionFinanciera ? (
                                     <>
                                         <EyeOff className="w-4 h-4" />
-                                        Ocultar
+                                        Ocultar Costos
                                     </>
                                 ) : (
                                     <>
                                         <Eye className="w-4 h-4" />
-                                        Mostrar
+                                        Mostrar Costos
                                     </>
                                 )}
                             </button>
                         </div>
                     </div>
-
-                    {/* Línea 2: Gastos, costos, utilidad */}
-                    {mostrarInformacionFinanciera && (
-                        <div className="grid grid-cols-3 gap-6">
-                            <div className="text-center">
-                                <span className="text-sm text-zinc-400 block">Gastos</span>
-                                <span className="text-lg font-bold text-red-400">
-                                    ${totales.gastoTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </span>
-                            </div>
-                            <div className="text-center">
-                                <span className="text-sm text-zinc-400 block">Costos</span>
-                                <span className="text-lg font-bold text-blue-400">
-                                    ${totales.costoTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </span>
-                            </div>
-                            <div className="text-center">
-                                <span className="text-sm text-zinc-400 block">Utilidad</span>
-                                <span className="text-lg font-bold text-green-400">
-                                    ${totales.utilidadTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </span>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 {/* Servicios Agrupados */}
@@ -551,9 +510,9 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                                                                     </div>
                                                                 </div>
 
-                                                                {/* Línea 3: Costo, cantidad, total + estado nómina (condicional) */}
+                                                                {/* Línea 3: Información financiera y nómina (condicional) */}
                                                                 {mostrarInformacionFinanciera && (
-                                                                    <div className="flex items-center justify-between pt-2 border-t border-zinc-700">
+                                                                    <div className="flex items-center justify-between pt-3 mt-3 border-t border-zinc-700">
                                                                         <div className="flex items-center gap-4 text-sm text-zinc-300">
                                                                             <span>
                                                                                 <strong className="text-zinc-200">Costo:</strong> ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -566,41 +525,40 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                                                                             </span>
                                                                         </div>
 
-                                                                        {/* Mostrar estado de nómina o botón crear nómina */}
-                                                                        {(() => {
-                                                                            if (!servicio.User) return null;
+                                                                        {/* Mostrar botones de nómina cuando hay usuario asignado */}
+                                                                        {servicio.User && (
+                                                                            <div className="flex items-center gap-2">
+                                                                                {(() => {
+                                                                                    const infoNomina = obtenerInfoNomina(servicio);
 
-                                                                            const infoNomina = obtenerInfoNomina(servicio);
-
-                                                                            if (infoNomina) {
-                                                                                // Si existe nómina, mostrar solo botón ver (sin monto duplicado)
-                                                                                return (
-                                                                                    <div className="flex items-center gap-2">
-                                                                                        {/* Botón Ver para todos los estados */}
-                                                                                        <button
-                                                                                            onClick={() => {/* TODO: Implementar ver nómina */ }}
-                                                                                            className="flex items-center gap-1 px-3 py-1 text-xs bg-zinc-600 hover:bg-zinc-500 text-white rounded transition-colors"
-                                                                                            title="Ver nómina"
-                                                                                        >
-                                                                                            <FileText className="w-3 h-3" />
-                                                                                            Ver
-                                                                                        </button>
-                                                                                    </div>
-                                                                                );
-                                                                            } else {
-                                                                                // Si no existe nómina, mostrar botón crear
-                                                                                return (
-                                                                                    <button
-                                                                                        onClick={() => handleAutorizarPago(servicio)}
-                                                                                        className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600/80 hover:bg-green-600 text-white rounded transition-colors"
-                                                                                        title="Crear nómina de pago"
-                                                                                    >
-                                                                                        <DollarSign className="w-3 h-3" />
-                                                                                        Pagar
-                                                                                    </button>
-                                                                                );
-                                                                            }
-                                                                        })()}
+                                                                                    if (infoNomina) {
+                                                                                        // Si existe nómina, mostrar botón ver
+                                                                                        return (
+                                                                                            <button
+                                                                                                onClick={() => {/* TODO: Implementar ver nómina */ }}
+                                                                                                className="flex items-center gap-1 px-3 py-1 text-xs bg-zinc-600 hover:bg-zinc-500 text-white rounded transition-colors"
+                                                                                                title="Ver detalles de nómina"
+                                                                                            >
+                                                                                                <FileText className="w-3 h-3" />
+                                                                                                Ver Nómina
+                                                                                            </button>
+                                                                                        );
+                                                                                    } else {
+                                                                                        // Si no existe nómina, mostrar botón crear
+                                                                                        return (
+                                                                                            <button
+                                                                                                onClick={() => handleAutorizarPago(servicio)}
+                                                                                                className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600/80 hover:bg-green-600 text-white rounded transition-colors"
+                                                                                                title="Crear nómina de pago"
+                                                                                            >
+                                                                                                <DollarSign className="w-3 h-3" />
+                                                                                                Crear Nómina
+                                                                                            </button>
+                                                                                        );
+                                                                                    }
+                                                                                })()}
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                 )}
                                                             </div>
