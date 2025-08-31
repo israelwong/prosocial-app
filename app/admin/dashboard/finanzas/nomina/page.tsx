@@ -21,6 +21,7 @@ import {
 import Link from 'next/link';
 import { obtenerResumenNomina } from '@/app/admin/_lib/actions/finanzas';
 import { autorizarPago, cancelarPago, eliminarNomina } from '@/app/admin/_lib/actions/seguimiento/nomina.actions';
+import { toast } from 'sonner';
 
 interface NominaResumen {
     totalPendiente: number;
@@ -59,6 +60,11 @@ export default function NominaPage() {
     const [eliminando, setEliminando] = useState<string | null>(null);
     const [pagosSeleccionados, setPagosSeleccionados] = useState<string[]>([]);
     const [autorizandoTodos, setAutorizandoTodos] = useState(false);
+
+    // Establecer el título de la página
+    useEffect(() => {
+        document.title = 'Nómina - ProSocial Admin';
+    }, []);
 
     // Cargar resumen de nómina
     useEffect(() => {
@@ -106,13 +112,13 @@ export default function NominaPage() {
                 // Recargar datos
                 const resumenData = await obtenerResumenNomina();
                 setResumen(resumenData);
-                alert('Pago autorizado exitosamente');
+                toast.success('Pago autorizado exitosamente');
             } else {
-                alert('Error: No se encontró el ID del evento para este pago');
+                toast.error('Error: No se encontró el ID del evento para este pago');
             }
         } catch (error) {
             console.error('Error al autorizar pago:', error);
-            alert('Error al autorizar el pago');
+            toast.error('Error al autorizar el pago');
         } finally {
             setAutorizando(null);
         }
@@ -131,13 +137,13 @@ export default function NominaPage() {
                     // Recargar datos
                     const resumenData = await obtenerResumenNomina();
                     setResumen(resumenData);
-                    alert('Pago cancelado exitosamente');
+                    toast.success('Pago cancelado exitosamente');
                 } else {
-                    alert('Error: No se encontró el ID del evento para este pago');
+                    toast.error('Error: No se encontró el ID del evento para este pago');
                 }
             } catch (error) {
                 console.error('Error al cancelar pago:', error);
-                alert('Error al cancelar el pago');
+                toast.error('Error al cancelar el pago');
             } finally {
                 setCancelando(null);
             }
@@ -156,10 +162,10 @@ export default function NominaPage() {
                 // Recargar datos
                 const resumenData = await obtenerResumenNomina();
                 setResumen(resumenData);
-                alert('Pago eliminado exitosamente');
+                toast.success('Pago eliminado exitosamente');
             } catch (error) {
                 console.error('Error al eliminar pago:', error);
-                alert('Error al eliminar el pago');
+                toast.error('Error al eliminar el pago');
             } finally {
                 setEliminando(null);
             }
@@ -184,7 +190,7 @@ export default function NominaPage() {
 
     const manejarAutorizarTodos = async () => {
         if (pagosSeleccionados.length === 0) {
-            alert('Selecciona al menos un pago para autorizar');
+            toast.error('Selecciona al menos un pago para autorizar');
             return;
         }
 
@@ -209,10 +215,10 @@ export default function NominaPage() {
                 const resumenData = await obtenerResumenNomina();
                 setResumen(resumenData);
                 setPagosSeleccionados([]);
-                alert(`${pagosSeleccionados.length} pagos autorizados exitosamente`);
+                toast.success(`${pagosSeleccionados.length} pagos autorizados exitosamente`);
             } catch (error) {
                 console.error('Error al autorizar pagos:', error);
-                alert('Error al autorizar algunos pagos');
+                toast.error('Error al autorizar algunos pagos');
             } finally {
                 setAutorizandoTodos(false);
             }

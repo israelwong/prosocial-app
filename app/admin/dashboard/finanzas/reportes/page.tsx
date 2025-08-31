@@ -341,45 +341,7 @@ export default function ReportesPage() {
                 </CardContent>
             </Card>
 
-            {/* Indicadores de salud financiera */}
-            <Card className="bg-zinc-900 border-zinc-800">
-                <CardHeader>
-                    <CardTitle className="text-white">Indicadores de Salud Financiera</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="text-center space-y-2">
-                            <div className="text-3xl font-bold text-blue-500">
-                                {resumen.balance.porcentajeUtilidad.toFixed(1)}%
-                            </div>
-                            <p className="text-zinc-400">Margen de Utilidad</p>
-                            <Badge variant={resumen.balance.porcentajeUtilidad >= 20 ? "success" : resumen.balance.porcentajeUtilidad >= 10 ? "warning" : "destructive"}>
-                                {resumen.balance.porcentajeUtilidad >= 20 ? "Excelente" : resumen.balance.porcentajeUtilidad >= 10 ? "Bueno" : "Mejorable"}
-                            </Badge>
-                        </div>
 
-                        <div className="text-center space-y-2">
-                            <div className="text-3xl font-bold text-green-500">
-                                {resumen.ingresos.total > 0 ? ((resumen.ingresos.pagosConfirmados / resumen.ingresos.total) * 100).toFixed(1) : 0}%
-                            </div>
-                            <p className="text-zinc-400">Ingresos Confirmados</p>
-                            <Badge variant={((resumen.ingresos.pagosConfirmados / resumen.ingresos.total) * 100) >= 80 ? "success" : "warning"}>
-                                {((resumen.ingresos.pagosConfirmados / resumen.ingresos.total) * 100) >= 80 ? "Estable" : "Riesgo"}
-                            </Badge>
-                        </div>
-
-                        <div className="text-center space-y-2">
-                            <div className="text-3xl font-bold text-purple-500">
-                                {resumen.ingresos.total > 0 ? (resumen.egresos.total / resumen.ingresos.total).toFixed(2) : 0}
-                            </div>
-                            <p className="text-zinc-400">Ratio Egresos/Ingresos</p>
-                            <Badge variant={(resumen.egresos.total / resumen.ingresos.total) <= 0.7 ? "success" : (resumen.egresos.total / resumen.ingresos.total) <= 0.9 ? "warning" : "destructive"}>
-                                {(resumen.egresos.total / resumen.ingresos.total) <= 0.7 ? "Óptimo" : (resumen.egresos.total / resumen.ingresos.total) <= 0.9 ? "Aceptable" : "Alto"}
-                            </Badge>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     );
 }
