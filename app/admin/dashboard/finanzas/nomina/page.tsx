@@ -1,50 +1,27 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Button } from '@/app/components/ui/button';
-import { Badge } from '@/app/components/ui/badge';
+'use client'
+import React, { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import {
-    Users,
+    CheckCircle2,
     Clock,
-    CheckCircle,
-    AlertCircle,
-    Calendar,
-    DollarSign,
-    Filter,
-    Download,
-    Trash2,
+    Eye,
+    CreditCard,
+    HandCoins,
     X,
     Check,
-    CheckSquare
-} from 'lucide-react';
-import Link from 'next/link';
-import { obtenerResumenNomina } from '@/app/admin/_lib/actions/finanzas';
-import { autorizarPago, cancelarPago, eliminarNomina } from '@/app/admin/_lib/actions/seguimiento/nomina.actions';
-import { toast } from 'sonner';
-
-interface NominaResumen {
-    totalPendiente: number;
-    totalAutorizado: number;
-    totalPagado: number;
-    cantidadPendiente: number;
-    cantidadAutorizada: number;
-    cantidadPagada: number;
-    proximosPagos: Array<{
-        id: string;
-        usuario: string;
-        monto: number;
-        concepto: string;
-        fechaAsignacion: Date;
-        fechaPago?: Date;
-        cliente?: string;
-        evento?: string;
-        fechaEvento?: Date;
-        eventoId?: string;
-    }>;
-}
+    AlertCircle
+} from 'lucide-react'
+import { obtenerResumenNomina } from '@/app/admin/_lib/actions/finanzas/reportes.actions'
+import { autorizarPago, marcarComoPagado, autorizarYPagar } from '@/app/admin/_lib/actions/seguimiento/nomina.actions'
+import { getCurrentUserId } from '@/app/admin/_lib/utils/auth.utils'
+import { Button } from '@/app/components/ui/button'
+import { Badge } from '@/app/components/ui/badge'
+import { NOMINA_STATUS } from '@/app/admin/_lib/constants/status'
+import { NominaResumen } from '@/app/admin/_lib/actions/finanzas/finanzas.schemas'
+import { useRouter } from 'next/navigation'
 
 export default function NominaPage() {
+    const router = useRouter()
     const [resumen, setResumen] = useState<NominaResumen>({
         totalPendiente: 0,
         totalAutorizado: 0,
@@ -53,500 +30,560 @@ export default function NominaPage() {
         cantidadAutorizada: 0,
         cantidadPagada: 0,
         proximosPagos: []
-    });
-    const [isLoading, setIsLoading] = useState(true);
-    const [autorizando, setAutorizando] = useState<string | null>(null);
-    const [cancelando, setCancelando] = useState<string | null>(null);
-    const [eliminando, setEliminando] = useState<string | null>(null);
-    const [pagosSeleccionados, setPagosSeleccionados] = useState<string[]>([]);
-    const [autorizandoTodos, setAutorizandoTodos] = useState(false);
+    })
+    const [loading, setLoading] = useState(true)
+    const [pagosSeleccionados, setPagosSeleccionados] = useState<string[]>([])
+    const [procesando, setProcesando] = useState<string[]>([])
+    const [filtroActivo, setFiltroActivo] = useState<'todos' | 'pendientes' | 'autorizados' | 'pagados'>('todos')
 
-    // Establecer el título de la página
     useEffect(() => {
-        document.title = 'Nómina - ProSocial Admin';
-    }, []);
+        cargarResumen()
+    }, [])
 
-    // Cargar resumen de nómina
     useEffect(() => {
-        const cargarResumen = async () => {
-            try {
-                setIsLoading(true);
-                // Limpiar selecciones al recargar
-                setPagosSeleccionados([]);
-                const resumenData = await obtenerResumenNomina();
-                setResumen(resumenData);
-            } catch (error) {
-                console.error('Error al cargar resumen de nómina:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+        document.title = 'Gestión de Nómina - ProSocial'
+    }, [])
 
-        cargarResumen();
-    }, []);
-
-    const formatearMoneda = (amount: number) => {
-        return new Intl.NumberFormat('es-MX', {
-            style: 'currency',
-            currency: 'MXN'
-        }).format(amount);
-    };
-
-    const formatearFecha = (fecha: Date | string) => {
-        const date = typeof fecha === 'string' ? new Date(fecha) : fecha;
-        return date.toLocaleDateString('es-MX', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-        });
-    };
-
-    const manejarAutorizacion = async (nominaId: string, eventoId?: string) => {
+    const cargarResumen = async () => {
         try {
-            setAutorizando(nominaId);
-            if (eventoId) {
-                // TODO: Obtener el userId del usuario actual logueado
-                const currentUserId = 'admin-user-id'; // Placeholder
-                await autorizarPago(nominaId, currentUserId, eventoId);
-                // Recargar datos
-                const resumenData = await obtenerResumenNomina();
-                setResumen(resumenData);
-                toast.success('Pago autorizado exitosamente');
-            } else {
-                toast.error('Error: No se encontró el ID del evento para este pago');
-            }
+            setLoading(true)
+            const data = await obtenerResumenNomina()
+            setResumen(data)
         } catch (error) {
-            console.error('Error al autorizar pago:', error);
-            toast.error('Error al autorizar el pago');
+            console.error('Error al cargar resumen:', error)
+            toast.error('Error al cargar el resumen de nómina')
         } finally {
-            setAutorizando(null);
+            setLoading(false)
         }
-    };
+    }
 
-    const manejarCancelacion = async (nominaId: string, eventoId?: string, concepto?: string) => {
-        const confirmacion = confirm(
-            `¿Estás seguro de que deseas cancelar el pago "${concepto}"?\n\nEsta acción cambiará el estado a cancelado.`
-        );
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case NOMINA_STATUS.PENDIENTE:
+                return (
+                    <Badge variant="secondary" className="bg-yellow-900 text-yellow-200 border-yellow-700">
+                        <Clock className="w-3 h-3 mr-1" />
+                        Pendiente
+                    </Badge>
+                )
+            case NOMINA_STATUS.AUTORIZADO:
+                return (
+                    <Badge variant="secondary" className="bg-blue-900 text-blue-200 border-blue-700">
+                        <AlertCircle className="w-3 h-3 mr-1" />
+                        Autorizado
+                    </Badge>
+                )
+            case NOMINA_STATUS.PAGADO:
+                return (
+                    <Badge variant="secondary" className="bg-green-900 text-green-200 border-green-700">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Pagado
+                    </Badge>
+                )
+            default:
+                return (
+                    <Badge variant="outline" className="border-zinc-600 text-zinc-400">
+                        Desconocido
+                    </Badge>
+                )
+        }
+    }
 
-        if (confirmacion) {
-            try {
-                setCancelando(nominaId);
-                if (eventoId) {
-                    await cancelarPago(nominaId, eventoId);
-                    // Recargar datos
-                    const resumenData = await obtenerResumenNomina();
-                    setResumen(resumenData);
-                    toast.success('Pago cancelado exitosamente');
-                } else {
-                    toast.error('Error: No se encontró el ID del evento para este pago');
-                }
-            } catch (error) {
-                console.error('Error al cancelar pago:', error);
-                toast.error('Error al cancelar el pago');
-            } finally {
-                setCancelando(null);
+    // Función para actualizar un pago específico en el estado local
+    const actualizarPagoLocal = (pagoId: string, nuevoStatus: string) => {
+        setResumen(prev => {
+            const nuevosProximosPagos = prev.proximosPagos.map(pago =>
+                pago.id === pagoId
+                    ? { ...pago, status: nuevoStatus }
+                    : pago
+            )
+
+            // Recalcular totales y cantidades
+            const pendientes = nuevosProximosPagos.filter(p => p.status === NOMINA_STATUS.PENDIENTE)
+            const autorizados = nuevosProximosPagos.filter(p => p.status === NOMINA_STATUS.AUTORIZADO)
+            const pagados = nuevosProximosPagos.filter(p => p.status === NOMINA_STATUS.PAGADO)
+
+            return {
+                ...prev,
+                proximosPagos: nuevosProximosPagos,
+                cantidadPendiente: pendientes.length,
+                cantidadAutorizada: autorizados.length,
+                cantidadPagada: pagados.length,
+                totalPendiente: pendientes.reduce((sum, p) => sum + p.monto, 0),
+                totalAutorizado: autorizados.reduce((sum, p) => sum + p.monto, 0),
+                totalPagado: pagados.reduce((sum, p) => sum + p.monto, 0),
             }
-        }
-    };
+        })
+    }
 
-    const manejarEliminacion = async (nominaId: string, concepto?: string) => {
-        const confirmacion = confirm(
-            `¿Estás seguro de que deseas eliminar permanentemente el pago "${concepto}"?\n\nEsta acción no se puede deshacer.`
-        );
-
-        if (confirmacion) {
-            try {
-                setEliminando(nominaId);
-                await eliminarNomina(nominaId);
-                // Recargar datos
-                const resumenData = await obtenerResumenNomina();
-                setResumen(resumenData);
-                toast.success('Pago eliminado exitosamente');
-            } catch (error) {
-                console.error('Error al eliminar pago:', error);
-                toast.error('Error al eliminar el pago');
-            } finally {
-                setEliminando(null);
+    const handleAutorizar = async (pagoId: string, eventoId?: string) => {
+        try {
+            if (!eventoId) {
+                toast.error('ID de evento no encontrado')
+                return
             }
-        }
-    };
 
-    const manejarSeleccionPago = (pagoId: string) => {
+            const currentUserId = getCurrentUserId()
+            if (!currentUserId) {
+                toast.error('Error: No se pudo obtener la información del usuario actual')
+                return
+            }
+
+            setProcesando(prev => [...prev, pagoId])
+            await autorizarPago(pagoId, currentUserId, eventoId)
+            toast.success('Pago autorizado correctamente')
+
+            // Actualizar estado local en lugar de recargar todo
+            actualizarPagoLocal(pagoId, NOMINA_STATUS.AUTORIZADO)
+        } catch (error) {
+            console.error('Error al autorizar pago:', error)
+            toast.error('Error al autorizar el pago')
+        } finally {
+            setProcesando(prev => prev.filter(id => id !== pagoId))
+        }
+    }
+
+    const handleMarcarPagado = async (pagoId: string, eventoId?: string) => {
+        try {
+            if (!eventoId) {
+                toast.error('ID de evento no encontrado')
+                return
+            }
+
+            const currentUserId = getCurrentUserId()
+            if (!currentUserId) {
+                toast.error('Error: No se pudo obtener la información del usuario actual')
+                return
+            }
+
+            setProcesando(prev => [...prev, pagoId])
+            await marcarComoPagado(pagoId, currentUserId, eventoId)
+            toast.success('Pago marcado como pagado')
+
+            // Actualizar estado local en lugar de recargar todo
+            actualizarPagoLocal(pagoId, NOMINA_STATUS.PAGADO)
+        } catch (error) {
+            console.error('Error al marcar como pagado:', error)
+            toast.error('Error al marcar como pagado')
+        } finally {
+            setProcesando(prev => prev.filter(id => id !== pagoId))
+        }
+    }
+
+    const handleAutorizarYPagar = async (pagoId: string, eventoId?: string) => {
+        try {
+            if (!eventoId) {
+                toast.error('ID de evento no encontrado')
+                return
+            }
+
+            const currentUserId = getCurrentUserId()
+            if (!currentUserId) {
+                toast.error('Error: No se pudo obtener la información del usuario actual')
+                return
+            }
+
+            setProcesando(prev => [...prev, pagoId])
+            await autorizarYPagar(pagoId, currentUserId, eventoId)
+            toast.success('Pago autorizado y marcado como pagado')
+
+            // Actualizar estado local en lugar de recargar todo
+            actualizarPagoLocal(pagoId, NOMINA_STATUS.PAGADO)
+        } catch (error) {
+            console.error('Error al autorizar y pagar:', error)
+            toast.error('Error al autorizar y pagar')
+        } finally {
+            setProcesando(prev => prev.filter(id => id !== pagoId))
+        }
+    }
+
+    const handleVerDetalle = (eventoId: string) => {
+        if (eventoId) {
+            router.push(`/admin/dashboard/seguimiento/${eventoId}`)
+        }
+    }
+
+    const toggleSeleccionTodos = () => {
+        const pagosPendientesFiltrados = pagosFiltrados.filter(p => p.status === NOMINA_STATUS.PENDIENTE)
+        if (pagosSeleccionados.length === pagosPendientesFiltrados.length && pagosPendientesFiltrados.length > 0) {
+            setPagosSeleccionados([])
+        } else {
+            setPagosSeleccionados(pagosPendientesFiltrados.map(p => p.id))
+        }
+    }
+
+    const toggleSeleccionPago = (pagoId: string) => {
         setPagosSeleccionados(prev =>
             prev.includes(pagoId)
                 ? prev.filter(id => id !== pagoId)
                 : [...prev, pagoId]
-        );
-    };
+        )
+    }
 
-    const manejarSeleccionarTodos = () => {
-        setPagosSeleccionados(
-            pagosSeleccionados.length === resumen.proximosPagos.length
-                ? []
-                : resumen.proximosPagos.map(p => p.id)
-        );
-    };
-
-    const manejarAutorizarTodos = async () => {
+    const handleAccionMasiva = async (accion: 'autorizar' | 'autorizar_y_pagar') => {
         if (pagosSeleccionados.length === 0) {
-            toast.error('Selecciona al menos un pago para autorizar');
-            return;
+            toast.error('Selecciona al menos un pago')
+            return
         }
 
-        const confirmacion = confirm(
-            `¿Estás seguro de que deseas autorizar ${pagosSeleccionados.length} pagos seleccionados?`
-        );
+        const currentUserId = getCurrentUserId()
+        if (!currentUserId) {
+            toast.error('Error: No se pudo obtener la información del usuario actual')
+            return
+        }
 
-        if (confirmacion) {
-            try {
-                setAutorizandoTodos(true);
+        try {
+            setProcesando(prev => [...prev, ...pagosSeleccionados])
 
-                // Autorizar uno por uno
-                for (const pagoId of pagosSeleccionados) {
-                    const pago = resumen.proximosPagos.find(p => p.id === pagoId);
-                    if (pago && pago.eventoId) {
-                        const currentUserId = 'admin-user-id'; // Placeholder
-                        await autorizarPago(pagoId, currentUserId, pago.eventoId);
+            for (const pagoId of pagosSeleccionados) {
+                const pago = resumen.proximosPagos.find(p => p.id === pagoId)
+                if (pago && pago.eventoId) {
+                    if (accion === 'autorizar') {
+                        await autorizarPago(pagoId, currentUserId, pago.eventoId)
+                        // Actualizar estado local
+                        actualizarPagoLocal(pagoId, NOMINA_STATUS.AUTORIZADO)
+                    } else {
+                        await autorizarYPagar(pagoId, currentUserId, pago.eventoId)
+                        // Actualizar estado local
+                        actualizarPagoLocal(pagoId, NOMINA_STATUS.PAGADO)
                     }
                 }
-
-                // Recargar datos
-                const resumenData = await obtenerResumenNomina();
-                setResumen(resumenData);
-                setPagosSeleccionados([]);
-                toast.success(`${pagosSeleccionados.length} pagos autorizados exitosamente`);
-            } catch (error) {
-                console.error('Error al autorizar pagos:', error);
-                toast.error('Error al autorizar algunos pagos');
-            } finally {
-                setAutorizandoTodos(false);
             }
-        }
-    };
 
-    if (isLoading) {
+            toast.success(`${pagosSeleccionados.length} pagos procesados correctamente`)
+            setPagosSeleccionados([])
+        } catch (error) {
+            console.error('Error en acción masiva:', error)
+            toast.error('Error al procesar los pagos')
+        } finally {
+            setProcesando([])
+        }
+    }
+
+    const pagosPendientes = resumen.proximosPagos.filter(p => p.status === NOMINA_STATUS.PENDIENTE)
+    const pagosAutorizados = resumen.proximosPagos.filter(p => p.status === NOMINA_STATUS.AUTORIZADO)
+    const pagosPagados = resumen.proximosPagos.filter(p => p.status === NOMINA_STATUS.PAGADO)
+
+    // Función para obtener pagos filtrados
+    const getPagosFiltrados = () => {
+        switch (filtroActivo) {
+            case 'pendientes':
+                return pagosPendientes
+            case 'autorizados':
+                return pagosAutorizados
+            case 'pagados':
+                return pagosPagados
+            default:
+                return resumen.proximosPagos
+        }
+    }
+
+    const pagosFiltrados = getPagosFiltrados()
+
+    if (loading) {
         return (
-            <div className="space-y-6 animate-pulse">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="h-32 bg-zinc-800 rounded-lg"></div>
-                    ))}
+            <div className="p-6 bg-zinc-900 min-h-screen">
+                <h1 className="text-2xl font-bold mb-6 text-white">Gestión de Nómina</h1>
+                <div className="animate-pulse space-y-4">
+                    <div className="h-32 bg-zinc-800 rounded"></div>
+                    <div className="h-64 bg-zinc-800 rounded"></div>
                 </div>
-                <div className="h-64 bg-zinc-800 rounded-lg"></div>
             </div>
-        );
+        )
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-white">
-                        Gestión de Nómina
-                    </h1>
-                    <p className="text-zinc-400">
-                        Administración de pagos al personal
-                    </p>
-                </div>
-
-                <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                        <Filter className="w-4 h-4 mr-2" />
-                        Filtros
+        <div className="p-6 space-y-6 bg-zinc-900 min-h-screen">
+            <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-white">Gestión de Nómina</h1>
+                {filtroActivo !== 'todos' && (
+                    <Button
+                        onClick={() => setFiltroActivo('todos')}
+                        variant="ghost"
+                        size="sm"
+                        className="text-zinc-400 hover:text-white"
+                    >
+                        <X className="w-4 h-4 mr-1" />
+                        Mostrar Todos
                     </Button>
-                    <Button variant="outline" size="sm">
-                        <Download className="w-4 h-4 mr-2" />
-                        Reporte
-                    </Button>
-                </div>
+                )}
             </div>
 
-            {/* Métricas de nómina */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Pendientes */}
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">
-                            Pagos Pendientes
-                        </CardTitle>
-                        <Clock className="h-4 w-4 text-yellow-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-yellow-500">
-                            {formatearMoneda(resumen.totalPendiente)}
-                        </div>
-                        <p className="text-xs text-yellow-600 mt-1">
-                            {resumen.cantidadPendiente} personas
-                        </p>
-                    </CardContent>
-                </Card>
-
-                {/* Autorizados */}
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">
-                            Autorizados
-                        </CardTitle>
-                        <CheckCircle className="h-4 w-4 text-blue-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-blue-500">
-                            {formatearMoneda(resumen.totalAutorizado)}
-                        </div>
-                        <p className="text-xs text-blue-600 mt-1">
-                            {resumen.cantidadAutorizada} personas
-                        </p>
-                    </CardContent>
-                </Card>
-
-                {/* Pagados */}
-                <Card className="bg-zinc-900 border-zinc-800">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">
-                            Pagados
-                        </CardTitle>
-                        <DollarSign className="h-4 w-4 text-green-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-500">
-                            {formatearMoneda(resumen.totalPagado)}
-                        </div>
-                        <p className="text-xs text-green-600 mt-1">
-                            {resumen.cantidadPagada} personas
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Alertas */}
-            {resumen.cantidadPendiente > 0 && (
-                <Card className="bg-yellow-900/20 border-yellow-600">
-                    <CardContent className="pt-6">
-                        <div className="flex items-center gap-2">
-                            <AlertCircle className="h-5 w-5 text-yellow-400" />
-                            <span className="text-yellow-200">
-                                Hay {resumen.cantidadPendiente} pagos de nómina pendientes de autorización
-                            </span>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* Próximos pagos */}
-            <Card className="bg-zinc-900 border-zinc-800">
-                <CardHeader>
+            {/* Resumen de estado - Ahora clicables */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div
+                    className={`cursor-pointer transition-all duration-200 border-l-4 p-4 rounded ${filtroActivo === 'pendientes'
+                        ? 'bg-yellow-900/30 border-yellow-400 ring-2 ring-yellow-500'
+                        : 'bg-zinc-800 border-yellow-500 hover:bg-yellow-900/20'
+                        }`}
+                    onClick={() => setFiltroActivo(filtroActivo === 'pendientes' ? 'todos' : 'pendientes')}
+                >
                     <div className="flex items-center justify-between">
-                        <CardTitle className="text-white">Próximos Pagos Pendientes</CardTitle>
-                        {pagosSeleccionados.length > 0 && (
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-zinc-400">
-                                    {pagosSeleccionados.length} seleccionados
+                        <div>
+                            <p className="text-sm text-yellow-400">Pendientes</p>
+                            <p className="text-2xl font-bold text-yellow-300">{resumen.cantidadPendiente}</p>
+                        </div>
+                        <Clock className="w-8 h-8 text-yellow-500" />
+                    </div>
+                    <p className="text-sm text-yellow-200 mt-2">
+                        ${resumen.totalPendiente.toLocaleString('es-MX')}
+                    </p>
+                    {filtroActivo === 'pendientes' && (
+                        <p className="text-xs text-yellow-300 mt-1 opacity-75">
+                            ← Filtro activo
+                        </p>
+                    )}
+                </div>
+
+                <div
+                    className={`cursor-pointer transition-all duration-200 border-l-4 p-4 rounded ${filtroActivo === 'autorizados'
+                        ? 'bg-blue-900/30 border-blue-400 ring-2 ring-blue-500'
+                        : 'bg-zinc-800 border-blue-500 hover:bg-blue-900/20'
+                        }`}
+                    onClick={() => setFiltroActivo(filtroActivo === 'autorizados' ? 'todos' : 'autorizados')}
+                >
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-blue-400">Autorizados</p>
+                            <p className="text-2xl font-bold text-blue-300">{resumen.cantidadAutorizada}</p>
+                        </div>
+                        <AlertCircle className="w-8 h-8 text-blue-500" />
+                    </div>
+                    <p className="text-sm text-blue-200 mt-2">
+                        ${resumen.totalAutorizado.toLocaleString('es-MX')}
+                    </p>
+                    {filtroActivo === 'autorizados' && (
+                        <p className="text-xs text-blue-300 mt-1 opacity-75">
+                            ← Filtro activo
+                        </p>
+                    )}
+                </div>
+
+                <div
+                    className={`cursor-pointer transition-all duration-200 border-l-4 p-4 rounded ${filtroActivo === 'pagados'
+                        ? 'bg-green-900/30 border-green-400 ring-2 ring-green-500'
+                        : 'bg-zinc-800 border-green-500 hover:bg-green-900/20'
+                        }`}
+                    onClick={() => setFiltroActivo(filtroActivo === 'pagados' ? 'todos' : 'pagados')}
+                >
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-green-400">Pagados</p>
+                            <p className="text-2xl font-bold text-green-300">{resumen.cantidadPagada}</p>
+                        </div>
+                        <CheckCircle2 className="w-8 h-8 text-green-500" />
+                    </div>
+                    <p className="text-sm text-green-200 mt-2">
+                        ${resumen.totalPagado.toLocaleString('es-MX')}
+                    </p>
+                    {filtroActivo === 'pagados' && (
+                        <p className="text-xs text-green-300 mt-1 opacity-75">
+                            ← Filtro activo
+                        </p>
+                    )}
+                </div>
+            </div>
+
+            {/* Acciones masivas */}
+            {pagosPendientes.length > 0 && filtroActivo !== 'pagados' && filtroActivo !== 'autorizados' && (
+                <div className="bg-zinc-800 p-4 rounded-lg border border-zinc-700">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-4">
+                            <label className="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    checked={pagosSeleccionados.length === pagosFiltrados.filter(p => p.status === NOMINA_STATUS.PENDIENTE).length && pagosFiltrados.filter(p => p.status === NOMINA_STATUS.PENDIENTE).length > 0}
+                                    onChange={toggleSeleccionTodos}
+                                    className="rounded border-zinc-600 bg-zinc-700 text-blue-500"
+                                />
+                                <span className="text-sm text-zinc-300">
+                                    Seleccionar todos los pendientes ({pagosFiltrados.filter(p => p.status === NOMINA_STATUS.PENDIENTE).length})
                                 </span>
+                            </label>
+                        </div>
+                        {pagosSeleccionados.length > 0 && (
+                            <div className="flex space-x-2">
                                 <Button
+                                    onClick={() => handleAccionMasiva('autorizar')}
+                                    disabled={procesando.length > 0}
                                     variant="outline"
                                     size="sm"
-                                    onClick={manejarAutorizarTodos}
-                                    disabled={autorizandoTodos}
                                     className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
                                 >
-                                    {autorizandoTodos ? (
-                                        <>
-                                            <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                            Autorizando...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <CheckSquare className="w-4 h-4 mr-2" />
-                                            Autorizar Seleccionados
-                                        </>
-                                    )}
+                                    <Check className="w-4 h-4 mr-1" />
+                                    Autorizar ({pagosSeleccionados.length})
+                                </Button>
+                                <Button
+                                    onClick={() => handleAccionMasiva('autorizar_y_pagar')}
+                                    disabled={procesando.length > 0}
+                                    size="sm"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                    <HandCoins className="w-4 h-4 mr-1" />
+                                    Autorizar y Pagar ({pagosSeleccionados.length})
                                 </Button>
                             </div>
                         )}
                     </div>
-                    {resumen.proximosPagos.length > 0 && (
-                        <div className="flex items-center gap-2 mt-2">
-                            <input
-                                type="checkbox"
-                                checked={pagosSeleccionados.length === resumen.proximosPagos.length}
-                                onChange={manejarSeleccionarTodos}
-                                className="rounded"
-                            />
-                            <span className="text-sm text-zinc-400">
-                                Seleccionar todos
-                            </span>
-                        </div>
-                    )}
-                </CardHeader>
-                <CardContent>
-                    {resumen.proximosPagos.length > 0 ? (
-                        <div className="space-y-4">
-                            {resumen.proximosPagos.map(pago => (
-                                <div key={pago.id} className="flex items-center gap-3 p-6 bg-zinc-800 rounded-lg border border-zinc-700 hover:border-zinc-600 transition-colors">
-                                    <input
-                                        type="checkbox"
-                                        checked={pagosSeleccionados.includes(pago.id)}
-                                        onChange={() => manejarSeleccionPago(pago.id)}
-                                        className="rounded"
-                                    />
-                                    <div className="flex-1 flex items-center justify-between">
-                                        <div className="flex-1">
-                                            {/* Header: Cliente - Evento - Fecha Evento */}
-                                            <div className="flex items-center gap-3 mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <h3 className="font-medium text-white text-lg">
-                                                        {pago.cliente}
-                                                    </h3>
-                                                    <span className="text-zinc-500">-</span>
-                                                    <span className="text-zinc-300">
-                                                        {pago.evento}
-                                                    </span>
-                                                    {pago.fechaEvento && (
-                                                        <>
-                                                            <span className="text-zinc-500">-</span>
-                                                            <span className="text-zinc-400 text-sm">
-                                                                {formatearFecha(pago.fechaEvento)}
-                                                            </span>
-                                                        </>
-                                                    )}
-                                                </div>
-                                                <Badge variant="warning">Pendiente</Badge>
-                                            </div>
+                </div>
+            )}
 
-                                            {/* Información del concepto y usuario */}
-                                            <div className="text-sm text-zinc-400 space-y-2 mb-3">
-                                                <p><span className="font-medium">Concepto:</span> {pago.concepto}</p>
-                                                <p><span className="font-medium">Personal:</span> {pago.usuario}</p>
-                                            </div>
+            {/* Indicador de filtro activo */}
+            {filtroActivo !== 'todos' && (
+                <div className="bg-zinc-800 p-3 rounded-lg border border-zinc-700 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                        <div className={`w-3 h-3 rounded-full ${filtroActivo === 'pendientes' ? 'bg-yellow-500' :
+                            filtroActivo === 'autorizados' ? 'bg-blue-500' : 'bg-green-500'
+                            }`}></div>
+                        <span className="text-zinc-300 text-sm">
+                            Mostrando solo pagos <strong className="text-white capitalize">{filtroActivo}</strong>
+                            ({pagosFiltrados.length} de {resumen.proximosPagos.length})
+                        </span>
+                    </div>
+                    <Button
+                        onClick={() => setFiltroActivo('todos')}
+                        variant="ghost"
+                        size="sm"
+                        className="text-zinc-400 hover:text-white h-6"
+                    >
+                        Limpiar filtro
+                    </Button>
+                </div>
+            )}
 
-                                            {/* Fechas */}
-                                            <div className="flex items-center gap-6 text-sm text-zinc-500">
-                                                <div className="flex items-center gap-1">
-                                                    <Calendar className="w-4 h-4" />
-                                                    <span>Asignado: {formatearFecha(pago.fechaAsignacion)}</span>
+            {/* Lista de pagos */}
+            <div className="bg-zinc-800 rounded-lg border border-zinc-700 shadow">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-zinc-700 border-b border-zinc-600">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                                    Usuario
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                                    Evento
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                                    Concepto
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                                    Monto
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase tracking-wider">
+                                    Acciones
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-zinc-800 divide-y divide-zinc-700">
+                            {pagosFiltrados.length > 0 ? (
+                                pagosFiltrados.map(pago => (
+                                    <tr key={pago.id} className="hover:bg-zinc-700">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                {pago.status === NOMINA_STATUS.PENDIENTE && (
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={pagosSeleccionados.includes(pago.id)}
+                                                        onChange={() => toggleSeleccionPago(pago.id)}
+                                                        className="mr-3 rounded border-zinc-600 bg-zinc-700 text-blue-500"
+                                                    />
+                                                )}
+                                                <div>
+                                                    <div className="text-sm font-medium text-white">
+                                                        {pago.usuario}
+                                                    </div>
                                                 </div>
-                                                {pago.fechaPago && (
-                                                    <div className="flex items-center gap-1">
-                                                        <Check className="w-4 h-4" />
-                                                        <span>Pagado: {formatearFecha(pago.fechaPago)}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-white">{pago.evento}</div>
+                                            <div className="text-sm text-zinc-400">{pago.cliente}</div>
+                                            {pago.fechaEvento && (
+                                                <div className="text-xs text-zinc-500">
+                                                    {new Date(pago.fechaEvento).toLocaleDateString('es-MX')}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
+                                            {pago.concepto}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-400">
+                                            ${pago.monto.toLocaleString('es-MX')}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {getStatusBadge(pago.status)}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                            <div className="flex items-center space-x-2">
+                                                {pago.status === NOMINA_STATUS.PENDIENTE && (
+                                                    <>
+                                                        <Button
+                                                            onClick={() => handleAutorizar(pago.id, pago.eventoId)}
+                                                            disabled={procesando.includes(pago.id)}
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
+                                                        >
+                                                            <Check className="w-4 h-4 mr-1" />
+                                                            Autorizar
+                                                        </Button>
+                                                        <Button
+                                                            onClick={() => handleAutorizarYPagar(pago.id, pago.eventoId)}
+                                                            disabled={procesando.includes(pago.id)}
+                                                            size="sm"
+                                                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                                                        >
+                                                            <HandCoins className="w-4 h-4 mr-1" />
+                                                            Autorizar y Pagar
+                                                        </Button>
+                                                    </>
+                                                )}
+                                                {pago.status === NOMINA_STATUS.AUTORIZADO && (
+                                                    <Button
+                                                        onClick={() => handleMarcarPagado(pago.id, pago.eventoId)}
+                                                        disabled={procesando.includes(pago.id)}
+                                                        size="sm"
+                                                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                                                    >
+                                                        <CreditCard className="w-4 h-4 mr-1" />
+                                                        Marcar como Pagado
+                                                    </Button>
+                                                )}
+                                                {pago.status === NOMINA_STATUS.PAGADO && (
+                                                    <div className="text-sm text-green-400 flex items-center">
+                                                        <CheckCircle2 className="w-4 h-4 mr-1" />
+                                                        Completado
                                                     </div>
                                                 )}
-                                            </div>
-                                        </div>
-                                        <div className="text-right space-y-3">
-                                            <div className="p-3 rounded-lg">
-                                                <p className="text-2xl font-bold text-green-400">
-                                                    {formatearMoneda(pago.monto)}
-                                                </p>
-                                                <p className="text-xs text-zinc-500">Monto a pagar</p>
-                                            </div>
-                                            <div className="flex gap-2 flex-wrap justify-end">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => manejarAutorizacion(pago.id, pago.eventoId)}
-                                                    disabled={autorizando === pago.id}
-                                                    className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
-                                                >
-                                                    {autorizando === pago.id ? (
-                                                        <>
-                                                            <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                                            Autorizando...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Check className="w-4 h-4 mr-2" />
-                                                            Autorizar
-                                                        </>
-                                                    )}
-                                                </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => manejarCancelacion(pago.id, pago.eventoId, pago.concepto)}
-                                                    disabled={cancelando === pago.id}
-                                                    className="border-orange-600 text-orange-400 hover:bg-orange-600 hover:text-white"
-                                                >
-                                                    {cancelando === pago.id ? (
-                                                        <>
-                                                            <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                                            Cancelando...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <X className="w-4 h-4 mr-2" />
-                                                            Cancelar
-                                                        </>
-                                                    )}
-                                                </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => manejarEliminacion(pago.id, pago.concepto)}
-                                                    disabled={eliminando === pago.id}
-                                                    className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
-                                                >
-                                                    {eliminando === pago.id ? (
-                                                        <>
-                                                            <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                                            Eliminando...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Trash2 className="w-4 h-4 mr-2" />
-                                                            Eliminar
-                                                        </>
-                                                    )}
-                                                </Button>
-                                                <Link href={`/admin/dashboard/finanzas/nomina/${pago.id}`}>
-                                                    <Button variant="outline" size="sm">
-                                                        Ver detalle
+                                                {pago.eventoId && (
+                                                    <Button
+                                                        onClick={() => handleVerDetalle(pago.eventoId!)}
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-zinc-400 hover:text-white hover:bg-zinc-700"
+                                                    >
+                                                        <Eye className="w-4 h-4 mr-1" />
+                                                        Ver Detalle
                                                     </Button>
-                                                </Link>
+                                                )}
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-12">
-                            <Users className="h-16 w-16 mx-auto mb-4 text-zinc-600" />
-                            <h3 className="text-lg font-medium text-zinc-300 mb-2">
-                                No hay pagos pendientes
-                            </h3>
-                            <p className="text-zinc-500">
-                                Todos los pagos de nómina están al día
-                            </p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* Acciones rápidas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Link href="/admin/dashboard/finanzas/nomina/historial">
-                    <Card className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer">
-                        <CardContent className="p-6 text-center">
-                            <Calendar className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-                            <h3 className="font-semibold text-white">Historial de Pagos</h3>
-                            <p className="text-sm text-zinc-400">Ver pagos anteriores</p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
-                <Link href="/admin/dashboard/seguimiento">
-                    <Card className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer">
-                        <CardContent className="p-6 text-center">
-                            <Users className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                            <h3 className="font-semibold text-white">Gestión de Eventos</h3>
-                            <p className="text-sm text-zinc-400">Asignar servicios</p>
-                        </CardContent>
-                    </Card>
-                </Link>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-4 text-center text-zinc-500">
+                                        No hay pagos de nómina registrados
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    );
+    )
 }

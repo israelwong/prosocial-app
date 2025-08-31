@@ -298,11 +298,9 @@ export async function obtenerResumenNomina(
             }
         });
 
-        // Próximos pagos (pendientes más recientes) con información completa
+        // Próximos pagos con todos los estados para mostrar en la interfaz
         const proximosPagos = await prisma.nomina.findMany({
-            where: {
-                status: 'pendiente'
-            },
+            where: fechaConditions,
             include: {
                 User: {
                     select: {
@@ -324,12 +322,10 @@ export async function obtenerResumenNomina(
                 }
             },
             orderBy: {
-                fecha_asignacion: 'asc'
+                fecha_asignacion: 'desc'
             },
-            take: 10
-        });
-
-        const totalPendiente = nominasPendientes.reduce((sum, nomina) => sum + nomina.monto_neto, 0);
+            take: 100 // Limitar a los últimos 100 pagos
+        }); const totalPendiente = nominasPendientes.reduce((sum, nomina) => sum + nomina.monto_neto, 0);
         const totalAutorizado = nominasAutorizadas.reduce((sum, nomina) => sum + nomina.monto_neto, 0);
         const totalPagado = nominasPagadas.reduce((sum, nomina) => sum + nomina.monto_neto, 0);
 
@@ -347,6 +343,7 @@ export async function obtenerResumenNomina(
                 usuario: nomina.User.username || nomina.User.email || 'Usuario',
                 monto: nomina.monto_neto,
                 concepto: nomina.concepto,
+                status: nomina.status,
                 fechaAsignacion: nomina.fecha_asignacion,
                 fechaPago: nomina.fecha_pago || undefined,
                 cliente: nomina.Evento?.Cliente?.nombre || 'Cliente no especificado',

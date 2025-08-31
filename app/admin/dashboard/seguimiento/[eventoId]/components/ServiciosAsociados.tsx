@@ -207,7 +207,7 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
                     await cancelarPago(infoNomina.id, evento.id);
                     // Luego remover al usuario
                     await removerUsuarioDeServicio(servicio.id, evento.id);
-                    alert('Pago cancelado y usuario removido exitosamente');
+                    // alert('Pago cancelado y usuario removido exitosamente');
                 } catch (error) {
                     console.error('Error al cancelar pago y remover usuario:', error);
                     alert('Error: ' + (error as Error).message);
@@ -246,7 +246,7 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
 
         try {
             await crearNominaIndividual(servicioSeleccionado.id, evento.id, datosNomina);
-            alert('Nómina creada exitosamente');
+            // alert('Nómina creada exitosamente');
         } catch (error) {
             console.error('Error al crear nómina:', error);
             alert('Error al crear nómina: ' + (error as Error).message);
@@ -260,7 +260,7 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
         if (confirm('¿Estás seguro de que deseas cancelar este pago?')) {
             try {
                 await cancelarPago(infoNomina.id, evento.id);
-                alert('Pago cancelado exitosamente');
+                // alert('Pago cancelado exitosamente');
             } catch (error) {
                 console.error('Error al cancelar pago:', error);
                 alert('Error al cancelar pago: ' + (error as Error).message);

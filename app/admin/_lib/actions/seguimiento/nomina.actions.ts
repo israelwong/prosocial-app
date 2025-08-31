@@ -2,6 +2,7 @@
 
 import prisma from '@/app/admin/_lib/prismaClient';
 import { revalidatePath } from 'next/cache';
+import { NOMINA_STATUS } from '@/app/admin/_lib/constants/status';
 
 // =====================================
 // CREAR NÓMINA INDIVIDUAL
@@ -121,26 +122,55 @@ export async function autorizarPago(
             eventoId
         });
 
-        // @ts-ignore - Usar operación directa en la base de datos
-        await prisma.$queryRaw`
-            UPDATE "Nomina" 
-            SET status = 'autorizado', 
-                autorizado_por = ${autorizadoPorUserId}, 
-                fecha_autorizacion = NOW(),
-                "updatedAt" = NOW()
-            WHERE id = ${nominaId}
-        `;
+        // Verificar que el usuario autorizador existe
+        const usuarioAutorizador = await prisma.user.findUnique({
+            where: { id: autorizadoPorUserId },
+            select: { id: true, username: true, email: true }
+        });
 
-        console.log('✅ Pago autorizado exitosamente');
+        if (!usuarioAutorizador) {
+            throw new Error(`Usuario autorizador no encontrado: ${autorizadoPorUserId}`);
+        }
+
+        // Verificar que la nómina existe y está pendiente
+        const nominaExistente = await prisma.nomina.findUnique({
+            where: { id: nominaId },
+            select: { id: true, status: true, concepto: true }
+        });
+
+        if (!nominaExistente) {
+            throw new Error('Nómina no encontrada');
+        }
+
+        if (nominaExistente.status !== NOMINA_STATUS.PENDIENTE) {
+            throw new Error(`No se puede autorizar una nómina con status: ${nominaExistente.status}`);
+        }
+
+        // Actualizar usando Prisma ORM
+        await prisma.nomina.update({
+            where: { id: nominaId },
+            data: {
+                status: NOMINA_STATUS.AUTORIZADO,
+                autorizado_por: autorizadoPorUserId,
+                fecha_autorizacion: new Date(),
+            }
+        });
+
+        console.log('✅ Pago autorizado exitosamente por:', usuarioAutorizador.username || usuarioAutorizador.email);
 
         // Revalidar para actualizar la UI
         revalidatePath(`/admin/dashboard/seguimiento/${eventoId}`);
 
-        return { success: true };
+        const nombreUsuario = usuarioAutorizador.username || usuarioAutorizador.email || 'Usuario';
+        return {
+            success: true,
+            message: `Pago autorizado exitosamente por ${nombreUsuario}`
+        };
 
     } catch (error) {
         console.error('❌ Error al autorizar pago:', error);
-        throw new Error('Error al autorizar pago');
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido al autorizar pago';
+        throw new Error(errorMessage);
     }
 }
 
@@ -149,39 +179,38 @@ export async function cancelarPago(nominaId: string, eventoId: string) {
 
     try {
         // Verificar que la nómina existe y está en estado 'pendiente'
-        // @ts-ignore - Usar operación directa en la base de datos
-        const nomina = await prisma.$queryRaw`
-            SELECT id, status FROM "Nomina" 
-            WHERE id = ${nominaId}
-        `;
+        const nominaExistente = await prisma.nomina.findUnique({
+            where: { id: nominaId },
+            select: { id: true, status: true }
+        });
 
-        if (!nomina || (nomina as any).length === 0) {
+        if (!nominaExistente) {
             throw new Error('Nómina no encontrada');
         }
 
-        const nominaData = (nomina as any)[0];
-        if (nominaData.status !== 'pendiente') {
-            throw new Error('Solo se pueden cancelar pagos en estado pendiente');
+        if (nominaExistente.status !== NOMINA_STATUS.PENDIENTE) {
+            throw new Error(`Solo se pueden cancelar pagos en estado pendiente. Estado actual: ${nominaExistente.status}`);
         }
 
-        // @ts-ignore - Usar operación directa en la base de datos
-        await prisma.$queryRaw`
-            UPDATE "Nomina" 
-            SET status = 'cancelado', 
-                "updatedAt" = NOW()
-            WHERE id = ${nominaId}
-        `;
+        // Actualizar usando Prisma ORM
+        await prisma.nomina.update({
+            where: { id: nominaId },
+            data: {
+                status: NOMINA_STATUS.CANCELADO
+            }
+        });
 
         console.log('✅ Pago cancelado exitosamente');
 
         // Revalidar para actualizar la UI
         revalidatePath(`/admin/dashboard/seguimiento/${eventoId}`);
 
-        return { success: true };
+        return { success: true, message: 'Pago cancelado exitosamente' };
 
     } catch (error) {
         console.error('❌ Error al cancelar pago:', error);
-        throw new Error('Error al cancelar pago');
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido al cancelar pago';
+        throw new Error(errorMessage);
     }
 }
 
@@ -222,5 +251,110 @@ export async function eliminarNomina(nominaId: string) {
     } catch (error) {
         console.error('❌ Error al eliminar nómina:', error);
         throw new Error('Error al eliminar nómina');
+    }
+}
+
+// =====================================
+// MARCAR COMO PAGADO
+// =====================================
+export async function marcarComoPagado(
+    nominaId: string,
+    pagadoPorUserId: string,
+    eventoId: string,
+    metodoPago?: string
+) {
+    try {
+        console.log('🔄 Marcando como pagado:', {
+            nominaId,
+            pagadoPorUserId,
+            eventoId,
+            metodoPago
+        });
+
+        // Verificar que el usuario que marca el pago existe
+        const usuarioPagador = await prisma.user.findUnique({
+            where: { id: pagadoPorUserId },
+            select: { id: true, username: true, email: true }
+        });
+
+        if (!usuarioPagador) {
+            throw new Error(`Usuario pagador no encontrado: ${pagadoPorUserId}`);
+        }
+
+        // Verificar que la nómina existe y está autorizada
+        const nominaExistente = await prisma.nomina.findUnique({
+            where: { id: nominaId },
+            select: { id: true, status: true, concepto: true, monto_neto: true }
+        });
+
+        if (!nominaExistente) {
+            throw new Error('Nómina no encontrada');
+        }
+
+        if (nominaExistente.status !== NOMINA_STATUS.AUTORIZADO) {
+            throw new Error(`Solo se pueden marcar como pagadas las nóminas autorizadas. Estado actual: ${nominaExistente.status}`);
+        }
+
+        // Actualizar usando Prisma ORM
+        await prisma.nomina.update({
+            where: { id: nominaId },
+            data: {
+                status: NOMINA_STATUS.PAGADO,
+                pagado_por: pagadoPorUserId,
+                fecha_pago: new Date(),
+                metodo_pago: metodoPago || 'transferencia'
+            }
+        });
+
+        console.log('✅ Pago marcado como pagado exitosamente por:', usuarioPagador.username || usuarioPagador.email);
+
+        // Revalidar para actualizar la UI
+        revalidatePath(`/admin/dashboard/seguimiento/${eventoId}`);
+        revalidatePath('/admin/dashboard/finanzas/nomina');
+
+        const nombreUsuario = usuarioPagador.username || usuarioPagador.email || 'Usuario';
+        return {
+            success: true,
+            message: `Pago marcado como completado por ${nombreUsuario}`
+        };
+
+    } catch (error) {
+        console.error('❌ Error al marcar como pagado:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido al marcar como pagado';
+        throw new Error(errorMessage);
+    }
+}
+
+// =====================================
+// AUTORIZAR Y PAGAR (ACCIÓN COMBINADA)
+// =====================================
+export async function autorizarYPagar(
+    nominaId: string,
+    usuarioId: string,
+    eventoId: string,
+    metodoPago?: string
+) {
+    try {
+        console.log('🔄 Autorizando y pagando:', {
+            nominaId,
+            usuarioId,
+            eventoId
+        });
+
+        // Primero autorizar
+        await autorizarPago(nominaId, usuarioId, eventoId);
+
+        // Luego marcar como pagado
+        await marcarComoPagado(nominaId, usuarioId, eventoId, metodoPago);
+
+        return {
+            success: true,
+            message: 'Pago autorizado y marcado como completado exitosamente'
+        };
+
+    } catch (error) {
+        console.error('❌ Error al autorizar y pagar:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido al autorizar y pagar';
+        throw new Error(errorMessage);
     }
 }

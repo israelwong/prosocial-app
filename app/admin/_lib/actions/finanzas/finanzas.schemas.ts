@@ -208,6 +208,7 @@ export interface NominaResumen {
         usuario: string;
         monto: number;
         concepto: string;
+        status: string; // Agregado para manejar estados de nómina
         fechaAsignacion: Date;
         fechaPago?: Date;
         cliente?: string;

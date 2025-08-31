@@ -294,7 +294,9 @@ export async function obtenerMetricasDelMes(año: number, mes: number) {
             pagosPaid,
             pagosPendientes,
             eventosDelMes,
-            nominaPendiente
+            nominaPendiente,
+            nominaAutorizada,
+            nominaPagada
         ] = await Promise.all([
             // Pagos confirmados del mes
             prisma.pago.aggregate({
@@ -332,8 +334,35 @@ export async function obtenerMetricasDelMes(año: number, mes: number) {
                 },
                 _sum: { monto_neto: true },
                 _count: true
+            }),
+
+            // Nómina autorizada
+            prisma.nomina.aggregate({
+                where: {
+                    status: 'autorizado',
+                    createdAt: { gte: fechaInicio, lte: fechaFin }
+                },
+                _sum: { monto_neto: true },
+                _count: true
+            }),
+
+            // Nómina pagada
+            prisma.nomina.aggregate({
+                where: {
+                    status: 'pagado',
+                    createdAt: { gte: fechaInicio, lte: fechaFin }
+                },
+                _sum: { monto_neto: true },
+                _count: true
             })
         ]);
+
+        // Calcular totales de nómina
+        const totalNominaPendiente = nominaPendiente._sum.monto_neto || 0;
+        const totalNominaAutorizada = nominaAutorizada._sum.monto_neto || 0;
+        const totalNominaPagada = nominaPagada._sum.monto_neto || 0;
+        const totalNomina = totalNominaPendiente + totalNominaAutorizada + totalNominaPagada;
+        const cantidadTotalNomina = nominaPendiente._count + nominaAutorizada._count + nominaPagada._count;
 
         return {
             ingresosCobrados: pagosPaid._sum.monto || 0,
@@ -341,8 +370,16 @@ export async function obtenerMetricasDelMes(año: number, mes: number) {
             ingresosPendientes: pagosPendientes._sum.monto || 0,
             cantidadPagosPendientes: pagosPendientes._count,
             eventosDelMes,
-            nominaPendiente: nominaPendiente._sum.monto_neto || 0,
-            cantidadNominaPendiente: nominaPendiente._count
+            // Datos detallados de nómina
+            nominaPendiente: totalNominaPendiente,
+            cantidadNominaPendiente: nominaPendiente._count,
+            nominaAutorizada: totalNominaAutorizada,
+            cantidadNominaAutorizada: nominaAutorizada._count,
+            nominaPagada: totalNominaPagada,
+            cantidadNominaPagada: nominaPagada._count,
+            // Totales de nómina
+            nominaTotal: totalNomina,
+            cantidadNominaTotal: cantidadTotalNomina
         };
 
     } catch (error) {
@@ -354,7 +391,13 @@ export async function obtenerMetricasDelMes(año: number, mes: number) {
             cantidadPagosPendientes: 0,
             eventosDelMes: 0,
             nominaPendiente: 0,
-            cantidadNominaPendiente: 0
+            cantidadNominaPendiente: 0,
+            nominaAutorizada: 0,
+            cantidadNominaAutorizada: 0,
+            nominaPagada: 0,
+            cantidadNominaPagada: 0,
+            nominaTotal: 0,
+            cantidadNominaTotal: 0
         };
     }
 }
