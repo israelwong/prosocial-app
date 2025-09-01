@@ -262,6 +262,13 @@ export async function eliminarEvento(eventoId: string) {
             await tx.evento.delete({ where: { id: eventoId } });
         });
 
+        // Invalidar cache de todas las rutas relacionadas
+        revalidatePath('/admin/dashboard/eventos')
+        revalidatePath('/admin/dashboard/seguimiento')
+        revalidatePath('/admin/dashboard/gestion')
+        revalidatePath(`/admin/dashboard/eventos/${eventoId}`)
+        revalidatePath(`/admin/dashboard/seguimiento/${eventoId}`)
+
         return {
             success: true,
             message: 'Evento eliminado exitosamente'
