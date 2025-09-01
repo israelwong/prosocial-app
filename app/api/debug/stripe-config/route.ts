@@ -33,9 +33,9 @@ export async function GET(request: NextRequest) {
         // Intentar obtener información de la cuenta
         const account = await stripe.accounts.retrieve()
 
-        // Crear un PaymentIntent de prueba con monto mínimo válido
+        // Crear un PaymentIntent de prueba con monto mínimo válido para MXN en LIVE
         const testPaymentIntent = await stripe.paymentIntents.create({
-            amount: 1000, // $10.00 MXN (mínimo requerido)
+            amount: 50000, // $500.00 MXN (monto seguro para LIVE en MXN)
             currency: 'mxn',
             metadata: {
                 test: 'stripe-config-validation'
