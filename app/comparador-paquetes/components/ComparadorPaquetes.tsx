@@ -3,9 +3,11 @@ import React, { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
-import { ArrowLeft, Check, X, Package, CreditCard, MessageCircle, Filter, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, Check, X, Package, CreditCard, MessageCircle, Filter, Eye, EyeOff, Info, HelpCircle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import SolicitudPaqueteModal from '@/app/components/modals/SolicitudPaqueteModal'
+import ModalAyudaComparador from '@/app/components/modals/ModalAyudaComparador'
+import AyudaEleccionCotizaciones from '@/app/components/shared/AyudaEleccionCotizaciones'
 
 // Tipos
 interface ServicioDetalle {
@@ -59,12 +61,13 @@ type TodasSecciones = Map<string, { posicion: number, categorias: Map<string, { 
 
 export default function ComparadorPaquetes() {
     const searchParams = useSearchParams()
+    const router = useRouter()
     const eventoId = searchParams?.get('eventoId')
 
-    const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null)
+    const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]) // Cambio: array en lugar de una sola
     const [eventoData, setEventoData] = useState<any>(null) // Datos del evento
     const [paquetes, setPaquetes] = useState<Paquete[]>([])
-    const [serviciosCotizacion, setServiciosCotizacion] = useState<ServiciosAgrupados>({})
+    const [serviciosCotizaciones, setServiciosCotizaciones] = useState<{ [key: string]: ServiciosAgrupados }>({}) // Cambio: objeto con servicios de todas las cotizaciones
     const [serviciosPaquetes, setServiciosPaquetes] = useState<{ [key: string]: ServiciosAgrupados }>({})
     const [loading, setLoading] = useState(true)
     const [eventoTipoId, setEventoTipoId] = useState<string | null>(null)
@@ -76,6 +79,9 @@ export default function ComparadorPaquetes() {
     // Estados para el modal de confirmación
     const [mostrarModal, setMostrarModal] = useState(false)
     const [paqueteSeleccionado, setPaqueteSeleccionado] = useState<Paquete | null>(null)
+
+    // Estado para el modal de ayuda
+    const [mostrarAyuda, setMostrarAyuda] = useState(false)
 
     // Función para agrupar servicios (VERSIÓN ORIGINAL)
     const agruparServicios = (servicios: any[]): ServiciosAgrupados => {
@@ -111,13 +117,13 @@ export default function ComparadorPaquetes() {
         return agrupados
     }
 
-    // Obtener todas las secciones únicas para la comparación (VERSIÓN ORIGINAL)
+    // Obtener todas las secciones únicas para la comparación (VERSIÓN ACTUALIZADA)
     const obtenerTodasSecciones = () => {
         const todasSecciones = new Map<string, { posicion: number, categorias: Map<string, { posicion: number, servicios: Set<string> }> }>()
 
-        // Agregar secciones de la cotización
-        if (serviciosCotizacion) {
-            Object.entries(serviciosCotizacion).forEach(([seccionNombre, seccionData]) => {
+        // Agregar secciones de las cotizaciones
+        Object.values(serviciosCotizaciones).forEach(cotizacionServicios => {
+            Object.entries(cotizacionServicios).forEach(([seccionNombre, seccionData]) => {
                 if (!todasSecciones.has(seccionNombre)) {
                     todasSecciones.set(seccionNombre, {
                         posicion: seccionData.posicion,
@@ -135,12 +141,12 @@ export default function ComparadorPaquetes() {
                     }
                     const categoria = seccion.categorias.get(categoriaNombre)!
 
-                    categoriaData.servicios.forEach(servicio => {
+                    categoriaData.servicios.forEach((servicio: any) => {
                         categoria.servicios.add(`${servicio.id}|${servicio.nombre}`)
                     })
                 })
             })
-        }
+        })
 
         // Agregar secciones de los paquetes
         Object.values(serviciosPaquetes).forEach(paqueteServicios => {
@@ -162,14 +168,12 @@ export default function ComparadorPaquetes() {
                     }
                     const categoria = seccion.categorias.get(categoriaNombre)!
 
-                    categoriaData.servicios.forEach(servicio => {
+                    categoriaData.servicios.forEach((servicio: any) => {
                         categoria.servicios.add(`${servicio.id}|${servicio.nombre}`)
                     })
                 })
             })
         })
-
-
 
         return todasSecciones
     }
@@ -220,13 +224,16 @@ export default function ComparadorPaquetes() {
                 const eventoDataResponse = await eventoResponse.json()
                 setEventoData(eventoDataResponse)
 
-                // Si hay cotizaciones, usar la primera como principal
-                const cotizacionPrincipal = eventoDataResponse.cotizaciones?.[0]
-                if (cotizacionPrincipal) {
-                    setCotizacion(cotizacionPrincipal)
-                    const serviciosAgrupadosCotizacion = agruparServicios(cotizacionPrincipal.servicios)
-                    setServiciosCotizacion(serviciosAgrupadosCotizacion)
-                }
+                // Establecer todas las cotizaciones
+                const todasLasCotizaciones = eventoDataResponse.cotizaciones || []
+                setCotizaciones(todasLasCotizaciones)
+
+                // Agrupar servicios de todas las cotizaciones
+                const serviciosCotizacionesMap: { [key: string]: ServiciosAgrupados } = {}
+                todasLasCotizaciones.forEach((cotizacion: Cotizacion) => {
+                    serviciosCotizacionesMap[cotizacion.id] = agruparServicios(cotizacion.servicios)
+                })
+                setServiciosCotizaciones(serviciosCotizacionesMap)
 
                 const eventoTipo = eventoDataResponse.eventoTipoId
                 setEventoTipoId(eventoTipo)
@@ -239,13 +246,13 @@ export default function ComparadorPaquetes() {
                     const paquetesData = await paquetesResponse.json()
                     setPaquetes(paquetesData)
 
-                    // Inicializar columnas visibles DESPUÉS de establecer la cotización
+                    // Inicializar columnas visibles DESPUÉS de establecer las cotizaciones
                     const columnasIniciales: { [key: string]: boolean } = {}
 
-                    // Solo mostrar cotización si existe
-                    if (cotizacionPrincipal) {
-                        columnasIniciales.cotizacion = true
-                    }
+                    // Mostrar todas las cotizaciones
+                    todasLasCotizaciones.forEach((cotizacion: Cotizacion) => {
+                        columnasIniciales[`cotizacion-${cotizacion.id}`] = true
+                    })
 
                     paquetesData.forEach((paquete: any) => {
                         columnasIniciales[paquete.id] = true // Todas visibles por defecto
@@ -284,7 +291,7 @@ export default function ComparadorPaquetes() {
         )
     }
 
-    if (!cotizacion && (!eventoData || !paquetes || paquetes.length === 0)) {
+    if (!cotizaciones.length && (!eventoData || !paquetes || paquetes.length === 0)) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="text-center">
@@ -301,9 +308,9 @@ export default function ComparadorPaquetes() {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
-                    {cotizacion ? (
+                    {cotizaciones.length > 0 ? (
                         <Link
-                            href={`/evento/${cotizacion.evento.id}/cotizacion/${cotizacion.id}`}
+                            href={`/evento/${cotizaciones[0].evento.id}`}
                             className="text-zinc-400 hover:text-white transition-colors"
                         >
                             <ArrowLeft className="w-6 h-6" />
@@ -318,11 +325,11 @@ export default function ComparadorPaquetes() {
                     )}
                     <div>
                         <h1 className="text-2xl font-bold text-white">
-                            {cotizacion ? 'Comparar Paquetes' : 'Paquetes Disponibles'}
+                            {cotizaciones.length > 0 ? 'Comparar Paquetes y Cotizaciones' : 'Paquetes Disponibles'}
                         </h1>
                         <p className="text-zinc-400">
-                            {cotizacion
-                                ? `${cotizacion.nombre} • ${cotizacion.evento.nombre}`
+                            {cotizaciones.length > 0
+                                ? `${cotizaciones.length} cotizaciones • ${cotizaciones[0].evento.nombre}`
                                 : `${eventoData?.nombre || 'Evento'} • ${eventoData?.eventoTipo?.nombre || 'Sin tipo'}`
                             }
                         </p>
@@ -351,6 +358,26 @@ export default function ComparadorPaquetes() {
                     </div>
                 </div> */}
 
+                {/* Instrucciones de uso */}
+                <div className="bg-blue-900/30 border border-blue-600/50 rounded-lg p-4 mb-6">
+                    <div className="flex items-start gap-3">
+                        <Info className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                            <p className="text-blue-100 text-sm">
+                                <span className="font-medium">💡 Consejo:</span> Usa los filtros de abajo para ocultar/mostrar cotizaciones y paquetes que desees comparar.{' '}
+                                <span className="hidden sm:inline">En dispositivos móviles, desliza horizontalmente para ver todas las columnas.</span>
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setMostrarAyuda(true)}
+                            className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-xs font-medium px-2 py-1 rounded border border-blue-500/30 hover:border-blue-400/50 transition-colors"
+                        >
+                            <HelpCircle className="w-3 h-3" />
+                            Guía completa
+                        </button>
+                    </div>
+                </div>
+
                 {/* Filtros de columnas */}
                 <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700 mb-6">
                     <div className="flex items-center justify-between mb-4">
@@ -369,21 +396,21 @@ export default function ComparadorPaquetes() {
 
                     {mostrarFiltros && (
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {/* Toggle para cotización - Solo si existe */}
-                            {cotizacion && (
-                                <div className="flex items-center gap-2">
+                            {/* Toggles para cotizaciones - Solo si existen */}
+                            {cotizaciones.map(cotizacion => (
+                                <div key={cotizacion.id} className="flex items-center gap-2">
                                     <input
                                         type="checkbox"
-                                        id="cotizacion-toggle"
-                                        checked={columnasVisibles.cotizacion || false}
-                                        onChange={() => toggleColumnaVisible('cotizacion')}
+                                        id={`cotizacion-${cotizacion.id}`}
+                                        checked={columnasVisibles[`cotizacion-${cotizacion.id}`] || false}
+                                        onChange={() => toggleColumnaVisible(`cotizacion-${cotizacion.id}`)}
                                         className="w-4 h-4 text-green-600 bg-zinc-700 border-zinc-600 rounded focus:ring-green-500"
                                     />
-                                    <label htmlFor="cotizacion-toggle" className="text-sm text-green-400 font-medium">
-                                        Tu Cotización
+                                    <label htmlFor={`cotizacion-${cotizacion.id}`} className="text-sm text-green-400 font-medium truncate">
+                                        {cotizacion.nombre}
                                     </label>
                                 </div>
-                            )}
+                            ))}
 
                             {/* Toggles para paquetes */}
                             {paquetes.map(paquete => (
@@ -406,7 +433,11 @@ export default function ComparadorPaquetes() {
 
                 {/* Tabla de comparación anidada */}
                 <div className="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700">
-                    <div className="overflow-x-auto">
+                    {/* Indicador de scroll horizontal - solo en móvil */}
+                    <div className="block sm:hidden bg-gradient-to-r from-purple-600/80 to-pink-600/80 text-white text-xs text-center py-2 px-4">
+                        ← Desliza para ver más columnas →
+                    </div>
+                    <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-600 scrollbar-track-zinc-800">
                         <table className="w-full">
                             {/* Header de la tabla */}
                             <thead className="bg-zinc-700">
@@ -414,13 +445,15 @@ export default function ComparadorPaquetes() {
                                     <th className="text-left p-4 text-white font-semibold min-w-[300px]">
                                         Servicios
                                     </th>
-                                    {cotizacion && columnasVisibles.cotizacion && (
-                                        <th className="text-center p-3 text-white font-semibold min-w-[140px]">
-                                            <div className="text-green-400 font-bold">Tu Cotización</div>
-                                            <div className="text-green-300 text-sm font-normal">
-                                                {formatearPrecio(cotizacion.precio || 0)}
-                                            </div>
-                                        </th>
+                                    {cotizaciones.map(cotizacion =>
+                                        columnasVisibles[`cotizacion-${cotizacion.id}`] && (
+                                            <th key={cotizacion.id} className="text-center p-3 text-white font-semibold min-w-[140px]">
+                                                <div className="text-green-400 font-bold">{cotizacion.nombre}</div>
+                                                <div className="text-green-300 text-sm font-normal">
+                                                    {formatearPrecio(cotizacion.precio || 0)}
+                                                </div>
+                                            </th>
+                                        )
                                     )}
                                     {paquetes.filter(paquete => columnasVisibles[paquete.id]).map(paquete => (
                                         <th key={paquete.id} className="text-center p-3 text-white font-semibold min-w-[140px]">
@@ -438,7 +471,7 @@ export default function ComparadorPaquetes() {
                                         <React.Fragment key={seccionNombre}>
                                             {/* Header de Sección */}
                                             <tr className="bg-gradient-to-r from-purple-600 to-purple-700">
-                                                <td colSpan={1 + (cotizacion ? 1 : 0) + paquetes.length} className="p-3">
+                                                <td colSpan={1 + cotizaciones.filter(c => columnasVisibles[`cotizacion-${c.id}`]).length + paquetes.filter(p => columnasVisibles[p.id]).length} className="p-3">
                                                     <h3 className="text-white font-bold text-base">
                                                         📋 {seccionNombre}
                                                     </h3>
@@ -450,7 +483,7 @@ export default function ComparadorPaquetes() {
                                                     <React.Fragment key={categoriaNombre}>
                                                         {/* Header de Categoría */}
                                                         <tr className="bg-zinc-700/70">
-                                                            <td colSpan={1 + (cotizacion && columnasVisibles.cotizacion ? 1 : 0) + paquetes.filter(p => columnasVisibles[p.id]).length} className="p-3">
+                                                            <td colSpan={1 + cotizaciones.filter(c => columnasVisibles[`cotizacion-${c.id}`]).length + paquetes.filter(p => columnasVisibles[p.id]).length} className="p-3">
                                                                 <div className="flex items-center gap-2">
                                                                     <div className="w-1 h-4 bg-blue-500 rounded"></div>
                                                                     <h4 className="text-blue-300 font-semibold text-sm">
@@ -473,15 +506,17 @@ export default function ComparadorPaquetes() {
                                                                             </div>
                                                                         </td>
 
-                                                                        {/* Comparación - Tu Cotización */}
-                                                                        {cotizacion && columnasVisibles.cotizacion && (
-                                                                            <td className="p-3 text-center">
-                                                                                {servicioEstaIncluido(servicioId, serviciosCotizacion) ? (
-                                                                                    <Check className="w-5 h-5 text-green-400 mx-auto" />
-                                                                                ) : (
-                                                                                    <X className="w-5 h-5 text-red-400 mx-auto" />
-                                                                                )}
-                                                                            </td>
+                                                                        {/* Comparación - Todas las Cotizaciones */}
+                                                                        {cotizaciones.map(cotizacion =>
+                                                                            columnasVisibles[`cotizacion-${cotizacion.id}`] && (
+                                                                                <td key={cotizacion.id} className="p-3 text-center">
+                                                                                    {servicioEstaIncluido(servicioId, serviciosCotizaciones[cotizacion.id] || {}) ? (
+                                                                                        <Check className="w-5 h-5 text-green-400 mx-auto" />
+                                                                                    ) : (
+                                                                                        <X className="w-5 h-5 text-red-400 mx-auto" />
+                                                                                    )}
+                                                                                </td>
+                                                                            )
                                                                         )}
 
                                                                         {/* Comparación - Paquetes */}
@@ -509,16 +544,18 @@ export default function ComparadorPaquetes() {
                                             Acciones
                                         </div>
                                     </td>
-                                    {cotizacion && columnasVisibles.cotizacion && (
-                                        <td className="p-3 text-center">
-                                            <Link
-                                                href={`/evento/${cotizacion.evento.id}/cotizacion/${cotizacion.id}`}
-                                                className="inline-flex items-center gap-1 bg-green-600/80 hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
-                                            >
-                                                <CreditCard className="w-3.5 h-3.5" />
-                                                Reservar
-                                            </Link>
-                                        </td>
+                                    {cotizaciones.map(cotizacion =>
+                                        columnasVisibles[`cotizacion-${cotizacion.id}`] && (
+                                            <td key={cotizacion.id} className="p-3 text-center">
+                                                <Link
+                                                    href={`/evento/${cotizacion.evento.id}/cotizacion/${cotizacion.id}`}
+                                                    className="inline-flex items-center gap-1 bg-green-600/80 hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                                                >
+                                                    <CreditCard className="w-3.5 h-3.5" />
+                                                    Reservar
+                                                </Link>
+                                            </td>
+                                        )
                                     )}
                                     {paquetes.filter(paquete => columnasVisibles[paquete.id]).map(paquete => (
                                         <td key={paquete.id} className="p-3 text-center">
@@ -537,6 +574,27 @@ export default function ComparadorPaquetes() {
                     </div>
                 </div>
 
+                {/* Sección de ayuda para elegir */}
+                <AyudaEleccionCotizaciones
+                    mostrar={true}
+                    titulo="¿Necesitas ayuda para elegir?"
+                    descripcion="Contáctanos para que te ayudemos a generar una cotización personalizada"
+                    telefonoWhatsApp={eventoData?.negocio?.telefono || "5544546582"}
+                    telefonoLlamada={eventoData?.negocio?.telefono || "5544546582"}
+                    mensajeWhatsApp="Hola, necesito ayuda para generar una cotización personalizada"
+                />
+
+                {/* Botón de regresar en footer */}
+                <div className="mt-8 lg:mt-10 text-center">
+                    <button
+                        onClick={() => router.back()}
+                        className="inline-flex items-center justify-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-white font-medium py-3 px-6 rounded-lg transition-colors text-sm lg:text-base"
+                    >
+                        <ArrowLeft className="w-4 h-4 lg:w-5 lg:h-5" />
+                        Regresar
+                    </button>
+                </div>
+
                 {/* Modal de solicitud de paquete */}
                 {mostrarModal && paqueteSeleccionado && (
                     <SolicitudPaqueteModal
@@ -548,9 +606,9 @@ export default function ComparadorPaquetes() {
                         }}
                         eventoId={eventoId || ''}
                         cliente={{
-                            nombre: cotizacion?.cliente?.nombre || eventoData?.cliente?.nombre,
-                            email: cotizacion?.cliente?.email || eventoData?.cliente?.email,
-                            telefono: cotizacion?.cliente?.telefono || eventoData?.cliente?.telefono
+                            nombre: cotizaciones[0]?.cliente?.nombre || eventoData?.cliente?.nombre,
+                            email: cotizaciones[0]?.cliente?.email || eventoData?.cliente?.email,
+                            telefono: cotizaciones[0]?.cliente?.telefono || eventoData?.cliente?.telefono
                         }}
                         onClose={() => {
                             setMostrarModal(false)
@@ -562,6 +620,12 @@ export default function ComparadorPaquetes() {
                         }}
                     />
                 )}
+
+                {/* Modal de ayuda del comparador */}
+                <ModalAyudaComparador
+                    isOpen={mostrarAyuda}
+                    onClose={() => setMostrarAyuda(false)}
+                />
             </div>
         </div>
     )
