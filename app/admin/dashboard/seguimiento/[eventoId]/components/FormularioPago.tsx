@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Plus, CreditCard, DollarSign, Calendar, FileText, Loader2, X } from 'lucide-react'
+import { crearFechaLocal } from '@/app/admin/_lib/utils/fechas'
 
 interface FormularioPagoProps {
     cotizacionId: string
@@ -32,9 +33,20 @@ export default function FormularioPago({
 
     // Establecer fecha después del montaje para evitar problemas de hidratación
     useEffect(() => {
-        const fechaInicial = pagoExistente?.createdAt
-            ? new Date(pagoExistente.createdAt).toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0]
+        let fechaInicial: string
+        
+        if (pagoExistente?.createdAt) {
+            // 🔧 Usar crearFechaLocal para evitar desfase de zona horaria
+            const fechaLocal = crearFechaLocal(pagoExistente.createdAt)
+            fechaInicial = fechaLocal.toISOString().split('T')[0]
+        } else {
+            // Para fechas nuevas, usar fecha actual sin conversión UTC
+            const hoy = new Date()
+            const year = hoy.getFullYear()
+            const month = String(hoy.getMonth() + 1).padStart(2, '0')
+            const day = String(hoy.getDate()).padStart(2, '0')
+            fechaInicial = `${year}-${month}-${day}`
+        }
 
         setFormData(prev => ({ ...prev, fechaPago: fechaInicial }))
     }, [pagoExistente])

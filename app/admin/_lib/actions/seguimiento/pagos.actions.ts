@@ -5,6 +5,7 @@ import { EVENTO_ETAPAS } from '@/app/admin/_lib/constants/evento-etapas'
 import prisma from '@/app/admin/_lib/prismaClient'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { crearFechaLocal } from '@/app/admin/_lib/utils/fechas'
 
 // Schemas para validación
 const PagoCreateSchema = z.object({
@@ -73,7 +74,7 @@ export async function crearPago(data: PagoCreateForm) {
                 status: PAGO_STATUS.PAID,
                 tipo_transaccion: 'income',
                 categoria_transaccion: 'event_payment',
-                createdAt: validData.fechaPago ? new Date(validData.fechaPago) : new Date()
+                createdAt: validData.fechaPago ? crearFechaLocal(validData.fechaPago) : new Date()
             },
             include: {
                 MetodoPago: true,
@@ -126,7 +127,7 @@ export async function actualizarPago(data: PagoUpdateForm) {
         if (updateData.metodoPago !== undefined) dataToUpdate.metodo_pago = updateData.metodoPago
         if (updateData.concepto !== undefined) dataToUpdate.concepto = updateData.concepto
         if (updateData.descripcion !== undefined) dataToUpdate.descripcion = updateData.descripcion
-        if (updateData.fechaPago !== undefined) dataToUpdate.createdAt = new Date(updateData.fechaPago)
+        if (updateData.fechaPago !== undefined) dataToUpdate.createdAt = crearFechaLocal(updateData.fechaPago)
 
         // Actualizar método de pago si cambió
         if (updateData.metodoPago) {
