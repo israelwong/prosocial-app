@@ -140,6 +140,9 @@ export default function CotizacionForm({
     // Estado para controlar visibilidad de acciones destructivas
     const [mostrarAccionesDestructivas, setMostrarAccionesDestructivas] = useState(false);
 
+    // Estado para controlar la actualización del catálogo
+    const [actualizandoCatalogo, setActualizandoCatalogo] = useState(false);
+
     // Debug: Rastrear cambios en usuarioHaModificado
     useEffect(() => {
         console.log('🚨 CAMBIO EN usuarioHaModificado:', usuarioHaModificado);
@@ -1196,27 +1199,46 @@ export default function CotizacionForm({
                                         type="button"
                                         onClick={() => window.open('/admin/configurar/catalogo', '_blank')}
                                         className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-sm"
-                                        title="Gestionar catálogo de servicios"
+                                        title="Abrir configurador de catálogo en nueva ventana (no perderás los cambios actuales)"
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
-                                        Gestionar
+                                        Gestionar Catálogo
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            toast.success('Catálogo actualizado');
-                                            // Como los datos vienen de props, mostramos feedback visual sin recargar
+                                        disabled={actualizandoCatalogo}
+                                        onClick={async () => {
+                                            setActualizandoCatalogo(true);
+                                            try {
+                                                // Recargar los datos del servidor
+                                                router.refresh();
+
+                                                // Simular tiempo de actualización para mostrar feedback
+                                                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                                                toast.success('Catálogo actualizado desde el servidor');
+                                            } catch (error) {
+                                                toast.error('Error al actualizar el catálogo');
+                                            } finally {
+                                                setActualizandoCatalogo(false);
+                                            }
                                         }}
-                                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition text-sm"
-                                        title="Los datos del catálogo se actualizan desde el servidor"
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="Recargar catálogo de servicios desde el servidor"
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                        </svg>
-                                        Actualizar
+                                        {actualizandoCatalogo ? (
+                                            <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} className="opacity-25" />
+                                                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" className="opacity-75" />
+                                            </svg>
+                                        ) : (
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                        )}
+                                        {actualizandoCatalogo ? 'Actualizando...' : 'Actualizar'}
                                     </button>
                                 </div>
                             </div>

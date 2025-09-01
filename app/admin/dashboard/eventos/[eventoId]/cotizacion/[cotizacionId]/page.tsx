@@ -57,13 +57,49 @@ export default async function EditarCotizacionPage({ params }: PageProps) {
                                     {datosCotizacion.evento.Cliente?.nombre ?? 'Sin cliente'} • {cotizacionExistente.cotizacion.nombre}
                                 </p>
                             </div>
-                            <div className="text-right text-sm">
-                                <div className="text-lg font-semibold text-amber-400 mb-1">
+                            <div className="text-right">
+                                <div className="text-lg font-semibold text-amber-400 mb-2">
                                     {eventoTipoFinal.nombre}
                                 </div>
-                                <div className="text-blue-400 text-sm">
-                                    {cotizacionExistente.cotizacion.status === COTIZACION_STATUS.PENDIENTE ? 'Pendiente' :
-                                        cotizacionExistente.cotizacion.status === COTIZACION_STATUS.APROBADA ? 'Aprobada' : 'Rechazada'}
+                                {/* Badge de status más prominente */}
+                                <div className="inline-flex items-center gap-2">
+                                    {cotizacionExistente.cotizacion.status === COTIZACION_STATUS.PENDIENTE && (
+                                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-900/30 border border-yellow-600/30">
+                                            <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                                            <span className="text-yellow-300 font-medium text-sm">Pendiente</span>
+                                        </div>
+                                    )}
+                                    {cotizacionExistente.cotizacion.status === COTIZACION_STATUS.APROBADA && (
+                                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-900/30 border border-green-600/30">
+                                            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span className="text-green-300 font-medium text-sm">Aprobada</span>
+                                        </div>
+                                    )}
+                                    {cotizacionExistente.cotizacion.status === COTIZACION_STATUS.AUTORIZADO && (
+                                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-900/30 border border-blue-600/30">
+                                            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span className="text-blue-300 font-medium text-sm">Autorizada</span>
+                                        </div>
+                                    )}
+                                    {cotizacionExistente.cotizacion.status === COTIZACION_STATUS.RECHAZADA && (
+                                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-900/30 border border-red-600/30">
+                                            <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            <span className="text-red-300 font-medium text-sm">Rechazada</span>
+                                        </div>
+                                    )}
+                                    {/* Fallback para otros estados */}
+                                    {![COTIZACION_STATUS.PENDIENTE, COTIZACION_STATUS.APROBADA, COTIZACION_STATUS.AUTORIZADO, COTIZACION_STATUS.RECHAZADA].includes(cotizacionExistente.cotizacion.status as any) && (
+                                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-800 border border-zinc-600">
+                                            <div className="w-2 h-2 bg-zinc-400 rounded-full"></div>
+                                            <span className="text-zinc-300 font-medium text-sm capitalize">{cotizacionExistente.cotizacion.status}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
