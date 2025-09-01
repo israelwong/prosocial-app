@@ -631,7 +631,7 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                         <div className="space-y-3">
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-zinc-400">
-                                    {pagosExitosos.length} de {pagos?.length || 0} pagos
+                                    Pagado: {formatearMoneda(totalPagado)} de {formatearMoneda(totalCotizacion)}
                                 </span>
                             </div>
 
@@ -668,8 +668,8 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                                         'text-yellow-800'
                                     }`}>
                                     {estadoFinanciero === 'completo' && 'Pagos completos - Evento totalmente financiado'}
-                                    {estadoFinanciero === 'avanzado' && 'Progreso avanzado - Más del 50% pagado'}
-                                    {estadoFinanciero === 'inicial' && 'Fase inicial - Requiere más pagos'}
+                                    {estadoFinanciero === 'avanzado' && `Progreso avanzado - ${porcentajePagado.toFixed(1)}% pagado`}
+                                    {estadoFinanciero === 'inicial' && `Fase inicial - ${porcentajePagado.toFixed(1)}% pagado`}
                                 </span>
                             </div>
                         </div>
@@ -684,22 +684,39 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                                     </span>
                                 </div>
                                 <p className="text-sm text-yellow-100 mt-1">
-                                    El evento tiene un saldo pendiente considerable.
+                                    El evento tiene un saldo pendiente de {formatearMoneda(saldoPendiente)} ({(100 - porcentajePagado).toFixed(1)}% del total).
                                     Considera contactar al cliente para el siguiente pago.
                                 </p>
                             </div>
                         )}
 
-                        {porcentajePagado >= 75 && saldoPendiente > 0 && (
+                        {porcentajePagado >= 50 && porcentajePagado < 100 && saldoPendiente > 0 && (
                             <div className="p-3 bg-blue-900/20 border border-blue-800 rounded-lg">
                                 <div className="flex items-center gap-2">
                                     <TrendingUp className="h-4 w-4 text-blue-400" />
                                     <span className="text-sm font-medium text-blue-300">
-                                        Casi completo
+                                        {porcentajePagado >= 75 ? 'Casi completo' : 'Buen progreso'}
                                     </span>
                                 </div>
                                 <p className="text-sm text-blue-100 mt-1">
-                                    ¡Excelente progreso! Solo falta {formatearMoneda(saldoPendiente)} para completar el pago.
+                                    {porcentajePagado >= 75
+                                        ? `¡Excelente progreso! Solo falta ${formatearMoneda(saldoPendiente)} (${(100 - porcentajePagado).toFixed(1)}%) para completar el pago.`
+                                        : `Progreso sólido con ${porcentajePagado.toFixed(1)}% pagado. Faltan ${formatearMoneda(saldoPendiente)} por cobrar.`
+                                    }
+                                </p>
+                            </div>
+                        )}
+
+                        {porcentajePagado >= 100 && (
+                            <div className="p-3 bg-green-900/20 border border-green-800 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle className="h-4 w-4 text-green-400" />
+                                    <span className="text-sm font-medium text-green-300">
+                                        Evento completamente financiado
+                                    </span>
+                                </div>
+                                <p className="text-sm text-green-100 mt-1">
+                                    ¡Felicidades! El evento ha sido pagado completamente. Total recibido: {formatearMoneda(totalPagado)}.
                                 </p>
                             </div>
                         )}

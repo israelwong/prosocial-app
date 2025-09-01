@@ -37,6 +37,7 @@ export default async function Page({ params }: PageProps) {
                     eventoNombre={datos.evento?.nombre || 'Evento sin nombre'}
                     eventoId={eventoId}
                     clienteNombre={datos.cliente?.nombre || undefined}
+                    clienteTelefono={datos.cliente?.telefono || undefined}
                     tipoEvento={datos.tipoEvento?.nombre || undefined}
                     etapa={datos.etapaActual?.nombre || undefined}
                     fechaEvento={datos.evento?.fecha_evento}

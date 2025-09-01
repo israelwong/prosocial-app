@@ -2,15 +2,17 @@
 
 import { Card, CardContent } from "@/app/components/ui/card"
 import { Button } from "@/app/components/ui/button"
-import { Calendar, User, FileText, Edit, MapPin } from "lucide-react"
+import { Calendar, User, FileText, Edit, MapPin, Copy, Check, Phone } from "lucide-react"
 import { WhatsAppIcon } from "@/app/components/ui/WhatsAppIcon"
 import Link from "next/link"
 import { formatearFecha, formatearFechaCorta, esFechaValida } from "@/app/admin/_lib/utils/fechas"
+import { useState } from "react"
 
 interface HeaderSimpleProps {
     eventoNombre: string
     eventoId: string
     clienteNombre?: string
+    clienteTelefono?: string
     tipoEvento?: string
     etapa?: string
     fechaEvento?: Date | string
@@ -20,10 +22,13 @@ export function HeaderSimple({
     eventoNombre,
     eventoId,
     clienteNombre,
+    clienteTelefono,
     tipoEvento,
     etapa,
     fechaEvento
 }: HeaderSimpleProps) {
+
+    const [copiado, setCopiado] = useState(false)
 
     const formatearFechaEvento = (fecha?: Date | string) => {
         if (!fecha) return 'Fecha no definida'
@@ -41,6 +46,21 @@ export function HeaderSimple({
         const mensaje = encodeURIComponent(`Hola ${clienteNombre || 'estimado cliente'}`)
         const url = `https://wa.me/?text=${mensaje}`
         window.open(url, '_blank')
+    }
+
+    const copiarTelefono = async () => {
+        if (!clienteTelefono) return
+
+        // Remover espacios, guiones y paréntesis del teléfono
+        const telefonoLimpio = clienteTelefono.replace(/[\s\-\(\)]/g, '')
+
+        try {
+            await navigator.clipboard.writeText(telefonoLimpio)
+            setCopiado(true)
+            setTimeout(() => setCopiado(false), 2000) // Resetear después de 2 segundos
+        } catch (err) {
+            console.error('Error al copiar el teléfono:', err)
+        }
     }
 
     return (
@@ -76,7 +96,7 @@ export function HeaderSimple({
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {/* Cliente con botón WhatsApp */}
                     <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <User className="h-5 w-5 text-blue-400" />
                                 <span className="text-sm font-medium text-zinc-300">Cliente</span>
@@ -96,6 +116,23 @@ export function HeaderSimple({
                         <p className="text-lg font-semibold text-zinc-100">
                             {clienteNombre || 'No asignado'}
                         </p>
+
+                        {/* Teléfono del cliente dentro de la misma ficha */}
+                        {clienteTelefono && (
+                            <div
+                                className="flex items-center gap-2 cursor-pointer hover:bg-zinc-700/30 p-1 rounded transition-colors"
+                                onClick={copiarTelefono}
+                                title="Hacer clic para copiar teléfono"
+                            >
+                                <Phone className="h-3 w-3 text-green-400" />
+                                <span className="text-xs text-zinc-400">
+                                    {clienteTelefono}
+                                </span>
+                                {copiado && (
+                                    <span className="text-xs text-green-400 font-medium ml-2">¡Copiado!</span>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Fecha del evento */}
