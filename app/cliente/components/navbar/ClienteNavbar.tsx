@@ -233,8 +233,15 @@ export default function ClienteNavbar() {
 
                     {/* Acciones del usuario */}
                     <div className="flex items-center space-x-4">
-                        {/* Menú de usuario */}
-                        <div className="relative group">
+                        {/* Menú de usuario - Desktop */}
+                        <div className="hidden md:block relative group">
+                            {/* Botón trigger del usuario */}
+                            <button className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors">
+                                <User className="w-4 h-4" />
+                                <span>{cliente?.nombre || 'Usuario'}</span>
+                                <ChevronDown className="w-4 h-4" />
+                            </button>
+
                             {/* Dropdown del usuario */}
                             <div className="absolute right-0 mt-2 w-48 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                                 <div className="py-1">

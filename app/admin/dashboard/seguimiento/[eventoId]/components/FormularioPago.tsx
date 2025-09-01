@@ -34,7 +34,7 @@ export default function FormularioPago({
     // Establecer fecha después del montaje para evitar problemas de hidratación
     useEffect(() => {
         let fechaInicial: string
-        
+
         if (pagoExistente?.createdAt) {
             // 🔧 Usar crearFechaLocal para evitar desfase de zona horaria
             const fechaLocal = crearFechaLocal(pagoExistente.createdAt)

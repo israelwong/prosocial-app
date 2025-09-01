@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/app/components/ui/card"
 import { Button } from "@/app/components/ui/button"
-import { Calendar, User, FileText, Edit, MapPin, Copy, Check, Phone } from "lucide-react"
+import { Calendar, User, FileText, Edit, MapPin, Copy, Check, Phone, ExternalLink } from "lucide-react"
 import { WhatsAppIcon } from "@/app/components/ui/WhatsAppIcon"
 import Link from "next/link"
 import { formatearFecha, formatearFechaCorta, esFechaValida } from "@/app/admin/_lib/utils/fechas"
@@ -45,6 +45,11 @@ export function HeaderSimple({
     const abrirWhatsApp = () => {
         const mensaje = encodeURIComponent(`Hola ${clienteNombre || 'estimado cliente'}`)
         const url = `https://wa.me/?text=${mensaje}`
+        window.open(url, '_blank')
+    }
+
+    const abrirPortalCliente = () => {
+        const url = '/cliente/auth/login'
         window.open(url, '_blank')
     }
 
@@ -102,15 +107,28 @@ export function HeaderSimple({
                                 <span className="text-sm font-medium text-zinc-300">Cliente</span>
                             </div>
                             {clienteNombre && (
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={abrirWhatsApp}
-                                    className="h-10 w-10 p-0 text-green-500 hover:text-green-400 hover:bg-green-500/10 rounded-full"
-                                    title="Contactar por WhatsApp"
-                                >
-                                    <WhatsAppIcon size={20} />
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                    {/* Botón Portal del Cliente */}
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={abrirPortalCliente}
+                                        className="h-10 w-10 p-0 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-full"
+                                        title="Abrir portal del cliente"
+                                    >
+                                        <ExternalLink size={20} />
+                                    </Button>
+                                    {/* Botón WhatsApp */}
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={abrirWhatsApp}
+                                        className="h-10 w-10 p-0 text-green-500 hover:text-green-400 hover:bg-green-500/10 rounded-full"
+                                        title="Contactar por WhatsApp"
+                                    >
+                                        <WhatsAppIcon size={20} />
+                                    </Button>
+                                </div>
                             )}
                         </div>
                         <p className="text-lg font-semibold text-zinc-100">
