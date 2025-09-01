@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { CotizacionFormSchema, type CotizacionForm } from '@/app/admin/_lib/actions/cotizacion/cotizacion.schemas';
 import { manejarSubmitCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
 import { useRouter } from 'next/navigation';
-import { Loader2, MinusCircle, Plus, Minus } from 'lucide-react';
+import { Loader2, MinusCircle, Plus, Minus, Calendar, CheckCircle } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { calcularPaquete, calcularServicioDesdeBase, type ServicioCantidad } from '@/app/admin/_lib/pricing/calculos';
 import toast from 'react-hot-toast';
@@ -136,6 +136,9 @@ export default function CotizacionForm({
         estado: 'OK' | 'RISK' | 'MANUAL';
         mensaje?: string;
     } | null>(null);
+
+    // Estado para controlar visibilidad de acciones destructivas
+    const [mostrarAccionesDestructivas, setMostrarAccionesDestructivas] = useState(false);
 
     // Debug: Rastrear cambios en usuarioHaModificado
     useEffect(() => {
@@ -1282,10 +1285,11 @@ export default function CotizacionForm({
                                 <button
                                     type="button"
                                     onClick={() => setMostrarModalServicioPersonalizado(true)}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition text-sm"
+                                    className="px-2 py-1 rounded bg-zinc-800 text-zinc-100 hover:bg-zinc-700 transition text-xs flex items-center gap-1 border border-zinc-700"
+                                    title="Agregar servicio personalizado"
                                 >
-                                    <Plus size={16} />
-                                    Agregar Al Vuelo
+                                    <Plus size={14} />
+                                    Servicio personalizado
                                 </button>
                             </div>
 
@@ -1748,59 +1752,141 @@ export default function CotizacionForm({
                                 )}
                             </div>
 
-                            {/* Botones de acción */}
-                            <div className="mt-6 space-y-3">
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    onClick={(e) => {
-                                        console.log('🔵 Botón clicked!', e);
-                                        console.log('🔵 isSubmitting:', isSubmitting);
-                                        console.log('🔵 isValid:', isValid);
-                                        console.log('🔵 Form errors:', errors);
-                                        console.log('🔵 Servicios length:', fields.length);
-                                    }}
-                                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-0"
-                                >
-                                    {isSubmitting && <Loader2 size={16} className="animate-spin mr-2 flex-shrink-0" />}
-                                    <span className="truncate">
-                                        {modo === 'editar' ? 'Actualizar Cotización' : 'Guardar Cotización'}
-                                    </span>
-                                </button>
+                            {/* Botones de acción reorganizados */}
+                            <div className="mt-6 space-y-4">
+                                {/* Sección de acciones principales (seguras) */}
+                                <div className="space-y-3">
+                                    <div className="text-xs text-zinc-400 uppercase tracking-wide font-semibold border-b border-zinc-700/50 pb-1">
+                                        Acciones de Formulario
+                                    </div>
 
-                                {/* Botón de Autorización - Solo en modo editar y si hay una cotización existente */}
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        onClick={(e) => {
+                                            console.log('🔵 Botón clicked!', e);
+                                            console.log('🔵 isSubmitting:', isSubmitting);
+                                            console.log('🔵 isValid:', isValid);
+                                            console.log('🔵 Form errors:', errors);
+                                            console.log('🔵 Servicios length:', fields.length);
+                                        }}
+                                        className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-0"
+                                    >
+                                        {isSubmitting && <Loader2 size={16} className="animate-spin mr-2 flex-shrink-0" />}
+                                        <span className="truncate">
+                                            {modo === 'editar' ? 'Actualizar Cotización' : 'Guardar Cotización'}
+                                        </span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => router.back()}
+                                        className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-zinc-700 text-zinc-100 hover:bg-zinc-600 min-w-0"
+                                    >
+                                        <span className="truncate">Cancelar Cambios</span>
+                                    </button>
+
+                                    {/* Botón de seguimiento - Solo si cotización está aprobada */}
+                                    {modo === 'editar' && cotizacionExistente && cotizacionExistente.status === 'aprobada' && (
+                                        <button
+                                            type="button"
+                                            onClick={() => router.push(`/admin/dashboard/seguimiento/${evento.id}`)}
+                                            className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-green-600 text-white hover:bg-green-700 min-w-0"
+                                        >
+                                            <Calendar size={16} className="mr-2 flex-shrink-0" />
+                                            <span className="truncate">Ir a Seguimiento</span>
+                                        </button>
+                                    )}
+
+                                    {/* Mensaje informativo cuando la cotización está aprobada */}
+                                    {modo === 'editar' && cotizacionExistente && cotizacionExistente.status === 'aprobada' && (
+                                        <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
+                                            <div className="flex items-center gap-2">
+                                                <CheckCircle size={16} className="text-green-400 flex-shrink-0" />
+                                                <div>
+                                                    <div className="text-sm text-green-400 font-medium">
+                                                        Cotización Aprobada
+                                                    </div>
+                                                    <div className="text-xs text-green-600 mt-0.5">
+                                                        Esta cotización ha sido aprobada y está lista para seguimiento
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Sección de acciones administrativas (potencialmente destructivas) */}
                                 {modo === 'editar' && cotizacionExistente && (
-                                    <div className="w-full">
-                                        <BotonAutorizarCotizacion
-                                            cotizacionId={cotizacionExistente.id}
-                                            eventoId={evento.id}
-                                            estadoInicial={cotizacionExistente.status}
-                                            className="w-full"
-                                            mostrarTexto={true}
-                                            onAutorizado={() => {
-                                                toast.success('Evento autorizado y movido a seguimiento');
-                                            }}
-                                            onEliminado={() => {
-                                                toast.success('Cotización eliminada exitosamente');
-                                                router.push(`/admin/dashboard/eventos/${evento.id}`);
-                                            }}
-                                            cotizacion={{
-                                                id: cotizacionExistente.id,
-                                                nombre: cotizacionExistente.nombre,
-                                                status: cotizacionExistente.status,
-                                                archivada: cotizacionExistente.archivada
-                                            }}
-                                        />
+                                    <div className="border-t border-zinc-700/50 pt-4">
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <div className="text-xs text-amber-400 uppercase tracking-wide font-semibold">
+                                                        Acciones Administrativas
+                                                    </div>
+                                                    <div className="text-xs text-zinc-500 mt-0.5">
+                                                        {cotizacionExistente.status === 'aprobada'
+                                                            ? 'Gestionar cotización aprobada'
+                                                            : 'Estas acciones afectan el estado de la cotización'
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setMostrarAccionesDestructivas(!mostrarAccionesDestructivas)}
+                                                    className="flex items-center gap-1 px-2 py-1 text-xs bg-amber-600/20 text-amber-400 rounded hover:bg-amber-600/30 transition-colors border border-amber-600/30"
+                                                >
+                                                    {mostrarAccionesDestructivas ? (
+                                                        <>
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                            </svg>
+                                                            Ocultar
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                            </svg>
+                                                            Mostrar
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+
+                                            {mostrarAccionesDestructivas && (
+                                                <div className="space-y-2">
+                                                    <div className="bg-amber-900/10 border border-amber-600/30 rounded-lg p-3">
+                                                        <BotonAutorizarCotizacion
+                                                            cotizacionId={cotizacionExistente.id}
+                                                            eventoId={evento.id}
+                                                            estadoInicial={cotizacionExistente.status}
+                                                            className="w-full"
+                                                            mostrarTexto={true}
+                                                            onAutorizado={() => {
+                                                                toast.success('Evento autorizado y movido a seguimiento');
+                                                            }}
+                                                            onEliminado={() => {
+                                                                toast.success('Cotización eliminada exitosamente');
+                                                                router.push(`/admin/dashboard/eventos/${evento.id}`);
+                                                            }}
+                                                            cotizacion={{
+                                                                id: cotizacionExistente.id,
+                                                                nombre: cotizacionExistente.nombre,
+                                                                status: cotizacionExistente.status,
+                                                                archivada: cotizacionExistente.archivada
+                                                            }}
+                                                        />
+                                                        <div className="text-xs text-amber-600 bg-amber-900/20 border border-amber-600/30 rounded px-2 py-1 mt-2">
+                                                            ⚠️ Las acciones de autorización/eliminación afectan permanentemente el estado de la cotización
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
-
-                                <button
-                                    type="button"
-                                    onClick={() => router.back()}
-                                    className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-zinc-700 text-zinc-100 hover:bg-zinc-600 min-w-0"
-                                >
-                                    <span className="truncate">Cancelar</span>
-                                </button>
                             </div>
                         </div>
                     </div>
