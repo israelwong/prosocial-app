@@ -24,8 +24,12 @@ import CondicionesComerciales from './CondicionesComerciales'
 import ServiciosAgrupados from './ServiciosAgrupados'
 import BotonPago from './BotonPago'
 
-// 🔑 Configuración de Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+// 🔑 Configuración de Stripe con validación
+const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+if (!publishableKey) {
+    console.error("🚨 STRIPE ERROR: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY no está definida");
+}
+const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
 // Tipos específicos para servicios agrupados en el display
 interface ServiciosAgrupados {
@@ -760,57 +764,75 @@ export default function CotizacionDetalle({
                             </button>
                         </div>
 
-                        <Elements
-                            stripe={stripePromise}
-                            options={{
-                                clientSecret,
-                                appearance: {
-                                    theme: 'night',
-                                    variables: {
-                                        colorPrimary: '#8b5cf6',
-                                        colorBackground: '#27272a',
-                                        colorText: '#ffffff',
-                                        colorDanger: '#ef4444',
-                                        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-                                        spacingUnit: '4px',
-                                        borderRadius: '8px',
-                                    }
-                                }
-                            }}
-                        >
-                            <FormularioPagoStripe
-                                cotizacionId={cotizacion.id}
-                                paymentData={{
-                                    montoFinal: precioFinalStripe,
-                                    esMSI: infoMetodoPago?.esMSI || false,
-                                    numMSI: infoMetodoPago?.numMSI || 0,
-                                    tipoPago: (() => {
-                                        // 🎯 DETERMINAR TIPO DE PAGO BASADO EN EL MÉTODO SELECCIONADO
-                                        const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
-                                        const metodoActivo = condicionActiva?.metodosPago.find((m: any) => m.metodoPagoId === metodoPagoSeleccionado)
-
-                                        if (metodoActivo) {
-                                            const esSpei = metodoActivo.payment_method === 'customer_balance' ||
-                                                metodoActivo.metodo_pago?.toLowerCase().includes('spei');
-                                            return esSpei ? 'spei' : 'card';
+                        {/* 🔍 Validación de Stripe antes del renderizado */}
+                        {!stripePromise ? (
+                            <div className="p-6 text-center">
+                                <p className="text-red-400 mb-4">
+                                    ⚠️ Error de configuración: Stripe no está disponible
+                                </p>
+                                <p className="text-sm text-zinc-400">
+                                    Por favor contacta al soporte técnico
+                                </p>
+                            </div>
+                        ) : !clientSecret ? (
+                            <div className="p-6 text-center">
+                                <p className="text-zinc-400 mb-4">
+                                    🔄 Inicializando pago...
+                                </p>
+                            </div>
+                        ) : (
+                            <Elements
+                                stripe={stripePromise}
+                                options={{
+                                    clientSecret,
+                                    appearance: {
+                                        theme: 'night',
+                                        variables: {
+                                            colorPrimary: '#8b5cf6',
+                                            colorBackground: '#27272a',
+                                            colorText: '#ffffff',
+                                            colorDanger: '#ef4444',
+                                            fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                                            spacingUnit: '4px',
+                                            borderRadius: '8px',
                                         }
-
-                                        return 'card'; // Fallback
-                                    })(),
-                                    cotizacion: {
-                                        nombre: cotizacion.nombre || 'Cotización',
-                                        cliente: cotizacion.Evento?.Cliente?.nombre || 'Cliente'
-                                    },
-                                    metodo: {
-                                        nombre: infoMetodoPago?.esMSI ? `${infoMetodoPago.numMSI} MSI` : 'Pago único',
-                                        tipo: infoMetodoPago?.esMSI ? 'msi' : 'single'
                                     }
                                 }}
-                                returnUrl={undefined} // 🎯 SIEMPRE usar callback (nunca redirección)
-                                onSuccess={onPagoExitoso}
-                                onCancel={cerrarModalPago}
-                            />
-                        </Elements>
+                            >
+                                <FormularioPagoStripe
+                                    cotizacionId={cotizacion.id}
+                                    paymentData={{
+                                        montoFinal: precioFinalStripe,
+                                        esMSI: infoMetodoPago?.esMSI || false,
+                                        numMSI: infoMetodoPago?.numMSI || 0,
+                                        tipoPago: (() => {
+                                            // 🎯 DETERMINAR TIPO DE PAGO BASADO EN EL MÉTODO SELECCIONADO
+                                            const condicionActiva = condicionesComerciales.find(c => c.id === condicionSeleccionada)
+                                            const metodoActivo = condicionActiva?.metodosPago.find((m: any) => m.metodoPagoId === metodoPagoSeleccionado)
+
+                                            if (metodoActivo) {
+                                                const esSpei = metodoActivo.payment_method === 'customer_balance' ||
+                                                    metodoActivo.metodo_pago?.toLowerCase().includes('spei');
+                                                return esSpei ? 'spei' : 'card';
+                                            }
+
+                                            return 'card'; // Fallback
+                                        })(),
+                                        cotizacion: {
+                                            nombre: cotizacion.nombre || 'Cotización',
+                                            cliente: cotizacion.Evento?.Cliente?.nombre || 'Cliente'
+                                        },
+                                        metodo: {
+                                            nombre: infoMetodoPago?.esMSI ? `${infoMetodoPago.numMSI} MSI` : 'Pago único',
+                                            tipo: infoMetodoPago?.esMSI ? 'msi' : 'single'
+                                        }
+                                    }}
+                                    returnUrl={undefined} // 🎯 SIEMPRE usar callback (nunca redirección)
+                                    onSuccess={onPagoExitoso}
+                                    onCancel={cerrarModalPago}
+                                />
+                            </Elements>
+                        )}
 
                         <button
                             onClick={cerrarModalPago}

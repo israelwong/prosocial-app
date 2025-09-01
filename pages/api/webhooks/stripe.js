@@ -28,23 +28,19 @@ export default async function handler(req, res) {
   let event;
 
   try {
-    // 🔧 Método correcto para leer raw body en Next.js
-    let body = "";
-
-    req.on("data", (chunk) => {
-      body += chunk.toString();
-    });
-
-    const rawBody = await new Promise((resolve) => {
-      req.on("end", () => {
-        resolve(body);
-      });
-    });
+    // 🔧 Método correcto para leer raw body en Next.js API Routes
+    const chunks = [];
+    
+    for await (const chunk of req) {
+      chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+    }
+    
+    const rawBody = Buffer.concat(chunks);
 
     console.log("📦 Raw body recibido:", {
       length: rawBody.length,
       hasSignature: !!sig,
-      bodyStart: rawBody.substring(0, 100) + "...",
+      bodyStart: rawBody.toString().substring(0, 100) + "...",
     });
 
     event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
