@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
         // Intentar obtener información de la cuenta
         const account = await stripe.accounts.retrieve()
-        
+
         // Crear un PaymentIntent de prueba
         const testPaymentIntent = await stripe.paymentIntents.create({
             amount: 100, // $1.00 MXN
@@ -49,8 +49,8 @@ export async function GET(request: NextRequest) {
                 publishableKeyPrefix: publishableKey.substring(0, 12) + '...',
                 secretKeyEnv: secretKey.includes('test') ? 'test' : 'live',
                 publishableKeyEnv: publishableKey.includes('test') ? 'test' : 'live',
-                keysMatch: (secretKey.includes('test') && publishableKey.includes('test')) || 
-                          (!secretKey.includes('test') && !publishableKey.includes('test')),
+                keysMatch: (secretKey.includes('test') && publishableKey.includes('test')) ||
+                    (!secretKey.includes('test') && !publishableKey.includes('test')),
                 accountId: account.id,
                 testPaymentIntent: {
                     id: testPaymentIntent.id,
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     } catch (error) {
         console.error('❌ Error verificando Stripe config:', error)
-        
+
         return NextResponse.json({
             success: false,
             error: error instanceof Error ? error.message : 'Error desconocido',
