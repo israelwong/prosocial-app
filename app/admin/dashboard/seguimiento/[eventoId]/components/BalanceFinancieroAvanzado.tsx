@@ -24,6 +24,7 @@ import {
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 import FormularioPago from "./FormularioPago"
 import FormularioCosto from "./FormularioCosto"
 import { crearPago, actualizarPago, eliminarPago } from "@/app/admin/_lib/actions/seguimiento/pagos.actions"
@@ -281,6 +282,65 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
     // Cálculo de utilidad final
     const utilidadFinal = totalPagado - gastosOperativos - totalCostos
 
+    // Datos para la gráfica de pastel (simplificada)
+    const datosGraficaPastel = [
+        {
+            name: 'Utilidad Final',
+            value: Math.max(0, utilidadFinal),
+            color: '#22c55e', // green-500
+            percentage: totalPagado > 0 ? ((Math.max(0, utilidadFinal) / totalPagado) * 100).toFixed(1) : '0'
+        },
+        {
+            name: 'Gastos Operativos',
+            value: gastosOperativos,
+            color: '#f97316', // orange-500
+            percentage: totalPagado > 0 ? ((gastosOperativos / totalPagado) * 100).toFixed(1) : '0'
+        },
+        {
+            name: 'Costos Producción',
+            value: totalCostos,
+            color: '#ef4444', // red-500
+            percentage: totalPagado > 0 ? ((totalCostos / totalPagado) * 100).toFixed(1) : '0'
+        }
+    ].filter(item => item.value > 0) // Solo mostrar elementos con valor
+
+    // Custom label para la gráfica
+    const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, name, percentage }: any) => {
+        const RADIAN = Math.PI / 180;
+        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+        return (
+            <text
+                x={x}
+                y={y}
+                fill="white"
+                textAnchor={x > cx ? 'start' : 'end'}
+                dominantBaseline="central"
+                fontSize={12}
+                fontWeight="500"
+            >
+                {`${percentage}%`}
+            </text>
+        );
+    };
+
+    // Custom tooltip para la gráfica
+    const CustomTooltip = ({ active, payload }: any) => {
+        if (active && payload && payload.length) {
+            const data = payload[0];
+            return (
+                <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-3 shadow-lg">
+                    <p className="text-zinc-200 font-medium mb-1">{data.payload.name}</p>
+                    <p className="text-zinc-100 font-bold">{formatearMoneda(data.value)}</p>
+                    <p className="text-zinc-400 text-sm">{data.payload.percentage}% del total</p>
+                </div>
+            );
+        }
+        return null;
+    };
+
     // Funciones para manejar costos
     const cargarCostos = async () => {
         if (!cotizacion?.id) return
@@ -522,9 +582,9 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                                     </div>
                                 </div>
                             )}
-                            <div className="text-center p-4 bg-blue-50 rounded-lg">
-                                <DollarSign className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                                <p className="text-sm font-medium text-blue-800">
+                            <div className="text-center p-3 bg-blue-50 rounded-lg">
+                                <DollarSign className="h-5 w-5 text-blue-600 mx-auto mb-2" />
+                                <p className="text-xs font-medium text-blue-800">
                                     Cotización
                                     {descuentoCongelado && (
                                         <span className="ml-1 text-xs text-blue-600">
@@ -532,7 +592,7 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                                         </span>
                                     )}
                                 </p>
-                                <p className="text-xl font-bold text-blue-900">
+                                <p className="text-lg font-bold text-blue-900 leading-tight">
                                     {formatearMoneda(totalCotizacion)}
                                 </p>
                                 {descuentoCongelado && (
@@ -542,26 +602,26 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                                 )}
                             </div>
 
-                            <div className="text-center p-4 bg-green-900/20 rounded-lg border border-green-800">
-                                <CheckCircle className="h-6 w-6 text-green-400 mx-auto mb-2" />
-                                <p className="text-sm font-medium text-green-300">Pagado</p>
-                                <p className="text-xl font-bold text-green-100">
+                            <div className="text-center p-3 bg-green-900/20 rounded-lg border border-green-800">
+                                <CheckCircle className="h-5 w-5 text-green-400 mx-auto mb-2" />
+                                <p className="text-xs font-medium text-green-300">Pagado</p>
+                                <p className="text-lg font-bold text-green-100 leading-tight">
                                     {formatearMoneda(totalPagado)}
                                 </p>
                             </div>
 
-                            <div className="text-center p-4 bg-yellow-900/20 rounded-lg border border-yellow-800">
-                                <AlertTriangle className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
-                                <p className="text-sm font-medium text-yellow-300">Saldo</p>
-                                <p className="text-xl font-bold text-yellow-100">
+                            <div className="text-center p-3 bg-yellow-900/20 rounded-lg border border-yellow-800">
+                                <AlertTriangle className="h-5 w-5 text-yellow-400 mx-auto mb-2" />
+                                <p className="text-xs font-medium text-yellow-300">Saldo</p>
+                                <p className="text-lg font-bold text-yellow-100 leading-tight">
                                     {formatearMoneda(saldoPendiente)}
                                 </p>
                             </div>
 
-                            <div className="text-center p-4 bg-purple-900/20 rounded-lg border border-purple-800">
-                                <TrendingUp className="h-6 w-6 text-purple-400 mx-auto mb-2" />
-                                <p className="text-sm font-medium text-purple-300">Progreso</p>
-                                <p className="text-xl font-bold text-purple-100">
+                            <div className="text-center p-3 bg-purple-900/20 rounded-lg border border-purple-800">
+                                <TrendingUp className="h-5 w-5 text-purple-400 mx-auto mb-2" />
+                                <p className="text-xs font-medium text-purple-300">Progreso</p>
+                                <p className="text-lg font-bold text-purple-100 leading-tight">
                                     {porcentajePagado.toFixed(1)}%
                                 </p>
                             </div>
@@ -1082,6 +1142,75 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                             </div>
                         </div>
 
+                        {/* Gráfica de Pastel - Distribución Financiera */}
+                        {(totalPagado > 0 && datosGraficaPastel.length > 0) && (
+                            <div className="p-6 border border-zinc-700 rounded-lg bg-zinc-900">
+                                <h5 className="font-medium mb-4 text-zinc-100 flex items-center gap-2">
+                                    <PieChart className="h-5 w-5 text-blue-400" />
+                                    Distribución Financiera
+                                </h5>
+                                <div className="grid md:grid-cols-2 gap-6 items-center">
+                                    {/* Gráfica */}
+                                    <div className="h-64">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <RechartsPieChart>
+                                                <Pie
+                                                    data={datosGraficaPastel}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    labelLine={false}
+                                                    label={renderCustomLabel}
+                                                    outerRadius={80}
+                                                    fill="#8884d8"
+                                                    dataKey="value"
+                                                    stroke="#374151"
+                                                    strokeWidth={2}
+                                                >
+                                                    {datosGraficaPastel.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip content={<CustomTooltip />} />
+                                            </RechartsPieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+
+                                    {/* Leyenda personalizada */}
+                                    <div className="space-y-3">
+                                        {datosGraficaPastel.map((item, index) => (
+                                            <div key={index} className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+                                                <div className="flex items-center gap-3">
+                                                    <div
+                                                        className="w-4 h-4 rounded-full"
+                                                        style={{ backgroundColor: item.color }}
+                                                    ></div>
+                                                    <span className="text-zinc-200 font-medium text-sm">{item.name}</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-zinc-100 font-bold text-sm">
+                                                        {formatearMoneda(item.value)}
+                                                    </div>
+                                                    <div className="text-zinc-400 text-xs">
+                                                        {item.percentage}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {/* Total */}
+                                        <div className="pt-2 border-t border-zinc-700">
+                                            <div className="flex items-center justify-between p-3 bg-blue-900/30 rounded-lg border border-blue-700/50">
+                                                <span className="text-blue-200 font-semibold">Total Ingresos</span>
+                                                <span className="text-blue-100 font-bold">
+                                                    {formatearMoneda(totalPagado)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Desglose visual de costos */}
                         {(gastosOperativos > 0 || totalCostos > 0) && (
                             <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-900">
@@ -1158,60 +1287,6 @@ export function BalanceFinancieroAvanzado({ cotizacion, pagos = [] }: BalanceFin
                                 {Object.keys(metodosPago).length === 0 && (
                                     <p className="text-zinc-500 text-sm">No hay datos de métodos de pago</p>
                                 )}
-                            </div>
-                        </div>
-
-                        {/* Cronograma sugerido */}
-                        <div>
-                            <h4 className="font-medium mb-3 text-zinc-100">Cronograma de pagos sugerido</h4>
-                            <div className="space-y-2">
-                                <div className="flex justify-between p-3 bg-green-900/20 rounded border border-green-800">
-                                    <span className="text-green-300">Anticipo (10%)</span>
-                                    <span className="font-medium text-green-100">{formatearMoneda(totalCotizacion * 0.1)}</span>
-                                </div>
-                                <div className="flex justify-between p-3 bg-blue-900/20 rounded border border-blue-800">
-                                    <span className="text-blue-300">Segundo pago (40%)</span>
-                                    <span className="font-medium text-blue-100">{formatearMoneda(totalCotizacion * 0.4)}</span>
-                                </div>
-                                <div className="flex justify-between p-3 bg-purple-900/20 rounded border border-purple-800">
-                                    <span className="text-purple-300">Pago final (50%)</span>
-                                    <span className="font-medium text-purple-100">{formatearMoneda(totalCotizacion * 0.5)}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Estado actual del proyecto */}
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-900">
-                                <h5 className="font-medium mb-2 text-zinc-100">Estado Actual</h5>
-                                <div className="space-y-1 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">Pagado:</span>
-                                        <span className="text-zinc-200">{formatearMoneda(totalPagado)}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">Avance:</span>
-                                        <span className="text-zinc-200">{porcentajePagado.toFixed(1)}%</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">Pendiente:</span>
-                                        <span className="text-zinc-200">{formatearMoneda(saldoPendiente)}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-900">
-                                <h5 className="font-medium mb-2 text-zinc-100">Próximo Pago</h5>
-                                <div className="space-y-1 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">Sugerido:</span>
-                                        <span className="text-zinc-200">{formatearMoneda(Math.min(saldoPendiente, totalCotizacion * 0.4))}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-400">Fecha sugerida:</span>
-                                        <span className="text-zinc-200">Próxima semana</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>

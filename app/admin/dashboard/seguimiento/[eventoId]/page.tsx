@@ -6,7 +6,7 @@ import { obtenerUsuarios } from '@/app/admin/_lib/actions/users/users.actions'
 import { HeaderSimple } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/HeaderSimple'
 import { BitacoraSimple } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/BitacoraSimple'
 import { BalanceFinancieroAvanzado } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/BalanceFinancieroAvanzado'
-import ServiciosAsociados from '@/app/admin/dashboard/seguimiento/[eventoId]/components/ServiciosAsociados'
+import ServiciosAsociadosMinimalista from './components/ServiciosAsociadosMinimalista'
 import FichaAgendaV3 from '@/app/admin/dashboard/seguimiento/[eventoId]/components/FichaAgendaV3'
 
 export const metadata: Metadata = {
@@ -69,7 +69,7 @@ export default async function Page({ params }: PageProps) {
 
                     {/* Columna 2: Servicios Asociados (completa) */}
                     <div className='space-y-5'>
-                        <ServiciosAsociados
+                        <ServiciosAsociadosMinimalista
                             evento={{
                                 ...datos.evento,
                                 Cotizacion: datos.cotizacion ? [datos.cotizacion] : []

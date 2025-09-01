@@ -335,39 +335,29 @@ export default function ServiciosAsociados({ evento, usuarios }: Props) {
 
     return (
         <div>
-            {/* Ficha unificada con cabecera y servicios */}
+            {/* Header minimalista */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg">
-                {/* Cabecera con Información Financiera */}
-                <div className="p-6 border-b border-zinc-800">
-                    {/* Línea 1: Título | Botones */}
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-semibold text-zinc-200">Servicios Asociados</h2>
-
-                        <div className="flex items-center gap-3">
+                <div className="p-4 border-b border-zinc-800">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-lg font-semibold text-zinc-200">Servicios Asociados</h2>
+                        <div className="flex items-center gap-2">
                             <a
                                 href={`/admin/dashboard/eventos/${evento.id}/cotizacion/${cotizacionAprobada?.id}`}
-                                className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
-                                title="Editar cotización - Abrir formulario de edición"
+                                className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                                title="Editar cotización"
                             >
-                                <FileText className="w-4 h-4" />
+                                <FileText className="w-4 h-4 inline mr-1" />
                                 Editar
                             </a>
-
                             <button
                                 onClick={() => setMostrarInformacionFinanciera(!mostrarInformacionFinanciera)}
-                                className="flex items-center gap-2 px-3 py-2 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg transition-colors"
-                                title={mostrarInformacionFinanciera ? "Ocultar información de costos y nómina" : "Mostrar información de costos y nómina"}
+                                className="p-1.5 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-md transition-colors"
+                                title={mostrarInformacionFinanciera ? "Ocultar costos" : "Mostrar costos"}
                             >
                                 {mostrarInformacionFinanciera ? (
-                                    <>
-                                        <EyeOff className="w-4 h-4" />
-                                        Ocultar Costos
-                                    </>
+                                    <EyeOff className="w-4 h-4" />
                                 ) : (
-                                    <>
-                                        <Eye className="w-4 h-4" />
-                                        Mostrar Costos
-                                    </>
+                                    <Eye className="w-4 h-4" />
                                 )}
                             </button>
                         </div>

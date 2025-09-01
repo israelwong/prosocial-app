@@ -96,7 +96,7 @@ export default function CrearNominaModal({ isOpen, onClose, servicio, onConfirma
                 <div className="flex items-center justify-between p-6 border-b border-zinc-700">
                     <h3 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
                         <DollarSign className="w-5 h-5 text-green-400" />
-                        Crear Nómina
+                        Asignar Nómina
                     </h3>
                     <button
                         onClick={handleClose}
