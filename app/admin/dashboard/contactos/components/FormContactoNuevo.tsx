@@ -1,4 +1,4 @@
-// Ruta: app/admin/dashboard/contactos/components/FormContactoNuevoV2.tsx
+// Ruta: app/admin/dashboard/contactos/components/FormContactoNuevo.tsx
 
 'use client'
 
@@ -30,7 +30,7 @@ import {
     Radio
 } from 'lucide-react';
 
-export default function FormContactoNuevoV2() {
+export default function FormContactoNuevo() {
     const router = useRouter();
     const [canales, setCanales] = useState<Canal[]>([]);
     const [loading, setLoading] = useState(false);

@@ -39,7 +39,7 @@ interface Props {
     onAsignacionEvento?: (status: boolean) => void
 }
 
-export default function FichaEventoUnificadaV2({ eventoCompleto, onAsignacionEvento }: Props) {
+export default function FichaEventoUnificada({ eventoCompleto, onAsignacionEvento }: Props) {
     const evento = eventoCompleto
 
     const [loading, setLoading] = useState(true)

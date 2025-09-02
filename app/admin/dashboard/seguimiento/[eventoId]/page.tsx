@@ -7,7 +7,7 @@ import { HeaderSimple } from '@/app/admin/dashboard/seguimiento/[eventoId]/compo
 import { BitacoraSimple } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/BitacoraSimple'
 import { BalanceFinancieroAvanzado } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/BalanceFinancieroAvanzado'
 import ServiciosAsociadosMinimalista from './components/ServiciosAsociadosMinimalista'
-import FichaAgendaV3 from '@/app/admin/dashboard/seguimiento/[eventoId]/components/FichaAgendaV3'
+import FichaAgenda from '@/app/admin/dashboard/seguimiento/[eventoId]/components/FichaAgenda'
 
 export const metadata: Metadata = {
     title: 'Detalle del evento',
@@ -83,7 +83,7 @@ export default async function Page({ params }: PageProps) {
                     <div className='space-y-5'>
 
                         {/* Ficha de Agenda V3 */}
-                        <FichaAgendaV3 eventoId={eventoId} />
+                        <FichaAgenda eventoId={eventoId} />
 
                         {/* Widget TodoList / Checklist */}
                         <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-4">

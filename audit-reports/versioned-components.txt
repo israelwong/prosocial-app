@@ -1,0 +1,8 @@
+./app/admin/_lib/actions/agenda/agenda.actions-v2.ts
+./app/admin/dashboard/contactos/components/FormContactoNuevoV2.tsx
+./app/admin/dashboard/contactos/components/ListaContactosV2.tsx
+./app/admin/dashboard/eventos/[eventoId]/components/FichaClienteUnificadaV2.tsx
+./app/admin/dashboard/eventos/[eventoId]/components/FichaEventoUnificadaV2.tsx
+./app/admin/dashboard/eventos/[eventoId]/cotizacion/components/ListaCotizacionesV2.tsx
+./app/admin/dashboard/seguimiento/[eventoId]/components/FichaAgendaV3.tsx
+./app/ui/main/Fifteens/PaquetesFifteensV2.jsx

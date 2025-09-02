@@ -1,6 +1,6 @@
 import React from 'react'
 import { Metadata } from 'next'
-import FormContactoNuevoV2 from '../components/FormContactoNuevoV2'
+import FormContactoNuevo from '../components/FormContactoNuevo'
 
 export const metadata: Metadata = {
     title: 'Nuevo Contacto - ProSocial',
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 }
 
 export default function NuevoContactoPage() {
-    return <FormContactoNuevoV2 />
+    return <FormContactoNuevo />
 }

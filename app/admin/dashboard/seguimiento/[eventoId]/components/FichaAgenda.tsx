@@ -11,7 +11,7 @@ interface Props {
     eventoId: string
 }
 
-export default function FichaAgendaV3({ eventoId }: Props) {
+export default function FichaAgenda({ eventoId }: Props) {
     const [agenda, setAgenda] = useState<Agenda[]>([])
     const [loading, setLoading] = useState(true)
     const [isModalAgendaNuevoOpen, setIsModalAgendaNuevoOpen] = useState(false)

@@ -5,8 +5,8 @@ import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.sche
 
 // Nuevos componentes unificados
 import EventoHeader from './EventoHeader'
-import FichaClienteUnificadaV2 from './FichaClienteUnificadaV2'
-import FichaEventoUnificadaV2 from './FichaEventoUnificadaV2'
+import FichaClienteUnificada from './FichaClienteUnificada'
+import FichaEventoUnificada from './FichaEventoUnificada'
 import FichaBitacoraUnificada from './FichaBitacoraUnificada'
 import FichaCotizacionesUnificada from './FichaCotizacionesUnificada'
 import FichaPaquetesCompartir from './FichaPaquetesCompartir'
@@ -25,7 +25,7 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
         return <div className="p-4 text-red-500">Error: Datos del cliente no disponibles</div>
     }
 
-    // Para compatibilidad con FichaClienteUnificadaV2, necesitamos un cliente con más propiedades
+    // Para compatibilidad con FichaClienteUnificada, necesitamos un cliente con más propiedades
     const clienteExtendido = {
         ...eventoCompleto.Cliente,
         // Solo usar valores por defecto si los campos no existen en los datos reales
@@ -103,14 +103,14 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
 
                     {/* Columna 1: Información del Cliente */}
                     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
-                        <FichaClienteUnificadaV2
+                        <FichaClienteUnificada
                             eventoCompleto={eventoCompletoExtendido}
                         />
                     </div>
 
                     {/* Columna 2: Información del Evento */}
                     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
-                        <FichaEventoUnificadaV2
+                        <FichaEventoUnificada
                             eventoCompleto={eventoCompleto}
                             onAsignacionEvento={handleEventoAsignado}
                         />
@@ -135,9 +135,9 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
                 <EventoMobileNavigation
                     gestionContent={
                         <div className="p-4 space-y-6">
-                            <FichaClienteUnificadaV2 eventoCompleto={eventoCompletoExtendido} />
+                            <FichaClienteUnificada eventoCompleto={eventoCompletoExtendido} />
                             <hr className="border-zinc-800" />
-                            <FichaEventoUnificadaV2
+                            <FichaEventoUnificada
                                 eventoCompleto={eventoCompleto}
                                 onAsignacionEvento={handleEventoAsignado}
                             />

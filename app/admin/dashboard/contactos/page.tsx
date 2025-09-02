@@ -1,6 +1,6 @@
 import React from 'react'
 import { Metadata } from 'next'
-import ListaContactosV2 from './components/ListaContactosV2'
+import ListaContactos from './components/ListaContactos'
 
 export const metadata: Metadata = {
     title: 'Contactos - ProSocial',
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 }
 
 function ContactosPage() {
-    return <ListaContactosV2 />
+    return <ListaContactos />
 }
 
 export default ContactosPage

@@ -1,7 +1,7 @@
 import React from 'react'
 import type { Metadata } from "next";
 import BtnCerrar from '@/app/ui/main/BtnCerrar';
-import PaquetesFifteensV2 from '@/app/ui/main/Fifteens/PaquetesFifteensV2';
+import PaquetesFifteens from '@/app/ui/main/Fifteens/PaquetesFifteens';
 // import Galeria from '@/app/ui/main/Galeria';
 
 export const metadata: Metadata = {
@@ -33,7 +33,7 @@ function page() {
         </div>
 
         <div className="px-5">
-          <PaquetesFifteensV2 />
+          <PaquetesFifteens />
         </div>
 
       </section>

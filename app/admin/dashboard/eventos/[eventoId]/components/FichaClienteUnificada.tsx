@@ -138,7 +138,7 @@ export function FichaClienteActions({ eventoCompleto }: { eventoCompleto: Evento
     )
 }
 
-export default function FichaClienteUnificadaV2({ eventoCompleto, showActions = true }: Props) {
+export default function FichaClienteUnificada({ eventoCompleto, showActions = true }: Props) {
     const [canales, setCanales] = useState<Canal[]>([])
     const [loading, setLoading] = useState(true)
     const [isEditing, setIsEditing] = useState(false)

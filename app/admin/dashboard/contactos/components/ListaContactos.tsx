@@ -1,4 +1,4 @@
-// Ruta: app/admin/dashboard/contactos/components/ListaContactosV2.tsx
+// Ruta: app/admin/dashboard/contactos/components/ListaContactos.tsx
 
 'use client'
 
@@ -35,7 +35,7 @@ interface PaginationInfo {
     pages: number;
 }
 
-export default function ListaContactosV2() {
+export default function ListaContactos() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
