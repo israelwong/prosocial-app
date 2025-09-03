@@ -1,6 +1,6 @@
 'use server'
-import { Notificacion } from './types';
-import prisma from './prismaClient';
+import { Notificacion } from '../../types';
+import prisma from '../../prismaClient';
 
 export async function obtenerNotificaciones() {
     const notificaciones = await prisma.notificacion.findMany({

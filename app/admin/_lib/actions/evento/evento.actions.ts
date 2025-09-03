@@ -24,7 +24,7 @@ import { revalidatePath } from 'next/cache';
 // Importamos las funciones auxiliares existentes
 import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions';
 import { obtenerBalancePagosEvento } from '@/app/admin/_lib/actions/pagos';
-import { obtenerCliente } from '@/app/admin/_lib/cliente.actions';
+import { obtenerCliente } from '@/app/admin/_lib/actions/cliente/cliente.actions';
 import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
 
 // =============================================================================

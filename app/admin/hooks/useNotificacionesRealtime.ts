@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../_lib/supabase'
-import { crearNotificacion } from '../_lib/notificacion.actions'
+import { crearNotificacion } from '../_lib/actions/notificacion/notificacion.actions'
 
 interface UseNotificacionesRealtimeReturn {
     notificaciones: any[]
@@ -22,7 +22,7 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
     // Función para recargar notificaciones
     const recargarNotificaciones = useCallback(async () => {
         try {
-            const { obtenerNotificaciones } = await import('../_lib/notificacion.actions')
+            const { obtenerNotificaciones } = await import('../_lib/actions/notificacion/notificacion.actions')
             const result = await obtenerNotificaciones()
 
             // ✅ Filtrar notificaciones ocultas por seguridad extra

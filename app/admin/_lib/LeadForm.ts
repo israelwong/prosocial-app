@@ -1,8 +1,8 @@
 'use server';
 import { LeadForm } from './types';
-import { crearCliente } from './cliente.actions';
+import { crearCliente } from './actions/cliente/cliente.actions';
 import { crearEvento } from './evento.actions';
-import { obtenerEtapa1 } from './EventoEtapa.actions';
+import { obtenerEtapa1 } from './actions/EventoEtapa/EventoEtapa.actions';
 import prisma from './prismaClient';
 
 

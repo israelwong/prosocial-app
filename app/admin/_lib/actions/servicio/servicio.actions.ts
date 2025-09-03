@@ -1,8 +1,8 @@
 'use server'
 import { Servicio } from "@/app/admin/_lib/types";
-import { crearGasto, eliminarGasto, obtenerGastosPorServicio } from '@/app/admin/_lib/gastos.actions';
-import { eliminarGastos } from '@/app/admin/_lib/gastos.actions';
-import prisma from './prismaClient';
+import { crearGasto, eliminarGasto, obtenerGastosPorServicio } from '@/app/admin/_lib/actions/gastos/gastos.actions';
+import { eliminarGastos } from '@/app/admin/_lib/actions/gastos/gastos.actions';
+import prisma from '../../prismaClient';
 
 export async function obtenerServicos() {
     return prisma.servicio.findMany({

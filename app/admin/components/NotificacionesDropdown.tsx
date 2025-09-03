@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Bell, X, Eye, ExternalLink, Clock, CheckCircle, AlertCircle } from 'lucide-react'
-import { marcarComoLeida, ocultarNotificacion, obtenerNotificaciones } from '../_lib/notificacion.actions'
+import { marcarComoLeida, ocultarNotificacion, obtenerNotificaciones } from '../_lib/actions/notificacion/notificacion.actions'
 import { supabase } from '../_lib/supabase'
 
 interface Notificacion {

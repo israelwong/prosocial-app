@@ -20,7 +20,7 @@ export function useNotificacionesPolling(): UseNotificacionesPollingReturn {
     const recargarNotificaciones = useCallback(async () => {
         try {
             setCargando(true)
-            const { obtenerNotificaciones } = await import('../_lib/notificacion.actions')
+            const { obtenerNotificaciones } = await import('../_lib/actions/notificacion/notificacion.actions')
             const result = await obtenerNotificaciones()
 
             // Filtrar notificaciones ocultas

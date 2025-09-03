@@ -9,7 +9,7 @@ import { PAGO_STATUS } from '@/app/admin/_lib/constants/status'
 import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
 import { obtenerPaquete, obtenerServiciosPorPaquete } from '@/app/admin/_lib/paquete.actions'
 import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
-import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
+import { obtenerServicio } from '@/app/admin/_lib/actions/servicio/servicio.actions'
 import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
 import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
 import { crearCotizacion, crearCotizacionAutorizada } from '@/app/admin/_lib/cotizacion.actions';

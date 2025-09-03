@@ -1,9 +1,9 @@
 'use server';
 import { Pago } from "@/app/admin/_lib/types";
-import { PAGO_STATUS } from './constants/status';
-import prisma from './prismaClient';
-import { Agenda } from './types';
-import { crearAgendaEvento } from "./agenda.actions";
+import { PAGO_STATUS } from '../../constants/status';
+import prisma from '../../prismaClient';
+import { Agenda } from '../../types';
+import { crearAgendaEvento } from "../../agenda.actions";
 // import { enviarCorreoBienvenida, enviarCorreoPagoExitoso } from "./correo.actions";
 
 export async function obtenerPagos() {

@@ -1,6 +1,6 @@
 'use server'
-import prisma from './prismaClient';
-import { Cliente } from "./types";
+import prisma from '../../prismaClient';
+import { Cliente } from "../../types";
 
 export async function obtenerClientes() {
     return await prisma.cliente.findMany({

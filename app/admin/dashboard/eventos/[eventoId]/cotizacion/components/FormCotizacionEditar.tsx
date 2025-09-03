@@ -10,11 +10,11 @@ import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizaci
 import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
 import { actualizarEventoStatus } from '@/app/admin/_lib/evento.actions';
 import { obtenerEventoPorId } from '@/app/admin/_lib/evento.actions';
-import { obtenerCliente } from '@/app/admin/_lib/cliente.actions';
+import { obtenerCliente } from '@/app/admin/_lib/actions/cliente/cliente.actions';
 import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
-import { obtenerServicio } from '@/app/admin/_lib/servicio.actions'
+import { obtenerServicio } from '@/app/admin/_lib/actions/servicio/servicio.actions'
 import { crearPago } from '@/app/admin/_lib/actions/pagos';
-import { obtenerConteoCotizacionVisitas } from '@/app/admin/_lib/cotizacionVisita.actions'
+import { obtenerConteoCotizacionVisitas } from '@/app/admin/_lib/actions/cotizacionVisita/cotizacionVisita.actions'
 
 // import ListaServicios from './ListaServicios' // Componente eliminado en refactoring
 // import Wishlist from './Wishlist' // Componente eliminado en refactoring

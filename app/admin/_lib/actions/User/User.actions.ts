@@ -1,7 +1,7 @@
 'use server';
-import { User } from './types';
+import { User } from '../../types';
 import bcrypt from 'bcrypt';
-import prisma from './prismaClient';
+import prisma from '../../prismaClient';
 
 export async function obtenerUsuarios() {
     return await prisma.user.findMany({

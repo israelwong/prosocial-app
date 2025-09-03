@@ -14,7 +14,7 @@ import {
 import { supabase } from '../../_lib/supabase'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { validarPagoStripe } from '../../_lib/pago.actions'
+import { validarPagoStripe } from '../../_lib/actions/pago/pago.actions'
 import { EVENTO_STATUS, AGENDA_STATUS } from '../../_lib/constants/status'
 
 const links = [

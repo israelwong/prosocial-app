@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { Cliente } from '@/app/admin/_lib/types'
-import { obtenerCliente, actualizarCliente, eliminarCliente } from '@/app/admin/_lib/cliente.actions'
+import { obtenerCliente, actualizarCliente, eliminarCliente } from '@/app/admin/_lib/actions/cliente/cliente.actions'
 import { Trash } from 'lucide-react'
 import { obtenerCanalesLegacy as obtenerCanales } from '@/app/admin/_lib/actions/canal/canal.actions'
 import { useRouter } from 'next/navigation'
