@@ -3,6 +3,7 @@ import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { obtenerCotizacionesParaEvento } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento.actions'
+import { crearFechaLocal, calcularDiasRestantes } from '@/app/admin/_lib/utils/fechas'
 // Nuevos componentes
 import EventoHeaderWrapper from '../components/layout/EventoHeaderWrapper'
 import EventoFooterWrapper from '../components/layout/EventoFooterWrapper'
@@ -90,10 +91,8 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
         redirect('/cliente/auth/login')
     }
 
-    // Calcular días restantes
-    const fechaEvento = new Date(evento.fecha_evento)
-    const hoy = new Date()
-    const diasRestantes = Math.ceil((fechaEvento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))
+    // Calcular días restantes usando utilidad que evita problemas de zona horaria
+    const diasRestantes = calcularDiasRestantes(evento.fecha_evento)
 
     // Fecha no disponible (fecha pasada)
     if (diasRestantes < 0) {

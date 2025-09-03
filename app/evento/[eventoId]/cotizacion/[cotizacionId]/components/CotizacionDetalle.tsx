@@ -7,6 +7,7 @@ import { obtenerEventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimien
 import { obtenerCondicionesComerciales } from '@/app/admin/_lib/actions/condicionesComerciales/condicionesComerciales.actions'
 import { obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/actions/condicionesComerciales/condicionesComerciales.actions'
 import { obtenerMetodoPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions'
+import { crearFechaLocal, formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import type { EventoExtendido, ServicioDetalle, EventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.schemas'
 import { verificarDisponibilidadFechaRootLegacy as verificarDisponibilidadFecha } from '@/app/admin/_lib/actions/agenda'
 import { obtenerPaquetesParaCliente } from '@/app/admin/_lib/actions/paquetes/paquetes.actions'
@@ -153,7 +154,7 @@ export default function CotizacionDetalle({
 
     const verificarDisponibilidadReal = async () => {
         try {
-            const fechaEvento = new Date(evento.fecha_evento)
+            const fechaEvento = crearFechaLocal(evento.fecha_evento)
             const disponibilidad = await verificarDisponibilidadFecha(fechaEvento, evento.id)
             setFechaDisponible(disponibilidad.disponible)
         } catch (error) {
@@ -659,12 +660,7 @@ export default function CotizacionDetalle({
                                 {evento.nombre || 'Evento sin nombre'}
                             </h1>
                             <p className="text-zinc-400 text-sm">
-                                {new Date(evento.fecha_evento).toLocaleDateString('es-MX', {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                })}
+                                {formatearFecha(evento.fecha_evento)}
                             </p>
                         </div>
                     </div>

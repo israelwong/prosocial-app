@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import { Calendar, Clock, MapPin, User } from 'lucide-react'
+import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
 
 interface Evento {
     id: string
@@ -33,17 +34,6 @@ export default function HeroSection({
     tipoContenido,
     cantidadOpciones = 0
 }: Props) {
-    const fechaEvento = new Date(evento.fecha_evento)
-
-    const formatearFecha = (fecha: Date) => {
-        return fecha.toLocaleDateString('es-MX', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        })
-    }
-
     const getTipoEventoIcon = (tipo?: string) => {
         if (!tipo) return '🎉'
         if (tipo.toLowerCase().includes('boda')) return '💍'
@@ -151,7 +141,7 @@ export default function HeroSection({
                         {/* Fecha */}
                         <div className="flex items-center justify-center gap-2 text-white/90">
                             <Calendar className="w-4 h-4 text-white/80" />
-                            <span className="drop-shadow-sm">{formatearFecha(fechaEvento)}</span>
+                            <span className="drop-shadow-sm">{formatearFecha(evento.fecha_evento)}</span>
                         </div>
 
                         {/* Días restantes */}
