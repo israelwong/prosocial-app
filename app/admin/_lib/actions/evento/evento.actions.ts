@@ -4,6 +4,7 @@
 
 import prisma from '@/app/admin/_lib/prismaClient';
 import { retryDatabaseOperation } from '@/app/admin/_lib/utils/database-retry';
+import { Evento } from '@/app/cliente/_lib/types';
 import {
     EventoBusquedaSchema,
     EventoEtapaUpdateSchema,
@@ -728,5 +729,61 @@ export async function obtenerEventoSeguimiento(eventoId: string) {
             success: false,
             error: 'Error obteniendo los datos del evento'
         };
+    }
+}
+
+// ===================================
+// FUNCIONES MIGRADAS DESDE evento.actions.ts OBSOLETO
+// ===================================
+
+/**
+ * Versión básica de obtener evento por ID (migrada desde archivo obsoleto)
+ */
+export async function obtenerEventoBasicoPorId(id: string) {
+    return prisma.evento.findUnique({
+        where: { id },
+        include: {
+            EventoTipo: {
+                select: {
+                    nombre: true,
+                }
+            },
+            Cliente: {
+                select: {
+                    nombre: true,
+                    telefono: true
+                }
+            },
+            EventoEtapa: {
+                select: {
+                    nombre: true,
+                    posicion: true
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Versión básica de crear evento (migrada desde archivo obsoleto)
+ */
+export async function crearEventoBasico(data: any) {
+    try {
+        const nuevoEvento = await prisma.evento.create({
+            data: {
+                clienteId: data.clienteId ?? '',
+                eventoTipoId: data.eventoTipoId,
+                nombre: data.nombre,
+                fecha_evento: data.fecha_evento,
+                status: 'active',
+                userId: data.userId || null,
+                eventoEtapaId: data.eventoEtapaId || null
+            }
+        });
+
+        return { success: true, id: nuevoEvento.id };
+    } catch (error) {
+        console.error(error);
+        return { error: 'Error creating event' };
     }
 }

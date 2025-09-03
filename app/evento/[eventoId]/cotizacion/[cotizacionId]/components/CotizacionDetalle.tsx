@@ -8,7 +8,7 @@ import { obtenerCondicionesComerciales } from '@/app/admin/_lib/actions/condicio
 import { obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/actions/condicionesComerciales/condicionesComerciales.actions'
 import { obtenerMetodoPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions'
 import type { EventoExtendido, ServicioDetalle, EventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.schemas'
-import { verificarDisponibilidadFecha } from '@/app/admin/_lib/agenda.actions'
+import { verificarDisponibilidadFechaRootLegacy as verificarDisponibilidadFecha } from '@/app/admin/_lib/actions/agenda'
 import { obtenerPaquetesParaCliente } from '@/app/admin/_lib/actions/paquetes/paquetes.actions'
 import { Package } from 'lucide-react'
 import type { Cliente, EventoTipo, Cotizacion, Evento } from '@/app/admin/_lib/types'

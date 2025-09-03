@@ -1,7 +1,13 @@
 'use client'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Agenda, AgendaTipo } from '@/app/admin/_lib/types'
-import { obtenerAgendaDeEvento, eliminarAgendaEvento, actualzarStatusAgendaActividad, crearAgendaEvento, actualizarAgendaEvento } from '@/app/admin/_lib/agenda.actions'
+import {
+    obtenerAgendaDeEventoRootLegacy as obtenerAgendaDeEvento,
+    eliminarAgendaEventoRootLegacy as eliminarAgendaEvento,
+    actualizarStatusAgendaActividadRootLegacy as actualzarStatusAgendaActividad,
+    crearAgendaEvento,
+    actualizarAgendaEventoRootLegacy as actualizarAgendaEvento
+} from '@/app/admin/_lib/actions/agenda'
 import { obtenerAgendaTipos } from '@/app/admin/_lib/actions/agendaTipos/agendaTipos.actions'
 import { Edit, Trash, Calendar, Clock, MessageCircle, MapPin, Link, Plus, MoreVertical, CheckCircle, XCircle, X, Clock4, RotateCcw, AlertCircle } from 'lucide-react'
 import Cookies from 'js-cookie'

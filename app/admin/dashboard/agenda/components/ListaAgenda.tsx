@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useMemo } from 'react'
-import { obtenerAgendaConEventos } from '@/app/admin/_lib/agenda.actions'
+import { obtenerAgendaConEventosRootLegacy as obtenerAgendaConEventos } from '@/app/admin/_lib/actions/agenda'
 import { Agenda } from '@/app/admin/_lib/types'
 import { useRouter } from 'next/navigation'
 import { Calendar, Clock, Search, ChevronRight, User } from 'lucide-react'

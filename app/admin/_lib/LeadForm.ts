@@ -1,7 +1,7 @@
 'use server';
 import { LeadForm } from './types';
 import { crearCliente } from './actions/cliente/cliente.actions';
-import { crearEvento } from './evento.actions';
+import { crearEventoBasico } from './actions/evento/evento.actions';
 import { obtenerEtapa1 } from './actions/EventoEtapa/EventoEtapa.actions';
 import prisma from './prismaClient';
 
@@ -37,7 +37,7 @@ export async function registrarLead(lead: LeadForm) {
 
 
                 // console.log('Creating evento...');
-                await crearEvento({
+                await crearEventoBasico({
                     clienteId: cliente.clienteId!,
                     eventoTipoId: lead.eventoTipoId,
                     nombre: '',

@@ -15,7 +15,15 @@ export {
     cambiarStatusAgenda,
 
     // Compatibilidad
-    crearAgendaEvento
+    crearAgendaEvento,
+
+    // Funciones migradas desde ROOT (legacy)
+    verificarDisponibilidadFechaRootLegacy,
+    obtenerAgendaConEventosRootLegacy,
+    obtenerAgendaDeEventoRootLegacy,
+    eliminarAgendaEventoRootLegacy,
+    actualizarStatusAgendaActividadRootLegacy,
+    actualizarAgendaEventoRootLegacy
 } from './agenda.actions';
 
 export * from './agenda.schemas';
