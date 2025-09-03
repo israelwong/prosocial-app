@@ -21,13 +21,30 @@ type RawCatalogo = RawSeccion[];
 
 // Función para transformar los datos del servidor a la estructura que esperan los componentes cliente
 const transformCatalogoData = (catalogo: RawCatalogo) => {
+    console.log('🔍 FRONTEND DEBUG - Datos originales de BD:');
+    catalogo.forEach((seccion, secIndex) => {
+        console.log(`Sección ${secIndex}: "${seccion.nombre}" (pos BD: ${seccion.posicion})`);
+        seccion.seccionCategorias.forEach((sc, catIndex) => {
+            console.log(`  Categoría ${catIndex}: "${sc.ServicioCategoria.nombre}" (pos BD: ${sc.ServicioCategoria.posicion})`);
+            sc.ServicioCategoria.Servicio.forEach((servicio, servIndex) => {
+                console.log(`    Servicio ${servIndex}: "${servicio.nombre}" (pos BD: ${servicio.posicion})`);
+            });
+        });
+    });
+
     return catalogo.map((seccion: RawSeccion) => ({
         ...seccion,
         categorias: seccion.seccionCategorias.map((sc: RawSeccionCategoria) => ({
             ...sc.ServicioCategoria,
-            servicios: sc.ServicioCategoria.Servicio || [],
+            servicios: sc.ServicioCategoria.Servicio.map(servicio => ({
+                ...servicio,
+                // Mantener la posición explícitamente
+                posicion: servicio.posicion
+            })) || [],
             // Aseguramos que seccionId esté disponible para la lógica de dnd-kit
             seccionId: seccion.id,
+            // Mantener la posición explícitamente
+            posicion: sc.ServicioCategoria.posicion
         }))
     }));
 };

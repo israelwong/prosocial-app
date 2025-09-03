@@ -202,6 +202,17 @@ export default function Organizador({ initialCatalogo }: OrganizadorProps) {
 
             // Enviamos overIndex y dejamos que backend ajuste cuando activeIndex < overIndex
             newIndex = overIndex;
+
+            console.log('🔍 FRONTEND DEBUG - Reordenamiento en mismo contenedor:', {
+                activeItem: activeItemInfo.data.nombre,
+                overItem: overItemInfo.data.nombre,
+                activeIndex,
+                overIndex,
+                newIndexToSend: newIndex,
+                parentId: newParentId,
+                siblingsCount: siblings.length,
+                siblings: siblings.map((s, i) => `${i}: ${s.nombre} (pos: ${s.posicion || 'N/A'})`)
+            });
         } else {
             const targetIsContainer = overItemInfo.type === 'seccion' || overItemInfo.type === 'categoria';
             const targetParentType = targetIsContainer ? overItemInfo.type : itemsMap.get(overItemInfo.parentId!)?.type || 'root';
@@ -223,6 +234,18 @@ export default function Organizador({ initialCatalogo }: OrganizadorProps) {
             const childrenList = (parentData as SeccionItemData).categorias || (parentData as CategoriaItemData).servicios;
             // Si se suelta sobre un contenedor, inserta al final; si se suelta sobre un ítem, inserta en su posición
             newIndex = targetIsContainer ? childrenList.length : childrenList.findIndex(item => item.id === overItemInfo.id);
+
+            console.log('🔍 FRONTEND DEBUG - Movimiento entre contenedores:', {
+                activeItem: activeItemInfo.data.nombre,
+                activeType: activeItemInfo.type,
+                fromParent: activeItemInfo.parentId,
+                toParent: newParentId,
+                targetIsContainer,
+                overItem: overItemInfo.data.nombre,
+                newIndexToSend: newIndex,
+                childrenInDestination: childrenList.length,
+                destinationChildren: childrenList.map((c, i) => `${i}: ${c.nombre} (pos: ${c.posicion || 'N/A'})`)
+            });
         }
 
         if (newIndex === -1 || newParentId === undefined) return;
