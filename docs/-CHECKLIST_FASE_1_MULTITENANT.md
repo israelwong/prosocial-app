@@ -25,6 +25,7 @@
   # Crear lista de tablas críticas
   echo "Cliente, Evento, Cotizacion, Pago, Agenda, User, Configuracion" > tablas-tenant.txt
   echo "Servicio, Categoria, Seccion, Paquete" >> tablas-tenant.txt
+  echo "CotizacionAnexo (NUEVA - Sistema anexos servicios adicionales)" >> tablas-tenant.txt
   ```
 
 - [ ] **1.2** Diseñar schema completo en Prisma - **ARQUITECTURA SIMPLIFICADA**
@@ -34,14 +35,18 @@
   - [ ] Relaciones entre entidades
 
 **📋 Schema Base:**
+
 ```prisma
 model ClientePlatform {
   id    String @id @default(cuid())
   slug  String @unique  // "estudio-luna" → URL directa
-  nombre String         // "Estudio Luna"  
+  nombre String         // "Estudio Luna"
   email String @unique
-  plan  String         // "starter", "professional"
-  
+  plan  String         // "starter", "professional", "enterprise"
+
+  // B2B2C - Configuración servicios adicionales
+  serviciosB2B2C Json?  // Config inicial para invitaciones, espacio virtual, etc.
+
   negocio Negocio?     // 1:1 relación (escalable después)
 }
 
@@ -49,9 +54,16 @@ model Negocio {
   id        String @id @default(cuid())
   clienteId String @unique
   nombre    String
-  
+
   clientePlatform ClientePlatform @relation(fields: [clienteId], references: [id])
   eventos         Evento[]
+  cotizaciones    Cotizacion[]
+
+  // B2B2C - Entidades futuras (Fase 8)
+  // invitacionesDigitales InvitacionDigital[]
+  // espaciosVirtuales     EspacioVirtual[]
+  // portalesClientePremium PortalClientePremium[]
+
   // ... resto entidades con negocioId
 }
 ```
@@ -73,29 +85,62 @@ model Negocio {
     nombre String
     email  String @unique
     plan   String
-    
+
     negocio Negocio?
-    
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
   }
-  
+
   model Negocio {
     id        String @id @default(cuid())
     clienteId String @unique
     nombre    String
-    
+
     clientePlatform ClientePlatform @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-    
+
     // Todas las entidades operativas
     eventos      Evento[]
     cotizaciones Cotizacion[]
     clientes     Cliente[]
-    
+
+    // 📝 B2B2C - Entidades futuras (Fase 8)
+    // invitacionesDigitales InvitacionDigital[]
+    // espaciosVirtuales     EspacioVirtual[]
+    // facturacionClienteFinal FacturacionClienteFinal[]
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
   }
+
+  // 🚀 NOTA: Entidades B2B2C se implementarán en Fase 8
+  // - InvitacionDigital (plantillas + envío)
+  // - EspacioVirtual (storage límites por plan)
+  // - PortalClientePremium (funciones avanzadas)
+  // - FacturacionClienteFinal (pagos automáticos)
+  // - CostosInfraestructura (tracking costos real-time) ⚠️ CRÍTICO VIABILIDAD
   ```
+
+**⚠️ CONSIDERACIÓN CRÍTICA - Viabilidad Financiera:**
+
+```typescript
+// Control automático de costos por cliente final
+CostosInfraestructura {
+  clienteFinalId: string
+  negocioId: string
+
+  // Costos reales tracking
+  storageUsed: number        // GB utilizados
+  emailsSent: number         // Emails enviados mes actual
+  dataTransfer: number       // GB transferencia
+
+  // Costos calculados
+  costoMensualReal: number   // USD costo real
+  limitePresupuesto: number  // USD límite por plan
+  alertaEnviada: boolean     // Alerta 90% límite
+  suspendidoAutomatico: boolean // Si excedió límite
+}
+```
 
 - [ ] **1.5** Agregar `negocioId` a tablas existentes
 

@@ -11,7 +11,121 @@
 - [x] Refactorización `_lib` → `_lib/actions`
 - [x] Sistema drag-and-drop del catálogo reparado
 - [x] Gestión de cotizaciones mejorada
-- [x] Correcciones de fechas y timezone
+- [x---
+
+## 🚀 FASE 8: MODELO B2B2C - SERVICIOS ADICIONALES
+
+**Duración estimada: 3-4 semanas**
+
+### 8.1 **Servicios White-Label para Clientes Finales**
+
+#### **A. Invitaciones Digitales**
+
+- [ ] **InvitacionDigital** (nueva entidad)
+  - [ ] Plantillas personalizables por negocio
+  - [ ] Branding del estudio (colores, logos)
+  - [ ] Sistema de envío masivo
+  - [ ] Tracking de visualizaciones/confirmaciones
+  - [ ] Integración con evento y lista de invitados
+
+- [ ] **PlantillaInvitacion**
+  - [ ] Editor visual drag-and-drop
+  - [ ] Variables dinámicas (nombres, fechas, ubicación)
+  - [ ] Responsive design automático
+  - [ ] Preview en tiempo real
+
+#### **B. Espacio Virtual (Cloud Storage)**
+
+- [ ] **EspacioVirtual** (nueva entidad)
+  - [ ] Límites de almacenamiento por plan
+  - [ ] Organización por evento/cliente
+  - [ ] Galería privada con contraseña
+  - [ ] Descarga individual y masiva
+  - [ ] Streaming de videos
+
+- [ ] **GaleriaPrivada**
+  - [ ] URLs únicas por evento: `prosocial.mx/[negocio]/galeria/[token]`
+  - [ ] Caducidad automática configurable
+  - [ ] Notificaciones al cliente cuando se suben fotos
+  - [ ] Comentarios y favoritos del cliente
+
+#### **C. Sistema de Monetización B2B2C - MODELO VIABLE**
+
+- [ ] **PlanServicioAdicional** con estructura de costos contemplada
+  - [ ] Invitaciones: Gratis (50), Pro ($4.99 - ilimitadas + analytics)
+  - [ ] Espacio Virtual: Básico (5GB - $2.99), Pro (25GB - $9.99), Enterprise (100GB - $24.99)
+  - [ ] Portal Cliente: Básico (incluido), Premium ($7.99 - chat + timeline + solicitudes)
+
+- [ ] **💰 Cobranza a Negocios ProSocial** (Recommended Model)
+
+  ```typescript
+  // Negocio paga directamente a ProSocial Platform
+  costoPorClienteFinal: {
+    espacioBasico: 1.50,     // USD/mes (cubre 5GB + procesamiento)
+    espacioPro: 4.99,        // USD/mes (cubre 25GB + features avanzadas)
+    espacioEnterprise: 12.99 // USD/mes (cubre 100GB + soporte premium)
+  }
+
+  // Beneficios:
+  // - Ingreso predecible para ProSocial
+  // - Costos de infraestructura siempre cubiertos
+  // - Negocio tiene libertad de precios a cliente final
+  // - Margen saludable 200-300% sobre costos reales
+  ```
+
+#### **D. Facturación y Control de Costos**
+
+- [ ] **FacturacionClienteFinal** con protección automática
+  - [ ] Monitoreo costos tiempo real (Storage + Email + Processing)
+  - [ ] Límites automáticos por plan (Soft limit 90%, Hard limit 100%)
+  - [ ] Alertas automáticas a negocio cuando se aproxima límite
+  - [ ] Suspensión automática si excede límites sin upgrade
+  - [ ] Sistema de backup antes de eliminación (30 días gracia)
+
+- [ ] **MetricasViabilidad** - Dashboard ProSocial Platform
+  - [ ] Costo promedio por cliente final: Target $0.25/mes
+  - [ ] Ingreso promedio por cliente final: Target $1.50/mes
+  - [ ] Margen objetivo: 83% (6x sobre costos)
+  - [ ] Alertas automáticas si margen <50% (revisar precios)
+
+#### **E. Configuración por Negocio - White Label**
+
+- [ ] **ConfiguracionServiciosAdicionales**
+  - [ ] Activar/desactivar servicios por negocio
+  - [ ] Precios personalizados por negocio (libertad total pricing)
+  - [ ] Branding white-label completo (logos, colores, dominio)
+  - [ ] Términos y condiciones personalizables
+  - [ ] **Límites personalizados por plan** (storage, invitaciones, clientes)
+
+#### **⚠️ CRÍTICO - Sostenibilidad Financiera**
+
+```
+🚨 PROBLEMA: Sin modelo viable, ProSocial absorbe costos infrastructure
+✅ SOLUCIÓN: Cobranza directa por cliente final activo
+📊 NÚMEROS: $0.25 costo real → $1.50 cobranza → 83% margen
+🎯 OBJETIVO: Cada cliente final del negocio es rentable desde día 1
+```
+
+### 8.3 **UX/UI B2B2C**
+
+#### **A. Dashboard Negocio - Gestión Servicios**
+
+- [ ] Panel "Servicios Adicionales" en dashboard
+- [ ] Métricas de uso por cliente final
+- [ ] Configuración de precios y límites
+- [ ] Reportes de ingresos adicionales
+
+#### **B. Cliente Final - Experiencia**
+
+- [ ] Onboarding automático post-contratación
+- [ ] URLs branded: `prosocial.mx/[negocio]/invitaciones/mi-boda`
+- [ ] Notificaciones por email/SMS cuando aplique
+- [ ] Soporte técnico escalado (Cliente Final → Negocio → ProSocial)
+
+---
+
+## 🎨 FASE 9: DISEÑO RESPONSIVO Y MOBILE Correcciones de fechas y timezone
+
 - [x] Footer dinámico implementado
 - [x] Edición de sede/dirección de eventos
 - [x] Sistema de balance en agenda
@@ -25,7 +139,7 @@
 ProSocial Platform (Empresa SaaS)
 ├── Cliente A → prosocial.mx/estudio-luna/
 │   └── Negocio Principal (1:1 relación)
-├── Cliente B → prosocial.mx/foto-express/  
+├── Cliente B → prosocial.mx/foto-express/
 │   └── Negocio Principal (1:1 relación)
 └── Cliente C → prosocial.mx/agencia-norte/
     └── Negocio Principal (1:1 relación)
@@ -181,7 +295,47 @@ ProSocial Platform (Empresa SaaS)
 - [ ] **CategoriaMultimedia** (opcional)
   - [ ] Multimedia a nivel categoría
 
-### 5.3 **Templates TODO List**
+### 5.3 **Sistema de Cotización Anexo** ⭐ **NUEVA FUNCIONALIDAD**
+
+- [ ] **CotizacionAnexo** (nueva entidad)
+
+  ```prisma
+  model CotizacionAnexo {
+    id              String @id @default(cuid())
+    cotizacionId    String
+    serviciosAdicionales Json[]  // Array de servicios propuestos
+    montoAdicional  Float
+    estado          String      // "pendiente", "autorizada", "rechazada"
+    motivoAnexo     String?     // Razón del anexo
+    fechaCreacion   DateTime @default(now())
+    fechaAutorizacion DateTime?
+
+    cotizacion      Cotizacion @relation(fields: [cotizacionId], references: [id])
+  }
+  ```
+
+- [ ] **Workflow Cotización Anexo:**
+  1. **Admin crea anexo** para cotización aprobada
+  2. **Cliente revisa** servicios adicionales propuestos
+  3. **Cliente autoriza/rechaza** anexo
+  4. **Si autorizada:** Servicios se integran a cotización original
+  5. **Status visual:** Servicios anexados destacados con badge "AGREGADO"
+
+- [ ] **UI/UX Funcionalidades:**
+  - [ ] Botón "Crear Anexo" en cotizaciones aprobadas
+  - [ ] Modal para seleccionar servicios adicionales
+  - [ ] Vista previa para el cliente con servicios originales + anexos
+  - [ ] Notificación automática al cliente cuando hay anexo pendiente
+  - [ ] Badge visual en servicios: `ORIGINAL` | `AGREGADO` | `PENDIENTE`
+  - [ ] Timeline de anexos en historial de cotización
+
+- [ ] **Integración con Sistema Actual:**
+  - [ ] Servicios anexados se agregan a Sección/Categoría correspondiente
+  - [ ] Monto total actualizado automáticamente
+  - [ ] Estado de cotización mantiene "Aprobado" pero muestra "Con anexos"
+  - [ ] Sistema de pagos contempla montos adicionales
+
+### 5.4 **Templates TODO List**
 
 - [ ] **TodoTemplate** (nueva entidad)
   - [ ] Templates generales por evento
@@ -236,7 +390,7 @@ ProSocial Platform (Empresa SaaS)
 
 ```
 **URLs Simplificadas:**
-prosocial.mx/[clienteSlug]/dashboard             ← Admin principal  
+prosocial.mx/[clienteSlug]/dashboard             ← Admin principal
 prosocial.mx/[clienteSlug]/eventos               ← Gestión eventos
 prosocial.mx/[clienteSlug]/cotizaciones          ← Gestión cotizaciones
 
@@ -319,19 +473,27 @@ prosocial.mx/[clienteSlug]/pago/[pagoId]         ← Proceso de pago
 
 ## 📅 CRONOGRAMA ESTIMADO
 
-| Fase                        | Duración  | Acumulado |
-| --------------------------- | --------- | --------- |
-| 1. Multi-Tenant Foundations | 3 semanas | 3 sem     |
-| 2. Middleware y Seguridad   | 2 semanas | 5 sem     |
-| 3. Dashboard Kanban         | 3 semanas | 8 sem     |
-| 4. Finanzas Mejorado        | 2 semanas | 10 sem    |
-| 5. Configuración Avanzada   | 4 semanas | 14 sem    |
-| 6. Onboarding               | 4 semanas | 18 sem    |
-| 7. Branding                 | 3 semanas | 21 sem    |
-| 8. Diseño Responsivo        | 4 semanas | 25 sem    |
-| 9. Integraciones            | 2 semanas | 27 sem    |
+| Fase                            | Duración      | Acumulado  |
+| ------------------------------- | ------------- | ---------- |
+| 1. Multi-Tenant Foundations     | 3 semanas     | 3 sem      |
+| 2. Middleware y Seguridad       | 2 semanas     | 5 sem      |
+| 3. Dashboard Kanban             | 3 semanas     | 8 sem      |
+| 4. Finanzas Mejorado            | 2 semanas     | 10 sem     |
+| 5. Configuración Avanzada       | 4 semanas     | 14 sem     |
+| 6. Onboarding                   | 4 semanas     | 18 sem     |
+| 7. Branding                     | 3 semanas     | 21 sem     |
+| 8. **Modelo B2B2C - Servicios** | **4 semanas** | **25 sem** |
+| 9. Diseño Responsivo            | 4 semanas     | 29 sem     |
+| 10. Integraciones               | 2 semanas     | 31 sem     |
 
-**TOTAL ESTIMADO: ~6-7 meses**
+**TOTAL ESTIMADO: ~7-8 meses**
+
+### 🎯 **HITOS CRÍTICOS B2B2C:**
+
+- **Semana 25**: Invitaciones digitales funcionando
+- **Semana 26**: Espacio virtual con límites por plan
+- **Semana 27**: Portal cliente premium con facturación
+- **Semana 28**: Sistema completo white-label operativo
 
 ---
 
