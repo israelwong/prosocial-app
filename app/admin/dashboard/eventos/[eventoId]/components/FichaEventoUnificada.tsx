@@ -334,7 +334,12 @@ export default function FichaEventoUnificada({ eventoCompleto, onAsignacionEvent
                         <Tag className="w-4 h-4" />
                         Tipo de evento
                     </label>
-                    <p className="text-zinc-200">{evento.EventoTipo?.nombre || 'No especificado'}</p>
+                    <div className="flex items-center">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                            <Tag className="w-3 h-3 mr-1.5" />
+                            {evento.EventoTipo?.nombre || 'No especificado'}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Nombre del evento */}
@@ -368,16 +373,57 @@ export default function FichaEventoUnificada({ eventoCompleto, onAsignacionEvent
                             className="bg-zinc-800 border-zinc-700"
                         />
                     ) : (
-                        <p className="text-zinc-200">
-                            {evento.fecha_evento ?
-                                formatearFecha(evento.fecha_evento, {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                }) :
-                                'No especificada'
-                            }
-                        </p>
+                        <div className="flex items-center">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                <Calendar className="w-3 h-3 mr-1.5" />
+                                {evento.fecha_evento ?
+                                    formatearFecha(evento.fecha_evento, {
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    }) :
+                                    'No especificada'
+                                }
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Sede del evento */}
+                <div className="space-y-2">
+                    <label className="text-sm text-zinc-400 flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        Sede del evento
+                    </label>
+                    {isEditing ? (
+                        <Input
+                            value={formData.sede || ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, sede: e.target.value }))}
+                            placeholder="Nombre de la sede o lugar del evento"
+                            className="bg-zinc-800 border-zinc-700"
+                        />
+                    ) : (
+                        <p className="text-zinc-200">{evento.sede || 'No especificada'}</p>
+                    )}
+                </div>
+
+                {/* Dirección del evento */}
+                <div className="space-y-2">
+                    <label className="text-sm text-zinc-400 flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        Dirección
+                    </label>
+                    {isEditing ? (
+                        <textarea
+                            value={formData.direccion || ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
+                            placeholder="Dirección completa del evento"
+                            rows={2}
+                            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-zinc-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    ) : (
+                        <p className="text-zinc-200">{evento.direccion || 'No especificada'}</p>
                     )}
                 </div>
 
