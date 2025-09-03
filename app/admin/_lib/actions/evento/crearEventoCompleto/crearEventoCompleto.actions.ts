@@ -174,6 +174,23 @@ export async function validarDisponibilidadFecha(data: ValidarFechaEvento): Prom
         }
     }
 
+    // Agrupar eventos únicos por eventoId para evitar duplicados
+    const eventosUnicosMap = new Map()
+    agendaExistente.forEach(agenda => {
+        if (!eventosUnicosMap.has(agenda.Evento.id)) {
+            eventosUnicosMap.set(agenda.Evento.id, {
+                id: agenda.Evento.id,
+                nombre: agenda.Evento.nombre || 'Sin nombre',
+                cliente: agenda.Evento.Cliente?.nombre || 'Sin cliente',
+                fecha_evento: agenda.Evento.fecha_evento,
+                concepto: agenda.concepto || 'Sin concepto',
+                hora: agenda.hora || 'Sin hora definida'
+            })
+        }
+    })
+
+    const eventosUnicos = Array.from(eventosUnicosMap.values())
+
     // Si hay conflictos pero se permite duplicada con autorización
     if (validatedData.permitirDuplicada && validatedData.codigoAutorizacion) {
         const autorizacionValida = await validarCondigoAutorizacion(validatedData.codigoAutorizacion)
@@ -187,14 +204,7 @@ export async function validarDisponibilidadFecha(data: ValidarFechaEvento): Prom
 
     return {
         disponible: false,
-        conflictos: agendaExistente.map(agenda => ({
-            id: agenda.Evento.id,
-            nombre: agenda.Evento.nombre || 'Sin nombre',
-            cliente: agenda.Evento.Cliente?.nombre || 'Sin cliente',
-            fecha_evento: agenda.Evento.fecha_evento,
-            concepto: agenda.concepto || 'Sin concepto',
-            hora: agenda.hora || 'Sin hora definida'
-        }))
+        conflictos: eventosUnicos
     }
 }
 

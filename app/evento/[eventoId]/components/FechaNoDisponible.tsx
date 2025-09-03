@@ -20,6 +20,7 @@ interface Evento {
 interface ConflictoInfo {
     mensaje: string
     eventosEnConflicto: Array<{
+        eventoId?: string
         evento: string | null
         tipo: string | null
     }>
@@ -58,7 +59,7 @@ export default function FechaNoDisponible({ evento, diasRestantes, conflicto }: 
                             <strong className="text-red-300">Evento en conflicto:</strong>
                             <div className="mt-2 text-red-200">
                                 {conflicto.eventosEnConflicto.map((item, index) => (
-                                    <div key={index} className="flex items-center gap-2">
+                                    <div key={`evento-conflicto-${item.eventoId || `idx-${index}`}`} className="flex items-center gap-2">
                                         <span className="w-2 h-2 bg-red-400 rounded-full"></span>
                                         {item.evento} {item.tipo && `(${item.tipo})`}
                                     </div>

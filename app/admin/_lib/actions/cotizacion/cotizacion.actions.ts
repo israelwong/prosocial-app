@@ -642,7 +642,7 @@ export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
             // 5.2 CREAR servicios nuevos
             console.log(`➕ Creando ${serviciosNuevos.length} servicios nuevos...`);
             if (serviciosNuevos.length > 0) {
-                const creacionPromises = serviciosNuevos.map(servicioNuevo => 
+                const creacionPromises = serviciosNuevos.map(servicioNuevo =>
                     tx.cotizacionServicio.create({
                         data: {
                             cotizacionId: validatedData.id,
@@ -672,7 +672,7 @@ export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
                     })
                 );
                 await Promise.all(creacionPromises);
-                
+
                 // Log después de todas las creaciones
                 serviciosNuevos.forEach(servicio => {
                     console.log(`  ✅ Creado: ${servicio.nombre_snapshot}`);
@@ -682,7 +682,7 @@ export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
             // 5.3 ACTUALIZAR servicios modificados (PRESERVANDO datos operacionales)
             console.log(`📝 Actualizando ${serviciosModificados.length} servicios modificados...`);
             if (serviciosModificados.length > 0) {
-                const actualizacionPromises = serviciosModificados.map(({ existente, nuevo }) => 
+                const actualizacionPromises = serviciosModificados.map(({ existente, nuevo }) =>
                     tx.cotizacionServicio.update({
                         where: { id: existente.id },
                         data: {
@@ -713,7 +713,7 @@ export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
                     })
                 );
                 await Promise.all(actualizacionPromises);
-                
+
                 // Log después de todas las actualizaciones
                 serviciosModificados.forEach(({ existente, nuevo }) => {
                     console.log(`  ✅ Actualizado: ${nuevo.nombre_snapshot}${existente.userId ? ' (con personal asignado)' : ''}`);
@@ -723,13 +723,13 @@ export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
             // 5.4 ELIMINAR servicios removidos (ya validados)
             console.log(`🗑️ Eliminando ${serviciosAEliminar.length} servicios removidos...`);
             if (serviciosAEliminar.length > 0) {
-                const eliminacionPromises = serviciosAEliminar.map(servicioEliminar => 
+                const eliminacionPromises = serviciosAEliminar.map(servicioEliminar =>
                     tx.cotizacionServicio.delete({
                         where: { id: servicioEliminar.id }
                     })
                 );
                 await Promise.all(eliminacionPromises);
-                
+
                 // Log después de todas las eliminaciones
                 serviciosAEliminar.forEach(servicio => {
                     console.log(`  ✅ Eliminado: ${servicio.nombre_snapshot}${servicio.userId ? ' (se liberó personal asignado)' : ''}`);
@@ -1006,7 +1006,8 @@ export async function obtenerCotizacionesParaEvento(eventoId: string) {
             const finDelDia = new Date(evento.fecha_evento)
             finDelDia.setHours(23, 59, 59, 999)
 
-            const eventosEnConflicto = await prisma.agenda.findMany({
+            // Obtener eventos únicos en conflicto (agrupados por eventoId)
+            const agendaEnConflicto = await prisma.agenda.findMany({
                 where: {
                     fecha: {
                         gte: inicioDelDia,
@@ -1021,8 +1022,10 @@ export async function obtenerCotizacionesParaEvento(eventoId: string) {
                 },
                 select: {
                     id: true,
+                    eventoId: true,
                     Evento: {
                         select: {
+                            id: true,
                             nombre: true,
                             EventoTipo: {
                                 select: {
@@ -1034,6 +1037,20 @@ export async function obtenerCotizacionesParaEvento(eventoId: string) {
                 }
             })
 
+            // Agrupar por eventoId para evitar eventos duplicados
+            const eventosUnicosMap = new Map()
+            agendaEnConflicto.forEach(agenda => {
+                if (!eventosUnicosMap.has(agenda.eventoId)) {
+                    eventosUnicosMap.set(agenda.eventoId, {
+                        eventoId: agenda.eventoId,
+                        evento: agenda.Evento?.nombre,
+                        tipo: agenda.Evento?.EventoTipo?.nombre
+                    })
+                }
+            })
+
+            const eventosEnConflicto = Array.from(eventosUnicosMap.values())
+
             const fechaDisponible = eventosEnConflicto.length === 0
 
             // 3. Si la fecha no está disponible, retornar información del conflicto
@@ -1042,9 +1059,10 @@ export async function obtenerCotizacionesParaEvento(eventoId: string) {
                     disponible: false,
                     conflicto: {
                         mensaje: 'Fecha no disponible',
-                        eventosEnConflicto: eventosEnConflicto.map(agenda => ({
-                            evento: agenda.Evento?.nombre,
-                            tipo: agenda.Evento?.EventoTipo?.nombre
+                        eventosEnConflicto: eventosEnConflicto.map(evento => ({
+                            eventoId: evento.eventoId,
+                            evento: evento.evento,
+                            tipo: evento.tipo
                         }))
                     }
                 }

@@ -155,7 +155,7 @@ export default function CotizacionForm({
             const preciosPersonalizadosValoresInit: Record<string, number> = {};
 
             cotizacionExistente.Servicio.forEach((servicio: any, index: number) => {
-                const fieldId = `servicio-${index}`;
+                const fieldId = `service-${servicio.servicioId || servicio.id}-idx-${index}`;
 
                 // Si tiene un precio unitario diferente al precio calculado del servicio, es personalizado
                 if (servicio.servicioId) {
@@ -204,12 +204,12 @@ export default function CotizacionForm({
 
     // Preparar servicios base dependiendo del modo
     const serviciosParaFormulario = modo === 'editar' && cotizacionExistente?.Servicio
-        ? cotizacionExistente.Servicio.map((servicio: any) => ({
+        ? cotizacionExistente.Servicio.map((servicio: any, index: number) => ({
             servicioId: servicio.servicioId || `personalizado_${servicio.id}`,
             cantidad: servicio.cantidad.toString(),
             precioPersonalizado: servicio.precioUnitario?.toString() || ""
         }))
-        : serviciosBase.map(s => ({
+        : serviciosBase.map((s, index) => ({
             servicioId: s.id,
             cantidad: s.cantidad?.toString() || '1',
             precioPersonalizado: ""
@@ -937,14 +937,14 @@ export default function CotizacionForm({
                 const cantidad = parseInt(watchedServicios[index]?.cantidad || '1', 10);
 
                 // Usar precio personalizado si está definido, sino calcular precio normal
-                const fieldId = field.id || `${field.servicioId}-${index}`;
+                const fieldId = `service-${field.servicioId}-idx-${index}`;
                 const precioPersonalizadoValor = preciosPersonalizadosValores[fieldId];
                 const precio = parseFloat((precioPersonalizadoValor > 0 ? precioPersonalizadoValor : calcularPrecioCorrectoServicio(servicioCompleto)).toFixed(2));
 
                 agrupados[seccionNombre].categorias[categoriaNombre].servicios.push({
                     ...servicioCompleto,
                     fieldIndex: index,
-                    fieldId: field.id,
+                    fieldId: fieldId, // Usar el fieldId generado
                     cantidad,
                     precio,
                     subtotal: parseFloat((precio * cantidad).toFixed(2)),
@@ -1049,7 +1049,7 @@ export default function CotizacionForm({
                 }
 
                 // Verificar si hay precio personalizado para este campo
-                const fieldId = `servicio-${index}`;
+                const fieldId = `service-${s.servicioId}-idx-${index}`;
                 const precioPersonalizado = preciosPersonalizadosValores[fieldId];
                 const precioUnitario = parseFloat((precioPersonalizado || calcularPrecioCorrectoServicio(servicio)).toFixed(2));
                 const cantidad = parseInt(s.cantidad, 10);
@@ -1244,8 +1244,8 @@ export default function CotizacionForm({
                             </div>
 
                             <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                                {secciones.map(seccion => (
-                                    <div key={seccion.id} className="border border-zinc-700/60 rounded-lg p-4 bg-zinc-900/30 space-y-4">
+                                {secciones.map((seccion, seccionIdx) => (
+                                    <div key={`catalogo-seccion-${seccion.id}-${seccionIdx}`} className="border border-zinc-700/60 rounded-lg p-4 bg-zinc-900/30 space-y-4">
                                         <div className="flex items-center justify-between">
                                             <h4 className="text-base font-semibold text-zinc-300">{seccion.nombre}</h4>
                                             <span className="text-xs text-zinc-500">
@@ -1254,17 +1254,17 @@ export default function CotizacionForm({
                                         </div>
 
                                         <div className="space-y-4">
-                                            {seccion.seccionCategorias.map(sc => (
-                                                <div key={sc.ServicioCategoria.id} className="space-y-2 border border-zinc-700/40 rounded-md p-3 bg-zinc-800/40">
+                                            {seccion.seccionCategorias.map((sc, catIdx) => (
+                                                <div key={`catalogo-categoria-${sc.ServicioCategoria.id}-${seccionIdx}-${catIdx}`} className="space-y-2 border border-zinc-700/40 rounded-md p-3 bg-zinc-800/40">
                                                     <h5 className="text-sm font-medium text-zinc-400">
                                                         {sc.ServicioCategoria.nombre}
                                                     </h5>
                                                     <div className="space-y-1.5">
-                                                        {sc.ServicioCategoria.Servicio?.map((servicio: any) => {
+                                                        {sc.ServicioCategoria.Servicio?.map((servicio: any, servicioIdx: number) => {
                                                             const estaSeleccionado = servicioEstaSeleccionado(servicio.id);
                                                             return (
                                                                 <div
-                                                                    key={servicio.id}
+                                                                    key={`catalogo-servicio-${servicio.id}-${seccionIdx}-${catIdx}-${servicioIdx}`}
                                                                     onClick={() => handleAddServicio(servicio)}
                                                                     className={`p-2.5 rounded-md border flex justify-between items-center transition group ${estaSeleccionado
                                                                         ? 'border-zinc-800/50 bg-zinc-900/40 opacity-50 cursor-default'
@@ -1322,22 +1322,22 @@ export default function CotizacionForm({
                                 </div>
                             ) : (
                                 <div className="space-y-6">
-                                    {Object.entries(serviciosAgrupadosSeleccionados).map(([seccion, categorias]) => (
-                                        <div key={seccion} className="border border-zinc-700/50 rounded-lg p-4 bg-zinc-800/30">
+                                    {Object.entries(serviciosAgrupadosSeleccionados).map(([seccion, categorias], seccionIndex) => (
+                                        <div key={`seccion-${seccion}-${seccionIndex}`} className="border border-zinc-700/50 rounded-lg p-4 bg-zinc-800/30">
                                             <h4 className="text-sm font-semibold text-zinc-300 mb-3 uppercase tracking-wide">
                                                 {seccion}
                                             </h4>
 
                                             <div className="space-y-4">
-                                                {Object.entries(categorias as any).map(([categoria, servicios]) => (
-                                                    <div key={categoria} className="space-y-2">
+                                                {Object.entries(categorias as any).map(([categoria, servicios], categoriaIndex) => (
+                                                    <div key={`categoria-${categoria}-${seccionIndex}-${categoriaIndex}`} className="space-y-2">
                                                         <h5 className="text-sm font-semibold text-blue-400 px-2 py-1 bg-blue-900/20 rounded border-l-2 border-blue-500">
                                                             {categoria}
                                                         </h5>
 
                                                         <div className="space-y-2">
-                                                            {(servicios as any[]).map((servicio) => (
-                                                                <div key={servicio.fieldId} className="bg-zinc-900/50 rounded-md p-3 border border-zinc-700/40">
+                                                            {(servicios as any[]).map((servicio, servicioIndex) => (
+                                                                <div key={`service-${servicio.id || servicio.servicioId}-sec-${seccionIndex}-cat-${categoriaIndex}-idx-${servicioIndex}`} className="bg-zinc-900/50 rounded-md p-3 border border-zinc-700/40">
                                                                     <div className="grid grid-cols-12 gap-3 items-center">
                                                                         {/* Descripción editable con precio unitario incluido */}
                                                                         <div className="col-span-6 min-w-0">
@@ -1480,7 +1480,7 @@ export default function CotizacionForm({
                                         };
 
                                         return (
-                                            <div key={tipoGrupo} className={`border rounded-lg p-3 ${tipoColors[tipoGrupo as keyof typeof tipoColors]}`}>
+                                            <div key={`costo-grupo-${tipoGrupo}`} className={`border rounded-lg p-3 ${tipoColors[tipoGrupo as keyof typeof tipoColors]}`}>
                                                 <h4 className="text-sm font-semibold text-zinc-300 mb-3">
                                                     {tipoLabels[tipoGrupo as keyof typeof tipoLabels]}
                                                 </h4>
@@ -1490,7 +1490,7 @@ export default function CotizacionForm({
                                                         if (costoTipo !== tipoGrupo) return null;
 
                                                         return (
-                                                            <div key={field.id} className="bg-zinc-900/50 rounded-md p-3 border border-zinc-700/40">
+                                                            <div key={`costo-${field.id}-${index}-${tipoGrupo}-field`} className="bg-zinc-900/50 rounded-md p-3 border border-zinc-700/40">
                                                                 <div className="grid grid-cols-12 gap-3 items-center">
                                                                     {/* Selector de tipo (oculto visualmente pero mantiene funcionalidad) */}
                                                                     <input
