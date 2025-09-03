@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
+import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 
 // Nuevos componentes unificados
 import EventoHeader from './EventoHeader'
@@ -68,6 +69,12 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
         return <div className="p-4 text-red-500">Error: ID de evento no encontrado</div>
     }
 
+    // Verificar si hay cotizaciones aprobadas o autorizadas
+    const tieneCotizacionAprobada = (eventoCompleto.Cotizacion || []).some(cotizacion =>
+        cotizacion.status === COTIZACION_STATUS.APROBADA ||
+        cotizacion.status === COTIZACION_STATUS.AUTORIZADO
+    )
+
     const handleAbrirConversacion = () => {
         const mensaje = `Hola ${eventoData.nombreCliente}, ¿Cómo estás?`
         window.open(`https://wa.me/${eventoData.telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
@@ -118,7 +125,9 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
 
                     {/* Columna 3: Cotizaciones */}
                     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
-                        <FichaPaquetesCompartir eventoCompleto={eventoCompleto} />
+                        {!tieneCotizacionAprobada && (
+                            <FichaPaquetesCompartir eventoCompleto={eventoCompleto} />
+                        )}
                         <FichaCotizacionesUnificada
                             eventoCompleto={eventoCompleto}
                             eventoAsignado={eventoData.eventoAsignado}
@@ -145,7 +154,9 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
                     }
                     cotizacionesContent={
                         <div className="p-4">
-                            <FichaPaquetesCompartir eventoCompleto={eventoCompleto} />
+                            {!tieneCotizacionAprobada && (
+                                <FichaPaquetesCompartir eventoCompleto={eventoCompleto} />
+                            )}
                             <FichaCotizacionesUnificada
                                 eventoCompleto={eventoCompleto}
                                 eventoAsignado={eventoData.eventoAsignado}

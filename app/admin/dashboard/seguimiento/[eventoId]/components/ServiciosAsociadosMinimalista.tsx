@@ -417,7 +417,8 @@ export default function ServiciosAsociadosMinimalista({ evento, usuarios }: Prop
                                         .sort(([, a], [, b]) => (a.posicion || 0) - (b.posicion || 0))
                                         .map(([categoria, categoriaData]) => (
                                             <div key={categoria} className="space-y-2">
-                                                <h4 className="text-sm font-medium text-zinc-300 pl-3">
+                                                <h4 className="text-sm font-medium text-zinc-300 pl-3 flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></div>
                                                     {categoria}
                                                 </h4>
 

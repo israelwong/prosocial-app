@@ -385,16 +385,16 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                             <div className="absolute right-0 top-8 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg py-1 z-10 min-w-48">
 
                                 {/* Preview */}
-                                <button
+                                {/* <button
                                     onClick={handlePreview}
                                     className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
                                 >
                                     <ArrowUpRight className="w-4 h-4" />
                                     Preview
-                                </button>
+                                </button> */}
 
                                 {/* Copiar link */}
-                                <button
+                                {/* <button
                                     onClick={() => cotizacion.id && handleCopiarLink(cotizacion.id)}
                                     className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
                                 >
@@ -409,16 +409,16 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                             Copiar link
                                         </>
                                     )}
-                                </button>
+                                </button> */}
 
                                 {/* WhatsApp */}
-                                <button
+                                {/* <button
                                     onClick={() => cotizacion.id && handleCompartirWhatsApp(cotizacion.id)}
                                     className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
                                 >
                                     <WhatsAppIcon className="w-4 h-4" size={16} />
                                     Compartir cotización
-                                </button>
+                                </button> */}
 
                                 {/* Autorizar - Solo si está en pendiente */}
                                 {cotizacion.status === COTIZACION_STATUS.PENDIENTE && (
@@ -462,9 +462,6 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                         <div className="border-t border-zinc-700 my-1"></div>
                                     </>
                                 )}
-
-
-                                <div className="border-t border-zinc-700 my-1"></div>
 
                                 {/* Clonar */}
                                 <button
