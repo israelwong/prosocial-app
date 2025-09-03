@@ -41,7 +41,15 @@ const AgendaCard = ({ agenda, color, onClick }: { agenda: AgendaEvento, color: s
                 </h3>
 
                 <div className="flex flex-wrap items-center gap-2 mb-3">
-                    {agenda.Evento.EventoTipo.nombre && (
+                    {/* Status del agendamiento */}
+                    <span className={`px-2 py-0.5 text-xs rounded-full ${agenda.status === AGENDA_STATUS.CONFIRMADO
+                        ? 'bg-green-900/50 text-green-300 border border-green-700/50'
+                        : 'bg-amber-900/50 text-amber-300 border border-amber-700/50'
+                        }`}>
+                        {agenda.status === AGENDA_STATUS.CONFIRMADO ? 'Confirmado' : 'Pendiente'}
+                    </span>
+
+                    {agenda.Evento.EventoTipo.nombre && agenda.Evento.EventoTipo.nombre !== 'Sin tipo' && (
                         <span className="px-2 py-0.5 text-xs rounded-full bg-blue-900/50 text-blue-300 border border-blue-700/50">
                             {agenda.Evento.EventoTipo.nombre}
                         </span>
@@ -123,11 +131,19 @@ export default function ListaAgenda() {
     useEffect(() => {
         setLoading(true)
         obtenerAgendaConEventos().then((data) => {
+            console.log('🔍 AGENDA DEBUG - Datos recibidos:', data.length, 'items');
+            console.log('🔍 AGENDA DEBUG - Primer item:', data[0]);
+
             setAgenda(
                 data.map((agenda: any): AgendaEvento => {
                     let cotizacionPrecio = 0;
                     let totalPagado = 0;
                     let totalPendiente = 0;
+
+                    console.log(`🔍 AGENDA DEBUG - Procesando evento: ${agenda.Evento?.nombre}`);
+                    console.log(`🔍 AGENDA DEBUG - Tipo agenda: ${agenda.agendaTipo}`);
+                    console.log(`🔍 AGENDA DEBUG - Tipo evento: ${agenda.Evento?.EventoTipo?.nombre}`);
+                    console.log(`🔍 AGENDA DEBUG - Cotizaciones:`, agenda.Evento?.Cotizacion?.length || 0);
 
                     // Solo calcular precios si NO es una sesión
                     // Las sesiones están incluidas en el precio del evento principal
@@ -148,8 +164,12 @@ export default function ListaAgenda() {
                                 return pago.status === PAGO_STATUS.PAID ? sum + (pago.monto || 0) : sum;
                             }, 0) || 0;
                             totalPendiente = Math.max(0, cotizacionPrecio - totalPagado);
+
+                            console.log(`🔍 AGENDA DEBUG - Precio: ${cotizacionPrecio}, Pagado: ${totalPagado}, Pendiente: ${totalPendiente}`);
                         }
-                    } return {
+                    }
+
+                    return {
                         ...agenda,
                         Evento: {
                             ...agenda.Evento,
@@ -186,7 +206,8 @@ export default function ListaAgenda() {
 
     const { grouped, sortedMonths, monthlyTotals, totalGeneralPendiente } = useMemo(() => {
         const filtered = agenda.filter(item => {
-            if (item.status !== AGENDA_STATUS.CONFIRMADO) return false; // Mostrar agenda confirmada
+            // Mostrar agenda confirmada y pendiente
+            if (item.status !== AGENDA_STATUS.CONFIRMADO && item.status !== AGENDA_STATUS.PENDIENTE) return false;
             const lowerCaseSearchTerm = searchTerm.toLowerCase()
             return (
                 item.Evento.nombre.toLowerCase().includes(lowerCaseSearchTerm) ||
@@ -279,11 +300,11 @@ export default function ListaAgenda() {
                 <div>
                     <h1 className="text-xl font-medium text-zinc-200">Agenda</h1>
                     <p className="text-sm text-zinc-500 mt-1">
-                        {agenda.filter(a => a.status === AGENDA_STATUS.PENDIENTE).length} eventos pendientes en total
+                        {agenda.filter(a => a.status === AGENDA_STATUS.CONFIRMADO || a.status === AGENDA_STATUS.PENDIENTE).length} eventos programados
                     </p>
                 </div>
                 <div className="text-right">
-                    <span className="text-xs text-amber-400 block">Pendiente a cobrar (Total)</span>
+                    <span className="text-xs text-amber-400 block">Total pendiente por cobrar</span>
                     <span className="text-lg font-medium text-amber-400">
                         ${totalGeneralPendiente.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>

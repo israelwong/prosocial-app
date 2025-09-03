@@ -434,7 +434,16 @@ export async function obtenerAgendaConEventosRootLegacy() {
     try {
         const agenda = await prisma.agenda.findMany({
             include: {
-                Evento: true,
+                Evento: {
+                    include: {
+                        EventoTipo: true,
+                        Cotizacion: {
+                            include: {
+                                Pago: true
+                            }
+                        }
+                    }
+                },
                 User: true
             }
         });
