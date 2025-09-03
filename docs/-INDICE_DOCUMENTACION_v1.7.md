@@ -9,6 +9,7 @@
 | **[-PLAN_REFACTORIZACION_SAAS_v1.7_DEFINITIVO.md](./-PLAN_REFACTORIZACION_SAAS_v1.7_DEFINITIVO.md)** | 🎯 **ACTIVO**     | Roadmap completo **10 fases** (7-8 meses) **+ B2B2C** |
 | **[-CHECKLIST_FASE_1_MULTITENANT.md](./-CHECKLIST_FASE_1_MULTITENANT.md)**                           | ✅ **EJECUTABLE** | Checklist Fase 1 (3 semanas) + nuevas entidades       |
 | **[-CONSIDERACIONES_TECNICAS_SAAS_v1.7.md](./-CONSIDERACIONES_TECNICAS_SAAS_v1.7.md)**               | 🔧 **TÉCNICO**    | Arquitectura + implementación Sistema Anexo           |
+| **[-ESPECIFICACIONES_COMERCIALES_ProSocial.md](./-ESPECIFICACIONES_COMERCIALES_ProSocial.md)**       | 💼 **COMERCIAL**  | **Specs completas para área comercial y estudios mercado** |
 
 ### 📈 **ANTECEDENTES IMPORTANTES**
 
