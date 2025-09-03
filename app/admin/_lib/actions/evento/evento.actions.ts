@@ -25,7 +25,7 @@ import { revalidatePath } from 'next/cache';
 import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions';
 import { obtenerBalancePagosEvento } from '@/app/admin/_lib/actions/pagos';
 import { obtenerCliente } from '@/app/admin/_lib/actions/cliente/cliente.actions';
-import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions';
+import { obtenerCotizacionCompleta } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
 
 // =============================================================================
 // FUNCIONES BÁSICAS DE EVENTOS (migradas desde evento/evento.actions.ts)
@@ -697,14 +697,16 @@ export async function obtenerEventoSeguimiento(eventoId: string) {
         ]);
 
         // Obtener servicios de cotización y pagos
-        const [cotizacionServicio, pago] = await Promise.all([
-            cotizacion ? obtenerCotizacionServicios(cotizacion.id) : [],
+        const [cotizacionCompleta, pago] = await Promise.all([
+            cotizacion ? obtenerCotizacionCompleta(cotizacion.id) : null,
             cotizacion ? prisma.pago.findMany({
                 where: {
                     cotizacionId: cotizacion.id
                 }
             }) : []
         ]);
+
+        const cotizacionServicio = cotizacionCompleta?.cotizacion?.Servicio || [];
 
         return {
             success: true,

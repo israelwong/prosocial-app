@@ -5,8 +5,7 @@ import { Servicio, MetodoPago, CondicionesComerciales } from '@/app/admin/_lib/t
 import { COTIZACION_STATUS, PAGO_STATUS } from '@/app/admin/_lib/constants/status'
 
 import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
-import { obtenerCotizacion, obtenerCotizacionServicios, actualizarCotizacion } from '@/app/admin/_lib/cotizacion.actions';
-import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
+import { obtenerCotizacionCompleta as obtenerCotizacion, eliminarCotizacion, actualizarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
 import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
 import { actualizarEventoStatus } from '@/app/admin/_lib/evento.actions';
 import { obtenerEventoPorId } from '@/app/admin/_lib/evento.actions';
@@ -82,7 +81,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
             const configuracionPromise = obtenerConfiguracionActiva();
             const condicionesComercialesPromise = obtenerCondicionesComercialesActivas();
 
-            const [cotizacion, configuracion, condicionesComerciales] = await Promise.all([
+            const [resultado, configuracion, condicionesComerciales] = await Promise.all([
                 cotizacionPromise,
                 configuracionPromise,
                 condicionesComercialesPromise
@@ -93,23 +92,24 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 setVisitas(conteo);
             });
 
-            if (cotizacion) {
+            if (resultado.cotizacion) {
+                const cotizacionData = resultado.cotizacion;
 
-                // console.log('cotizacion:', cotizacion);
+                // console.log('cotizacion:', cotizacionData);
 
-                setNombreCotizacion(cotizacion.nombre || '');
-                setEventoId(cotizacion.eventoId);
-                setEventoTipoId(cotizacion.eventoTipoId);
-                setCondicionComercialId(cotizacion.condicionesComercialesId ?? '');
-                setMetodoPagoId(cotizacion.condicionesComercialesMetodoPagoId ?? '');
-                setCotizacionEstatus(cotizacion.status);//!
-                setEventoTipo(cotizacion.eventoTipo?.nombre || '');
+                setNombreCotizacion(cotizacionData.nombre || '');
+                setEventoId(cotizacionData.eventoId);
+                setEventoTipoId(cotizacionData.eventoTipoId);
+                setCondicionComercialId(cotizacionData.condicionesComercialesId ?? '');
+                setMetodoPagoId(cotizacionData.condicionesComercialesMetodoPagoId ?? '');
+                setCotizacionEstatus(cotizacionData.status);//!
+                setEventoTipo(cotizacionData.EventoTipo?.nombre || '');
 
-                // Obtener los servicios de la cotización
-                const serviciosCotizacion = await obtenerCotizacionServicios(cotizacionId);
+                // Usar los servicios que ya vienen con la cotización completa
+                const serviciosCotizacion = cotizacionData.Servicio || [];
 
-                // Obtener los servicios
-                const serviciosData = await Promise.all(serviciosCotizacion.map(async (servicio) => {
+                // Procesar los servicios
+                const serviciosData = await Promise.all(serviciosCotizacion.map(async (servicio: any) => {
                     if (!servicio.servicioId) {
                         // Opcional: manejar el caso donde servicioId es null o undefined
                         return null;
@@ -136,7 +136,7 @@ export default function FormCotizaacionEditar({ cotizacionId }: Props) {
                 );
 
                 //obtener evento por id
-                const evento = await obtenerEventoPorId(cotizacion.eventoId);
+                const evento = await obtenerEventoPorId(cotizacionData.eventoId);
                 if (evento) {
                     setEventoNombre(evento.nombre || '');
                     setEventoFecha(evento.fecha_evento?.toISOString() || '');

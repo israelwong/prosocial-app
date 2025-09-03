@@ -1737,3 +1737,70 @@ export async function cancelarCotizacion(cotizacionId: string) {
         };
     }
 }
+
+/**
+ * Actualizar cotización completa con servicios
+ * Migrada desde cotizacion.actions.ts eliminado
+ */
+export async function actualizarCotizacion(data: any) {
+    try {
+        //// console.log('Updating cotizacion with id:', data.id);
+        await prisma.cotizacion.update({
+            where: {
+                id: data.id
+            },
+            data: {
+                eventoTipoId: data.eventoTipoId,
+                eventoId: data.eventoId,
+                nombre: data.nombre,
+                precio: data.precio,
+                condicionesComercialesId: data.condicionesComercialesId || null,
+                condicionesComercialesMetodoPagoId: data.condicionesComercialesMetodoPagoId || null,
+                status: data.status,
+            }
+        });
+        //// console.log('Cotizacion updated successfully');
+
+        if (data.servicios) {
+            //// console.log('Deleting existing cotizacionServicios for cotizacionId:', data.id);
+            await prisma.cotizacionServicio.deleteMany({
+                where: {
+                    cotizacionId: data.id
+                }
+            });
+
+            //// console.log('Creating new cotizacionServicios');
+            for (const servicio of data.servicios) {
+                try {
+                    await prisma.cotizacionServicio.create({
+                        data: {
+                            cotizacionId: data.id ?? '',
+                            servicioId: servicio.id ?? '',
+                            cantidad: servicio.cantidad,
+                            posicion: servicio.posicion,
+                            servicioCategoriaId: servicio.servicioCategoriaId ?? '',
+                            userId: servicio.userId || undefined
+                        }
+                    });
+                    //// console.log('Created cotizacionServicio for servicioId:', servicio.id);
+                } catch (error: unknown) {
+                    if (error instanceof Error) {
+                        console.error('Error creating cotizacionServicio for servicioId:', servicio.id, error.message);
+                    } else {
+                        console.error('Unknown error creating cotizacionServicio for servicioId:', servicio.id);
+                    }
+                }
+            }
+        }
+
+        return { success: true };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error updating cotizacion:', error.message);
+            return { error: 'Error updating cotizacion ' + error.message };
+        }
+        console.error('Unknown error updating cotizacion');
+        return { error: 'Error updating cotizacion' };
+    }
+}
+

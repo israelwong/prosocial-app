@@ -3,7 +3,7 @@ import { Evento } from "./types";
 import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
 import { obtenerBalancePagosEvento } from '@/app/admin/_lib/actions/pagos'
 import { obtenerCliente } from '@/app/admin/_lib/actions/cliente/cliente.actions'
-import { obtenerCotizacionServicios } from '@/app/admin/_lib/cotizacion.actions'
+import { obtenerCotizacionCompleta } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import { EVENTO_STATUS, COTIZACION_STATUS } from './constants/status';
 
 import prisma from './prismaClient';
@@ -287,7 +287,8 @@ export async function obtenerEventoSeguimiento(eventoId: string) {
         }
     });
 
-    const cotizacionServicio = await obtenerCotizacionServicios(cotizacion?.id ?? '');
+    const cotizacionCompleta = await obtenerCotizacionCompleta(cotizacion?.id ?? '');
+    const cotizacionServicio = cotizacionCompleta?.cotizacion?.Servicio || [];
 
     const pago = await prisma.pago.findMany({
         where: {
