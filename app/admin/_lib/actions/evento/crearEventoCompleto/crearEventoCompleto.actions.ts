@@ -1,7 +1,7 @@
 'use server'
 
 import prisma from '../../../prismaClient'
-import { validarCondigoAutorizacion } from '../../../configuracion.actions'
+import { validarCondigoAutorizacion } from '../../configuracion/configuracion.actions'
 import { obtenerEtapa1 } from '../../../actions/EventoEtapa/EventoEtapa.actions'
 import { EVENTO_STATUS, CLIENTE_STATUS, MANUAL_CREATION_FLOW } from '../../../constants/status'
 import {

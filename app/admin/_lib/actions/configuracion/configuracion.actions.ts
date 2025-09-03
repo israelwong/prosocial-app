@@ -103,3 +103,94 @@ export async function updateGlobalConfiguracion(data: unknown) {
         return { success: false, error: { root: ["No se pudo completar la operación."] } };
     }
 }
+
+// =============================================================================
+// FUNCIONES LEGACY MIGRADAS DESDE configuracion.actions.ts (ROOT)
+// =============================================================================
+
+/**
+ * Obtiene todas las configuraciones
+ * Migrada desde configuracion.actions.ts
+ */
+export async function obtenerConfiguraciones() {
+    return await prisma.configuracion.findMany({
+        orderBy: {
+            updatedAt: 'desc'
+        }
+    });
+}
+
+/**
+ * Obtiene la configuración activa
+ * Migrada desde configuracion.actions.ts - FUNCIÓN MUY UTILIZADA
+ */
+export async function obtenerConfiguracionActiva() {
+    return await prisma.configuracion.findFirst({
+        where: {
+            status: 'active'
+        },
+        orderBy: {
+            updatedAt: 'desc'
+        }
+    });
+}
+
+/**
+ * Obtiene una configuración por ID
+ * Migrada desde configuracion.actions.ts
+ */
+export async function obtenerConfiguracion(id: string) {
+    return await prisma.configuracion.findUnique({
+        where: {
+            id: id
+        }
+    });
+}
+
+/**
+ * Crea nueva configuración
+ * Migrada desde configuracion.actions.ts
+ */
+export async function crearConfiguracion(configuracion: any) {
+    return await prisma.configuracion.create({
+        data: {
+            nombre: configuracion.nombre,
+            utilidad_producto: Number(configuracion.utilidad_producto),
+            utilidad_servicio: Number(configuracion.utilidad_servicio),
+            comision_venta: Number(configuracion.comision_venta),
+            sobreprecio: Number(configuracion.sobreprecio)
+        }
+    });
+}
+
+/**
+ * Actualiza configuración existente
+ * Migrada desde configuracion.actions.ts
+ */
+export async function actualizarConfiguracion(configuracion: any) {
+    return await prisma.configuracion.update({
+        where: {
+            id: configuracion.id
+        },
+        data: {
+            nombre: configuracion.nombre,
+            utilidad_producto: Number(configuracion.utilidad_producto),
+            utilidad_servicio: Number(configuracion.utilidad_servicio),
+            comision_venta: Number(configuracion.comision_venta),
+            sobreprecio: Number(configuracion.sobreprecio),
+            claveAutorizacion: configuracion.claveAutorizacion,
+        }
+    });
+}
+
+/**
+ * Valida código de autorización
+ * Migrada desde configuracion.actions.ts
+ */
+export async function validarCondigoAutorizacion(clave: string) {
+    return await prisma.configuracion.findFirst({
+        where: {
+            claveAutorizacion: clave
+        }
+    });
+}

@@ -14,6 +14,16 @@ export async function obtenerTiposEvento() {
     });
 }
 
+/**
+ * Obtiene un tipo de evento por ID
+ * Migrado desde eventoTipo.actions.ts (root)
+ */
+export async function obtenerTipoEvento(id: string) {
+    return await prisma.eventoTipo.findUnique({
+        where: { id }
+    });
+}
+
 export async function crearTipoEvento(data: unknown) {
     const validationResult = EventoTipoCreateSchema.safeParse(data);
 

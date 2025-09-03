@@ -1,9 +1,9 @@
 'use server';
 import { Evento } from "./types";
-import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions'
-import { obtenerBalancePagosEvento } from '@/app/admin/_lib/actions/pagos'
-import { obtenerCliente } from '@/app/admin/_lib/actions/cliente/cliente.actions'
-import { obtenerCotizacionCompleta } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
+import { obtenerTipoEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
+import { obtenerBalancePagosEvento } from '@/app/admin/_lib/actions/pagos';
+import { obtenerCliente } from '@/app/admin/_lib/actions/cliente/cliente.actions';
+import { obtenerCotizacionCompleta } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
 import { EVENTO_STATUS, COTIZACION_STATUS } from './constants/status';
 
 import prisma from './prismaClient';

@@ -146,3 +146,37 @@ export async function eliminarCondicionComercial(id: string) {
     revalidatePath(basePath);
     redirect(basePath);
 }
+
+// =============================================================================
+// FUNCIONES LEGACY MIGRADAS DESDE condicionesComerciales.actions.ts (ROOT)
+// =============================================================================
+
+/**
+ * Obtiene condiciones comerciales activas
+ * Migrada desde condicionesComerciales.actions.ts - FUNCIÓN MUY UTILIZADA
+ */
+export async function obtenerCondicionesComercialesActivas() {
+    return await prisma.condicionesComerciales.findMany({
+        where: {
+            status: 'active'
+        },
+        orderBy: {
+            orden: 'asc'
+        }
+    });
+}
+
+/**
+ * Obtiene métodos de pago para una condición comercial
+ * Migrada desde condicionesComerciales.actions.ts - FUNCIÓN MUY UTILIZADA  
+ */
+export async function obtenerCondicionesComercialesMetodosPago(condicionesComercialesId: string) {
+    return await prisma.condicionesComercialesMetodoPago.findMany({
+        where: {
+            condicionesComercialesId
+        },
+        orderBy: {
+            orden: 'asc'
+        }
+    });
+}

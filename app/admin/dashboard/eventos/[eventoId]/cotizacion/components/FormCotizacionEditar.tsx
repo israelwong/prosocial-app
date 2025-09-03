@@ -4,13 +4,13 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { Servicio, MetodoPago, CondicionesComerciales } from '@/app/admin/_lib/types'
 import { COTIZACION_STATUS, PAGO_STATUS } from '@/app/admin/_lib/constants/status'
 
-import { obtenerConfiguracionActiva } from '@/app/admin/_lib/configuracion.actions'
+import { obtenerConfiguracionActiva } from '@/app/admin/_lib/actions/configuracion/configuracion.actions'
 import { obtenerCotizacionCompleta as obtenerCotizacion, eliminarCotizacion, actualizarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
-import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/condicionesComerciales.actions';
+import { obtenerCondicionesComercialesActivas, obtenerCondicionesComercialesMetodosPago } from '@/app/admin/_lib/actions/condicionesComerciales/condicionesComerciales.actions';
 import { actualizarEventoStatus } from '@/app/admin/_lib/evento.actions';
 import { obtenerEventoPorId } from '@/app/admin/_lib/evento.actions';
 import { obtenerCliente } from '@/app/admin/_lib/actions/cliente/cliente.actions';
-import { obtenerMetodoPago } from '@/app/admin/_lib/metodoPago.actions';
+import { obtenerMetodoPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions';
 import { obtenerServicio } from '@/app/admin/_lib/actions/servicio/servicio.actions'
 import { crearPago } from '@/app/admin/_lib/actions/pagos';
 import { obtenerConteoCotizacionVisitas } from '@/app/admin/_lib/actions/cotizacionVisita/cotizacionVisita.actions'

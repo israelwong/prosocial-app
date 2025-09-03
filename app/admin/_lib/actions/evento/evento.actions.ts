@@ -22,7 +22,7 @@ import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
 import { revalidatePath } from 'next/cache';
 
 // Importamos las funciones auxiliares existentes
-import { obtenerTipoEvento } from '@/app/admin/_lib/eventoTipo.actions';
+import { obtenerTipoEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
 import { obtenerBalancePagosEvento } from '@/app/admin/_lib/actions/pagos';
 import { obtenerCliente } from '@/app/admin/_lib/actions/cliente/cliente.actions';
 import { obtenerCotizacionCompleta } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
