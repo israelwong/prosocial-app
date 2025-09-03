@@ -641,78 +641,99 @@ export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
 
             // 5.2 CREAR servicios nuevos
             console.log(`➕ Creando ${serviciosNuevos.length} servicios nuevos...`);
-            for (const servicioNuevo of serviciosNuevos) {
-                await tx.cotizacionServicio.create({
-                    data: {
-                        cotizacionId: validatedData.id,
-                        servicioId: servicioNuevo.servicioId,
-                        servicioCategoriaId: servicioNuevo.servicioCategoriaId,
-                        cantidad: servicioNuevo.cantidad,
-                        precioUnitario: servicioNuevo.precioUnitario,
-                        subtotal: servicioNuevo.precioUnitario * servicioNuevo.cantidad,
-                        posicion: servicioNuevo.posicion,
-                        status: COTIZACION_STATUS.PENDIENTE,
-                        // Campos snapshot
-                        nombre_snapshot: servicioNuevo.nombre_snapshot,
-                        descripcion_snapshot: servicioNuevo.descripcion_snapshot,
-                        precio_unitario_snapshot: servicioNuevo.precio_unitario_snapshot,
-                        costo_snapshot: servicioNuevo.costo_snapshot,
-                        gasto_snapshot: servicioNuevo.gasto_snapshot,
-                        utilidad_snapshot: servicioNuevo.utilidad_snapshot,
-                        precio_publico_snapshot: servicioNuevo.precio_publico_snapshot,
-                        tipo_utilidad_snapshot: servicioNuevo.tipo_utilidad_snapshot,
-                        categoria_nombre_snapshot: servicioNuevo.categoria_nombre_snapshot,
-                        seccion_nombre_snapshot: servicioNuevo.seccion_nombre_snapshot,
-                        es_personalizado: servicioNuevo.es_personalizado,
-                        servicio_original_id: servicioNuevo.servicio_original_id,
-                        // userId: null (sin asignar inicialmente)
-                        // fechaAsignacion: null (sin asignar inicialmente)
-                    }
+            if (serviciosNuevos.length > 0) {
+                const creacionPromises = serviciosNuevos.map(servicioNuevo => 
+                    tx.cotizacionServicio.create({
+                        data: {
+                            cotizacionId: validatedData.id,
+                            servicioId: servicioNuevo.servicioId,
+                            servicioCategoriaId: servicioNuevo.servicioCategoriaId,
+                            cantidad: servicioNuevo.cantidad,
+                            precioUnitario: servicioNuevo.precioUnitario,
+                            subtotal: servicioNuevo.precioUnitario * servicioNuevo.cantidad,
+                            posicion: servicioNuevo.posicion,
+                            status: COTIZACION_STATUS.PENDIENTE,
+                            // Campos snapshot
+                            nombre_snapshot: servicioNuevo.nombre_snapshot,
+                            descripcion_snapshot: servicioNuevo.descripcion_snapshot,
+                            precio_unitario_snapshot: servicioNuevo.precio_unitario_snapshot,
+                            costo_snapshot: servicioNuevo.costo_snapshot,
+                            gasto_snapshot: servicioNuevo.gasto_snapshot,
+                            utilidad_snapshot: servicioNuevo.utilidad_snapshot,
+                            precio_publico_snapshot: servicioNuevo.precio_publico_snapshot,
+                            tipo_utilidad_snapshot: servicioNuevo.tipo_utilidad_snapshot,
+                            categoria_nombre_snapshot: servicioNuevo.categoria_nombre_snapshot,
+                            seccion_nombre_snapshot: servicioNuevo.seccion_nombre_snapshot,
+                            es_personalizado: servicioNuevo.es_personalizado,
+                            servicio_original_id: servicioNuevo.servicio_original_id,
+                            // userId: null (sin asignar inicialmente)
+                            // fechaAsignacion: null (sin asignar inicialmente)
+                        }
+                    })
+                );
+                await Promise.all(creacionPromises);
+                
+                // Log después de todas las creaciones
+                serviciosNuevos.forEach(servicio => {
+                    console.log(`  ✅ Creado: ${servicio.nombre_snapshot}`);
                 });
-                console.log(`  ✅ Creado: ${servicioNuevo.nombre_snapshot}`);
             }
 
             // 5.3 ACTUALIZAR servicios modificados (PRESERVANDO datos operacionales)
             console.log(`📝 Actualizando ${serviciosModificados.length} servicios modificados...`);
-            for (const { existente, nuevo } of serviciosModificados) {
-                await tx.cotizacionServicio.update({
-                    where: { id: existente.id },
-                    data: {
-                        // Actualizar solo campos del formulario
-                        cantidad: nuevo.cantidad,
-                        posicion: nuevo.posicion,
-                        precioUnitario: nuevo.precioUnitario,
-                        subtotal: nuevo.precioUnitario * nuevo.cantidad,
+            if (serviciosModificados.length > 0) {
+                const actualizacionPromises = serviciosModificados.map(({ existente, nuevo }) => 
+                    tx.cotizacionServicio.update({
+                        where: { id: existente.id },
+                        data: {
+                            // Actualizar solo campos del formulario
+                            cantidad: nuevo.cantidad,
+                            posicion: nuevo.posicion,
+                            precioUnitario: nuevo.precioUnitario,
+                            subtotal: nuevo.precioUnitario * nuevo.cantidad,
 
-                        // Campos snapshot actualizados
-                        nombre_snapshot: nuevo.nombre_snapshot,
-                        descripcion_snapshot: nuevo.descripcion_snapshot,
-                        precio_unitario_snapshot: nuevo.precio_unitario_snapshot,
-                        costo_snapshot: nuevo.costo_snapshot,
-                        gasto_snapshot: nuevo.gasto_snapshot,
-                        utilidad_snapshot: nuevo.utilidad_snapshot,
-                        precio_publico_snapshot: nuevo.precio_publico_snapshot,
-                        tipo_utilidad_snapshot: nuevo.tipo_utilidad_snapshot,
-                        categoria_nombre_snapshot: nuevo.categoria_nombre_snapshot,
-                        seccion_nombre_snapshot: nuevo.seccion_nombre_snapshot,
+                            // Campos snapshot actualizados
+                            nombre_snapshot: nuevo.nombre_snapshot,
+                            descripcion_snapshot: nuevo.descripcion_snapshot,
+                            precio_unitario_snapshot: nuevo.precio_unitario_snapshot,
+                            costo_snapshot: nuevo.costo_snapshot,
+                            gasto_snapshot: nuevo.gasto_snapshot,
+                            utilidad_snapshot: nuevo.utilidad_snapshot,
+                            precio_publico_snapshot: nuevo.precio_publico_snapshot,
+                            tipo_utilidad_snapshot: nuevo.tipo_utilidad_snapshot,
+                            categoria_nombre_snapshot: nuevo.categoria_nombre_snapshot,
+                            seccion_nombre_snapshot: nuevo.seccion_nombre_snapshot,
 
-                        // PRESERVAR EXPLÍCITAMENTE datos operacionales:
-                        // userId: NO SE TOCA - mantiene asignación existente
-                        // fechaAsignacion: NO SE TOCA - mantiene fecha de asignación
-                        // FechaEntrega: NO SE TOCA - mantiene fechas programadas
-                        // NominaServicio: NO SE TOCA - es relación, se mantiene automáticamente
-                    }
+                            // PRESERVAR EXPLÍCITAMENTE datos operacionales:
+                            // userId: NO SE TOCA - mantiene asignación existente
+                            // fechaAsignacion: NO SE TOCA - mantiene fecha de asignación
+                            // FechaEntrega: NO SE TOCA - mantiene fechas programadas
+                            // NominaServicio: NO SE TOCA - es relación, se mantiene automáticamente
+                        }
+                    })
+                );
+                await Promise.all(actualizacionPromises);
+                
+                // Log después de todas las actualizaciones
+                serviciosModificados.forEach(({ existente, nuevo }) => {
+                    console.log(`  ✅ Actualizado: ${nuevo.nombre_snapshot}${existente.userId ? ' (con personal asignado)' : ''}`);
                 });
-                console.log(`  ✅ Actualizado: ${nuevo.nombre_snapshot}${existente.userId ? ' (con personal asignado)' : ''}`);
             }
 
             // 5.4 ELIMINAR servicios removidos (ya validados)
             console.log(`🗑️ Eliminando ${serviciosAEliminar.length} servicios removidos...`);
-            for (const servicioEliminar of serviciosAEliminar) {
-                await tx.cotizacionServicio.delete({
-                    where: { id: servicioEliminar.id }
+            if (serviciosAEliminar.length > 0) {
+                const eliminacionPromises = serviciosAEliminar.map(servicioEliminar => 
+                    tx.cotizacionServicio.delete({
+                        where: { id: servicioEliminar.id }
+                    })
+                );
+                await Promise.all(eliminacionPromises);
+                
+                // Log después de todas las eliminaciones
+                serviciosAEliminar.forEach(servicio => {
+                    console.log(`  ✅ Eliminado: ${servicio.nombre_snapshot}${servicio.userId ? ' (se liberó personal asignado)' : ''}`);
                 });
-                console.log(`  ✅ Eliminado: ${servicioEliminar.nombre_snapshot}${servicioEliminar.userId ? ' (se liberó personal asignado)' : ''}`);
             }
 
             // 5.5 Actualizar costos
@@ -735,12 +756,74 @@ export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
             }
 
             return cotizacion;
+            // 6. Obtener cotización completa dentro de la misma transacción
+            const cotizacionCompleta = await tx.cotizacion.findUnique({
+                where: { id: validatedData.id },
+                include: {
+                    Evento: {
+                        include: {
+                            Cliente: true,
+                            EventoTipo: true
+                        }
+                    },
+                    EventoTipo: true,
+                    CondicionesComerciales: true,
+                    Costos: {
+                        orderBy: { posicion: 'asc' }
+                    },
+                    Servicio: {
+                        include: {
+                            Servicio: {
+                                include: {
+                                    ServicioCategoria: {
+                                        include: {
+                                            seccionCategoria: {
+                                                include: {
+                                                    Seccion: true
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            ServicioCategoria: {
+                                include: {
+                                    seccionCategoria: {
+                                        include: {
+                                            Seccion: true
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        orderBy: [
+                            {
+                                Servicio: {
+                                    ServicioCategoria: {
+                                        seccionCategoria: {
+                                            Seccion: { posicion: 'asc' }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                Servicio: {
+                                    ServicioCategoria: { posicion: 'asc' }
+                                }
+                            },
+                            { posicion: 'asc' }
+                        ]
+                    }
+                }
+            });
+
+            return cotizacionCompleta;
         });
 
         console.log('✅ Transacción completada exitosamente');
 
-        // 6. Retornar cotización completa actualizada
-        return await obtenerCotizacionCompleta(validatedData.id);
+        // Devolver en el formato esperado por el frontend
+        return { cotizacion: cotizacionActualizada };
 
     } catch (error: any) {
         console.error('❌ Error en actualización con preservación:', error);
