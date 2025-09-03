@@ -140,7 +140,10 @@ export async function actualizarPosicionCatalogo(payload: unknown) {
     }
 
     const { itemId, itemType, newParentId } = validation.data;
+    // CRÍTICO: El frontend envía índices base 0, pero la BD usa posiciones base 1
+    // Convertir de índice (0-based) a posición (1-based)
     let { newIndex } = validation.data;
+    newIndex = newIndex + 1;
 
     await prisma.$transaction(async (tx) => {
         let item, oldParentId, oldIndex, parentRelationField, parentIdField;

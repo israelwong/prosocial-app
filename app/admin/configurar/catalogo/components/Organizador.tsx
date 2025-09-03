@@ -193,14 +193,15 @@ export default function Organizador({ initialCatalogo }: OrganizadorProps) {
             newParentId = activeItemInfo.parentId;
             let siblings: any[] = [];
             const parentData = newParentId === null ? null : itemsMap.get(newParentId)!.data;
-            if (newParentId === null) {
-                siblings = catalogo;
-            } else if ((parentData as SeccionItemData).categorias !== undefined) {
-                siblings = (parentData as SeccionItemData).categorias;
-            } else if ((parentData as CategoriaItemData).servicios !== undefined) {
-                siblings = (parentData as CategoriaItemData).servicios;
-            }
-            newIndex = siblings.findIndex(item => item.id === overItemInfo.id);
+            if (newParentId === null) siblings = catalogo;
+            else if ((parentData as SeccionItemData).categorias !== undefined) siblings = (parentData as SeccionItemData).categorias;
+            else if ((parentData as CategoriaItemData).servicios !== undefined) siblings = (parentData as CategoriaItemData).servicios;
+
+            const activeIndex = siblings.findIndex(item => item.id === activeItemInfo.id);
+            const overIndex = siblings.findIndex(item => item.id === overItemInfo.id);
+
+            // Enviamos overIndex y dejamos que backend ajuste cuando activeIndex < overIndex
+            newIndex = overIndex;
         } else {
             const targetIsContainer = overItemInfo.type === 'seccion' || overItemInfo.type === 'categoria';
             const targetParentType = targetIsContainer ? overItemInfo.type : itemsMap.get(overItemInfo.parentId!)?.type || 'root';
@@ -220,18 +221,59 @@ export default function Organizador({ initialCatalogo }: OrganizadorProps) {
             if (!newParentId) return;
             const parentData = itemsMap.get(newParentId!)!.data;
             const childrenList = (parentData as SeccionItemData).categorias || (parentData as CategoriaItemData).servicios;
+            // Si se suelta sobre un contenedor, inserta al final; si se suelta sobre un ítem, inserta en su posición
             newIndex = targetIsContainer ? childrenList.length : childrenList.findIndex(item => item.id === overItemInfo.id);
         }
 
         if (newIndex === -1 || newParentId === undefined) return;
 
         const originalCatalogo = JSON.parse(JSON.stringify(catalogo));
-        setCatalogo(currentCatalogo => { const tempCatalogo = JSON.parse(JSON.stringify(currentCatalogo)); const findAndRemove = (items: any[], id: string): any | null => { for (let i = 0; i < items.length; i++) { if (items[i].id === id) return items.splice(i, 1)[0]; const children = items[i].categorias || items[i].servicios; if (children) { const found = findAndRemove(children, id); if (found) return found; } } return null; }; const findAndInsert = (items: any[], parentId: string | null, index: number, itemToInsert: any) => { if (parentId === null) { items.splice(index, 0, itemToInsert); return; } for (const item of items) { if (item.id === parentId) { const children = item.categorias ? item.categorias : item.servicios; children.splice(index, 0, itemToInsert); return; } const children = item.categorias || item.servicios; if (children) findAndInsert(children, parentId, index, itemToInsert); } }; const itemToMove = findAndRemove(tempCatalogo, activeId); if (itemToMove) findAndInsert(tempCatalogo, newParentId, newIndex, itemToMove); return tempCatalogo; });
+        setCatalogo(currentCatalogo => {
+            const tempCatalogo = JSON.parse(JSON.stringify(currentCatalogo));
+
+            const findAndRemove = (items: any[], id: string): any | null => {
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].id === id) return items.splice(i, 1)[0];
+                    const children = items[i].categorias || items[i].servicios;
+                    if (children) {
+                        const found = findAndRemove(children, id);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            };
+
+            const findAndInsert = (items: any[], parentId: string | null, index: number, itemToInsert: any) => {
+                if (parentId === null) {
+                    items.splice(index, 0, itemToInsert);
+                    return;
+                }
+                for (const item of items) {
+                    if (item.id === parentId) {
+                        const children = item.categorias ? item.categorias : item.servicios;
+                        children.splice(index, 0, itemToInsert);
+                        return;
+                    }
+                    const children = item.categorias || item.servicios;
+                    if (children) findAndInsert(children, parentId, index, itemToInsert);
+                }
+            };
+
+            // Ajustar el índice de inserción para el estado optimista
+            // Para el mismo contenedor, usar directamente overIndex
+            let insertIndex = newIndex;
+
+            const itemToMove = findAndRemove(tempCatalogo, activeId);
+            if (itemToMove) findAndInsert(tempCatalogo, newParentId, insertIndex, itemToMove);
+            return tempCatalogo;
+        });
 
         setIsSaving(true);
         const toastId = toast.loading("Guardando cambios...");
         try {
-            await actualizarPosicionCatalogo({ itemId: activeItemInfo.id, itemType: activeItemInfo.type, newParentId: String(newParentId), newIndex });
+            // Normalizar el parentId: las secciones viven en la raíz ('root') para el backend
+            const normalizedParentId = activeItemInfo.type === 'seccion' ? 'root' : String(newParentId);
+            await actualizarPosicionCatalogo({ itemId: activeItemInfo.id, itemType: activeItemInfo.type, newParentId: normalizedParentId, newIndex });
             toast.success("Catálogo actualizado.", { id: toastId });
         } catch (error) {
             toast.error((error as Error).message || "No se pudo actualizar.", { id: toastId });
@@ -240,10 +282,6 @@ export default function Organizador({ initialCatalogo }: OrganizadorProps) {
             setIsSaving(false);
         }
     };
-
-    // const handleSaveSeccion = (savedData: ServicioSeccion) => { ... } // eliminado
-
-    // const handleSaveCategoria = (...) // eliminado
 
     const handleDeleteConfirm = async () => {
         if (!deletingItem) return;
