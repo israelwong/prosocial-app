@@ -19,6 +19,7 @@
 | **[-MAPA_REFACTORIZACION_v2.md](./-MAPA_REFACTORIZACION_v2.md)**                     | 🗺️ **GUÍA**       | Mapa de secciones UI/UX            |
 
 ### 🗑️ **DOCUMENTOS ELIMINADOS** (Evitar Confusión)
+
 - ❌ `-PLAN_REFACTORIZACION_SAAS_v1.7_DEFINITIVO.md` - Reemplazado por TIME_TO_REVENUE
 - ❌ `-CHECKLIST_FASE_1_MULTITENANT.md` - Reemplazado por CHECKLIST_EMV
 
