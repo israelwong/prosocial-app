@@ -4,12 +4,12 @@
 
 ### 🚀 **SAAS MIGRATION v1.7 - DOCUMENTOS MAESTROS**
 
-| Documento                                                                                            | Estado            | Propósito                                             |
-| ---------------------------------------------------------------------------------------------------- | ----------------- | ----------------------------------------------------- |
-| **[-PLAN_REFACTORIZACION_SAAS_v1.7_DEFINITIVO.md](./-PLAN_REFACTORIZACION_SAAS_v1.7_DEFINITIVO.md)** | 🎯 **ACTIVO**     | Roadmap completo **10 fases** (7-8 meses) **+ B2B2C** |
-| **[-CHECKLIST_FASE_1_MULTITENANT.md](./-CHECKLIST_FASE_1_MULTITENANT.md)**                           | ✅ **EJECUTABLE** | Checklist Fase 1 (3 semanas) + nuevas entidades       |
-| **[-CONSIDERACIONES_TECNICAS_SAAS_v1.7.md](./-CONSIDERACIONES_TECNICAS_SAAS_v1.7.md)**               | 🔧 **TÉCNICO**    | Arquitectura + implementación Sistema Anexo           |
-| **[-ESPECIFICACIONES_COMERCIALES_ProSocial.md](./-ESPECIFICACIONES_COMERCIALES_ProSocial.md)**       | 💼 **COMERCIAL**  | **Specs completas para área comercial y estudios mercado** |
+| Documento                                                                                                      | Estado            | Propósito                                                    |
+| -------------------------------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------ |
+| **[-PLAN_REFACTORIZACION_SAAS_v1.7_TIME_TO_REVENUE.md](./-PLAN_REFACTORIZACION_SAAS_v1.7_TIME_TO_REVENUE.md)** | 🎯 **ACTIVO**     | **Roadmap acelerado Time-to-Revenue + Modelo Revenue Share** |
+| **[-CHECKLIST_EMV_FASE_1_TIME_TO_REVENUE.md](./-CHECKLIST_EMV_FASE_1_TIME_TO_REVENUE.md)**                     | ✅ **EJECUTABLE** | **Checklist Ecosistema Mínimo Viable (4 semanas)**           |
+| **[-CONSIDERACIONES_TECNICAS_SAAS_v1.7.md](./-CONSIDERACIONES_TECNICAS_SAAS_v1.7.md)**                         | 🔧 **TÉCNICO**    | Arquitectura + implementación Sistema Anexo                  |
+| **[-ESPECIFICACIONES_COMERCIALES_ProSocial.md](./-ESPECIFICACIONES_COMERCIALES_ProSocial.md)**                 | 💼 **COMERCIAL**  | **Specs completas para área comercial y estudios mercado**   |
 
 ### 📈 **ANTECEDENTES IMPORTANTES**
 
@@ -17,6 +17,10 @@
 | ------------------------------------------------------------------------------------ | ----------------- | ---------------------------------- |
 | **[-Plan-Escalabilidad-SaaS-ProSocial.md](./-Plan-Escalabilidad-SaaS-ProSocial.md)** | 📋 **REFERENCIA** | Análisis inicial arquitectura SaaS |
 | **[-MAPA_REFACTORIZACION_v2.md](./-MAPA_REFACTORIZACION_v2.md)**                     | 🗺️ **GUÍA**       | Mapa de secciones UI/UX            |
+
+### 🗑️ **DOCUMENTOS ELIMINADOS** (Evitar Confusión)
+- ❌ `-PLAN_REFACTORIZACION_SAAS_v1.7_DEFINITIVO.md` - Reemplazado por TIME_TO_REVENUE
+- ❌ `-CHECKLIST_FASE_1_MULTITENANT.md` - Reemplazado por CHECKLIST_EMV
 
 ---
 
