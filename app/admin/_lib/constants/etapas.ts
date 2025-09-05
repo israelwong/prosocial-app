@@ -8,6 +8,7 @@
 export const ETAPA_CODES = {
     // === PIPELINE DE CONVERSIÓN ===
     NUEVO: 'nuevo',                    // Leads recién capturados
+    SEGUIMIENTO: 'seguimiento',        // En proceso de seguimiento/nutrición
     PROMESA: 'promesa',               // Cliente prometió respuesta
     APROBADO: 'aprobado',             // Cotización aprobada/contratada
 
@@ -44,6 +45,7 @@ export function esCodigoEtapaValido(codigo: string): codigo is EtapaCodigo {
  */
 export const ETAPA_NOMBRES_DEFAULT = {
     [ETAPA_CODES.NUEVO]: 'Nuevo',
+    [ETAPA_CODES.SEGUIMIENTO]: 'Seguimiento',
     [ETAPA_CODES.PROMESA]: 'Promesa',
     [ETAPA_CODES.APROBADO]: 'Aprobado',
     [ETAPA_CODES.EDICION]: 'En edición',
