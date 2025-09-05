@@ -6,6 +6,35 @@ import { Button } from '@/app/components/ui/button'
 import { EventoPorEtapa } from '@/app/admin/_lib/schemas/evento.schemas'
 import { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.schemas'
 import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
+import { AGENDA_STATUS } from '@/app/admin/_lib/constants/status'
+
+// Helper para formatear tiempo relativo
+const formatearTiempoRelativo = (fecha: Date) => {
+    const ahora = new Date()
+    const diferencia = ahora.getTime() - fecha.getTime()
+    const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24))
+    const horas = Math.floor(diferencia / (1000 * 60 * 60))
+    const minutos = Math.floor(diferencia / (1000 * 60))
+
+    if (dias > 0) return `hace ${dias}d`
+    if (horas > 0) return `hace ${horas}h`
+    if (minutos > 0) return `hace ${minutos}m`
+    return 'ahora'
+}
+
+// Helper para calcular días hasta el evento
+const calcularDiasHastaEvento = (fechaEvento: Date) => {
+    const ahora = new Date()
+    const fecha = new Date(fechaEvento)
+    const diferencia = fecha.getTime() - ahora.getTime()
+    const dias = Math.ceil(diferencia / (1000 * 60 * 60 * 24))
+
+    if (dias < 0) return { dias: Math.abs(dias), estado: 'pasado' }
+    if (dias === 0) return { dias: 0, estado: 'hoy' }
+    if (dias <= 7) return { dias, estado: 'urgente' }
+    if (dias <= 30) return { dias, estado: 'pronto' }
+    return { dias, estado: 'lejano' }
+}
 
 interface ListaEventosSimpleProps {
     eventosIniciales: EventoPorEtapa[]
@@ -126,52 +155,124 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                                         </div>
                                     </div>
                                     <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
-                                        {eventosEtapa.map(evento => (
-                                            <div
-                                                key={evento.id}
-                                                onClick={() => handleVerEvento(evento.id)}
-                                                className="p-4 bg-zinc-800/30 hover:bg-zinc-800/50 border border-zinc-700 rounded-lg cursor-pointer transition-colors"
-                                            >
-                                                <div className="flex items-start justify-between mb-2">
-                                                    <div className="flex-1">
-                                                        <h3 className="font-medium text-zinc-200 mb-1">
-                                                            {evento.nombre || 'Por configurar'}
-                                                        </h3>
-                                                        <div className="flex items-center gap-2 text-sm text-zinc-400 mb-2">
-                                                            <User className="h-3 w-3" />
-                                                            <span>{evento.Cliente.nombre}</span>
-                                                        </div>
-                                                        {evento.Cliente.telefono && (
-                                                            <div className="flex items-center gap-2 text-sm text-zinc-500 mb-2">
-                                                                <Phone className="h-3 w-3" />
-                                                                <span>{evento.Cliente.telefono}</span>
+                                        {eventosEtapa.map(evento => {
+                                            const diasHastaEvento = calcularDiasHastaEvento(evento.fecha_evento)
+                                            return (
+                                                <div
+                                                    key={evento.id}
+                                                    onClick={() => handleVerEvento(evento.id)}
+                                                    className="p-5 bg-zinc-800/30 hover:bg-zinc-800/50 border border-zinc-700 rounded-lg cursor-pointer transition-all duration-200 space-y-3"
+                                                >
+                                                    {/* Header del evento */}
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-3 mb-2">
+                                                                <h3 className="font-semibold text-zinc-100 text-base">
+                                                                    {evento.nombre || 'Por configurar'}
+                                                                </h3>
+                                                                {evento.EventoTipo && (
+                                                                    <span className="px-2.5 py-1 text-xs bg-zinc-700 text-zinc-300 rounded-md font-medium">
+                                                                        {evento.EventoTipo.nombre}
+                                                                    </span>
+                                                                )}
                                                             </div>
+
+                                                            {/* Información del cliente */}
+                                                            <div className="space-y-1">
+                                                                <div className="flex items-center gap-2 text-sm text-zinc-400">
+                                                                    <User className="h-4 w-4" />
+                                                                    <span className="font-medium">{evento.Cliente.nombre}</span>
+                                                                </div>
+                                                                {evento.Cliente.telefono && (
+                                                                    <div className="flex items-center gap-2 text-sm text-zinc-500">
+                                                                        <Phone className="h-4 w-4" />
+                                                                        <span>{evento.Cliente.telefono}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Badge de días hasta el evento */}
+                                                        <div className={`px-3 py-1.5 text-sm rounded-lg font-semibold ${diasHastaEvento.estado === 'pasado'
+                                                                ? 'bg-red-900/50 text-red-300 border border-red-800'
+                                                                : diasHastaEvento.estado === 'hoy'
+                                                                    ? 'bg-purple-900/50 text-purple-300 border border-purple-800'
+                                                                    : diasHastaEvento.estado === 'urgente'
+                                                                        ? 'bg-orange-900/50 text-orange-300 border border-orange-800'
+                                                                        : diasHastaEvento.estado === 'pronto'
+                                                                            ? 'bg-yellow-900/50 text-yellow-300 border border-yellow-800'
+                                                                            : 'bg-blue-900/50 text-blue-300 border border-blue-800'
+                                                            }`}>
+                                                            {diasHastaEvento.estado === 'pasado'
+                                                                ? `Hace ${diasHastaEvento.dias} días`
+                                                                : diasHastaEvento.estado === 'hoy'
+                                                                    ? 'Hoy'
+                                                                    : `En ${diasHastaEvento.dias} días`
+                                                            }
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Separador visual */}
+                                                    <div className="border-t border-zinc-700/50"></div>
+
+                                                    {/* Información de fecha y estado */}
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <Calendar className="h-4 w-4 text-zinc-400" />
+                                                            <span className="text-sm text-zinc-400 font-medium">Fecha:</span>
+                                                            <span className="text-sm text-zinc-200 font-medium">{formatearFecha(evento.fecha_evento, {
+                                                                weekday: 'short',
+                                                                day: '2-digit',
+                                                                month: 'short',
+                                                                year: 'numeric'
+                                                            })}</span>
+                                                        </div>
+                                                        {evento.Agenda && evento.Agenda.length > 0 && (
+                                                            <span className={`px-2 py-1 text-xs rounded-full font-medium ${evento.Agenda[0].status === AGENDA_STATUS.CONFIRMADO
+                                                                    ? 'bg-green-900/50 text-green-300 border border-green-800'
+                                                                    : 'bg-yellow-900/50 text-yellow-300 border border-yellow-800'
+                                                                }`}>
+                                                                {evento.Agenda[0].status === AGENDA_STATUS.CONFIRMADO ? 'Confirmada' : 'Tentativa'}
+                                                            </span>
                                                         )}
                                                     </div>
-                                                    {evento.EventoTipo && (
-                                                        <span className="px-2 py-1 text-xs bg-zinc-700 text-zinc-300 rounded">
-                                                            {evento.EventoTipo.nombre}
-                                                        </span>
-                                                    )}
-                                                </div>
 
-                                                <div className="flex items-center justify-between text-xs text-zinc-500">
-                                                    <div className="flex items-center gap-1">
-                                                        <Calendar className="h-3 w-3" />
-                                                        <span>{formatearFecha(evento.fecha_evento, {
-                                                            weekday: 'short',
-                                                            day: '2-digit',
-                                                            month: 'short',
-                                                            year: 'numeric'
-                                                        })}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1 text-blue-400">
-                                                        <FileText className="h-3 w-3" />
-                                                        <span>{evento.Cotizacion?.length || 0} cotizaciones</span>
+                                                    {/* Última actividad */}
+                                                    <div className="bg-zinc-800/50 p-3 rounded-md">
+                                                        <div className="flex items-start gap-2">
+                                                            <Clock className="h-4 w-4 text-zinc-500 mt-0.5" />
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <span className="text-xs text-zinc-500 font-medium">Última actividad</span>
+                                                                    {evento.EventoBitacora && evento.EventoBitacora.length > 0 && (
+                                                                        <>
+                                                                            <span className="text-xs text-zinc-400">
+                                                                                {formatearTiempoRelativo(evento.EventoBitacora[0].createdAt)}
+                                                                            </span>
+                                                                            {evento.EventoBitacora[0].importancia !== '1' && (
+                                                                                <span className={`px-1.5 py-0.5 text-xs rounded-full font-medium ${evento.EventoBitacora[0].importancia === '3'
+                                                                                        ? 'bg-red-900/50 text-red-300'
+                                                                                        : 'bg-orange-900/50 text-orange-300'
+                                                                                    }`}>
+                                                                                    {evento.EventoBitacora[0].importancia === '3' ? 'Urgente' : 'Importante'}
+                                                                                </span>
+                                                                            )}
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                                {evento.EventoBitacora && evento.EventoBitacora.length > 0 ? (
+                                                                    <p className="text-sm text-zinc-300 leading-relaxed">
+                                                                        {evento.EventoBitacora[0].comentario}
+                                                                    </p>
+                                                                ) : (
+                                                                    <p className="text-sm text-zinc-500 italic">Sin actividad reciente</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        })}
                                     </div>
                                 </div>
                             )

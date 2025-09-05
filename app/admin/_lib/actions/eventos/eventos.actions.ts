@@ -119,6 +119,24 @@ export async function getEventosPendientesPorEtapa(etapas: number[], incluirArch
                         }
                     }
                 },
+                EventoBitacora: {
+                    select: {
+                        comentario: true,
+                        importancia: true,
+                        createdAt: true
+                    },
+                    orderBy: {
+                        createdAt: 'desc'
+                    },
+                    take: 1
+                },
+                Agenda: {
+                    select: {
+                        status: true,
+                        fecha: true
+                    },
+                    take: 1
+                },
                 User: {
                     select: {
                         username: true

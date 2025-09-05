@@ -35,6 +35,18 @@ const UserSchema = z.object({
     username: z.string().nullable(),
 });
 
+// Esquema para EventoBitacora
+const EventoBitacoraSchema = z.object({
+    comentario: z.string(),
+    importancia: z.string(),
+    createdAt: z.date(),
+});
+
+const AgendaSchema = z.object({
+    status: z.string(),
+    fecha: z.date().nullable(),
+});
+
 // Esquema principal para un evento con todos sus detalles
 export const EventoConDetallesSchema = z.object({
     id: z.string(),
@@ -64,6 +76,8 @@ export const EventoPorEtapaSchema = z.object({
     EventoTipo: EventoTipoSchema.nullable(),
     EventoEtapa: EventoEtapaSchema.nullable(),
     Cotizacion: z.array(CotizacionSchema),
+    EventoBitacora: z.array(EventoBitacoraSchema),
+    Agenda: z.array(AgendaSchema),
     User: UserSchema.nullable(),
     total_pagado: z.number(),
 });
