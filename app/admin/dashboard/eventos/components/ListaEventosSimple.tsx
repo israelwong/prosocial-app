@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, User, Calendar, MapPin, Clock, FileText, Phone, Archive, ArchiveX } from 'lucide-react'
+import { Search, Plus, User, Calendar, MapPin, Clock, FileText, Phone, Archive, ArchiveX, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { EventoPorEtapa } from '@/app/admin/_lib/schemas/evento.schemas'
 import { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.schemas'
@@ -51,6 +51,7 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
     const [creandoEvento, setCreandoEvento] = useState(false)
     const [mostrarArchivados, setMostrarArchivados] = useState(false)
     const [cargandoArchivados, setCargandoArchivados] = useState(false)
+    const [ordenAscendente, setOrdenAscendente] = useState(true) // true = ascendente (fechas próximas primero)
 
     // Función para cargar eventos con o sin archivados
     const cargarEventos = async (incluirArchivados: boolean) => {
@@ -83,11 +84,36 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
         return coincideBusqueda
     })
 
-    // Agrupar eventos por etapa
-    const eventosPorEtapa = etapas.map(etapa => ({
-        etapa,
-        eventos: eventosFiltrados.filter(evento => evento.eventoEtapaId === etapa.id)
-    }))
+    // Agrupar eventos por etapa y ordenar por fecha
+    const eventosPorEtapa = etapas.map(etapa => {
+        const eventosDeEtapa = eventosFiltrados.filter(evento => evento.eventoEtapaId === etapa.id)
+
+        // Ordenar eventos por fecha con lógica diferente según el modo
+        const eventosOrdenados = eventosDeEtapa.sort((a, b) => {
+            const fechaA = new Date(a.fecha_evento).getTime()
+            const fechaB = new Date(b.fecha_evento).getTime()
+
+            if (mostrarArchivados) {
+                // Para archivados: mostrar primero los activos, luego archivados
+                const aEsArchivado = a.status === EVENTO_STATUS.ARCHIVADO
+                const bEsArchivado = b.status === EVENTO_STATUS.ARCHIVADO
+
+                if (aEsArchivado && !bEsArchivado) return 1  // Archivados al final
+                if (!aEsArchivado && bEsArchivado) return -1 // Activos al principio
+
+                // Si ambos son del mismo tipo, aplicar ordenamiento por fecha
+                return ordenAscendente ? (fechaA - fechaB) : (fechaB - fechaA)
+            } else {
+                // Para eventos normales: aplicar ordenamiento por fecha según preferencia
+                return ordenAscendente ? (fechaA - fechaB) : (fechaB - fechaA)
+            }
+        })
+
+        return {
+            etapa,
+            eventos: eventosOrdenados
+        }
+    })
 
     const handleCrearEvento = () => {
         setCreandoEvento(true)
@@ -130,7 +156,7 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                             <div className="text-2xl font-bold text-zinc-100">{totalEventos}</div>
                             <div className="text-sm text-zinc-400">Total Eventos</div>
                         </div>
-                        
+
                         {mostrarArchivados ? (
                             <>
                                 <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
@@ -154,7 +180,7 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                                 </div>
                             </>
                         )}
-                        
+
                         <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
                             <div className="text-2xl font-bold text-purple-400">{eventosPorEtapa.reduce((acc, { eventos }) => acc + eventos.length, 0)}</div>
                             <div className="text-sm text-zinc-400">En Etapas Visibles</div>
@@ -173,32 +199,48 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                                 className="w-full pl-10 pr-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-lg text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-                        
-                        {/* Toggle para eventos archivados */}
-                        <Button
-                            onClick={handleToggleArchivados}
-                            disabled={cargandoArchivados}
-                            variant="outline"
-                            className={`px-4 py-2 border transition-all duration-200 ${
-                                mostrarArchivados 
-                                    ? 'bg-amber-900/20 border-amber-700 text-amber-300 hover:bg-amber-900/30' 
+
+                        <div className="flex gap-2">
+                            {/* Toggle para ordenamiento */}
+                            <Button
+                                onClick={() => setOrdenAscendente(!ordenAscendente)}
+                                variant="outline"
+                                className="px-4 py-2 bg-zinc-900/50 border-zinc-700 text-zinc-400 hover:bg-zinc-800/50 transition-all duration-200"
+                                title={ordenAscendente ? 'Ordenar por fecha descendente' : 'Ordenar por fecha ascendente'}
+                            >
+                                {ordenAscendente ? (
+                                    <ArrowUp className="h-4 w-4 mr-2" />
+                                ) : (
+                                    <ArrowDown className="h-4 w-4 mr-2" />
+                                )}
+                                {ordenAscendente ? 'Próximas' : 'Lejanas'}
+                            </Button>
+
+                            {/* Toggle para eventos archivados */}
+                            <Button
+                                onClick={handleToggleArchivados}
+                                disabled={cargandoArchivados}
+                                variant="outline"
+                                className={`px-4 py-2 border transition-all duration-200 ${mostrarArchivados
+                                    ? 'bg-amber-900/20 border-amber-700 text-amber-300 hover:bg-amber-900/30'
                                     : 'bg-zinc-900/50 border-zinc-700 text-zinc-400 hover:bg-zinc-800/50'
-                            }`}
-                        >
-                            {cargandoArchivados ? (
-                                <Clock className="h-4 w-4 mr-2 animate-spin" />
-                            ) : mostrarArchivados ? (
-                                <ArchiveX className="h-4 w-4 mr-2" />
-                            ) : (
-                                <Archive className="h-4 w-4 mr-2" />
-                            )}
-                            {cargandoArchivados 
-                                ? 'Cargando...' 
-                                : mostrarArchivados 
-                                    ? 'Ocultar Archivados' 
-                                    : 'Mostrar Archivados'
-                            }
-                        </Button>
+                                    }`}
+                            >
+                                {cargandoArchivados ? (
+                                    <Clock className="h-4 w-4 mr-2 animate-spin" />
+                                ) : mostrarArchivados ? (
+                                    <ArchiveX className="h-4 w-4 mr-2" />
+                                ) : (
+                                    <Archive className="h-4 w-4 mr-2" />
+                                )}
+                                {cargandoArchivados
+                                    ? 'Cargando...'
+                                    : mostrarArchivados
+                                        ? 'Ocultar Archivados'
+                                        : 'Mostrar Archivados'
+                                }
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
@@ -247,11 +289,10 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                                                 <div
                                                     key={evento.id}
                                                     onClick={() => handleVerEvento(evento.id)}
-                                                    className={`p-5 border rounded-lg cursor-pointer transition-all duration-200 space-y-3 ${
-                                                        esArchivado 
-                                                            ? 'bg-amber-900/10 hover:bg-amber-900/20 border-amber-700/50' 
-                                                            : 'bg-zinc-800/30 hover:bg-zinc-800/50 border-zinc-700'
-                                                    }`}
+                                                    className={`p-5 border rounded-lg cursor-pointer transition-all duration-200 space-y-3 ${esArchivado
+                                                        ? 'bg-amber-900/10 hover:bg-amber-900/20 border-amber-700/50'
+                                                        : 'bg-zinc-800/30 hover:bg-zinc-800/50 border-zinc-700'
+                                                        }`}
                                                 >
                                                     {/* Header del evento */}
                                                     <div className="flex items-start justify-between">
@@ -290,14 +331,14 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
 
                                                         {/* Badge de días hasta el evento */}
                                                         <div className={`px-3 py-1.5 text-sm rounded-lg font-semibold ${diasHastaEvento.estado === 'pasado'
-                                                                ? 'bg-red-900/50 text-red-300 border border-red-800'
-                                                                : diasHastaEvento.estado === 'hoy'
-                                                                    ? 'bg-purple-900/50 text-purple-300 border border-purple-800'
-                                                                    : diasHastaEvento.estado === 'urgente'
-                                                                        ? 'bg-orange-900/50 text-orange-300 border border-orange-800'
-                                                                        : diasHastaEvento.estado === 'pronto'
-                                                                            ? 'bg-yellow-900/50 text-yellow-300 border border-yellow-800'
-                                                                            : 'bg-blue-900/50 text-blue-300 border border-blue-800'
+                                                            ? 'bg-red-900/50 text-red-300 border border-red-800'
+                                                            : diasHastaEvento.estado === 'hoy'
+                                                                ? 'bg-purple-900/50 text-purple-300 border border-purple-800'
+                                                                : diasHastaEvento.estado === 'urgente'
+                                                                    ? 'bg-orange-900/50 text-orange-300 border border-orange-800'
+                                                                    : diasHastaEvento.estado === 'pronto'
+                                                                        ? 'bg-yellow-900/50 text-yellow-300 border border-yellow-800'
+                                                                        : 'bg-blue-900/50 text-blue-300 border border-blue-800'
                                                             }`}>
                                                             {diasHastaEvento.estado === 'pasado'
                                                                 ? `Hace ${diasHastaEvento.dias} días`
@@ -325,8 +366,8 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                                                         </div>
                                                         {evento.Agenda && evento.Agenda.length > 0 && (
                                                             <span className={`px-2 py-1 text-xs rounded-full font-medium ${evento.Agenda[0].status === AGENDA_STATUS.CONFIRMADO
-                                                                    ? 'bg-green-900/50 text-green-300 border border-green-800'
-                                                                    : 'bg-yellow-900/50 text-yellow-300 border border-yellow-800'
+                                                                ? 'bg-green-900/50 text-green-300 border border-green-800'
+                                                                : 'bg-yellow-900/50 text-yellow-300 border border-yellow-800'
                                                                 }`}>
                                                                 {evento.Agenda[0].status === AGENDA_STATUS.CONFIRMADO ? 'Confirmada' : 'Tentativa'}
                                                             </span>
@@ -347,8 +388,8 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                                                                             </span>
                                                                             {evento.EventoBitacora[0].importancia !== '1' && (
                                                                                 <span className={`px-1.5 py-0.5 text-xs rounded-full font-medium ${evento.EventoBitacora[0].importancia === '3'
-                                                                                        ? 'bg-red-900/50 text-red-300'
-                                                                                        : 'bg-orange-900/50 text-orange-300'
+                                                                                    ? 'bg-red-900/50 text-red-300'
+                                                                                    : 'bg-orange-900/50 text-orange-300'
                                                                                     }`}>
                                                                                     {evento.EventoBitacora[0].importancia === '3' ? 'Urgente' : 'Importante'}
                                                                                 </span>
