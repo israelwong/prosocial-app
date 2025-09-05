@@ -81,7 +81,7 @@ export async function getEventosPendientesPorEtapa(etapas: number[], incluirArch
         } else {
             // Si incluir archivados, mostrar pendientes y archivados
             whereConditions.status = {
-                in: [EVENTO_STATUS.PENDIENTE, 'archived']
+                in: [EVENTO_STATUS.PENDIENTE, EVENTO_STATUS.ARCHIVADO]
             };
         }
 

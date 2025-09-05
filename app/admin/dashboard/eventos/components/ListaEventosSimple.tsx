@@ -1,12 +1,13 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, User, Calendar, MapPin, Clock, FileText, Phone } from 'lucide-react'
+import { Search, Plus, User, Calendar, MapPin, Clock, FileText, Phone, Archive, ArchiveX } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { EventoPorEtapa } from '@/app/admin/_lib/schemas/evento.schemas'
 import { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.schemas'
 import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
-import { AGENDA_STATUS } from '@/app/admin/_lib/constants/status'
+import { AGENDA_STATUS, EVENTO_STATUS } from '@/app/admin/_lib/constants/status'
+import { getEventosPendientesPorEtapa } from '@/app/admin/_lib/actions/eventos/eventos.actions'
 
 // Helper para formatear tiempo relativo
 const formatearTiempoRelativo = (fecha: Date) => {
@@ -48,6 +49,29 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
     const [eventos, setEventos] = useState<EventoPorEtapa[]>(eventosIniciales)
     const [busqueda, setBusqueda] = useState<string>('')
     const [creandoEvento, setCreandoEvento] = useState(false)
+    const [mostrarArchivados, setMostrarArchivados] = useState(false)
+    const [cargandoArchivados, setCargandoArchivados] = useState(false)
+
+    // Función para cargar eventos con o sin archivados
+    const cargarEventos = async (incluirArchivados: boolean) => {
+        try {
+            setCargandoArchivados(true)
+            const etapaPosiciones = etapas.map(etapa => etapa.posicion)
+            const eventosActualizados = await getEventosPendientesPorEtapa(etapaPosiciones, incluirArchivados)
+            setEventos(eventosActualizados)
+        } catch (error) {
+            console.error('Error al cargar eventos:', error)
+        } finally {
+            setCargandoArchivados(false)
+        }
+    }
+
+    // Manejar toggle de archivados
+    const handleToggleArchivados = async () => {
+        const nuevoEstado = !mostrarArchivados
+        setMostrarArchivados(nuevoEstado)
+        await cargarEventos(nuevoEstado)
+    }
 
     // Filtrar eventos
     const eventosFiltrados = eventos.filter(evento => {
@@ -77,6 +101,8 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
     const totalEventos = eventosFiltrados.length
     const eventosConCotizaciones = eventosFiltrados.filter(e => e.Cotizacion && e.Cotizacion.length > 0).length
     const eventosSinCotizaciones = eventosFiltrados.filter(e => !e.Cotizacion || e.Cotizacion.length === 0).length
+    const eventosArchivados = eventosFiltrados.filter(e => e.status === EVENTO_STATUS.ARCHIVADO).length
+    const eventosActivos = eventosFiltrados.filter(e => e.status !== EVENTO_STATUS.ARCHIVADO).length
 
     return (
         <div className="min-h-screen bg-zinc-950 p-6">
@@ -99,18 +125,39 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                     </div>
 
                     {/* Métricas simples */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
                             <div className="text-2xl font-bold text-zinc-100">{totalEventos}</div>
                             <div className="text-sm text-zinc-400">Total Eventos</div>
                         </div>
+                        
+                        {mostrarArchivados ? (
+                            <>
+                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+                                    <div className="text-2xl font-bold text-blue-400">{eventosActivos}</div>
+                                    <div className="text-sm text-zinc-400">Eventos Activos</div>
+                                </div>
+                                <div className="bg-amber-900/20 border border-amber-700/50 rounded-lg p-4">
+                                    <div className="text-2xl font-bold text-amber-400">{eventosArchivados}</div>
+                                    <div className="text-sm text-amber-300">Eventos Archivados</div>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+                                    <div className="text-2xl font-bold text-green-400">{eventosConCotizaciones}</div>
+                                    <div className="text-sm text-zinc-400">Con Cotizaciones</div>
+                                </div>
+                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
+                                    <div className="text-2xl font-bold text-yellow-400">{eventosSinCotizaciones}</div>
+                                    <div className="text-sm text-zinc-400">Sin Cotizaciones</div>
+                                </div>
+                            </>
+                        )}
+                        
                         <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
-                            <div className="text-2xl font-bold text-green-400">{eventosConCotizaciones}</div>
-                            <div className="text-sm text-zinc-400">Con Cotizaciones</div>
-                        </div>
-                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
-                            <div className="text-2xl font-bold text-yellow-400">{eventosSinCotizaciones}</div>
-                            <div className="text-sm text-zinc-400">Sin Cotizaciones</div>
+                            <div className="text-2xl font-bold text-purple-400">{eventosPorEtapa.reduce((acc, { eventos }) => acc + eventos.length, 0)}</div>
+                            <div className="text-sm text-zinc-400">En Etapas Visibles</div>
                         </div>
                     </div>
 
@@ -126,8 +173,46 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                                 className="w-full pl-10 pr-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-lg text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
+                        
+                        {/* Toggle para eventos archivados */}
+                        <Button
+                            onClick={handleToggleArchivados}
+                            disabled={cargandoArchivados}
+                            variant="outline"
+                            className={`px-4 py-2 border transition-all duration-200 ${
+                                mostrarArchivados 
+                                    ? 'bg-amber-900/20 border-amber-700 text-amber-300 hover:bg-amber-900/30' 
+                                    : 'bg-zinc-900/50 border-zinc-700 text-zinc-400 hover:bg-zinc-800/50'
+                            }`}
+                        >
+                            {cargandoArchivados ? (
+                                <Clock className="h-4 w-4 mr-2 animate-spin" />
+                            ) : mostrarArchivados ? (
+                                <ArchiveX className="h-4 w-4 mr-2" />
+                            ) : (
+                                <Archive className="h-4 w-4 mr-2" />
+                            )}
+                            {cargandoArchivados 
+                                ? 'Cargando...' 
+                                : mostrarArchivados 
+                                    ? 'Ocultar Archivados' 
+                                    : 'Mostrar Archivados'
+                            }
+                        </Button>
                     </div>
                 </div>
+
+                {/* Indicador de modo archivados */}
+                {mostrarArchivados && (
+                    <div className="mb-6 p-4 bg-amber-900/20 border border-amber-700/50 rounded-lg">
+                        <div className="flex items-center gap-2 text-amber-300">
+                            <Archive className="h-4 w-4" />
+                            <span className="text-sm font-medium">
+                                Mostrando eventos archivados. Los eventos archivados aparecen con fondo ámbar.
+                            </span>
+                        </div>
+                    </div>
+                )}
 
                 {/* Lista de eventos por etapa */}
                 {eventosFiltrados.length === 0 ? (
@@ -157,11 +242,16 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                                     <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
                                         {eventosEtapa.map(evento => {
                                             const diasHastaEvento = calcularDiasHastaEvento(evento.fecha_evento)
+                                            const esArchivado = evento.status === EVENTO_STATUS.ARCHIVADO
                                             return (
                                                 <div
                                                     key={evento.id}
                                                     onClick={() => handleVerEvento(evento.id)}
-                                                    className="p-5 bg-zinc-800/30 hover:bg-zinc-800/50 border border-zinc-700 rounded-lg cursor-pointer transition-all duration-200 space-y-3"
+                                                    className={`p-5 border rounded-lg cursor-pointer transition-all duration-200 space-y-3 ${
+                                                        esArchivado 
+                                                            ? 'bg-amber-900/10 hover:bg-amber-900/20 border-amber-700/50' 
+                                                            : 'bg-zinc-800/30 hover:bg-zinc-800/50 border-zinc-700'
+                                                    }`}
                                                 >
                                                     {/* Header del evento */}
                                                     <div className="flex items-start justify-between">
@@ -173,6 +263,12 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                                                                 {evento.EventoTipo && (
                                                                     <span className="px-2.5 py-1 text-xs bg-zinc-700 text-zinc-300 rounded-md font-medium">
                                                                         {evento.EventoTipo.nombre}
+                                                                    </span>
+                                                                )}
+                                                                {esArchivado && (
+                                                                    <span className="px-2.5 py-1 text-xs bg-amber-900/50 text-amber-300 border border-amber-700 rounded-md font-medium">
+                                                                        <Archive className="h-3 w-3 inline mr-1" />
+                                                                        ARCHIVADO
                                                                     </span>
                                                                 )}
                                                             </div>
