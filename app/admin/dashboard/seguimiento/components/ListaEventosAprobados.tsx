@@ -384,11 +384,12 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                                                 ? '#fbbf24'
                                                 : etapaNombre === 'En revisión por cliente'
                                                     ? '#a78bfa'
-                                                    : '#d4d4d8'
+                                                    : etapaNombre === 'En garantía'
+                                                        ? '#10b981'
+                                                        : '#d4d4d8'
                                 }}
                             ></span>
                             {etapaNombre}
-                            <span className="text-xs text-zinc-500 font-normal">({etapaId.slice(-8)})</span>
                         </h2>
                         <div className="flex items-center gap-3 mt-1">
                             <span className="text-sm text-zinc-400">
@@ -434,7 +435,7 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                         Seguimiento de Eventos
                     </h1>
                     <p className="text-zinc-400">
-                        Eventos en etapas de seguimiento: Aprobado, En edición, En revisión por cliente
+                        Eventos en etapas de seguimiento: Aprobado, En edición, En revisión por cliente, En garantía
                     </p>
                 </div>
 
@@ -556,7 +557,7 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
                 </div>
 
                 {/* Columnas por Etapa con Drag and Drop */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {Object.entries(eventosFiltradosPorEtapa).map(([etapaNombre, eventos]) => {
                         const etapaId = etapaIds[etapaNombre]
 

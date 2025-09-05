@@ -183,7 +183,8 @@ export async function obtenerEventosSeguimientoPorEtapaListaAprobados(
                     { nombre: { contains: 'Aprobado', mode: 'insensitive' } },
                     { nombre: { contains: 'edición', mode: 'insensitive' } },
                     { nombre: { contains: 'revisión', mode: 'insensitive' } },
-                    { nombre: { contains: 'cliente', mode: 'insensitive' } }
+                    { nombre: { contains: 'cliente', mode: 'insensitive' } },
+                    { nombre: { contains: 'garantía', mode: 'insensitive' } }
                 ]
             },
             orderBy: { posicion: 'asc' }
