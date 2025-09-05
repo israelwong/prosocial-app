@@ -121,6 +121,7 @@ model EventoTipo {
 model EventoEtapa {
   id        String   @id @default(cuid())
   nombre    String
+  codigo    String?  @unique // Identificador inmutable para lógica de negocio
   posicion  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

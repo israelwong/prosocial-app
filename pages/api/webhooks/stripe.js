@@ -119,15 +119,9 @@ export default async function handler(req, res) {
 
 async function obtenerEtapaContratado() {
   try {
+    // ✅ NUEVO: Usar código inmutable en lugar de nombres
     const etapaContratado = await prisma.eventoEtapa.findFirst({
-      where: {
-        OR: [
-          { nombre: { contains: "Contratado", mode: "insensitive" } },
-          { nombre: { contains: "Aprobado", mode: "insensitive" } },
-          { posicion: 4 }, // Asumiendo que posición 4 es "Contratado"
-        ],
-      },
-      orderBy: { posicion: "asc" },
+      where: { codigo: "aprobado" },
     });
 
     return etapaContratado?.id || null;

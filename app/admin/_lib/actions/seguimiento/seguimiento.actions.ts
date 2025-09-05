@@ -3,6 +3,7 @@
 'use server';
 
 import { EVENTO_STATUS, COTIZACION_STATUS, PAGO_STATUS } from '@/app/admin/_lib/constants/status';
+import { ETAPA_CODES } from '@/app/admin/_lib/constants/etapas';
 import prisma from '@/app/admin/_lib/prismaClient';
 import { revalidatePath } from 'next/cache';
 import {
@@ -29,15 +30,17 @@ export async function obtenerEventosSeguimientoPorEtapa(
     try {
         const validatedParams = SeguimientoBusquedaSchema.parse(params || {});
 
-        // PASO 1: Obtener solo las etapas específicas que necesitamos
+        // PASO 1: ✅ NUEVO - Obtener etapas por códigos inmutables
         const etapasEspecificas = await prisma.eventoEtapa.findMany({
             where: {
-                OR: [
-                    { nombre: { contains: 'Aprobado', mode: 'insensitive' } },
-                    { nombre: { contains: 'edición', mode: 'insensitive' } },
-                    { nombre: { contains: 'revisión', mode: 'insensitive' } },
-                    { nombre: { contains: 'cliente', mode: 'insensitive' } }
-                ]
+                codigo: {
+                    in: [
+                        ETAPA_CODES.APROBADO,
+                        ETAPA_CODES.EDICION,
+                        ETAPA_CODES.REVISION,
+                        ETAPA_CODES.GARANTIA
+                    ]
+                }
             },
             orderBy: { posicion: 'asc' }
         });
@@ -176,16 +179,17 @@ export async function obtenerEventosSeguimientoPorEtapaListaAprobados(
     try {
         const validatedParams = SeguimientoBusquedaSchema.parse(params || {});
 
-        // PASO 1: Obtener solo las etapas específicas que necesitamos
+        // PASO 1: ✅ NUEVO - Obtener etapas por códigos inmutables  
         const etapasEspecificas = await prisma.eventoEtapa.findMany({
             where: {
-                OR: [
-                    { nombre: { contains: 'Aprobado', mode: 'insensitive' } },
-                    { nombre: { contains: 'edición', mode: 'insensitive' } },
-                    { nombre: { contains: 'revisión', mode: 'insensitive' } },
-                    { nombre: { contains: 'cliente', mode: 'insensitive' } },
-                    { nombre: { contains: 'garantía', mode: 'insensitive' } }
-                ]
+                codigo: {
+                    in: [
+                        ETAPA_CODES.APROBADO,
+                        ETAPA_CODES.EDICION,
+                        ETAPA_CODES.REVISION,
+                        ETAPA_CODES.GARANTIA
+                    ]
+                }
             },
             orderBy: { posicion: 'asc' }
         });
