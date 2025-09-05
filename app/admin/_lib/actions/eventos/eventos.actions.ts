@@ -95,7 +95,8 @@ export async function getEventosPendientesPorEtapa(etapas: number[], incluirArch
                 },
                 Cliente: {
                     select: {
-                        nombre: true
+                        nombre: true,
+                        telefono: true
                     }
                 },
                 EventoEtapa: {

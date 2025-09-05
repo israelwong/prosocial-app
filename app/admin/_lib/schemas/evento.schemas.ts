@@ -3,6 +3,7 @@ import { z } from 'zod';
 // Esquema para los detalles básicos de las relaciones
 const ClienteSchema = z.object({
     nombre: z.string(),
+    telefono: z.string().nullable(),
 });
 
 const EventoTipoSchema = z.object({

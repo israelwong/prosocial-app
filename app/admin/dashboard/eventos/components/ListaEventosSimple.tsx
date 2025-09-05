@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, User, Calendar, MapPin, Clock, FileText } from 'lucide-react'
+import { Search, Plus, User, Calendar, MapPin, Clock, FileText, Phone } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { EventoPorEtapa } from '@/app/admin/_lib/schemas/evento.schemas'
 import { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.schemas'
@@ -18,18 +18,16 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
     // Estados principales
     const [eventos, setEventos] = useState<EventoPorEtapa[]>(eventosIniciales)
     const [busqueda, setBusqueda] = useState<string>('')
-    const [filtroEtapa, setFiltroEtapa] = useState<string>('')
     const [creandoEvento, setCreandoEvento] = useState(false)
 
     // Filtrar eventos
     const eventosFiltrados = eventos.filter(evento => {
         const coincideBusqueda = !busqueda ||
             evento.Cliente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-            (evento.nombre?.toLowerCase() || '').includes(busqueda.toLowerCase())
+            (evento.nombre?.toLowerCase() || '').includes(busqueda.toLowerCase()) ||
+            (evento.Cliente.telefono?.toLowerCase() || '').includes(busqueda.toLowerCase())
 
-        const coincideEtapa = !filtroEtapa || evento.eventoEtapaId === filtroEtapa
-
-        return coincideBusqueda && coincideEtapa
+        return coincideBusqueda
     })
 
     // Agrupar eventos por etapa
@@ -93,24 +91,12 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400" />
                             <input
                                 type="text"
-                                placeholder="Buscar por cliente o evento..."
+                                placeholder="Buscar por cliente, evento o teléfono..."
                                 value={busqueda}
                                 onChange={(e) => setBusqueda(e.target.value)}
                                 className="w-full pl-10 pr-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-lg text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-                        <select
-                            value={filtroEtapa}
-                            onChange={(e) => setFiltroEtapa(e.target.value)}
-                            className="px-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">Todas las etapas</option>
-                            {etapas.map((etapa) => (
-                                <option key={etapa.id} value={etapa.id}>
-                                    {etapa.nombre}
-                                </option>
-                            ))}
-                        </select>
                     </div>
                 </div>
 
@@ -118,9 +104,9 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                 {eventosFiltrados.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="text-zinc-500 mb-4">
-                            {busqueda || filtroEtapa ? 'No se encontraron eventos' : 'No hay eventos registrados'}
+                            {busqueda ? 'No se encontraron eventos' : 'No hay eventos registrados'}
                         </div>
-                        {!busqueda && !filtroEtapa && (
+                        {!busqueda && (
                             <Button onClick={handleCrearEvento} disabled={creandoEvento}>
                                 Crear tu primer evento
                             </Button>
@@ -155,6 +141,12 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                                                             <User className="h-3 w-3" />
                                                             <span>{evento.Cliente.nombre}</span>
                                                         </div>
+                                                        {evento.Cliente.telefono && (
+                                                            <div className="flex items-center gap-2 text-sm text-zinc-500 mb-2">
+                                                                <Phone className="h-3 w-3" />
+                                                                <span>{evento.Cliente.telefono}</span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     {evento.EventoTipo && (
                                                         <span className="px-2 py-1 text-xs bg-zinc-700 text-zinc-300 rounded">
