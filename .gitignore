@@ -48,5 +48,8 @@ next-env.d.ts
 /prisma/create_trigger.sql
 /app/rev.js
 
+# docs folder
+docs/
+
 # documentación
 documentacion/

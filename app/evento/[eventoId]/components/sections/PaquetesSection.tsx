@@ -1,6 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import PaqueteCard from '../cards/PaqueteCard'
+import ComparePaquetesButton from '../ComparePaquetesButton'
 import { Package, Scale, MessageSquare } from 'lucide-react'
 
 interface Paquete {
@@ -157,6 +158,15 @@ export default function PaquetesSection({ paquetes, eventoId, showAsAlternative 
                         </button>
                     </div>
                 )}
+
+                {/* Botón para comparar paquetes - Más vistoso */}
+                <div className="mt-12 mb-8">
+                    <ComparePaquetesButton
+                        eventoId={eventoId}
+                        variant="hero"
+                        showDescription={true}
+                    />
+                </div>
 
                 {/* Información adicional para paquetes */}
                 <div className="mt-8 text-center">

@@ -14,6 +14,7 @@ import PortfolioSection from './components/sections/PortfolioSection'
 import TestimoniosSection from './components/sections/TestimoniosSection'
 import EventoMetadataProvider from './components/EventoMetadataProvider'
 import RedirectCliente from './components/RedirectCliente'
+import ComparePaquetesButton from './components/ComparePaquetesButton'
 // Componentes legacy (mantenemos para casos específicos)
 import FechaNoDisponible from './components/FechaNoDisponible'
 
@@ -129,16 +130,30 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                         shareTitle={`${evento.Cliente?.nombre} - Cotización de evento`}
                         shareDescription={`Revisa la cotización para tu ${evento.EventoTipo?.nombre?.toLowerCase()}`}
                     />
+
                     <HeroSection
                         evento={evento}
                         diasRestantes={diasRestantes}
                         tipoContenido="paquetes"
                         cantidadOpciones={resultadoCotizaciones.paquetes.length}
                     />
+
                     <PaquetesSection
                         paquetes={resultadoCotizaciones.paquetes}
                         eventoId={eventoId}
                     />
+
+                    {/* Botón adicional para comparar paquetes */}
+                    <section className="py-8 px-4">
+                        <div className="max-w-4xl mx-auto">
+                            <ComparePaquetesButton
+                                eventoId={eventoId}
+                                variant="minimal"
+                                showDescription={false}
+                            />
+                        </div>
+                    </section>
+
                     <PortfolioSection
                         tipoEvento={evento.EventoTipo?.nombre?.toLowerCase().includes('xv') ||
                             evento.EventoTipo?.nombre?.toLowerCase().includes('15') ? 'xv' : 'boda'}
@@ -230,6 +245,19 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                 cotizaciones={resultadoCotizaciones.cotizaciones || []}
                 eventoId={eventoId}
             />
+
+            {/* Botón para comparar paquetes disponibles */}
+            {resultadoCotizaciones.paquetes && resultadoCotizaciones.paquetes.length > 0 && (
+                <section className="py-12 px-4">
+                    <div className="max-w-4xl mx-auto">
+                        <ComparePaquetesButton
+                            eventoId={eventoId}
+                            variant="hero"
+                            className="mb-8"
+                        />
+                    </div>
+                </section>
+            )}
 
             {/* Portfolio section */}
             <PortfolioSection
