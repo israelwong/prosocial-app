@@ -353,14 +353,18 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                             >
                                 {cotizacion.nombre} - {cotizacion.precio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
                             </button>
-                            {/* Badge de estado */}
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${getStatusBadgeStyles(cotizacion.status)} flex-shrink-0`}>
-                                {getStatusDisplayName(cotizacion.status)}
-                            </span>
+
                         </div>
-                        <div className="text-sm text-zinc-400 truncate max-w-full">
-                            {cotizacion.descripcion || (cotizacion.servicios?.length ? `${cotizacion.servicios.length} servicios incluidos` : 'Sin descripción')}
-                        </div>
+                        {cotizacion.descripcion && (
+                            <div className="text-sm text-zinc-400 truncate max-w-full">
+                                {cotizacion.descripcion}
+                            </div>
+                        )}
+
+                        {/* Badge de estado */}
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${getStatusBadgeStyles(cotizacion.status)} flex-shrink-0`}>
+                            {getStatusDisplayName(cotizacion.status)}
+                        </span>
                     </div>
                 </div>
 
@@ -384,41 +388,7 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                         {menuAbierto && (
                             <div className="absolute right-0 top-8 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg py-1 z-10 min-w-48">
 
-                                {/* Preview */}
-                                {/* <button
-                                    onClick={handlePreview}
-                                    className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
-                                >
-                                    <ArrowUpRight className="w-4 h-4" />
-                                    Preview
-                                </button> */}
 
-                                {/* Copiar link */}
-                                {/* <button
-                                    onClick={() => cotizacion.id && handleCopiarLink(cotizacion.id)}
-                                    className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
-                                >
-                                    {copiado === cotizacion.id ? (
-                                        <>
-                                            <Check className="w-4 h-4" />
-                                            Copiado
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Copy className="w-4 h-4" />
-                                            Copiar link
-                                        </>
-                                    )}
-                                </button> */}
-
-                                {/* WhatsApp */}
-                                {/* <button
-                                    onClick={() => cotizacion.id && handleCompartirWhatsApp(cotizacion.id)}
-                                    className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
-                                >
-                                    <WhatsAppIcon className="w-4 h-4" size={16} />
-                                    Compartir cotización
-                                </button> */}
 
                                 {/* Autorizar - Solo si está en pendiente */}
                                 {cotizacion.status === COTIZACION_STATUS.PENDIENTE && (
@@ -509,16 +479,27 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
             </div>
 
             {/* Información adicional */}
-            <div className={`text-sm text-zinc-500 space-y-1 ${archivada ? 'opacity-30' : ''}`}>
-                <p>
-                    Creada el {cotizacion.createdAt ? new Date(cotizacion.createdAt).toLocaleString('es-MX', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: 'numeric'
-                    }) : 'Fecha no disponible'}
-                </p>
+            <div className={`bg-zinc-950/60 rounded-md px-3 py-2 ${archivada ? 'opacity-30' : ''}`}>
+                <div className="text-sm text-zinc-500 space-y-1">
+                    <p>
+                        Creada el {cotizacion.createdAt ? new Date(cotizacion.createdAt).toLocaleString('es-MX', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: 'numeric'
+                        }) : 'Fecha no disponible'}
+                    </p>
+                    <p>
+                        Modificada el {cotizacion.updatedAt ? new Date(cotizacion.updatedAt).toLocaleString('es-MX', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: 'numeric'
+                        }) : 'Fecha no disponible'}
+                    </p>
+                </div>
             </div>
 
             {/* Status autorizado o aprobado */}

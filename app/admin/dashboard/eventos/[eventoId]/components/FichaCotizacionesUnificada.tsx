@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Copy, SquareArrowOutUpRight, Plus, MoreVertical, Package } from 'lucide-react'
+import { Plus, Package } from 'lucide-react'
 
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
 import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
@@ -13,7 +13,6 @@ import FichaCotizacionDetalle from '../cotizacion/components/FichaCotizacionDeta
 
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 import { Cotizacion, Paquete } from '@/app/admin/_lib/types'
-import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
 import { supabase } from '@/app/admin/_lib/supabase'
 import { useEventoTipoListener } from '@/app/admin/hooks/useEventoSync'
 
@@ -34,8 +33,6 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
     const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([])
     const [cotizacionesSimples, setCotizacionesSimples] = useState<CotizacionSimple[]>([])
     const [paquetes, setPaquetes] = useState<Paquete[]>([])
-    const [copiado, setCopiado] = useState<string | null>(null)
-    const [menuAbierto, setMenuAbierto] = useState(false)
     const [menuPaquetesAbierto, setMenuPaquetesAbierto] = useState(false)
     const [eliminandoCotizacion, setEliminandoCotizacion] = useState<string | null>(null)
 
@@ -136,16 +133,15 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Element
             if (!target.closest('.menu-container')) {
-                setMenuAbierto(false)
                 setMenuPaquetesAbierto(false)
             }
         }
 
-        if (menuAbierto || menuPaquetesAbierto) {
+        if (menuPaquetesAbierto) {
             document.addEventListener('mousedown', handleClickOutside)
             return () => document.removeEventListener('mousedown', handleClickOutside)
         }
-    }, [menuAbierto, menuPaquetesAbierto])
+    }, [menuPaquetesAbierto])
 
     const handleNuevaCotizacion = async (paqueteIdSeleccionado: string) => {
         if (!paqueteIdSeleccionado) {
@@ -221,44 +217,6 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
         }
     }
 
-    const handleCopiarLink = () => {
-        const link = `${window.location.origin}/evento/${eventoId}`
-        navigator.clipboard.writeText(link)
-        setCopiado('Copiado')
-        setTimeout(() => setCopiado(null), 2000)
-        setMenuAbierto(false)
-    }
-
-    const handlePreview = () => {
-        window.open(`/evento/${eventoId}`, '_blank')
-        setMenuAbierto(false)
-    }
-
-    const handleCompartirWhatsApp = () => {
-        const cliente = eventoCompleto.Cliente
-        const link = `${window.location.origin}/evento/${eventoId}`
-        const mensaje = `¡Hola ${cliente?.nombre || 'Cliente'}! Te comparto las cotizaciones para tu evento: ${link}`
-
-        if (cliente?.telefono) {
-            // Limpiar el número de caracteres no numéricos
-            const numeroLimpio = cliente.telefono.replace(/\D/g, '')
-
-            // Formatear para México: si tiene 10 dígitos, agregar +52
-            const numeroWhatsApp = numeroLimpio.length === 10
-                ? `52${numeroLimpio}`
-                : numeroLimpio
-
-            const whatsappUrl = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`
-            window.open(whatsappUrl, '_blank')
-        } else {
-            // Si no hay número, abrir WhatsApp sin número específico
-            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`
-            window.open(whatsappUrl, '_blank')
-        }
-
-        setMenuAbierto(false)
-    }
-
     if (loading) {
         return (
             <div className="space-y-4">
@@ -276,45 +234,6 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                 <h3 className="text-lg font-semibold text-zinc-200">Cotizaciones</h3>
 
                 <div className="flex items-center gap-2">
-                    {/* Menú de acciones (aparece si hay una o más cotizaciones) */}
-                    {((cotizaciones.length >= 1 || cotizacionesSimples.length >= 1)) && (
-                        <div className="relative menu-container">
-                            <button
-                                onClick={() => setMenuAbierto(!menuAbierto)}
-                                className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-md transition-colors"
-                                title="Opciones"
-                            >
-                                <MoreVertical className="w-4 h-4" />
-                            </button>
-
-                            {menuAbierto && (
-                                <div className="absolute right-0 top-8 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg py-1 z-10 min-w-48">
-                                    <button
-                                        onClick={handlePreview}
-                                        className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
-                                    >
-                                        <SquareArrowOutUpRight className="w-4 h-4" />
-                                        Preview
-                                    </button>
-                                    <button
-                                        onClick={handleCopiarLink}
-                                        className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
-                                    >
-                                        <Copy className="w-4 h-4" />
-                                        {copiado === 'Copiado' ? 'Copiado' : 'Copiar link'}
-                                    </button>
-                                    <button
-                                        onClick={handleCompartirWhatsApp}
-                                        className="w-full px-3 py-2 text-left text-zinc-200 hover:bg-zinc-700 flex items-center gap-2 text-sm"
-                                    >
-                                        <WhatsAppIcon className="w-4 h-4" size={16} />
-                                        Compartir cotizaciones
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
                     {/* Menú de crear paquetes */}
                     {eventoAsignado && (
                         <div className="relative menu-container">
