@@ -46,6 +46,7 @@ export type PagoStatus = typeof PAGO_STATUS[keyof typeof PAGO_STATUS];
 
 // Agenda Status
 export const AGENDA_STATUS = {
+    POR_CONFIRMAR: 'por_confirmar', // Fecha tentativa, no confirmada
     PENDIENTE: 'pendiente',
     CONFIRMADO: 'confirmado',
     CANCELADO: 'cancelado',
@@ -114,6 +115,7 @@ export const PAGO_STATUS_MAP: Record<string, PagoStatus> = {
 
 // Mapeo de valores antiguos a nuevos para Agenda
 export const AGENDA_STATUS_MAP: Record<string, AgendaStatus> = {
+    'por_confirmar': AGENDA_STATUS.POR_CONFIRMAR,
     'pendiente': AGENDA_STATUS.PENDIENTE,
     'confirmado': AGENDA_STATUS.CONFIRMADO,
     'cancelado': AGENDA_STATUS.CANCELADO,

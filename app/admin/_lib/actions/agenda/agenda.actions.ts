@@ -3,6 +3,7 @@
 'use server'
 
 import prisma from '../../prismaClient';
+import { AGENDA_STATUS } from '../../constants/status';
 import {
     AgendaCreateSchema,
     AgendaUpdateSchema,
@@ -510,6 +511,137 @@ export async function actualizarAgendaEventoRootLegacy(agenda: any) {
         return { success: true };
     } catch (error) {
         console.error('Error al actualizar la agenda del evento:', error);
+        throw error;
+    }
+}
+
+// ========================================
+// FUNCIONES PARA FECHAS TENTATIVAS
+// ========================================
+
+/**
+ * Confirma una fecha tentativa, cambiando el status de 'por_confirmar' a 'confirmado'
+ */
+export async function confirmarFechaTentativa(eventoId: string) {
+    try {
+        const agenda = await prisma.agenda.findFirst({
+            where: {
+                eventoId,
+                status: AGENDA_STATUS.POR_CONFIRMAR
+            }
+        });
+
+        if (!agenda) {
+            throw new Error('No se encontró una agenda con fecha tentativa para este evento');
+        }
+
+        await prisma.agenda.update({
+            where: { id: agenda.id },
+            data: { status: AGENDA_STATUS.CONFIRMADO }
+        });
+
+        return { success: true, message: 'Fecha confirmada exitosamente' };
+    } catch (error) {
+        console.error('Error confirmando fecha tentativa:', error);
+        throw error;
+    }
+}
+
+/**
+ * Verifica si una fecha está disponible para agendar
+ * (no hay otras agendas confirmadas en la misma fecha)
+ */
+export async function verificarDisponibilidadFecha(fecha: Date, eventoIdExcluir?: string) {
+    try {
+        const fechaInicio = new Date(fecha);
+        fechaInicio.setHours(0, 0, 0, 0);
+
+        const fechaFin = new Date(fecha);
+        fechaFin.setHours(23, 59, 59, 999);
+
+        const agendas = await prisma.agenda.findMany({
+            where: {
+                fecha: {
+                    gte: fechaInicio,
+                    lte: fechaFin
+                },
+                status: {
+                    not: AGENDA_STATUS.CANCELADO
+                },
+                ...(eventoIdExcluir ? { eventoId: { not: eventoIdExcluir } } : {})
+            },
+            include: {
+                Evento: {
+                    select: {
+                        id: true,
+                        nombre: true
+                    }
+                }
+            }
+        });
+
+        const disponible = agendas.length === 0;
+
+        return {
+            disponible,
+            agendas: agendas.map(agenda => ({
+                id: agenda.id,
+                eventoId: agenda.eventoId,
+                eventoNombre: agenda.Evento?.nombre,
+                status: agenda.status,
+                hora: agenda.hora
+            }))
+        };
+    } catch (error) {
+        console.error('Error verificando disponibilidad de fecha:', error);
+        throw error;
+    }
+}
+
+/**
+ * Actualiza la fecha de un evento y su agenda correspondiente
+ * Incluye validación de disponibilidad
+ */
+export async function actualizarFechaEvento(eventoId: string, nuevaFecha: Date, confirmarFecha: boolean = false) {
+    try {
+        // Verificar disponibilidad
+        const disponibilidad = await verificarDisponibilidadFecha(nuevaFecha, eventoId);
+
+        if (!disponibilidad.disponible) {
+            return {
+                success: false,
+                message: 'La fecha seleccionada no está disponible',
+                conflictos: disponibilidad.agendas
+            };
+        }
+
+        // Actualizar fecha del evento
+        await prisma.evento.update({
+            where: { id: eventoId },
+            data: { fecha_evento: nuevaFecha }
+        });
+
+        // Actualizar agenda asociada
+        const agenda = await prisma.agenda.findFirst({
+            where: { eventoId }
+        });
+
+        if (agenda) {
+            await prisma.agenda.update({
+                where: { id: agenda.id },
+                data: {
+                    fecha: nuevaFecha,
+                    status: confirmarFecha ? AGENDA_STATUS.CONFIRMADO : AGENDA_STATUS.POR_CONFIRMAR
+                }
+            });
+        }
+
+        return {
+            success: true,
+            message: `Fecha ${confirmarFecha ? 'confirmada' : 'actualizada como tentativa'} exitosamente`
+        };
+    } catch (error) {
+        console.error('Error actualizando fecha del evento:', error);
         throw error;
     }
 }

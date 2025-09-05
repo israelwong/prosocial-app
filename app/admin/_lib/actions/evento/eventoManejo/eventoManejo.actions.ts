@@ -12,6 +12,19 @@ import {
 } from './eventoManejo.schemas'
 
 /**
+ * Actualizar tipo de evento
+ */
+export async function actualizarTipoEvento(eventoId: string, eventoTipoId: string | null): Promise<boolean> {
+    await prisma.evento.update({
+        where: { id: eventoId },
+        data: {
+            eventoTipoId: eventoTipoId
+        }
+    })
+    return true
+}
+
+/**
  * Actualizar información básica del evento
  */
 export async function actualizarEventoBasico(data: ActualizarEventoBasico): Promise<boolean> {

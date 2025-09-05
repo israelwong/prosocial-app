@@ -15,6 +15,7 @@ import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 import { Cotizacion, Paquete } from '@/app/admin/_lib/types'
 import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
 import { supabase } from '@/app/admin/_lib/supabase'
+import { useEventoTipoListener } from '@/app/admin/hooks/useEventoSync'
 
 interface Props {
     eventoCompleto: EventoCompleto
@@ -81,6 +82,22 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
         }
         cargarPaquetes()
     }, [eventoTipoId])
+
+    // Escuchar cambios de tipo de evento para recargar paquetes
+    useEventoTipoListener(eventoId, async (nuevoTipoId) => {
+        if (nuevoTipoId) {
+            try {
+                const paquetesData = await obtenerPaquetesPorTipoEvento(nuevoTipoId)
+                setPaquetes(paquetesData)
+                console.log('🔄 Paquetes recargados por cambio de tipo de evento:', nuevoTipoId)
+            } catch (error) {
+                console.error('Error recargando paquetes:', error)
+            }
+        } else {
+            // Si no hay tipo de evento, limpiar paquetes
+            setPaquetes([])
+        }
+    })
 
     // Suscripción en tiempo real
     const suscripcionSupabase = useCallback(() => {

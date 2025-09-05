@@ -272,6 +272,21 @@ export async function crearEventoCompleto(data: CrearEventoCompleto): Promise<Re
             }
         })
 
+        // 5. Crear agenda si es necesario (fecha tentativa o confirmada)
+        if (validatedData.fechaTentativa || !validatedData.fechaTentativa) {
+            const agendaStatus = validatedData.fechaTentativa ? 'por_confirmar' : 'pendiente'
+
+            await prisma.agenda.create({
+                data: {
+                    eventoId: nuevoEvento.id,
+                    fecha: validatedData.fecha_evento,
+                    concepto: 'Fecha del evento',
+                    status: agendaStatus,
+                    agendaTipo: 'evento'
+                }
+            })
+        }
+
         return {
             success: true,
             eventoId: nuevoEvento.id,

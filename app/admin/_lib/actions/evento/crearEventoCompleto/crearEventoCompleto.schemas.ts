@@ -36,7 +36,8 @@ export const CrearEventoCompletoSchema = z.object({
     // Opcionales
     permitirFechaDuplicada: z.boolean().default(false),
     codigoAutorizacion: z.string().optional(),
-    userId: z.string().optional()
+    userId: z.string().optional(),
+    fechaTentativa: z.boolean().default(false)
 })
 
 // Schema de respuesta para disponibilidad de fecha

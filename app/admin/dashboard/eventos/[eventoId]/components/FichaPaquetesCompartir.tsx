@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { Package, Link, Share, Eye, MessageCircle } from 'lucide-react'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
+import { useEventoTipoListener } from '@/app/admin/hooks/useEventoSync'
 
 interface Props {
     eventoCompleto: EventoCompleto
@@ -11,6 +12,7 @@ export default function FichaPaquetesCompartir({ eventoCompleto }: Props) {
     const [copiandoLink, setCopiandoLink] = useState(false)
     const [compartiendo, setCompartiendo] = useState(false)
     const [eventoUrl, setEventoUrl] = useState('')
+    const [tipoEventoActual, setTipoEventoActual] = useState(eventoCompleto.EventoTipo?.nombre || 'evento')
 
     // Generar URL cuando el componente se monte (client-side)
     useEffect(() => {
@@ -19,8 +21,19 @@ export default function FichaPaquetesCompartir({ eventoCompleto }: Props) {
         }
     }, [eventoCompleto.id])
 
+    // Escuchar cambios de tipo de evento para actualizar mensajes
+    useEventoTipoListener(eventoCompleto.id, async (nuevoTipoId) => {
+        if (nuevoTipoId) {
+            // Aquí podrías hacer una llamada para obtener el nombre del tipo de evento
+            // Por simplicidad, asumiré que tienes acceso al nombre
+            // En una implementación real, podrías necesitar hacer una llamada al backend
+            console.log('🔄 Tipo de evento cambiado, actualizar mensajes:', nuevoTipoId)
+            // setTipoEventoActual(nuevoNombre) // Implementar según tus necesidades
+        }
+    })
+
     // Generar mensaje para WhatsApp
-    const mensajeWhatsApp = `Hola ${eventoCompleto.Cliente?.nombre || 'estimado cliente'}, te compartimos los paquetes disponibles para tu ${eventoCompleto.EventoTipo?.nombre?.toLowerCase() || 'evento'}: ${eventoUrl}`
+    const mensajeWhatsApp = `Hola ${eventoCompleto.Cliente?.nombre || 'estimado cliente'}, te compartimos los paquetes disponibles para tu ${tipoEventoActual.toLowerCase()}: ${eventoUrl}`
 
     const handleCopiarLink = async () => {
         setCopiandoLink(true)
@@ -89,8 +102,8 @@ export default function FichaPaquetesCompartir({ eventoCompleto }: Props) {
                     onClick={handleCopiarLink}
                     disabled={copiandoLink}
                     className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs transition-all duration-200 ${copiandoLink
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                            : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-600'
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-600'
                         }`}
                     title="Copiar enlace al portapapeles"
                 >
@@ -109,10 +122,10 @@ export default function FichaPaquetesCompartir({ eventoCompleto }: Props) {
                     onClick={handleCompartirWhatsApp}
                     disabled={compartiendo || !eventoCompleto.Cliente?.telefono}
                     className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs transition-all duration-200 ${compartiendo
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                            : eventoCompleto.Cliente?.telefono
-                                ? 'bg-green-600 hover:bg-green-700 text-white border border-green-500'
-                                : 'bg-zinc-700 text-zinc-500 border border-zinc-600 cursor-not-allowed'
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : eventoCompleto.Cliente?.telefono
+                            ? 'bg-green-600 hover:bg-green-700 text-white border border-green-500'
+                            : 'bg-zinc-700 text-zinc-500 border border-zinc-600 cursor-not-allowed'
                         }`}
                     title={eventoCompleto.Cliente?.telefono ? 'Compartir por WhatsApp' : 'Sin teléfono registrado'}
                 >

@@ -301,6 +301,7 @@ export default function FormEventoNuevoFinal() {
                 userId: user?.id,
                 permitirFechaDuplicada: mostrarAutorizacion && !!codigoAutorizacion,
                 codigoAutorizacion: mostrarAutorizacion ? codigoAutorizacion : undefined,
+                fechaTentativa,
                 clienteId: clienteSeleccionado?.id,
                 clienteNuevo: !clienteSeleccionado && mostrarFormCliente ? {
                     nombre: formData.clienteNombre,
