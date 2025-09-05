@@ -53,3 +53,19 @@ docs/
 
 # documentación
 documentacion/
+
+# development scripts and reports
+audit-reports/
+lib-analysis-reports/
+analyze-lib-structure.sh
+audit-cleanup.sh
+check-etapas.js
+debug-duplicados.js
+debug-paquetes.js
+desactivar-pago-contado.js
+migrate-to-live.md
+restore-negocio.js
+test-api-logic.js
+test-eliminacion-evento.js
+verificar-posiciones.js
+TARJETAS_MSI_MEXICO.md

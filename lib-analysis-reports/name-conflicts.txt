@@ -1,9 +1,0 @@
-
-⚠️ DETECCIÓN DE CONFLICTOS DE NOMBRES
-=====================================
-
-🔍 Analizando conflictos en: app/admin/_lib
----
-
-🔍 Analizando conflictos en: app/cliente/_lib
----
