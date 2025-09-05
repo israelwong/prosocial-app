@@ -347,7 +347,7 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
     // Obtener IDs de etapas para droppable zones
     const etapaIds = useMemo(() => {
         const ids: Record<string, string> = {}
-        
+
         // Primero, obtener IDs de eventos existentes
         Object.values(eventosPorEtapaIniciales).flat().forEach(evento => {
             if (!ids[evento.etapaNombre] && evento.eventoEtapaId) {
