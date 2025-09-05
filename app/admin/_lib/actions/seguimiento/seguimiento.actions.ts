@@ -442,6 +442,33 @@ export async function actualizarEtapaEvento(data: SeguimientoEtapaUpdateForm) {
     try {
         const validatedData = SeguimientoEtapaUpdateSchema.parse(data);
 
+        // Verificar que el evento existe
+        const eventoExiste = await prisma.evento.findUnique({
+            where: { id: validatedData.eventoId },
+            include: {
+                EventoEtapa: true
+            }
+        });
+
+        if (!eventoExiste) {
+            return {
+                success: false,
+                error: 'Evento no encontrado'
+            };
+        }
+
+        // Verificar que la nueva etapa existe
+        const nuevaEtapaExiste = await prisma.eventoEtapa.findUnique({
+            where: { id: validatedData.eventoEtapaId }
+        });
+
+        if (!nuevaEtapaExiste) {
+            return {
+                success: false,
+                error: 'Etapa destino no encontrada'
+            };
+        }
+
         const eventoActualizado = await prisma.evento.update({
             where: { id: validatedData.eventoId },
             data: { eventoEtapaId: validatedData.eventoEtapaId },
@@ -465,9 +492,7 @@ export async function actualizarEtapaEvento(data: SeguimientoEtapaUpdateForm) {
             error: 'Error al actualizar etapa del evento'
         };
     }
-}
-
-// ========================================
+}// ========================================
 // FUNCIONES ESPECÍFICAS DEL MÓDULO
 // ========================================
 
