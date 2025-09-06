@@ -64,14 +64,14 @@ function WeddingsPage() {
         description="Desde la sesión de compromiso hasta el gran día, nosotros nos encargamos de todo"
         buttons={[
           {
-            text: "Solicitar Cotización",
-            onClick: handleQuote,
+            text: "Ver Paquetes Bodas",
+            href: "/contacto?ref=weddings",
             variant: "primary",
             size: "xl"
           },
           {
-            text: "Ver Paquetes",
-            href: "/weddings/paquetes",
+            text: "Solicitar Cotización",
+            onClick: handleQuote,
             variant: "secondary",
             size: "lg"
           }
@@ -191,15 +191,15 @@ function WeddingsPage() {
         description="Contáctanos ahora y comencemos a planear la documentación perfecta de tu día especial"
         buttons={[
           {
-            text: "Agenda una Cita Virtual",
-            href: "https://calendly.com/prosocial-mx",
+            text: "Ver Paquetes Bodas",
+            href: "/contacto?ref=weddings",
             variant: "primary",
             size: "xl",
             fullWidth: false
           },
           {
-            text: "Ver Paquetes",
-            href: "/weddings/paquetes",
+            text: "Agenda una Cita Virtual",
+            href: "https://calendly.com/prosocial-mx",
             variant: "secondary",
             size: "lg",
             fullWidth: false

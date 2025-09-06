@@ -1,6 +1,6 @@
 import React from 'react'
 import { Metadata } from 'next'
-import { redirect } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import { obtenerEventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.actions'
 import { obtenerUsuarios } from '@/app/admin/_lib/actions/users/users.actions'
 import { HeaderSimple } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/HeaderSimple'
@@ -21,17 +21,30 @@ export default async function Page({ params }: PageProps) {
     try {
         const { eventoId } = await params;
 
-        // Cargar todos los datos del evento y usuarios en el servidor
-        // console.log('🔄 Cargando datos del evento en el servidor:', eventoId);
-        const [datos, usuarios] = await Promise.all([
-            obtenerEventoDetalleCompleto(eventoId),
-            obtenerUsuarios()
-        ]);
+        // Validar que eventoId existe y tiene formato válido
+        if (!eventoId || typeof eventoId !== 'string' || eventoId.trim() === '') {
+            console.log(`⚠️ eventoId inválido: ${eventoId}, mostrando página not-found`);
+            notFound();
+        }
 
-        // Si el evento no se encuentra, redirigir al dashboard de seguimiento
+        // Cargar todos los datos del evento y usuarios en el servidor
+        console.log(`🔄 Cargando datos del evento en el servidor: ${eventoId}`);
+
+        let datos, usuarios;
+        try {
+            [datos, usuarios] = await Promise.all([
+                obtenerEventoDetalleCompleto(eventoId.trim()),
+                obtenerUsuarios()
+            ]);
+        } catch (dbError) {
+            console.error('❌ Error al acceder a la base de datos:', dbError);
+            notFound();
+        }
+
+        // Si el evento no se encuentra, mostrar página not-found
         if (!datos) {
-            console.log(`⚠️ Evento ${eventoId} no encontrado, redirigiendo a dashboard de seguimiento`);
-            redirect('/admin/dashboard/seguimiento');
+            console.log(`⚠️ Evento ${eventoId} no encontrado en la base de datos, mostrando página not-found`);
+            notFound();
         }
 
         // Mostrar datos con componentes V3 simples
@@ -139,7 +152,13 @@ export default async function Page({ params }: PageProps) {
         );
 
     } catch (error) {
-        console.error('❌ Error cargando página de detalle:', error);
+        console.error('❌ Error crítico cargando página de detalle:', {
+            error: error instanceof Error ? error.message : error,
+            stack: error instanceof Error ? error.stack : undefined,
+            eventoId: (await params)?.eventoId || 'no disponible'
+        });
+
+        // En caso de cualquier error, redirigir al dashboard principal
         redirect('/admin/dashboard/seguimiento');
     }
 }

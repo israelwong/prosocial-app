@@ -7,11 +7,11 @@ function CTA() {
         <CTASection
             title="¡Contacta hoy mismo!"
             subtitle="tenemos fechas limitadas."
-            buttonText="Solicitar cotización"
-            buttonHref="/contacto"
-            buttonId="btn-contacto-desde-hero"
+            buttonText="Ver Paquetes XV Años"
+            buttonHref="/contacto?ref=fifteens"
+            buttonId="btn-contacto-desde-hero-fifteens"
             secondaryLinkText="Conoce más de nuestros servicios"
-            secondaryLinkHref="/contacto"
+            secondaryLinkHref="/contacto?ref=fifteens"
             secondaryLinkTitle="Contacto - Servicios XV años"
         />
     );

@@ -61,7 +61,7 @@ export default function PaquetesFifteens() {
         <div className="grid grid-flow-row gap-5 mb-5">
           <div className="flex items-center justify-center text-center w-full max-w-lg mx-auto">
             <Link
-              href={"/contacto"}
+              href={"/contacto?ref=fifteens"}
               className="bg-purple-800 px-5 py-2 text-white rounded-full animate-pulse"
             >
               Solicitar cotización personalizada
