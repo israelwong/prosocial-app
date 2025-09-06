@@ -3,8 +3,21 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata: Metadata = {
-  title: "Bienvenido a ProSocial",
-  description: "Fotogafía y video profesional para eventos sociales",
+  title: "Inicio",
+  description: "Fotografía y video profesional para eventos sociales. Más de 10 años de experiencia en bodas, XV años y eventos corporativos en México.",
+  keywords: ["fotografía profesional", "video profesional", "bodas México", "XV años", "eventos corporativos"],
+  openGraph: {
+    title: "ProSocial - Fotografía y Video Profesional",
+    description: "Más de 10 años capturando momentos únicos en bodas, XV años y eventos corporativos.",
+    images: [
+      {
+        url: "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_blanco.svg",
+        width: 1200,
+        height: 630,
+        alt: "ProSocial Logotipo",
+      },
+    ],
+  },
 };
 
 

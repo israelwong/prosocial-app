@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /cliente/
+Disallow: /_next/
+Disallow: /checkout/
+
+# Allow important pages
+Allow: /api/sitemap
+Allow: /api/robots
+
+# Sitemap
+Sitemap: https://prosocial.mx/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1

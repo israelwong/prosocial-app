@@ -53,3 +53,24 @@ docs/
 
 # documentación
 documentacion/
+
+# Archivos temporales y de desarrollo
+*_backup.*
+*_old.*
+*_copy.*
+*_new.*
+*_temp.*
+debug-*.js
+test-*.js
+*.bak
+
+# Scripts de desarrollo en root
+/check-*.js
+/debug-*.js
+/test-*.js
+/migrate-*.js
+/verify-*.js
+/restore-*.js
+/audit-*.js
+/analyze-*.js
+/desactivar-*.js

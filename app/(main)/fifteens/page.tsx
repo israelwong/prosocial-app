@@ -10,8 +10,21 @@ import Testomonios from '@/app/ui/main/Testomonios';
 // import Galeria from '@/app/ui/main/Galeria';
 
 export const metadata: Metadata = {
-  title: "Fifteens",
-  description: "Fifteens",
+  title: "XV Años",
+  description: "Fotografía y video profesional para XV años. Capturamos cada momento especial de tu celebración con el mejor equipo y experiencia.",
+  keywords: ["XV años", "quince años", "fotografía XV años", "video XV años", "celebración", "fiesta"],
+  openGraph: {
+    title: "XV Años - Fotografía y Video Profesional | ProSocial",
+    description: "Especialistas en fotografía y video para XV años. Hacemos de tu celebración un recuerdo inolvidable.",
+    images: [
+      {
+        url: "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_blanco.svg",
+        width: 1200,
+        height: 630,
+        alt: "XV Años - ProSocial",
+      },
+    ],
+  },
 };
 
 function page() {

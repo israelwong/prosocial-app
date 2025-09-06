@@ -5,7 +5,12 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Contacto',
-  description: 'Contactanos hoy mismo',
+  description: 'Contáctanos para conocer nuestros servicios de fotografía y video profesional. Te ayudamos a crear el evento perfecto.',
+  keywords: ['contacto', 'cotización', 'presupuesto', 'fotografía profesional', 'video profesional'],
+  openGraph: {
+    title: 'Contacto - ProSocial',
+    description: 'Contáctanos para conocer nuestros servicios de fotografía y video profesional.',
+  },
 }
 
 async function page() {

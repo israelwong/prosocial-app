@@ -5,8 +5,13 @@ import PaquetesFifteens from '@/app/ui/main/Fifteens/PaquetesFifteens';
 // import Galeria from '@/app/ui/main/Galeria';
 
 export const metadata: Metadata = {
-  title: "Paquetes",
-  description: "Paquetes de fotografía y video para XV años",
+  title: "Paquetes XV Años",
+  description: "Descubre nuestros paquetes especializados en fotografía y video para XV años. Diferentes opciones para hacer de tu celebración un momento único.",
+  keywords: ["paquetes XV años", "precios XV años", "fotografía quince años", "video quince años", "cotización"],
+  openGraph: {
+    title: "Paquetes XV Años - ProSocial",
+    description: "Paquetes especializados en fotografía y video para XV años con diferentes opciones y precios.",
+  },
 };
 
 function page() {

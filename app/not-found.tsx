@@ -2,11 +2,12 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-    title: {
-        template: '%s | ProSocial',
-        default: 'Oppss',
+    title: 'Página no encontrada',
+    description: 'La página que buscas no está disponible. Regresa al inicio para explorar nuestros servicios de fotografía y video profesional.',
+    robots: {
+        index: false,
+        follow: false,
     },
-    description: 'La página que buscas no está disponible',
 }
 
 
