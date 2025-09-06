@@ -446,7 +446,7 @@ export default function ListaEventosAprobados({ eventosPorEtapaIniciales }: Prop
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
-            <div className="p-6 max-w-7xl mx-auto">
+            <div className="p-6 w-full mx-auto">
                 {/* Encabezado Principal */}
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-white mb-2">

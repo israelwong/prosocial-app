@@ -89,12 +89,12 @@ const navCategories: NavCategory[] = [
                 Icon: Users,
                 description: 'Gestión de usuarios y empleados'
             },
-            {
-                href: '/admin/configurar/pipeline',
-                label: 'Pipeline',
-                Icon: Users,
-                description: 'Flujo de trabajo'
-            }
+            // {
+            //     href: '/admin/configurar/pipeline',
+            //     label: 'Pipeline',
+            //     Icon: Users,
+            //     description: 'Flujo de trabajo'
+            // }
         ]
     },
     {

@@ -284,8 +284,8 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                 {...listeners}
                 onClick={() => !isDragging && handleVerEvento(evento.id)}
                 className={`rounded-lg p-4 cursor-pointer transition-all hover:scale-[1.02] border ${esArchivado
-                        ? 'bg-amber-900/10 hover:bg-amber-900/20 border-amber-700/50'
-                        : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700 hover:border-zinc-600'
+                    ? 'bg-amber-900/10 hover:bg-amber-900/20 border-amber-700/50'
+                    : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700 hover:border-zinc-600'
                     }`}
             >
                 {/* Nombre del Evento */}
@@ -319,8 +319,8 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                         <Calendar size={16} className="mr-2 text-zinc-400" />
                         <span>{formatearFecha(evento.fecha_evento, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
                         <span className={`ml-2 text-xs ${diasHastaEvento.estado === 'pasado' ? 'text-red-400' :
-                                diasHastaEvento.estado === 'urgente' ? 'text-yellow-400' :
-                                    'text-zinc-400'
+                            diasHastaEvento.estado === 'urgente' ? 'text-yellow-400' :
+                                'text-zinc-400'
                             }`}>
                             ({obtenerDiasTexto(diasHastaEvento.dias)})
                         </span>
@@ -362,8 +362,8 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                             <span>hace {formatearTiempoRelativo(evento.EventoBitacora[0].createdAt)}</span>
                             {evento.EventoBitacora[0].importancia !== '1' && (
                                 <span className={`px-1.5 py-0.5 rounded-full font-medium ${evento.EventoBitacora[0].importancia === '3'
-                                        ? 'bg-red-900/50 text-red-300'
-                                        : 'bg-orange-900/50 text-orange-300'
+                                    ? 'bg-red-900/50 text-red-300'
+                                    : 'bg-orange-900/50 text-orange-300'
                                     }`}>
                                     {evento.EventoBitacora[0].importancia === '3' ? 'Urgente' : 'Importante'}
                                 </span>
@@ -491,7 +491,7 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
-            <div className="p-6 max-w-7xl mx-auto">
+            <div className="p-6 w-full mx-auto">
                 {/* Encabezado Principal */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between mb-4">
@@ -596,8 +596,8 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                             <button
                                 onClick={() => setOrdenAscendente(!ordenAscendente)}
                                 className={`px-4 py-2 rounded-lg font-medium transition-all ${ordenAscendente
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
                                     }`}
                             >
                                 {ordenAscendente ? (
@@ -612,8 +612,8 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                                 onClick={handleToggleArchivados}
                                 disabled={cargandoArchivados}
                                 className={`px-4 py-2 rounded-lg font-medium transition-all ${mostrarArchivados
-                                        ? 'bg-amber-500 text-white'
-                                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                                    ? 'bg-amber-500 text-white'
+                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
                                     }`}
                             >
                                 {cargandoArchivados ? (

@@ -94,7 +94,7 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-zinc-950">
+        <div className="min-h-screen bg-zinc-950 w-full">
             {/* Header Unificado */}
             <EventoHeader
                 eventoData={eventoData}
@@ -104,7 +104,7 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
             />
 
             {/* Contenido Principal */}
-            <div className="container mx-auto px-4 py-6">
+            <div className="container  mx-auto px-4 py-6">
                 {/* Desktop: Grid de 4 columnas */}
                 <div className="hidden lg:grid lg:grid-cols-4 gap-6">
 
