@@ -30,15 +30,15 @@ export async function obtenerEventosSeguimientoPorEtapa(
     try {
         const validatedParams = SeguimientoBusquedaSchema.parse(params || {});
 
-        // PASO 1: ✅ NUEVO - Obtener etapas por códigos inmutables
+        // PASO 1: ✅ NUEVO - Obtener etapas por IDs directos (producción)
         const etapasEspecificas = await prisma.eventoEtapa.findMany({
             where: {
-                codigo: {
+                id: {
                     in: [
-                        ETAPA_CODES.APROBADO,
-                        ETAPA_CODES.EDICION,
-                        ETAPA_CODES.REVISION,
-                        ETAPA_CODES.GARANTIA
+                        'cm6499aqs0002gu1ae4k1a7ls', // Aprobado
+                        'cm6499n9v0003gu1a9bj1neri', // En edición
+                        'cm649aflf0004gu1agr90z9o3', // En revisión por cliente
+                        'cm649e21l0007gu1a6xu17vk9'  // En garantía
                     ]
                 }
             },
@@ -179,15 +179,15 @@ export async function obtenerEventosSeguimientoPorEtapaListaAprobados(
     try {
         const validatedParams = SeguimientoBusquedaSchema.parse(params || {});
 
-        // PASO 1: ✅ NUEVO - Obtener etapas por códigos inmutables  
+        // PASO 1: ✅ NUEVO - Obtener etapas por IDs directos (producción)
         const etapasEspecificas = await prisma.eventoEtapa.findMany({
             where: {
-                codigo: {
+                id: {
                     in: [
-                        ETAPA_CODES.APROBADO,
-                        ETAPA_CODES.EDICION,
-                        ETAPA_CODES.REVISION,
-                        ETAPA_CODES.GARANTIA
+                        'cm6499aqs0002gu1ae4k1a7ls', // Aprobado
+                        'cm6499n9v0003gu1a9bj1neri', // En edición
+                        'cm649aflf0004gu1agr90z9o3', // En revisión por cliente
+                        'cm649e21l0007gu1a6xu17vk9'  // En garantía
                     ]
                 }
             },

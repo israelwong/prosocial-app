@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default async function page() {
     // Obtener datos iniciales del servidor
-    const filtroEtapas = [1, 2] // Nuevo y Seguimiento por defecto
+    const filtroEtapas = [1, 2, 3] // Nuevo, Seguimiento y Promesa
 
     const [etapas, eventos] = await Promise.all([
         obtenerEtapasPorPosicion(filtroEtapas),

@@ -69,19 +69,28 @@ export async function getEventosPendientesPorEtapa(etapas: number[], incluirArch
                 posicion: {
                     in: etapas
                 }
-            },
-            status: EVENTO_STATUS.PENDIENTE
+            }
         };
 
-        // Si no incluir archivados, agregar filtro
+        // Si no incluir archivados, mostrar solo eventos activos/pendientes
         if (!incluirArchivados) {
             whereConditions.status = {
-                in: [EVENTO_STATUS.PENDIENTE] // Solo eventos pendientes
+                in: [
+                    EVENTO_STATUS.PENDIENTE,
+                    EVENTO_STATUS.APROBADO,
+                    EVENTO_STATUS.ACTIVE // Legacy status
+                ]
             };
         } else {
-            // Si incluir archivados, mostrar pendientes y archivados
+            // Si incluir archivados, mostrar todos incluyendo archivados
             whereConditions.status = {
-                in: [EVENTO_STATUS.PENDIENTE, EVENTO_STATUS.ARCHIVADO]
+                in: [
+                    EVENTO_STATUS.PENDIENTE,
+                    EVENTO_STATUS.APROBADO,
+                    EVENTO_STATUS.ARCHIVADO,
+                    EVENTO_STATUS.ACTIVE,   // Legacy status
+                    EVENTO_STATUS.ARCHIVED  // Legacy status
+                ]
             };
         }
 

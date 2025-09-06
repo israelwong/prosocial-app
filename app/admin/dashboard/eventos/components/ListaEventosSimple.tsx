@@ -1,13 +1,28 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, User, Calendar, MapPin, Clock, FileText, Phone, Archive, ArchiveX, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { Search, Plus, User, Calendar, MapPin, Clock, FileText, Phone, Archive, ArchiveX, ArrowUpDown, ArrowUp, ArrowDown, CircleDollarSign, CircleUserRound } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { EventoPorEtapa } from '@/app/admin/_lib/schemas/evento.schemas'
 import { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.schemas'
 import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import { AGENDA_STATUS, EVENTO_STATUS } from '@/app/admin/_lib/constants/status'
 import { getEventosPendientesPorEtapa } from '@/app/admin/_lib/actions/eventos/eventos.actions'
+import { toast } from 'sonner'
+
+// Drag and Drop imports
+import {
+    DndContext,
+    DragEndEvent,
+    DragOverlay,
+    DragStartEvent,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    closestCorners,
+    useDroppable,
+    useDraggable
+} from '@dnd-kit/core'
 
 // Helper para formatear tiempo relativo
 const formatearTiempoRelativo = (fecha: Date) => {
@@ -51,7 +66,20 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
     const [creandoEvento, setCreandoEvento] = useState(false)
     const [mostrarArchivados, setMostrarArchivados] = useState(false)
     const [cargandoArchivados, setCargandoArchivados] = useState(false)
-    const [ordenAscendente, setOrdenAscendente] = useState(true) // true = ascendente (fechas próximas primero)
+    const [ordenAscendente, setOrdenAscendente] = useState(true)
+
+    // Estados para drag and drop
+    const [activeId, setActiveId] = useState<string | null>(null)
+    const [activeEvento, setActiveEvento] = useState<EventoPorEtapa | null>(null)
+
+    // Configurar sensores para drag and drop
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 3,
+            },
+        })
+    )
 
     // Función para cargar eventos con o sin archivados
     const cargarEventos = async (incluirArchivados: boolean) => {
@@ -115,6 +143,112 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
         }
     })
 
+    // Convertir datos agrupados a lista plana para filtros
+    const todosLosEventos = useMemo(() => {
+        const eventosPlanos: EventoPorEtapa[] = []
+        eventosPorEtapa.forEach(({ eventos: eventosEtapa }) => {
+            eventosPlanos.push(...eventosEtapa)
+        })
+        return eventosPlanos
+    }, [eventosPorEtapa])
+
+    // Funciones para drag and drop
+    const handleDragStart = (event: DragStartEvent) => {
+        const { active } = event
+        setActiveId(active.id as string)
+
+        // Encontrar el evento que se está arrastrando
+        const evento = todosLosEventos.find(e => e.id === active.id)
+        setActiveEvento(evento || null)
+    }
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event
+
+        if (!over) {
+            setActiveId(null)
+            setActiveEvento(null)
+            return
+        }
+
+        const eventoId = active.id as string
+        const overId = over.id as string
+
+        // Extraer el ID real del evento del ID prefijado
+        const realEventoId = eventoId.startsWith('evento-')
+            ? eventoId.replace('evento-', '')
+            : eventoId
+
+        // Extraer el ID real de la etapa del ID prefijado
+        const nuevaEtapaId = overId.startsWith('droppable-')
+            ? overId.replace('droppable-', '')
+            : overId
+
+        // Encontrar evento y nueva etapa
+        const evento = todosLosEventos.find(e => e.id === realEventoId)
+        if (!evento) {
+            setActiveId(null)
+            setActiveEvento(null)
+            return
+        }
+
+        // Validar que nuevaEtapaId no esté vacío
+        if (!nuevaEtapaId || nuevaEtapaId.trim() === '') {
+            setActiveId(null)
+            setActiveEvento(null)
+            return
+        }
+
+        // Si no cambió de etapa, no hacer nada
+        if (evento.eventoEtapaId === nuevaEtapaId) {
+            setActiveId(null)
+            setActiveEvento(null)
+            return
+        }
+
+        try {
+            // Actualizar el estado local inmediatamente
+            setEventos(prevEventos => {
+                return prevEventos.map(e =>
+                    e.id === realEventoId
+                        ? { ...e, eventoEtapaId: nuevaEtapaId }
+                        : e
+                )
+            })
+
+            // TODO: Aquí se debe llamar a la API para actualizar en la base de datos
+            toast.success('Evento movido correctamente')
+
+        } catch (error) {
+            // Revertir el cambio
+            setEventos(eventosIniciales)
+            toast.error('Error inesperado al mover evento')
+        } finally {
+            setActiveId(null)
+            setActiveEvento(null)
+        }
+    }
+
+    const formatearPrecio = (precio: number) => {
+        return precio.toLocaleString('es-MX', {
+            style: 'currency',
+            currency: 'MXN'
+        })
+    }
+
+    const obtenerColorBalance = (balance: number) => {
+        if (balance === 0) return 'text-green-500'
+        if (balance > 0) return 'text-red-500'
+        return 'text-orange-500' // sobregiro
+    }
+
+    const obtenerDiasTexto = (dias: number) => {
+        if (dias < 0) return `${Math.abs(dias)} días pasados`
+        if (dias === 0) return 'Hoy'
+        if (dias === 1) return 'Mañana'
+        return `En ${dias} días`
+    }
+
     const handleCrearEvento = () => {
         setCreandoEvento(true)
         router.push('/admin/dashboard/eventos/nuevo')
@@ -124,21 +258,250 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
         router.push(`/admin/dashboard/eventos/${eventoId}`)
     }
 
+    // Componente para tarjetas draggables
+    const DraggableEventCard = ({ evento }: { evento: EventoPorEtapa }) => {
+        const {
+            attributes,
+            listeners,
+            setNodeRef,
+            transform,
+            isDragging,
+        } = useDraggable({ id: `evento-${evento.id}` })
+
+        const style = {
+            transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+            opacity: isDragging ? 0.5 : 1,
+        }
+
+        const diasHastaEvento = calcularDiasHastaEvento(evento.fecha_evento)
+        const esArchivado = evento.status === EVENTO_STATUS.ARCHIVADO
+
+        return (
+            <div
+                ref={setNodeRef}
+                style={style}
+                {...attributes}
+                {...listeners}
+                onClick={() => !isDragging && handleVerEvento(evento.id)}
+                className={`rounded-lg p-4 cursor-pointer transition-all hover:scale-[1.02] border ${esArchivado
+                        ? 'bg-amber-900/10 hover:bg-amber-900/20 border-amber-700/50'
+                        : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700 hover:border-zinc-600'
+                    }`}
+            >
+                {/* Nombre del Evento */}
+                <div className="mb-3">
+                    <div className="flex items-center gap-2 mb-2">
+                        {evento.EventoTipo && (
+                            <span className="inline-block bg-yellow-600 text-black text-xs px-2 py-1 rounded-full font-medium">
+                                {evento.EventoTipo.nombre}
+                            </span>
+                        )}
+                        {esArchivado && (
+                            <span className="inline-block bg-amber-900/50 text-amber-300 border border-amber-700 text-xs px-2 py-1 rounded-full font-medium">
+                                <Archive className="h-3 w-3 inline mr-1" />
+                                ARCHIVADO
+                            </span>
+                        )}
+                    </div>
+                    <h3 className="font-semibold text-white text-lg leading-tight">
+                        {evento.nombre || 'Por configurar'}
+                    </h3>
+                </div>
+
+                {/* Cliente e información */}
+                <div className="space-y-2 text-sm">
+                    <div className="flex items-center text-zinc-300">
+                        <CircleUserRound size={16} className="mr-2 text-zinc-400" />
+                        <span>{evento.Cliente.nombre}</span>
+                    </div>
+
+                    <div className="flex items-center text-zinc-300">
+                        <Calendar size={16} className="mr-2 text-zinc-400" />
+                        <span>{formatearFecha(evento.fecha_evento, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        <span className={`ml-2 text-xs ${diasHastaEvento.estado === 'pasado' ? 'text-red-400' :
+                                diasHastaEvento.estado === 'urgente' ? 'text-yellow-400' :
+                                    'text-zinc-400'
+                            }`}>
+                            ({obtenerDiasTexto(diasHastaEvento.dias)})
+                        </span>
+                    </div>
+
+                    {evento.Cliente.telefono && (
+                        <div className="flex items-center text-zinc-300">
+                            <Phone size={16} className="mr-2 text-zinc-400" />
+                            <span className="text-xs">{evento.Cliente.telefono}</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Información de cotizaciones */}
+                {evento.Cotizacion && evento.Cotizacion.length > 0 && (
+                    <div className="pt-3 border-t border-zinc-700">
+                        <div className="flex justify-between items-center text-sm">
+                            <span className="text-zinc-400">Cotizaciones:</span>
+                            <span className="text-blue-400 font-medium">
+                                {evento.Cotizacion.length}
+                            </span>
+                        </div>
+                        {evento.Cotizacion[0].precio && (
+                            <div className="flex justify-between items-center text-sm mt-1">
+                                <span className="text-zinc-400">Precio:</span>
+                                <span className="text-white font-medium">
+                                    {formatearPrecio(evento.Cotizacion[0].precio)}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Última actividad */}
+                {evento.EventoBitacora && evento.EventoBitacora.length > 0 && (
+                    <div className="pt-3 border-t border-zinc-700">
+                        <div className="flex items-center gap-2 text-xs text-zinc-500 mb-1">
+                            <Clock size={12} />
+                            <span>hace {formatearTiempoRelativo(evento.EventoBitacora[0].createdAt)}</span>
+                            {evento.EventoBitacora[0].importancia !== '1' && (
+                                <span className={`px-1.5 py-0.5 rounded-full font-medium ${evento.EventoBitacora[0].importancia === '3'
+                                        ? 'bg-red-900/50 text-red-300'
+                                        : 'bg-orange-900/50 text-orange-300'
+                                    }`}>
+                                    {evento.EventoBitacora[0].importancia === '3' ? 'Urgente' : 'Importante'}
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-xs text-zinc-400 leading-relaxed line-clamp-2">
+                            {evento.EventoBitacora[0].comentario}
+                        </p>
+                    </div>
+                )}
+            </div>
+        )
+    }
+
+    // Componente DroppableColumn
+    const DroppableColumn = ({ etapa, eventos }: {
+        etapa: EventoEtapa;
+        eventos: EventoPorEtapa[];
+    }) => {
+        const { isOver, setNodeRef } = useDroppable({
+            id: `droppable-${etapa.id}`,
+        })
+
+        // Determinar color según la etapa
+        const obtenerColorEtapa = (nombre: string) => {
+            if (nombre.toLowerCase().includes('nuevo')) return '#38bdf8' // blue-400
+            if (nombre.toLowerCase().includes('seguimiento')) return '#fbbf24' // yellow-400
+            if (nombre.toLowerCase().includes('promesa')) return '#a78bfa' // violet-400
+            return '#d4d4d8' // zinc-300
+        }
+
+        return (
+            <div
+                ref={setNodeRef}
+                className={`bg-zinc-900 rounded-lg p-4 transition-colors ${isOver ? 'bg-zinc-800 ring-2 ring-blue-500' : ''
+                    }`}
+            >
+                {/* Header de Etapa */}
+                <div className="mb-6 pb-4 border-b border-zinc-700 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                            <span
+                                className="inline-block w-2 h-2 rounded-full"
+                                style={{ background: obtenerColorEtapa(etapa.nombre) }}
+                            ></span>
+                            {etapa.nombre}
+                        </h2>
+                        <div className="flex items-center gap-3 mt-1">
+                            <span className="text-sm text-zinc-400">
+                                {eventos.length} evento{eventos.length !== 1 ? 's' : ''}
+                            </span>
+                            {eventos.length > 0 && (
+                                <span className="text-xs bg-blue-500/10 text-blue-400 px-2 py-1 rounded font-semibold">
+                                    {eventos.filter(e => e.Cotizacion && e.Cotizacion.length > 0).length} con cotización
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Lista de Eventos */}
+                <div className="space-y-3">
+                    {eventos.length === 0 ? (
+                        <div className="text-zinc-500 text-center py-8 border-2 border-dashed border-zinc-700 rounded-lg">
+                            <div className="text-sm">No hay eventos en esta etapa</div>
+                            <div className="text-xs mt-1">Los nuevos eventos aparecerán aquí</div>
+                        </div>
+                    ) : (
+                        eventos.map(evento => (
+                            <DraggableEventCard key={evento.id} evento={evento} />
+                        ))
+                    )}
+                </div>
+            </div>
+        )
+    }
+
     const totalEventos = eventosFiltrados.length
     const eventosConCotizaciones = eventosFiltrados.filter(e => e.Cotizacion && e.Cotizacion.length > 0).length
     const eventosSinCotizaciones = eventosFiltrados.filter(e => !e.Cotizacion || e.Cotizacion.length === 0).length
     const eventosArchivados = eventosFiltrados.filter(e => e.status === EVENTO_STATUS.ARCHIVADO).length
     const eventosActivos = eventosFiltrados.filter(e => e.status !== EVENTO_STATUS.ARCHIVADO).length
 
+    // Calcular métricas de resumen
+    const metricas = useMemo(() => {
+        const totalEventos = todosLosEventos.length
+        const eventosPagados = todosLosEventos.filter(e =>
+            e.Cotizacion && e.Cotizacion.length > 0 &&
+            e.Cotizacion.some(cot => cot.Pago && cot.Pago.length > 0)
+        ).length
+        const eventosPendientes = totalEventos - eventosPagados
+
+        const montoTotal = todosLosEventos.reduce((sum, evento) => {
+            if (evento.Cotizacion && evento.Cotizacion.length > 0) {
+                return sum + evento.Cotizacion[0].precio
+            }
+            return sum
+        }, 0)
+
+        const montoPagado = todosLosEventos.reduce((sum, evento) => {
+            if (evento.Cotizacion && evento.Cotizacion.length > 0) {
+                const pagos = evento.Cotizacion[0].Pago || []
+                return sum + pagos.reduce((pagosSum, pago) => pagosSum + pago.monto, 0)
+            }
+            return sum
+        }, 0)
+
+        const montoPendiente = montoTotal - montoPagado
+
+        return {
+            totalEventos,
+            eventosPagados,
+            eventosPendientes,
+            montoTotal,
+            montoPagado,
+            montoPendiente,
+            porcentajePagado: montoTotal > 0 ? (montoPagado / montoTotal) * 100 : 0
+        }
+    }, [todosLosEventos])
+
     return (
-        <div className="min-h-screen bg-zinc-950 p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between mb-6">
+        <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+        >
+            <div className="p-6 max-w-7xl mx-auto">
+                {/* Encabezado Principal */}
+                <div className="mb-6">
+                    <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h1 className="text-3xl font-bold text-zinc-100">Eventos</h1>
-                            <p className="text-zinc-400 mt-1">Gestión de promesas y seguimiento</p>
+                            <h1 className="text-2xl font-bold text-white mb-2">
+                                Pipeline de Conversión
+                            </h1>
+                            <p className="text-zinc-400">
+                                Gestión de leads y seguimiento: Nuevo, Seguimiento, Promesa
+                            </p>
                         </div>
                         <Button
                             onClick={handleCrearEvento}
@@ -149,99 +512,135 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                             {creandoEvento ? 'Creando...' : 'Nuevo Evento'}
                         </Button>
                     </div>
+                </div>
 
-                    {/* Métricas simples */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
-                            <div className="text-2xl font-bold text-zinc-100">{totalEventos}</div>
-                            <div className="text-sm text-zinc-400">Total Eventos</div>
+                {/* Ficha de Resumen */}
+                <div className="mb-6 bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-xl p-6 border border-zinc-700">
+                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <CircleDollarSign className="text-blue-400" size={20} />
+                        Resumen de Pipeline
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        {/* Total Eventos */}
+                        <div className="bg-zinc-800/50 rounded-lg p-4 border border-zinc-700">
+                            <div className="text-zinc-400 text-sm">Total Eventos</div>
+                            <div className="text-2xl font-bold text-white">{metricas.totalEventos}</div>
                         </div>
 
-                        {mostrarArchivados ? (
-                            <>
-                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
-                                    <div className="text-2xl font-bold text-blue-400">{eventosActivos}</div>
-                                    <div className="text-sm text-zinc-400">Eventos Activos</div>
-                                </div>
-                                <div className="bg-amber-900/20 border border-amber-700/50 rounded-lg p-4">
-                                    <div className="text-2xl font-bold text-amber-400">{eventosArchivados}</div>
-                                    <div className="text-sm text-amber-300">Eventos Archivados</div>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
-                                    <div className="text-2xl font-bold text-green-400">{eventosConCotizaciones}</div>
-                                    <div className="text-sm text-zinc-400">Con Cotizaciones</div>
-                                </div>
-                                <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
-                                    <div className="text-2xl font-bold text-yellow-400">{eventosSinCotizaciones}</div>
-                                    <div className="text-sm text-zinc-400">Sin Cotizaciones</div>
-                                </div>
-                            </>
-                        )}
+                        {/* Con Cotizaciones */}
+                        <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/30">
+                            <div className="text-blue-400 text-sm">Con Cotización</div>
+                            <div className="text-2xl font-bold text-blue-400">{eventosConCotizaciones}</div>
+                        </div>
 
-                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
-                            <div className="text-2xl font-bold text-purple-400">{eventosPorEtapa.reduce((acc, { eventos }) => acc + eventos.length, 0)}</div>
-                            <div className="text-sm text-zinc-400">En Etapas Visibles</div>
+                        {/* Sin Cotizaciones */}
+                        <div className="bg-yellow-500/10 rounded-lg p-4 border border-yellow-500/30">
+                            <div className="text-yellow-400 text-sm">Sin Cotización</div>
+                            <div className="text-2xl font-bold text-yellow-400">{eventosSinCotizaciones}</div>
+                        </div>
+
+                        {/* Monto Total */}
+                        <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/30">
+                            <div className="text-green-400 text-sm">Monto Total</div>
+                            <div className="text-xl font-bold text-green-400">{formatearPrecio(metricas.montoTotal)}</div>
+                        </div>
+
+                        {/* Monto Pagado */}
+                        <div className="bg-emerald-500/10 rounded-lg p-4 border border-emerald-500/30">
+                            <div className="text-emerald-400 text-sm">Pagado</div>
+                            <div className="text-xl font-bold text-emerald-400">{formatearPrecio(metricas.montoPagado)}</div>
+                        </div>
+
+                        {/* Monto Pendiente */}
+                        <div className="bg-orange-500/10 rounded-lg p-4 border border-orange-500/30">
+                            <div className="text-orange-400 text-sm">Pendiente</div>
+                            <div className="text-xl font-bold text-orange-400">{formatearPrecio(metricas.montoPendiente)}</div>
                         </div>
                     </div>
 
-                    {/* Filtros simples */}
-                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                    {/* Barra de Progreso */}
+                    {metricas.montoTotal > 0 && (
+                        <div className="mt-4">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm text-zinc-400">Progreso de Cobro</span>
+                                <span className="text-sm font-medium text-white">{metricas.porcentajePagado.toFixed(1)}%</span>
+                            </div>
+                            <div className="w-full bg-zinc-700 rounded-full h-2">
+                                <div
+                                    className="bg-gradient-to-r from-green-600 to-green-400 h-2 rounded-full transition-all duration-300"
+                                    style={{ width: `${Math.min(metricas.porcentajePagado, 100)}%` }}
+                                ></div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Filtros */}
+                <div className="mb-6 bg-zinc-900 rounded-xl p-4 border border-zinc-700">
+                    <div className="flex flex-col md:flex-row gap-4">
+                        {/* Buscador */}
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400" size={20} />
                             <input
                                 type="text"
-                                placeholder="Buscar por cliente, evento o teléfono..."
+                                placeholder="Buscar por nombre, cliente o teléfono..."
                                 value={busqueda}
                                 onChange={(e) => setBusqueda(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-lg text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full pl-10 pr-4 py-3 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                         </div>
 
+                        {/* Filtros de estado */}
                         <div className="flex gap-2">
-                            {/* Toggle para ordenamiento */}
-                            <Button
+                            <button
                                 onClick={() => setOrdenAscendente(!ordenAscendente)}
-                                variant="outline"
-                                className="px-4 py-2 bg-zinc-900/50 border-zinc-700 text-zinc-400 hover:bg-zinc-800/50 transition-all duration-200"
-                                title={ordenAscendente ? 'Ordenar por fecha descendente' : 'Ordenar por fecha ascendente'}
+                                className={`px-4 py-2 rounded-lg font-medium transition-all ${ordenAscendente
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                                    }`}
                             >
                                 {ordenAscendente ? (
-                                    <ArrowUp className="h-4 w-4 mr-2" />
+                                    <ArrowUp className="h-4 w-4 mr-2 inline" />
                                 ) : (
-                                    <ArrowDown className="h-4 w-4 mr-2" />
+                                    <ArrowDown className="h-4 w-4 mr-2 inline" />
                                 )}
                                 {ordenAscendente ? 'Próximas' : 'Lejanas'}
-                            </Button>
+                            </button>
 
-                            {/* Toggle para eventos archivados */}
-                            <Button
+                            <button
                                 onClick={handleToggleArchivados}
                                 disabled={cargandoArchivados}
-                                variant="outline"
-                                className={`px-4 py-2 border transition-all duration-200 ${mostrarArchivados
-                                    ? 'bg-amber-900/20 border-amber-700 text-amber-300 hover:bg-amber-900/30'
-                                    : 'bg-zinc-900/50 border-zinc-700 text-zinc-400 hover:bg-zinc-800/50'
+                                className={`px-4 py-2 rounded-lg font-medium transition-all ${mostrarArchivados
+                                        ? 'bg-amber-500 text-white'
+                                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
                                     }`}
                             >
                                 {cargandoArchivados ? (
-                                    <Clock className="h-4 w-4 mr-2 animate-spin" />
+                                    <Clock className="h-4 w-4 mr-2 inline animate-spin" />
                                 ) : mostrarArchivados ? (
-                                    <ArchiveX className="h-4 w-4 mr-2" />
+                                    <ArchiveX className="h-4 w-4 mr-2 inline" />
                                 ) : (
-                                    <Archive className="h-4 w-4 mr-2" />
+                                    <Archive className="h-4 w-4 mr-2 inline" />
                                 )}
                                 {cargandoArchivados
                                     ? 'Cargando...'
                                     : mostrarArchivados
-                                        ? 'Ocultar Archivados'
-                                        : 'Mostrar Archivados'
+                                        ? `Ocultar (${eventosArchivados})`
+                                        : `Archivados (${eventosArchivados})`
                                 }
-                            </Button>
+                            </button>
                         </div>
                     </div>
+
+                    {/* Contador de resultados filtrados */}
+                    {(busqueda || mostrarArchivados) && (
+                        <div className="mt-3 pt-3 border-t border-zinc-700">
+                            <span className="text-sm text-zinc-400">
+                                Mostrando {eventosFiltrados.length} de {eventos.length} eventos
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Indicador de modo archivados */}
@@ -256,7 +655,7 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                     </div>
                 )}
 
-                {/* Lista de eventos por etapa */}
+                {/* Columnas por Etapa con Drag and Drop */}
                 {eventosFiltrados.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="text-zinc-500 mb-4">
@@ -269,154 +668,26 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                         )}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {eventosPorEtapa.map(({ etapa, eventos: eventosEtapa }) => (
-                            eventosEtapa.length > 0 && (
-                                <div key={etapa.id} className="bg-zinc-900/30 border border-zinc-800 rounded-lg">
-                                    <div className="p-4 border-b border-zinc-800">
-                                        <div className="flex items-center justify-between">
-                                            <h2 className="text-lg font-semibold text-zinc-200">{etapa.nombre}</h2>
-                                            <span className="px-2 py-1 bg-zinc-700 text-zinc-300 text-sm rounded-full">
-                                                {eventosEtapa.length}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
-                                        {eventosEtapa.map(evento => {
-                                            const diasHastaEvento = calcularDiasHastaEvento(evento.fecha_evento)
-                                            const esArchivado = evento.status === EVENTO_STATUS.ARCHIVADO
-                                            return (
-                                                <div
-                                                    key={evento.id}
-                                                    onClick={() => handleVerEvento(evento.id)}
-                                                    className={`p-5 border rounded-lg cursor-pointer transition-all duration-200 space-y-3 ${esArchivado
-                                                        ? 'bg-amber-900/10 hover:bg-amber-900/20 border-amber-700/50'
-                                                        : 'bg-zinc-800/30 hover:bg-zinc-800/50 border-zinc-700'
-                                                        }`}
-                                                >
-                                                    {/* Header del evento */}
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-3 mb-2">
-                                                                <h3 className="font-semibold text-zinc-100 text-base">
-                                                                    {evento.nombre || 'Por configurar'}
-                                                                </h3>
-                                                                {evento.EventoTipo && (
-                                                                    <span className="px-2.5 py-1 text-xs bg-zinc-700 text-zinc-300 rounded-md font-medium">
-                                                                        {evento.EventoTipo.nombre}
-                                                                    </span>
-                                                                )}
-                                                                {esArchivado && (
-                                                                    <span className="px-2.5 py-1 text-xs bg-amber-900/50 text-amber-300 border border-amber-700 rounded-md font-medium">
-                                                                        <Archive className="h-3 w-3 inline mr-1" />
-                                                                        ARCHIVADO
-                                                                    </span>
-                                                                )}
-                                                            </div>
-
-                                                            {/* Información del cliente */}
-                                                            <div className="space-y-1">
-                                                                <div className="flex items-center gap-2 text-sm text-zinc-400">
-                                                                    <User className="h-4 w-4" />
-                                                                    <span className="font-medium">{evento.Cliente.nombre}</span>
-                                                                </div>
-                                                                {evento.Cliente.telefono && (
-                                                                    <div className="flex items-center gap-2 text-sm text-zinc-500">
-                                                                        <Phone className="h-4 w-4" />
-                                                                        <span>{evento.Cliente.telefono}</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Badge de días hasta el evento */}
-                                                        <div className={`px-3 py-1.5 text-sm rounded-lg font-semibold ${diasHastaEvento.estado === 'pasado'
-                                                            ? 'bg-red-900/50 text-red-300 border border-red-800'
-                                                            : diasHastaEvento.estado === 'hoy'
-                                                                ? 'bg-purple-900/50 text-purple-300 border border-purple-800'
-                                                                : diasHastaEvento.estado === 'urgente'
-                                                                    ? 'bg-orange-900/50 text-orange-300 border border-orange-800'
-                                                                    : diasHastaEvento.estado === 'pronto'
-                                                                        ? 'bg-yellow-900/50 text-yellow-300 border border-yellow-800'
-                                                                        : 'bg-blue-900/50 text-blue-300 border border-blue-800'
-                                                            }`}>
-                                                            {diasHastaEvento.estado === 'pasado'
-                                                                ? `Hace ${diasHastaEvento.dias} días`
-                                                                : diasHastaEvento.estado === 'hoy'
-                                                                    ? 'Hoy'
-                                                                    : `En ${diasHastaEvento.dias} días`
-                                                            }
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Separador visual */}
-                                                    <div className="border-t border-zinc-700/50"></div>
-
-                                                    {/* Información de fecha y estado */}
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex items-center gap-2">
-                                                            <Calendar className="h-4 w-4 text-zinc-400" />
-                                                            <span className="text-sm text-zinc-400 font-medium">Fecha:</span>
-                                                            <span className="text-sm text-zinc-200 font-medium">{formatearFecha(evento.fecha_evento, {
-                                                                weekday: 'short',
-                                                                day: '2-digit',
-                                                                month: 'short',
-                                                                year: 'numeric'
-                                                            })}</span>
-                                                        </div>
-                                                        {evento.Agenda && evento.Agenda.length > 0 && (
-                                                            <span className={`px-2 py-1 text-xs rounded-full font-medium ${evento.Agenda[0].status === AGENDA_STATUS.CONFIRMADO
-                                                                ? 'bg-green-900/50 text-green-300 border border-green-800'
-                                                                : 'bg-yellow-900/50 text-yellow-300 border border-yellow-800'
-                                                                }`}>
-                                                                {evento.Agenda[0].status === AGENDA_STATUS.CONFIRMADO ? 'Confirmada' : 'Tentativa'}
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Última actividad */}
-                                                    <div className="bg-zinc-800/50 p-3 rounded-md">
-                                                        <div className="flex items-start gap-2">
-                                                            <Clock className="h-4 w-4 text-zinc-500 mt-0.5" />
-                                                            <div className="flex-1">
-                                                                <div className="flex items-center gap-2 mb-1">
-                                                                    <span className="text-xs text-zinc-500 font-medium">Última actividad</span>
-                                                                    {evento.EventoBitacora && evento.EventoBitacora.length > 0 && (
-                                                                        <>
-                                                                            <span className="text-xs text-zinc-400">
-                                                                                {formatearTiempoRelativo(evento.EventoBitacora[0].createdAt)}
-                                                                            </span>
-                                                                            {evento.EventoBitacora[0].importancia !== '1' && (
-                                                                                <span className={`px-1.5 py-0.5 text-xs rounded-full font-medium ${evento.EventoBitacora[0].importancia === '3'
-                                                                                    ? 'bg-red-900/50 text-red-300'
-                                                                                    : 'bg-orange-900/50 text-orange-300'
-                                                                                    }`}>
-                                                                                    {evento.EventoBitacora[0].importancia === '3' ? 'Urgente' : 'Importante'}
-                                                                                </span>
-                                                                            )}
-                                                                        </>
-                                                                    )}
-                                                                </div>
-                                                                {evento.EventoBitacora && evento.EventoBitacora.length > 0 ? (
-                                                                    <p className="text-sm text-zinc-300 leading-relaxed">
-                                                                        {evento.EventoBitacora[0].comentario}
-                                                                    </p>
-                                                                ) : (
-                                                                    <p className="text-sm text-zinc-500 italic">Sin actividad reciente</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
-                            )
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {eventosPorEtapa.map(({ etapa, eventos }) => (
+                            <DroppableColumn
+                                key={etapa.id}
+                                etapa={etapa}
+                                eventos={eventos}
+                            />
                         ))}
                     </div>
                 )}
+
+                {/* Overlay para drag and drop */}
+                <DragOverlay>
+                    {activeEvento ? (
+                        <div className="opacity-50">
+                            <DraggableEventCard evento={activeEvento} />
+                        </div>
+                    ) : null}
+                </DragOverlay>
             </div>
-        </div>
+        </DndContext>
     )
 }
