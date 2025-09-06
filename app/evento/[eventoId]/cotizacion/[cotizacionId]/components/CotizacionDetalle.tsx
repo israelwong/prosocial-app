@@ -10,7 +10,7 @@ import { obtenerMetodoPago } from '@/app/admin/_lib/actions/metodoPago/metodoPag
 import { crearFechaLocal, formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import type { EventoExtendido, ServicioDetalle, EventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.schemas'
 import { verificarDisponibilidadFechaRootLegacy as verificarDisponibilidadFecha } from '@/app/admin/_lib/actions/agenda'
-import { obtenerPaquetesParaCliente } from '@/app/admin/_lib/actions/paquetes/paquetes.actions'
+import { verificarPaquetesDisponiblesPorTipoEvento } from '@/app/admin/_lib/actions/paquetes/paquetes.actions'
 import { Package } from 'lucide-react'
 import type { Cliente, EventoTipo, Cotizacion, Evento } from '@/app/admin/_lib/types'
 
@@ -91,16 +91,22 @@ export default function CotizacionDetalle({
 
     const router = useRouter()
 
-    // 📊 Verificar si hay paquetes disponibles
+    // 📊 Verificar si hay paquetes disponibles para este tipo de evento
     const verificarPaquetesDisponibles = useCallback(async () => {
         try {
-            const paquetes = await obtenerPaquetesParaCliente();
-            setHayPaquetesDisponibles(paquetes.length > 0);
+            const eventoTipoId = evento.eventoTipoId;
+            if (!eventoTipoId) {
+                setHayPaquetesDisponibles(false);
+                return;
+            }
+
+            const hayPaquetes = await verificarPaquetesDisponiblesPorTipoEvento(eventoTipoId);
+            setHayPaquetesDisponibles(hayPaquetes);
         } catch (error) {
             console.error("Error al verificar paquetes:", error);
             setHayPaquetesDisponibles(false);
         }
-    }, []);
+    }, [evento.eventoTipoId]);
 
     // Función para obtener el total de la cotización
     const calcularTotalCotizacion = () => {

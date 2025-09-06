@@ -260,10 +260,21 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
             )}
 
             {/* Portfolio section */}
-            <PortfolioSection
-                tipoEvento={evento.EventoTipo?.nombre?.toLowerCase().includes('xv') ||
-                    evento.EventoTipo?.nombre?.toLowerCase().includes('15') ? 'xv' : 'boda'}
-            />
+            {(() => {
+                const nombre = evento.EventoTipo?.nombre?.toLowerCase() || '';
+                if (nombre.includes('xv') || nombre.includes('15') || nombre.includes('boda')) {
+                    return (
+                        <PortfolioSection
+                            tipoEvento={
+                                nombre.includes('xv') || nombre.includes('15')
+                                    ? 'xv'
+                                    : 'boda'
+                            }
+                        />
+                    );
+                }
+                return null;
+            })()}
 
             {/* Testimonios section */}
             <TestimoniosSection />

@@ -58,6 +58,25 @@ export async function obtenerPaquetesParaCliente() {
     });
 }
 
+/**
+ * Verificar si hay paquetes disponibles para un tipo de evento específico
+ * Función optimizada que solo verifica la existencia sin cargar todos los datos
+ */
+export async function verificarPaquetesDisponiblesPorTipoEvento(eventoTipoId: string): Promise<boolean> {
+    if (!eventoTipoId) {
+        return false;
+    }
+
+    const count = await prisma.paquete.count({
+        where: {
+            eventoTipoId: eventoTipoId,
+            status: 'active'
+        }
+    });
+
+    return count > 0;
+}
+
 export async function obtenerPaqueteDetalleParaCliente(paqueteId: string) {
     const paquete = await prisma.paquete.findUnique({
         where: {

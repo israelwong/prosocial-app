@@ -3,6 +3,8 @@ export * from './ui';
 export * from './galleries';
 export * from './video';
 export * from './heroes';
+export * from './faq';
+export * from './guarantees';
 
 // Direct exports for standalone components
 export { default as AyudaEleccionCotizaciones } from './AyudaEleccionCotizaciones';

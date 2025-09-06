@@ -6,7 +6,10 @@ import {
   HeroText,
   GalleryGrid,
   ServiceSection,
-  VideoSingle
+  VideoSingle,
+  FAQSection,
+  GuaranteesSection,
+  TrustBadges
 } from '@/app/components/shared'
 
 function WeddingsPage() {
@@ -158,6 +161,29 @@ function WeddingsPage() {
         minHeight="min-h-[60vh]"
       />
 
+      {/* Sección de Garantías */}
+      <section className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <GuaranteesSection
+            variant="full"
+            className="mb-16"
+          />
+          <TrustBadges variant="inline" />
+        </div>
+      </section>
+
+      {/* Sección de Preguntas Frecuentes */}
+      <section className="py-20 bg-zinc-900">
+        <div className="max-w-4xl mx-auto px-6">
+          <FAQSection
+            variant="full"
+            showCategories={true}
+            title="Preguntas Frecuentes"
+            subtitle="Todo lo que necesitas saber sobre nuestros servicios de boda"
+          />
+        </div>
+      </section>
+
       {/* Hero Final - Contacto */}
       <HeroText
         title="¿Listos para Empezar?"
@@ -165,26 +191,17 @@ function WeddingsPage() {
         description="Contáctanos ahora y comencemos a planear la documentación perfecta de tu día especial"
         buttons={[
           {
-            text: "5544546582",
-            href: "tel:5544546582",
+            text: "Agenda una Cita Virtual",
+            href: "https://calendly.com/prosocial-mx",
             variant: "primary",
             size: "xl",
             fullWidth: false
           },
           {
-            text: "contacto@prosocial.mx",
-            href: "mailto:contacto@prosocial.mx",
+            text: "Ver Paquetes",
+            href: "/weddings/paquetes",
             variant: "secondary",
             size: "lg",
-            fullWidth: false
-          },
-          {
-            text: "WhatsApp",
-            href: "https://wa.me/5544546582",
-            variant: "ghost",
-            size: "lg",
-            target: "_blank",
-            withBorder: true,
             fullWidth: false
           }
         ]}
