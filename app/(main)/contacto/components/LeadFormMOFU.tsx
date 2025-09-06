@@ -1,14 +1,20 @@
 'use client'
 import React, { useState, useEffect } from 'react'
+import DatePicker, { registerLocale } from 'react-datepicker'
+import { es } from 'date-fns/locale'
+import 'react-datepicker/dist/react-datepicker.css'
 import { obtenerTiposEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions'
 import { EventoTipo } from '@prisma/client'
+
+// Registrar localización en español
+registerLocale('es', es)
 
 interface LeadFormMOFUProps {
     refSource?: string
 }
 
 interface FormData {
-    fechaEvento: string
+    fechaEvento: Date | null
     tipoEventoId: string
     nombreEvento: string
     sede: string
@@ -20,7 +26,7 @@ interface FormData {
 export default function LeadFormMOFU({ refSource }: LeadFormMOFUProps) {
     const [tiposEvento, setTiposEvento] = useState<EventoTipo[]>([])
     const [formData, setFormData] = useState<FormData>({
-        fechaEvento: '',
+        fechaEvento: null,
         tipoEventoId: '',
         nombreEvento: '',
         sede: '',
@@ -84,15 +90,15 @@ export default function LeadFormMOFU({ refSource }: LeadFormMOFUProps) {
         } finally {
             setIsValidatingDate(false)
         }
-    }    // Manejar cambio de fecha
-    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newDate = e.target.value
-        setFormData(prev => ({ ...prev, fechaEvento: newDate }))
+    }    // Manejar cambio de fecha con react-datepicker
+    const handleDateChange = (date: Date | null) => {
+        setFormData(prev => ({ ...prev, fechaEvento: date }))
         setDateAvailable(null)
 
-        if (newDate) {
-            // Validar con debounce
-            setTimeout(() => validateDateAvailability(newDate), 500)
+        if (date) {
+            // Validar con debounce - convertir Date a string ISO
+            const dateString = date.toISOString().split('T')[0]
+            setTimeout(() => validateDateAvailability(dateString), 500)
         }
     }
 
@@ -142,14 +148,18 @@ export default function LeadFormMOFU({ refSource }: LeadFormMOFUProps) {
 
         setIsSubmitting(true)
         try {
+            // Preparar datos para envío - convertir fecha a string
+            const dataToSend = {
+                ...formData,
+                fechaEvento: formData.fechaEvento ? formData.fechaEvento.toISOString().split('T')[0] : '',
+                canalAdquisicion: 'landing-page',
+                referencia: refSource
+            }
+
             const response = await fetch('/api/crear-evento-landing', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    canalAdquisicion: 'landing-page',
-                    referencia: refSource
-                })
+                body: JSON.stringify(dataToSend)
             })
 
             const result = await response.json()
@@ -212,14 +222,23 @@ export default function LeadFormMOFU({ refSource }: LeadFormMOFUProps) {
                         <label className="block text-zinc-300 text-sm font-medium mb-2">
                             Fecha del evento
                         </label>
-                        <input
-                            type="date"
-                            name="fechaEvento"
-                            value={formData.fechaEvento}
-                            onChange={handleDateChange}
-                            min={new Date().toISOString().split('T')[0]}
-                            className="w-full px-4 py-3 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        />
+
+                        <div className="react-datepicker-wrapper w-full">
+                            <DatePicker
+                                selected={formData.fechaEvento}
+                                onChange={handleDateChange}
+                                minDate={new Date()}
+                                locale="es"
+                                dateFormat="dd/MM/yyyy"
+                                placeholderText="Selecciona la fecha del evento"
+                                className="w-full px-4 py-3 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-zinc-400"
+                                wrapperClassName="w-full"
+                                calendarClassName="dark-calendar"
+                                showPopperArrow={false}
+                                popperClassName="z-50"
+                            />
+                        </div>
+
                         {isValidatingDate && (
                             <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2 mt-2">
                                 <div className="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
@@ -299,7 +318,7 @@ export default function LeadFormMOFU({ refSource }: LeadFormMOFUProps) {
                                     </div>
                                     <button
                                         onClick={() => {
-                                            setFormData(prev => ({ ...prev, fechaEvento: '' }))
+                                            setFormData(prev => ({ ...prev, fechaEvento: null }))
                                             setDateAvailable(null)
                                         }}
                                         className="mt-3 text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
