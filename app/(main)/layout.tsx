@@ -1,5 +1,5 @@
 import Navbar from "@/app/ui/main/Navbar";
-import Footer from "@/app/ui/main/Footer";
+import { FooterMarketing } from "@/app/components/shared";
 import { GoogleTagManager } from '@next/third-parties/google';
 import "../globals.css";
 
@@ -14,7 +14,7 @@ export default function AdminLayout({
             <main className="flex-grow">
                 {children}
             </main>
-            <Footer />
+            <FooterMarketing />
             <GoogleTagManager gtmId="GTM-WCG8X7J" />
         </div>
     );

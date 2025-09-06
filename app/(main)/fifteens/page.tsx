@@ -1,10 +1,10 @@
 import React from 'react'
 import type { Metadata } from "next";
-import Hero from '@/app/ui/main/Fifteens/Hero';
-import CTA from '@/app/ui/main/Fifteens/CTA';
+import HeroRefactorizado from './components/HeroRefactorizado';
+import CTA from './components/CTA';
 import Hook from '@/app/ui/main/Hook';
 import Nosotros from '@/app/ui/main/Nosotros';
-import Servicios from '@/app/ui/main/Fifteens/Servicios';
+import Servicios from './components/ServiciosRefactorizado';
 import Entregas from '@/app/ui/main/Entregas';
 import Testomonios from '@/app/ui/main/Testomonios';
 // import Galeria from '@/app/ui/main/Galeria';
@@ -33,7 +33,7 @@ function page() {
     <div className='space-y-14'>
 
       <section>
-        <Hero />
+        <HeroRefactorizado />
       </section>
       <section>
         <CTA />

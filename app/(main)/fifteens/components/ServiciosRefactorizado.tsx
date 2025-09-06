@@ -5,7 +5,7 @@ import {
     MediaSlider,
     VideoSection,
     PortfolioGallery
-} from '@/app/components/shared/marketing'
+} from '@/app/components/shared'
 import Hook from '@/app/ui/main/Hook'
 
 // Configuración de imágenes para cada tipo de sesión
@@ -28,6 +28,10 @@ const imagenesConfig = {
     evento: [
         // Aquí irían las imágenes de eventos
         "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/1.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/2.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/3.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/4.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/5.jpg",
         // ... más imágenes
     ]
 }
@@ -63,7 +67,7 @@ function ServiciosRefactorizado() {
             </ServiceSection>
 
             {/* Sesión fotográfica casual */}
-            <ServiceSection
+            {/* <ServiceSection
                 titulo="Sesión fotográfica casual"
                 descripcion="Tu esencia y personalidad en fotografías casuales en locaciones urbanas y naturales"
                 titleGradient="from-blue-500 to-green-500"
@@ -74,7 +78,7 @@ function ServiciosRefactorizado() {
                     autoplay={3000}
                     alt="Sesión casual"
                 />
-            </ServiceSection>
+            </ServiceSection> */}
 
             {/* Impresión de cuadros */}
             <ServiceSection

@@ -1,9 +1,10 @@
 'use client';
 import React from 'react'
 import TitlePulse from '@/app/ui/main/TitlePulse';
-import SlideFotosSesionesVestido from '@/app/ui/main/Fifteens/SlideFotosSesionesVestido';
-import SlideFotosSesionesCasuales from '@/app/ui/main/Fifteens/SlideFotosSesionesCasuales';
-import SlideFotosEvento from '@/app/ui/main/Fifteens/SlideFotosEvento';
+// Importaciones comentadas - componentes eliminados, reemplazados por MediaSlider
+// import SlideFotosSesionesVestido from '@/app/ui/main/Fifteens/SlideFotosSesionesVestido';
+// import SlideFotosSesionesCasuales from '@/app/ui/main/Fifteens/SlideFotosSesionesCasuales';
+// import SlideFotosEvento from '@/app/ui/main/Fifteens/SlideFotosEvento';
 import VideoPlayer from '@/app/ui/main/VideoPlayer';
 import Hook from '@/app/ui/main/Hook';
 import { ArrowDown } from 'lucide-react';
@@ -35,7 +36,10 @@ function Servicios() {
                         Capturamos los mejores momentos de tu sesión de vestido en locaciones increíbles
                     </p>
                 </div>
-                <SlideFotosSesionesVestido />
+                {/* <SlideFotosSesionesVestido /> */}
+                <div className="p-8 text-center text-slate-400">
+                    <p>Componente reemplazado por MediaSlider en ServiciosRefactorizado.tsx</p>
+                </div>
 
             </div>
             {/* </Fade> */}
@@ -55,7 +59,10 @@ function Servicios() {
                         Tu esencia y personalidad en fotografías casuales en locaciones urbanas y naturales
                     </p>
                 </div>
-                <SlideFotosSesionesCasuales />
+                {/* <SlideFotosSesionesCasuales /> */}
+                <div className="p-8 text-center text-slate-400">
+                    <p>Componente reemplazado por MediaSlider en ServiciosRefactorizado.tsx</p>
+                </div>
             </div>
             {/* </Fade> */}
 
@@ -130,7 +137,10 @@ function Servicios() {
                         Nosotros nos encargamos de capturar los mejores momentos de tu evento
                     </p>
                 </div>
-                <SlideFotosEvento />
+                {/* <SlideFotosEvento /> */}
+                <div className="p-8 text-center text-slate-400">
+                    <p>Componente reemplazado por MediaSlider en ServiciosRefactorizado.tsx</p>
+                </div>
             </div>
             {/* </Fade> */}
 

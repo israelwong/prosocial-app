@@ -1,7 +1,6 @@
 'use client'
 import React from 'react'
-import { HeroMarketing } from '@/app/components/shared/marketing'
-import type { EventoBasico } from '@/app/components/shared/marketing'
+import { HeroMarketing } from '@/app/components/shared'
 
 interface Evento {
     id: string
@@ -38,7 +37,7 @@ export default function HeroSection({
         <HeroMarketing
             variant="evento"
             titulo={evento.Cliente?.nombre || 'Tu evento especial'}
-            evento={evento as EventoBasico}
+            evento={evento}
             diasRestantes={diasRestantes}
             tipoContenido={tipoContenido}
             cantidadOpciones={cantidadOpciones}

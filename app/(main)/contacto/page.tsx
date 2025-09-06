@@ -2,9 +2,11 @@ import React from 'react'
 import type { Metadata } from 'next'
 import {
   HeroMarketing,
-  TestimonialsCarousel,
-  PortfolioGallery
-} from '@/app/components/shared/marketing'
+  ServiceSection,
+  VideoSection,
+  PortfolioGallery,
+  TestimonialsCarousel
+} from '@/app/components/shared'
 
 export const metadata: Metadata = {
   title: 'Contacto',

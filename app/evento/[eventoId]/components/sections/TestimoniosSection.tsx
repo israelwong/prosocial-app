@@ -1,5 +1,5 @@
 import React from 'react'
-import { TestimonialsCarousel } from '@/app/components/shared/marketing'
+import { TestimonialsCarousel } from '@/app/components/shared'
 
 interface TestimoniosSectionProps {
     className?: string

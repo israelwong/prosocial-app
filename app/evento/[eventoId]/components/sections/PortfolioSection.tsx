@@ -1,7 +1,6 @@
 'use client'
 import React from 'react'
-import { PortfolioGallery } from '@/app/components/shared/marketing'
-import type { EventType } from '@/app/components/shared/marketing'
+import { PortfolioGallery } from '@/app/components/shared'
 
 interface PortfolioSectionProps {
     tipoEvento: 'boda' | 'xv' | 'xv años' | '15 años'
@@ -18,7 +17,7 @@ export default function PortfolioSection({
 }: PortfolioSectionProps) {
     return (
         <PortfolioGallery
-            tipoEvento={tipoEvento as EventType}
+            tipoEvento={tipoEvento}
             variant="default"
             titulo={titulo}
             descripcion={descripcion}

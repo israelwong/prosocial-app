@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { EventCarousel } from '@/app/components/ui/carousel'
-import MediaSlider from './MediaSlider'
+import MediaSlider from '../ui/MediaSlider'
 
 // Tipos más flexibles para diferentes contextos
 export type EventType = 'boda' | 'xv' | 'xv años' | '15 años' | 'corporativo'

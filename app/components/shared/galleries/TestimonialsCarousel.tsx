@@ -28,59 +28,77 @@ interface TestimonialsCarouselProps {
 const defaultTestimonios: TestimonialData[] = [
     {
         id: '1',
-        nombre: 'María González',
+        nombre: 'Stephanie Moran',
         evento: 'Boda',
-        testimonio: 'ProSocial hizo realidad el día más importante de nuestras vidas. Cada detalle fue perfecto, desde la decoración hasta la coordinación. ¡Superaron todas nuestras expectativas!',
+        testimonio: 'Recomiendo ampliamente su servicio ! Son muy profesionales , puntuales  y realmente los mejores para capturar un momento tan importante en la vida ! El material que te entregan es excelente ! Muchas gracias por todo',
         rating: 5,
-        fecha: 'Marzo 2024',
-        avatar: 'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/testimonios/avatar-1.jpg'
+        fecha: '',
+        avatar: ''
     },
     {
         id: '2',
-        nombre: 'Fernanda Martínez',
+        nombre: 'Adris Escalante',
         evento: 'XV Años',
-        testimonio: 'Mi celebración de XV años fue un sueño hecho realidad. El equipo de ProSocial se encargó de todo y mi familia y yo pudimos disfrutar sin preocupaciones. ¡Gracias por tanto!',
+        testimonio: 'El mejor equipo q pude elegir para recordar por siempre los mejores momentos de mi evento, siempre agradecida con ProSocial por su amabilidad, compromiso, profesionalismo, disponibilidad y paciencia .',
         rating: 5,
-        fecha: 'Enero 2024',
-        avatar: 'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/testimonios/avatar-2.jpg'
+        fecha: '',
+        avatar: ''
     },
     {
         id: '3',
-        nombre: 'Carlos y Ana Rodríguez',
-        evento: 'Boda',
-        testimonio: 'Profesionalismo, calidad y atención al detalle. ProSocial nos ayudó a crear momentos inolvidables. La coordinación fue impecable y nuestros invitados no paran de felicitarnos.',
+        nombre: 'Ashly Neri',
+        evento: 'XV Años',
+        testimonio: 'Hacen un trabajo increíble! Son súper profesionales y muy atentos a lo que quieres para tu servicio, me encanto, lo recomiendo 100%.',
         rating: 5,
-        fecha: 'Febrero 2024',
-        avatar: 'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/testimonios/avatar-3.jpg'
+        fecha: '',
+        avatar: ''
     },
     {
         id: '4',
-        nombre: 'Isabella Jiménez',
+        nombre: 'Patricia Soriano',
         evento: 'XV Años',
-        testimonio: 'Desde el primer día me sentí en las mejores manos. Cada sugerencia fue acertada y el resultado superó mis sueños más grandes. ¡Recomiendo ProSocial al 100%!',
+        testimonio: 'Son un excelente equipo de trabajo, muy profesionales y la calidad de su trabajo es de excelencia ... cumplidos en las fechas acordadas y bastante confiables ... ampliamente recomendables ... Isra ... felicidades por el Excel este equipo y la calidad de tus servicios 👏🏼👏🏼👏🏼.',
         rating: 5,
-        fecha: 'Diciembre 2023',
-        avatar: 'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/testimonios/avatar-4.jpg'
+        fecha: '',
+        avatar: ''
     },
     {
         id: '5',
-        nombre: 'Familia López',
-        evento: 'Bautizo',
-        testimonio: 'Una celebración íntima pero llena de detalles especiales. ProSocial entendió perfectamente lo que queríamos y lo ejecutó a la perfección. Estamos muy agradecidos.',
+        nombre: 'Paty Benitez',
+        evento: 'XV Años',
+        testimonio: 'Excelente servicio muy profesional y con buena disposición para cualquier idea. Súper recomendable!!!',
         rating: 5,
-        fecha: 'Noviembre 2023',
-        avatar: 'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/testimonios/avatar-5.jpg'
+        fecha: '',
+        avatar: ''
     },
     {
         id: '6',
-        nombre: 'Patricio Hernández',
-        evento: 'Graduación',
-        testimonio: 'Mi graduación fue el broche de oro perfecto para mis estudios. La organización, la decoración y todo el ambiente fue exactamente como lo había imaginado. ¡Gracias ProSocial!',
+        nombre: 'Mara Hernandez',
+        evento: 'XV Años',
+        testimonio: 'Tienen un servicio de excelencia y cálidad, me encanta su forma de trabajo y son muy cumplidos en lo que prometen',
         rating: 5,
-        fecha: 'Octubre 2023',
-        avatar: 'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/testimonios/avatar-6.jpg'
+        fecha: '',
+        avatar: ''
+    },
+    {
+        id: '7',
+        nombre: 'Norma Manzo',
+        evento: 'XV Años',
+        testimonio: 'Gracias prosocial muy satisfecha con su trabajo, excelente equipo  todo de 10 de principio o fin. Fue un placer es algo que vale mucho la pena recuerdos de muy buena calidad!',
+        rating: 5,
+        fecha: '',
+        avatar: ''
+    },
+    {
+        id: '8',
+        nombre: 'Elia Gatell',
+        evento: 'XV Años',
+        testimonio: 'Todos los servicios que ofrecen .  Sus atenciones , su compromiso por hacer su trabajo y darme una satisfacción plena a mi evento  y la actitud  de cada una de sus  integrantes en verdad son  personas que Aman y disfrutan su trabajo . Así ampliamente los recomiendo 👌.',
+        rating: 5,
+        fecha: '',
+        avatar: ''
     }
-]
+];
 
 // Componente de testimonio individual con variantes
 const TestimonialCard = ({
@@ -111,7 +129,8 @@ const TestimonialCard = ({
                         {testimonio.nombre}
                     </h4>
                     <p className={`text-gray-600 ${variant === 'compact' ? 'text-xs' : 'text-sm'}`}>
-                        {testimonio.evento} • {testimonio.fecha}
+                        {testimonio.evento}
+                        {/* • {testimonio.fecha} */}
                     </p>
                 </div>
                 <div className="flex items-center gap-1">
@@ -205,16 +224,16 @@ export default function TestimonialsCarousel({
                         <div className="flex items-center justify-center gap-3 mb-4">
                             <Star className={`text-yellow-400 fill-yellow-400 ${variant === 'compact' ? 'w-6 h-6' : 'w-8 h-8'}`} />
                             <h2 className={`font-bold text-gray-900 ${variant === 'compact' ? 'text-2xl sm:text-3xl' :
-                                    variant === 'centered' ? 'text-4xl sm:text-5xl' :
-                                        'text-3xl sm:text-4xl'
+                                variant === 'centered' ? 'text-4xl sm:text-5xl' :
+                                    'text-3xl sm:text-4xl'
                                 }`}>
                                 {title}
                             </h2>
                             <Star className={`text-yellow-400 fill-yellow-400 ${variant === 'compact' ? 'w-6 h-6' : 'w-8 h-8'}`} />
                         </div>
                         <p className={`text-gray-600 mx-auto leading-relaxed ${variant === 'compact' ? 'text-base max-w-xl' :
-                                variant === 'centered' ? 'text-xl max-w-3xl' :
-                                    'text-lg max-w-2xl'
+                            variant === 'centered' ? 'text-xl max-w-3xl' :
+                                'text-lg max-w-2xl'
                             }`}>
                             {subtitle}
                         </p>
