@@ -1,6 +1,6 @@
 // Exportaciones principales del sistema de carrusel
 export { default as ImageCarousel } from './ImageCarousel'
-export { XVCarousel, BodaCarousel, EventCarousel } from './EventCarousels'
+export { XVCarousel, BodaCarousel, CorporativoCarousel, EventCarousel } from './EventCarousels'
 
 // Tipos para facilitar el uso
 export interface CarouselConfig {
@@ -17,7 +17,7 @@ export interface CarouselConfig {
 }
 
 export interface EventCarouselProps {
-    tipoEvento: 'boda' | 'xv' | 'xv años' | '15 años'
+    tipoEvento: 'boda' | 'xv' | 'xv años' | '15 años' | 'corporativo'
     className?: string
     config?: CarouselConfig
 }

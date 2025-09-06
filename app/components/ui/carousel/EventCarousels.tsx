@@ -46,18 +46,43 @@ export const BodaCarousel = () => {
     )
 }
 
+// Configuración para Eventos Corporativos
+export const CorporativoCarousel = () => {
+    const corporativoImages = Array.from({ length: 6 }, (_, i) => `corporativo-${i + 1}.jpg`)
+
+    return (
+        <ImageCarousel
+            images={corporativoImages}
+            baseUrl="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/corporativo/"
+            className="w-full"
+            autoplay={4500}
+            perView={3.2}
+            gap={24}
+            breakpoints={{
+                1024: { perView: 4, gap: 28 },
+                768: { perView: 2.5, gap: 20 },
+                640: { perView: 1.2, gap: 16 }
+            }}
+            imageClassName="object-cover w-full h-full rounded-lg transition-all duration-300 hover:scale-105 hover:brightness-110"
+            containerClassName="relative w-full h-fit"
+        />
+    )
+}
+
 // Carrusel dinámico basado en tipo de evento
 interface EventCarouselProps {
-    tipoEvento: 'boda' | 'xv' | 'xv años' | '15 años'
+    tipoEvento: 'boda' | 'xv' | 'xv años' | '15 años' | 'corporativo'
     className?: string
 }
 
 export const EventCarousel = ({ tipoEvento, className = "" }: EventCarouselProps) => {
     const isXV = tipoEvento === 'xv' || tipoEvento.toLowerCase().includes('xv') || tipoEvento.toLowerCase().includes('15')
+    const isCorporativo = tipoEvento === 'corporativo'
 
     return (
         <div className={className}>
-            {isXV ? <XVCarousel /> : <BodaCarousel />}
+            {isCorporativo ? <CorporativoCarousel /> :
+                isXV ? <XVCarousel /> : <BodaCarousel />}
         </div>
     )
 }
