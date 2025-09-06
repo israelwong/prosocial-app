@@ -1,6 +1,6 @@
 import React from 'react'
 import { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { obtenerEventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.actions'
 import { obtenerUsuarios } from '@/app/admin/_lib/actions/users/users.actions'
 import { HeaderSimple } from '@/app/admin/dashboard/seguimiento/[eventoId]/components/HeaderSimple'
@@ -28,6 +28,11 @@ export default async function Page({ params }: PageProps) {
             obtenerUsuarios()
         ]);
 
+        // Si el evento no se encuentra, redirigir al dashboard de seguimiento
+        if (!datos) {
+            console.log(`⚠️ Evento ${eventoId} no encontrado, redirigiendo a dashboard de seguimiento`);
+            redirect('/admin/dashboard/seguimiento');
+        }
 
         // Mostrar datos con componentes V3 simples
         return (
@@ -135,6 +140,6 @@ export default async function Page({ params }: PageProps) {
 
     } catch (error) {
         console.error('❌ Error cargando página de detalle:', error);
-        notFound();
+        redirect('/admin/dashboard/seguimiento');
     }
 }

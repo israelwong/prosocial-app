@@ -39,7 +39,7 @@ import { PAGO_STATUS } from '@/app/admin/_lib/constants/status';
 export async function obtenerEventoDetalleCompleto(
     eventoId: string,
     cotizacionId?: string
-): Promise<EventoDetalleCompleto> {
+): Promise<EventoDetalleCompleto | null> {
     try {
         // console.log('🔍 Obteniendo datos completos para evento:', eventoId);
         // console.log('🔍 CotizacionId específica:', cotizacionId);
@@ -139,7 +139,8 @@ export async function obtenerEventoDetalleCompleto(
         });
 
         if (!evento) {
-            throw new Error(`Evento con ID ${eventoId} no encontrado`);
+            console.log(`⚠️ Evento con ID ${eventoId} no encontrado`);
+            return null;
         }
 
         // Consultas adicionales en paralelo - simplificadas
