@@ -71,7 +71,7 @@ export default async function ContactoPage({ searchParams }: ContactoPageProps) 
       {/* Formulario MOFU */}
       <section className="py-16 bg-zinc-900">
         <div className="container mx-auto px-4">
-          <LeadFormMOFU ref={ref} />
+          <LeadFormMOFU refSource={ref} />
         </div>
       </section>
 
