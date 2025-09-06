@@ -1,0 +1,170 @@
+'use client'
+import React, { useEffect, useRef } from 'react'
+import Glide from '@glidejs/glide'
+import Image from 'next/image'
+
+export type MediaSliderVariant = 'centered' | 'multiple' | 'fullwidth'
+
+interface MediaSliderProps {
+    imagenes: string[]
+    variant?: MediaSliderVariant
+    autoplay?: boolean | number
+    perView?: number
+    gap?: number
+    animationDuration?: number
+    className?: string
+    alt?: string
+    // Configuración responsive
+    breakpoints?: {
+        [key: number]: {
+            perView?: number
+            gap?: number
+        }
+    }
+}
+
+export default function MediaSlider({
+    imagenes,
+    variant = 'multiple',
+    autoplay = 3000,
+    perView = 3.5,
+    gap = 0,
+    animationDuration = 700,
+    className = '',
+    alt = 'Imagen',
+    breakpoints = {
+        1024: { perView: 4 },
+        640: { perView: 1.3 }
+    }
+}: MediaSliderProps) {
+    const sliderRef = useRef<HTMLDivElement>(null)
+    const glideRef = useRef<Glide | null>(null)
+
+    // Configuraciones predefinidas por variante
+    const getVariantConfig = (): any => {
+        switch (variant) {
+            case 'centered':
+                return {
+                    type: 'carousel' as const,
+                    focusAt: 'center' as const,
+                    perView: 1,
+                    autoplay: autoplay,
+                    animationDuration,
+                    gap: 20,
+                    breakpoints: {
+                        768: { perView: 1 }
+                    }
+                }
+            case 'fullwidth':
+                return {
+                    type: 'carousel' as const,
+                    focusAt: 'center' as const,
+                    perView: 1,
+                    autoplay: autoplay,
+                    animationDuration,
+                    gap: 0,
+                    breakpoints: {
+                        768: { perView: 1 }
+                    }
+                }
+            case 'multiple':
+            default:
+                return {
+                    type: 'carousel' as const,
+                    focusAt: 'center' as const,
+                    perView,
+                    autoplay: autoplay,
+                    animationDuration,
+                    gap,
+                    breakpoints
+                }
+        }
+    }
+
+    useEffect(() => {
+        if (!sliderRef.current || !imagenes.length) return
+
+        const config = getVariantConfig()
+
+        glideRef.current = new Glide(sliderRef.current, {
+            ...config,
+            classes: {
+                activeNav: '[&>*]:bg-slate-200',
+            },
+        })
+
+        glideRef.current.mount()
+
+        return () => {
+            if (glideRef.current) {
+                glideRef.current.destroy()
+                glideRef.current = null
+            }
+        }
+    }, [imagenes, variant, autoplay, perView, gap, animationDuration])
+
+    if (!imagenes.length) {
+        return (
+            <div className="w-full h-64 bg-zinc-800 rounded-lg flex items-center justify-center">
+                <p className="text-zinc-400">No hay imágenes disponibles</p>
+            </div>
+        )
+    }
+
+    return (
+        <div
+            ref={sliderRef}
+            className={`glide relative w-full h-fit ${className}`}
+        >
+            <div className="overflow-hidden" data-glide-el="track">
+                <ul className="whitespace-no-wrap flex-no-wrap [backface-visibility: hidden] [transform-style: preserve-3d] [touch-action: pan-Y] [will-change: transform] relative flex w-full overflow-hidden p-0">
+                    {imagenes.map((imagen, index) => (
+                        <li key={index} className="flex-shrink-0">
+                            <div className="relative overflow-hidden rounded-lg">
+                                <Image
+                                    src={imagen}
+                                    alt={`${alt} ${index + 1}`}
+                                    width={500}
+                                    height={500}
+                                    className="m-auto max-h-full w-full max-w-full object-cover transition-transform duration-300 hover:scale-105"
+                                    unoptimized={true}
+                                />
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+            {/* Navigation bullets para variant centered */}
+            {variant === 'centered' && imagenes.length > 1 && (
+                <div className="glide__bullets flex justify-center gap-2 mt-4" data-glide-el="controls[nav]">
+                    {imagenes.map((_, index) => (
+                        <button
+                            key={index}
+                            className="w-3 h-3 rounded-full bg-zinc-600 hover:bg-zinc-400 transition-colors"
+                            data-glide-dir={`=${index}`}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {/* Navigation arrows para variant fullwidth */}
+            {variant === 'fullwidth' && imagenes.length > 1 && (
+                <div className="glide__arrows absolute inset-y-0 left-0 right-0 flex items-center justify-between pointer-events-none" data-glide-el="controls">
+                    <button
+                        className="glide__arrow glide__arrow--left pointer-events-auto bg-black/50 text-white p-2 rounded-full ml-4 hover:bg-black/70 transition-colors"
+                        data-glide-dir="<"
+                    >
+                        ←
+                    </button>
+                    <button
+                        className="glide__arrow glide__arrow--right pointer-events-auto bg-black/50 text-white p-2 rounded-full mr-4 hover:bg-black/70 transition-colors"
+                        data-glide-dir=">"
+                    >
+                        →
+                    </button>
+                </div>
+            )}
+        </div>
+    )
+}

@@ -48,6 +48,13 @@ export default function ContactoPage() {
               variant="grid"
               titulo="Bodas"
               descripcion="Momentos únicos e irrepetibles capturados con elegancia y profesionalismo"
+              imagenes={[
+                'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/1.jpg',
+                'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/2.jpg',
+                'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/3.jpg',
+                'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/4.jpg',
+                'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/5.jpg'
+              ]}
             />
           </div>
 
@@ -58,18 +65,16 @@ export default function ContactoPage() {
               variant="carousel"
               titulo="XV Años"
               descripcion="Celebraciones llenas de alegría y tradición, documentadas con el mejor estilo"
+              imagenes={[
+                'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/6.jpg',
+                'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/7.jpg',
+                'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/8.jpg',
+                'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/9.jpg',
+                'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/10.jpg'
+              ]}
             />
           </div>
 
-          {/* Galería Corporativa */}
-          <div>
-            <PortfolioGallery
-              tipoEvento="corporativo"
-              variant="grid"
-              titulo="Eventos Corporativos"
-              descripcion="Profesionalismo y calidad para eventos empresariales y corporativos"
-            />
-          </div>
         </div>
       </section>
 

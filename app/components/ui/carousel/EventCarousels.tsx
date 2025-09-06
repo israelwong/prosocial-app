@@ -72,13 +72,38 @@ export const CorporativoCarousel = () => {
 // Carrusel dinámico basado en tipo de evento
 interface EventCarouselProps {
     tipoEvento: 'boda' | 'xv' | 'xv años' | '15 años' | 'corporativo'
+    imagenes?: string[] // 🆕 Prop para imágenes personalizadas
     className?: string
 }
 
-export const EventCarousel = ({ tipoEvento, className = "" }: EventCarouselProps) => {
+export const EventCarousel = ({ tipoEvento, imagenes, className = "" }: EventCarouselProps) => {
     const isXV = tipoEvento === 'xv' || tipoEvento.toLowerCase().includes('xv') || tipoEvento.toLowerCase().includes('15')
     const isCorporativo = tipoEvento === 'corporativo'
 
+    // Si se proporcionan imágenes personalizadas, usarlas
+    if (imagenes && imagenes.length > 0) {
+        return (
+            <div className={className}>
+                <ImageCarousel
+                    images={imagenes}
+                    baseUrl="" // No base URL ya que las imágenes son URLs completas
+                    className="w-full"
+                    autoplay={4000}
+                    perView={3.5}
+                    gap={16}
+                    breakpoints={{
+                        1024: { perView: 4, gap: 20 },
+                        768: { perView: 2.5, gap: 16 },
+                        640: { perView: 1.3, gap: 12 }
+                    }}
+                    imageClassName="object-cover w-full h-full rounded-xl transition-transform duration-300 hover:scale-105"
+                    containerClassName="relative w-full h-fit"
+                />
+            </div>
+        )
+    }
+
+    // Fallback a las imágenes predeterminadas
     return (
         <div className={className}>
             {isCorporativo ? <CorporativoCarousel /> :

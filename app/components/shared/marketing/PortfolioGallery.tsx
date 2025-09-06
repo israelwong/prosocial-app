@@ -1,16 +1,18 @@
 'use client'
 import React from 'react'
 import { EventCarousel } from '@/app/components/ui/carousel'
+import MediaSlider from './MediaSlider'
 
 // Tipos más flexibles para diferentes contextos
 export type EventType = 'boda' | 'xv' | 'xv años' | '15 años' | 'corporativo'
-export type PortfolioVariant = 'default' | 'compact' | 'landing' | 'grid' | 'carousel'
+export type PortfolioVariant = 'default' | 'compact' | 'landing' | 'grid' | 'carousel' | 'slider'
 
 interface PortfolioGalleryProps {
     tipoEvento: EventType
     variant?: PortfolioVariant
     titulo?: string
     descripcion?: string
+    imagenes?: string[] // 🆕 Nueva prop para imágenes personalizadas
     showCTA?: boolean
     ctaText?: string
     ctaAction?: () => void
@@ -22,6 +24,7 @@ export default function PortfolioGallery({
     variant = 'default',
     titulo,
     descripcion,
+    imagenes, // 🆕 Nueva prop
     showCTA = false,
     ctaText = 'Ver más trabajos',
     ctaAction,
@@ -109,12 +112,29 @@ export default function PortfolioGallery({
                     )}
                 </div>
 
-                {/* Carrusel */}
+                {/* Renderizado condicional según variante */}
                 <div className="relative">
-                    <EventCarousel
-                        tipoEvento={tipoEvento}
-                        className="w-full"
-                    />
+                    {variant === 'slider' ? (
+                        <MediaSlider
+                            imagenes={imagenes || []} // Usar imágenes proporcionadas o array vacío
+                            variant="multiple"
+                            autoplay={3000}
+                            perView={3.5}
+                            gap={0}
+                            className="w-full"
+                            alt={contenido.titulo}
+                            breakpoints={{
+                                1024: { perView: 4 },
+                                640: { perView: 1.3 }
+                            }}
+                        />
+                    ) : (
+                        <EventCarousel
+                            tipoEvento={tipoEvento}
+                            imagenes={imagenes} // 🆕 Pasar imágenes personalizadas
+                            className="w-full"
+                        />
+                    )}
                 </div>
 
                 {/* CTA opcional */}
