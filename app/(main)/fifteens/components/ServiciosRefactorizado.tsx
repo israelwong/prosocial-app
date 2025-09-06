@@ -2,8 +2,8 @@
 import React from 'react'
 import {
     ServiceSection,
-    MediaSlider,
-    VideoSection,
+    GallerySlider,
+    VideoSingle,
     PortfolioGallery
 } from '@/app/components/shared'
 import Hook from '@/app/ui/main/Hook'
@@ -58,7 +58,7 @@ function ServiciosRefactorizado() {
                 descripcion="Capturamos los mejores momentos de tu sesión de vestido en locaciones increíbles"
                 titleGradient="from-pink-500 to-violet-500"
             >
-                <MediaSlider
+                <GallerySlider
                     imagenes={imagenesConfig.vestido}
                     variant="multiple"
                     autoplay={3000}
@@ -72,7 +72,7 @@ function ServiciosRefactorizado() {
                 descripcion="Tu esencia y personalidad en fotografías casuales en locaciones urbanas y naturales"
                 titleGradient="from-blue-500 to-green-500"
             >
-                <MediaSlider
+                <GallerySlider
                     imagenes={imagenesConfig.casual}
                     variant="multiple"
                     autoplay={3000}
@@ -86,7 +86,7 @@ function ServiciosRefactorizado() {
                 descripcion='Puedes imprimir una de las fotografías de sesión en un cuadro de acrílico de 24x36"'
                 titleGradient="from-purple-500 to-pink-500"
             >
-                <VideoSection
+                <VideoSingle
                     src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/cuadro-acrilico.mp4"
                     autoPlay={true}
                     loop={true}
@@ -117,7 +117,7 @@ function ServiciosRefactorizado() {
                 descripcion="Nosotros nos encargamos de capturar los mejores momentos de tu evento"
                 titleGradient="from-yellow-500 to-orange-500"
             >
-                <MediaSlider
+                <GallerySlider
                     imagenes={imagenesConfig.evento}
                     variant="multiple"
                     autoplay={3000}
@@ -132,7 +132,7 @@ function ServiciosRefactorizado() {
                 titleGradient="from-red-500 to-pink-500"
                 showSeparator={false} // Último elemento
             >
-                <VideoSection
+                <VideoSingle
                     src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/reels/fifteens/reel_evento_2019.mp4?t=2024-09-29T01%3A58%3A00.130Z"
                     autoPlay={true}
                     loop={true}

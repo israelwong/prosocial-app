@@ -3,11 +3,13 @@ import React, { useEffect, useRef } from 'react'
 import Glide from '@glidejs/glide'
 import Image from 'next/image'
 
-export type MediaSliderVariant = 'centered' | 'multiple' | 'fullwidth'
+// Nuevos tipos
+export type GallerySliderVariant = 'centered' | 'multiple' | 'fullwidth'
+export type MediaSliderVariant = GallerySliderVariant // Para compatibilidad hacia atrás
 
-interface MediaSliderProps {
+interface GallerySliderProps {
     imagenes: string[]
-    variant?: MediaSliderVariant
+    variant?: GallerySliderVariant
     autoplay?: boolean | number
     perView?: number
     gap?: number
@@ -23,7 +25,10 @@ interface MediaSliderProps {
     }
 }
 
-export default function MediaSlider({
+// Para compatibilidad hacia atrás
+interface MediaSliderProps extends GallerySliderProps { }
+
+export default function GallerySlider({
     imagenes,
     variant = 'multiple',
     autoplay = 3000,
@@ -36,7 +41,7 @@ export default function MediaSlider({
         1024: { perView: 4 },
         640: { perView: 1.3 }
     }
-}: MediaSliderProps) {
+}: GallerySliderProps) {
     const sliderRef = useRef<HTMLDivElement>(null)
     const glideRef = useRef<Glide | null>(null)
 
@@ -168,3 +173,6 @@ export default function MediaSlider({
         </div>
     )
 }
+
+// Export como MediaSlider para compatibilidad hacia atrás
+export { GallerySlider as MediaSlider }

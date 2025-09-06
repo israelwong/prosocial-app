@@ -2,7 +2,7 @@
 import React from 'react'
 import VideoPlayer from '@/app/ui/main/VideoPlayer'
 
-interface VideoSectionProps {
+interface VideoSingleProps {
     src: string
     autoPlay?: boolean
     muted?: boolean
@@ -12,7 +12,7 @@ interface VideoSectionProps {
     maxWidth?: string
 }
 
-export default function VideoSection({
+export default function VideoSingle({
     src,
     autoPlay = true,
     muted = true,
@@ -20,7 +20,7 @@ export default function VideoSection({
     poster,
     className = '',
     maxWidth = 'max-w-screen-md'
-}: VideoSectionProps) {
+}: VideoSingleProps) {
     return (
         <div className={`${maxWidth} mx-auto ${className}`}>
             <VideoPlayer
