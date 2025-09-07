@@ -48,6 +48,7 @@ export const CotizacionNuevaSchema = z.object({
     nombre: z.string().min(1, 'Nombre de cotización requerido'),
     descripcion: z.string().optional(),
     precio: z.number().min(0, 'Precio debe ser mayor o igual a 0'),
+    dias_minimos_contratacion: z.number().min(1, 'Días mínimos debe ser mayor a 0').max(365, 'Días mínimos no puede exceder 365').default(5),
     condicionesComercialesId: z.string().optional(),
     servicios: z.array(CotizacionServicioSchema).min(1, 'Debe incluir al menos un servicio'),
     costos: z.array(CotizacionCostoSchema).optional().default([])
@@ -59,6 +60,7 @@ export const CotizacionEditarSchema = z.object({
     nombre: z.string().min(1, 'Nombre de cotización requerido'),
     descripcion: z.string().optional(),
     precio: z.number().min(0, 'Precio debe ser mayor o igual a 0'),
+    dias_minimos_contratacion: z.number().min(1, 'Días mínimos debe ser mayor a 0').max(365, 'Días mínimos no puede exceder 365').default(5),
     condicionesComercialesId: z.string().optional(),
     status: z.enum([
         COTIZACION_STATUS.PENDIENTE,
@@ -85,6 +87,7 @@ export const CotizacionParamsSchema = z.object({
 export const CotizacionFormSchema = z.object({
     nombre: z.string().min(1, 'Nombre de cotización requerido'),
     descripcion: z.string().optional(),
+    dias_minimos_contratacion: z.number().min(1, 'Días mínimos debe ser mayor a 0').max(365, 'Días mínimos no puede exceder 365').default(5),
     eventoTipoId: z.string().min(1, 'Tipo de evento requerido'),
     condicionesComercialesId: z.string().optional(),
     servicios: z.array(z.object({

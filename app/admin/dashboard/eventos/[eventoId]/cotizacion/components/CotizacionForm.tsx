@@ -240,6 +240,9 @@ export default function CotizacionForm({
             descripcion: modo === 'editar' && cotizacionExistente
                 ? cotizacionExistente.descripcion || ''
                 : '',
+            dias_minimos_contratacion: modo === 'editar' && cotizacionExistente
+                ? cotizacionExistente.dias_minimos_contratacion || 5
+                : paqueteBase ? (paqueteBase.dias_minimos_contratacion || 5) : 5,
             eventoTipoId: eventoTipoIdFinal,
             servicios: serviciosParaFormulario,
             costos: costosParaFormulario
@@ -1609,6 +1612,28 @@ export default function CotizacionForm({
                                     {errors.descripcion && (
                                         <p className="text-red-400 text-xs mt-1">{errors.descripcion.message}</p>
                                     )}
+                                </div>
+
+                                {/* Días mínimos de contratación */}
+                                <div>
+                                    <label htmlFor="dias_minimos_contratacion" className="block text-sm font-medium text-zinc-300 mb-1.5">
+                                        Días mínimos de contratación <span className="text-zinc-500 text-xs">(días)</span>
+                                    </label>
+                                    <input
+                                        id="dias_minimos_contratacion"
+                                        type="number"
+                                        {...register('dias_minimos_contratacion', { valueAsNumber: true })}
+                                        min="1"
+                                        max="365"
+                                        className="flex w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-blue-500 focus:outline-none"
+                                        placeholder="5"
+                                    />
+                                    {errors.dias_minimos_contratacion && (
+                                        <p className="text-red-400 text-xs mt-1">{errors.dias_minimos_contratacion.message}</p>
+                                    )}
+                                    <p className="text-zinc-500 text-xs mt-1">
+                                        Tiempo mínimo que debe contratarse con anticipación a la fecha del evento
+                                    </p>
                                 </div>
 
                                 {/* Hidden field para eventoTipoId */}

@@ -294,6 +294,7 @@ export async function crearCotizacionNueva(data: CotizacionNueva) {
                 nombre: validatedData.nombre,
                 descripcion: validatedData.descripcion,
                 precio: validatedData.precio,
+                dias_minimos_contratacion: validatedData.dias_minimos_contratacion,
                 condicionesComercialesId: validatedData.condicionesComercialesId,
                 status: COTIZACION_STATUS.PENDIENTE,
                 visible_cliente: true
@@ -404,6 +405,7 @@ export async function editarCotizacion(data: CotizacionEditar) {
                 nombre: validatedData.nombre,
                 descripcion: validatedData.descripcion,
                 precio: validatedData.precio,
+                dias_minimos_contratacion: validatedData.dias_minimos_contratacion,
                 condicionesComercialesId: validatedData.condicionesComercialesId,
                 status: validatedData.status,
                 visible_cliente: validatedData.visible_cliente,
@@ -633,6 +635,7 @@ export async function editarCotizacionConPreservacion(data: CotizacionEditar) {
                     nombre: validatedData.nombre,
                     descripcion: validatedData.descripcion,
                     precio: validatedData.precio,
+                    dias_minimos_contratacion: validatedData.dias_minimos_contratacion,
                     condicionesComercialesId: validatedData.condicionesComercialesId,
                     status: validatedData.status,
                     visible_cliente: validatedData.visible_cliente
@@ -1855,6 +1858,7 @@ export async function actualizarCotizacion(data: any) {
                 eventoId: data.eventoId,
                 nombre: data.nombre,
                 precio: data.precio,
+                dias_minimos_contratacion: data.dias_minimos_contratacion,
                 condicionesComercialesId: data.condicionesComercialesId || null,
                 condicionesComercialesMetodoPagoId: data.condicionesComercialesMetodoPagoId || null,
                 status: data.status,
