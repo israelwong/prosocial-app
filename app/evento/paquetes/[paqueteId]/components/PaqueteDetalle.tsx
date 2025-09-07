@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Package, DollarSign, Calendar, Users, CheckCircle, MessageCircle, Scale, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import SolicitudPaqueteModal from '@/app/components/modals/SolicitudPaqueteModal'
+import SolicitudPaqueteModal from '../../../[eventoId]/components/modals/SolicitudPaqueteModal'
 import ValidacionFechaInfo from '@/app/components/ui/ValidacionFechaInfo'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
 
