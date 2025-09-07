@@ -41,12 +41,9 @@ const AgendaCard = ({ agenda, color, onClick }: { agenda: AgendaEvento, color: s
                 </h3>
 
                 <div className="flex flex-wrap items-center gap-2 mb-3">
-                    {/* Status del agendamiento */}
-                    <span className={`px-2 py-0.5 text-xs rounded-full ${agenda.status === AGENDA_STATUS.CONFIRMADO
-                        ? 'bg-green-900/50 text-green-300 border border-green-700/50'
-                        : 'bg-amber-900/50 text-amber-300 border border-amber-700/50'
-                        }`}>
-                        {agenda.status === AGENDA_STATUS.CONFIRMADO ? 'Confirmado' : 'Pendiente'}
+                    {/* Status del agendamiento - Solo confirmados */}
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-green-900/50 text-green-300 border border-green-700/50">
+                        Confirmado
                     </span>
 
                     {agenda.Evento.EventoTipo.nombre && agenda.Evento.EventoTipo.nombre !== 'Sin tipo' && (
@@ -206,8 +203,8 @@ export default function ListaAgenda() {
 
     const { grouped, sortedMonths, monthlyTotals, totalGeneralPendiente } = useMemo(() => {
         const filtered = agenda.filter(item => {
-            // Mostrar agenda confirmada y pendiente
-            if (item.status !== AGENDA_STATUS.CONFIRMADO && item.status !== AGENDA_STATUS.PENDIENTE) return false;
+            // Mostrar solo agenda confirmada
+            if (item.status !== AGENDA_STATUS.CONFIRMADO) return false;
             const lowerCaseSearchTerm = searchTerm.toLowerCase()
             return (
                 item.Evento.nombre.toLowerCase().includes(lowerCaseSearchTerm) ||
@@ -300,7 +297,7 @@ export default function ListaAgenda() {
                 <div>
                     <h1 className="text-xl font-medium text-zinc-200">Agenda</h1>
                     <p className="text-sm text-zinc-500 mt-1">
-                        {agenda.filter(a => a.status === AGENDA_STATUS.CONFIRMADO || a.status === AGENDA_STATUS.PENDIENTE).length} eventos programados
+                        {agenda.filter(a => a.status === AGENDA_STATUS.CONFIRMADO).length} eventos confirmados
                     </p>
                 </div>
                 <div className="text-right">
