@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation'
 import { obtenerCotizacionesParaEvento } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento.actions'
 import { crearFechaLocal, calcularDiasRestantes } from '@/app/admin/_lib/utils/fechas'
-import { getImageSubset } from '@/app/components/shared/galleries/galleryData'
 // Nuevos componentes
 import EventoHeaderWrapper from '../components/layout/EventoHeaderWrapper'
 import EventoFooterWrapper from '../components/layout/EventoFooterWrapper'
@@ -158,13 +157,6 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                     <PortfolioSection
                         tipoEvento={evento.EventoTipo?.nombre?.toLowerCase().includes('xv') ||
                             evento.EventoTipo?.nombre?.toLowerCase().includes('15') ? 'xv' : 'boda'}
-                        imagenes={
-                            getImageSubset(
-                                evento.EventoTipo?.nombre?.toLowerCase().includes('xv') ||
-                                    evento.EventoTipo?.nombre?.toLowerCase().includes('15') ? 'xv' : 'boda',
-                                9
-                            )
-                        }
                     />
                     <TestimoniosSection />
                     <EventoFooterWrapper />
@@ -275,7 +267,6 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                     return (
                         <PortfolioSection
                             tipoEvento={isXV ? 'xv' : 'boda'}
-                            imagenes={getImageSubset(isXV ? 'xv' : 'boda', 9)}
                         />
                     );
                 }
