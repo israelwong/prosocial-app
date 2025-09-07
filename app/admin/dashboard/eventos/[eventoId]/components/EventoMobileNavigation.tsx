@@ -46,7 +46,7 @@ export default function EventoMobileNavigation({
     return (
         <div className="lg:hidden">
             {/* Navigation Tabs */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg mb-6">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg mb-6 overflow-hidden">
                 <div className="flex">
                     {tabs.map((tab, index) => {
                         const Icon = tab.icon
@@ -60,7 +60,7 @@ export default function EventoMobileNavigation({
                                 variant="ghost"
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
-                                    flex-1 flex items-center justify-center gap-2 py-3 px-4
+                                    flex-1 flex flex-col items-center justify-center gap-1 py-3 px-2 min-w-0
                                     ${isFirst ? 'rounded-l-lg' : ''}
                                     ${isLast ? 'rounded-r-lg' : ''}
                                     ${isActive
@@ -69,8 +69,10 @@ export default function EventoMobileNavigation({
                                     }
                                 `}
                             >
-                                <Icon className="h-4 w-4" />
-                                <span className="text-sm font-medium">{tab.label}</span>
+                                <Icon className="h-4 w-4 flex-shrink-0" />
+                                <span className="text-xs font-medium truncate w-full text-center">
+                                    {tab.label}
+                                </span>
                             </Button>
                         )
                     })}

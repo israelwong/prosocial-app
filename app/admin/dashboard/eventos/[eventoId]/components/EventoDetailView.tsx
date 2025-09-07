@@ -105,26 +105,26 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
             />
 
             {/* Contenido Principal */}
-            <div className="container mx-auto px-4 py-6">
-                {/* Desktop: Grid de 5 columnas */}
-                <div className="hidden xl:grid xl:grid-cols-5 gap-4">
+            <div className="container mx-auto px-4 py-6 max-w-full">
+                {/* Ultra Wide (2560px+): 4 columnas balanceadas */}
+                <div className="hidden 2xl:grid 2xl:grid-cols-4 gap-6">
 
-                    {/* Columna 1: Información del Cliente */}
-                    <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
-                        <FichaClienteUnificada
-                            eventoCompleto={eventoCompletoExtendido}
-                        />
+                    {/* Columna 1: Cliente + Evento */}
+                    <div className="space-y-6">
+                        <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+                            <FichaClienteUnificada
+                                eventoCompleto={eventoCompletoExtendido}
+                            />
+                        </div>
+                        <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+                            <FichaEventoUnificada
+                                eventoCompleto={eventoCompleto}
+                                onAsignacionEvento={handleEventoAsignado}
+                            />
+                        </div>
                     </div>
 
-                    {/* Columna 2: Información del Evento */}
-                    <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
-                        <FichaEventoUnificada
-                            eventoCompleto={eventoCompleto}
-                            onAsignacionEvento={handleEventoAsignado}
-                        />
-                    </div>
-
-                    {/* Columna 3: Cotizaciones */}
+                    {/* Columna 2: Cotizaciones */}
                     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
                         {!tieneCotizacionAprobada && (
                             <FichaPaquetesCompartir eventoCompleto={eventoCompleto} />
@@ -135,36 +135,36 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
                         />
                     </div>
 
-                    {/* Columna 4: Citas Comerciales */}
+                    {/* Columna 3: Citas Comerciales */}
                     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
                         <FichaCitasWidget eventoCompleto={eventoCompleto} />
                     </div>
 
-                    {/* Columna 5: Seguimiento (Bitácora) */}
+                    {/* Columna 4: Seguimiento */}
                     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
                         <FichaBitacoraUnificada eventoCompleto={eventoCompleto} />
                     </div>
                 </div>
 
-                {/* Tablet: Grid de 4 columnas (agrupa citas con seguimiento) */}
-                <div className="hidden lg:grid xl:hidden lg:grid-cols-4 gap-4">
+                {/* Desktop Large (1600px-2559px): 3 columnas */}
+                <div className="hidden xl:grid 2xl:hidden xl:grid-cols-3 gap-6">
 
-                    {/* Columna 1: Información del Cliente */}
-                    <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
-                        <FichaClienteUnificada
-                            eventoCompleto={eventoCompletoExtendido}
-                        />
+                    {/* Columna 1: Cliente + Evento */}
+                    <div className="space-y-6">
+                        <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+                            <FichaClienteUnificada
+                                eventoCompleto={eventoCompletoExtendido}
+                            />
+                        </div>
+                        <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+                            <FichaEventoUnificada
+                                eventoCompleto={eventoCompleto}
+                                onAsignacionEvento={handleEventoAsignado}
+                            />
+                        </div>
                     </div>
 
-                    {/* Columna 2: Información del Evento */}
-                    <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
-                        <FichaEventoUnificada
-                            eventoCompleto={eventoCompleto}
-                            onAsignacionEvento={handleEventoAsignado}
-                        />
-                    </div>
-
-                    {/* Columna 3: Cotizaciones */}
+                    {/* Columna 2: Cotizaciones */}
                     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
                         {!tieneCotizacionAprobada && (
                             <FichaPaquetesCompartir eventoCompleto={eventoCompleto} />
@@ -175,8 +175,8 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
                         />
                     </div>
 
-                    {/* Columna 4: Citas y Seguimiento */}
-                    <div className="space-y-4">
+                    {/* Columna 3: Citas + Seguimiento */}
+                    <div className="space-y-6">
                         <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
                             <FichaCitasWidget eventoCompleto={eventoCompleto} />
                         </div>
@@ -186,20 +186,23 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
                     </div>
                 </div>
 
-                {/* Mobile/Tablet: Navegación con Tabs */}
-                <EventoMobileNavigation
-                    gestionContent={
-                        <div className="p-4 space-y-6">
-                            <FichaClienteUnificada eventoCompleto={eventoCompletoExtendido} />
-                            <hr className="border-zinc-800" />
+                {/* Desktop (1280px-1599px): 2 columnas */}
+                <div className="hidden lg:grid xl:hidden lg:grid-cols-2 gap-6">
+
+                    {/* Columna 1: Cliente + Evento + Cotizaciones */}
+                    <div className="space-y-6">
+                        <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+                            <FichaClienteUnificada
+                                eventoCompleto={eventoCompletoExtendido}
+                            />
+                        </div>
+                        <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
                             <FichaEventoUnificada
                                 eventoCompleto={eventoCompleto}
                                 onAsignacionEvento={handleEventoAsignado}
                             />
                         </div>
-                    }
-                    cotizacionesContent={
-                        <div className="p-4">
+                        <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
                             {!tieneCotizacionAprobada && (
                                 <FichaPaquetesCompartir eventoCompleto={eventoCompleto} />
                             )}
@@ -208,18 +211,57 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
                                 eventoAsignado={eventoData.eventoAsignado}
                             />
                         </div>
-                    }
-                    citasContent={
-                        <div className="p-4">
+                    </div>
+
+                    {/* Columna 2: Citas + Seguimiento */}
+                    <div className="space-y-6">
+                        <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
                             <FichaCitasWidget eventoCompleto={eventoCompleto} />
                         </div>
-                    }
-                    seguimientoContent={
-                        <div className="p-4">
+                        <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
                             <FichaBitacoraUnificada eventoCompleto={eventoCompleto} />
                         </div>
-                    }
-                />
+                    </div>
+                </div>
+
+                {/* Mobile/Tablet: Navegación con Tabs Mejorada */}
+                <div className="lg:hidden">
+                    <EventoMobileNavigation
+                        gestionContent={
+                            <div className="p-4 space-y-6">
+                                <FichaClienteUnificada eventoCompleto={eventoCompletoExtendido} />
+                                <hr className="border-zinc-800" />
+                                <FichaEventoUnificada
+                                    eventoCompleto={eventoCompleto}
+                                    onAsignacionEvento={handleEventoAsignado}
+                                />
+                            </div>
+                        }
+                        cotizacionesContent={
+                            <div className="p-4">
+                                {!tieneCotizacionAprobada && (
+                                    <div className="mb-6">
+                                        <FichaPaquetesCompartir eventoCompleto={eventoCompleto} />
+                                    </div>
+                                )}
+                                <FichaCotizacionesUnificada
+                                    eventoCompleto={eventoCompleto}
+                                    eventoAsignado={eventoData.eventoAsignado}
+                                />
+                            </div>
+                        }
+                        citasContent={
+                            <div className="p-4">
+                                <FichaCitasWidget eventoCompleto={eventoCompleto} />
+                            </div>
+                        }
+                        seguimientoContent={
+                            <div className="p-4">
+                                <FichaBitacoraUnificada eventoCompleto={eventoCompleto} />
+                            </div>
+                        }
+                    />
+                </div>
             </div>
         </div>
     )

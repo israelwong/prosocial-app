@@ -133,42 +133,143 @@ export default function EventoHeader({
 
     return (
         <div className="bg-zinc-900/80 backdrop-blur-sm border-b border-zinc-800 sticky top-0 z-50">
-            <div className="container mx-auto px-4 py-3">
-                {/* Header minimalista */}
-                <div className="flex items-center justify-between">
-                    {/* Información básica */}
+            <div className="container mx-auto px-4 py-3 max-w-full">
+                {/* Mobile Layout */}
+                <div className="flex flex-col gap-3 md:hidden">
+                    {/* Row 1: Nombre del cliente y cerrar */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <User className="h-4 w-4 text-zinc-400 flex-shrink-0" />
+                            <h1 className="text-lg font-semibold text-zinc-100 truncate">
+                                {eventoData.nombreCliente}
+                            </h1>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={onCerrar}
+                            className="bg-zinc-700 hover:bg-zinc-600 text-zinc-200 border-zinc-600 h-8 px-2 flex-shrink-0"
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
+
+                    {/* Row 2: Estado y disponibilidad */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`px-2 py-1 rounded-md text-xs border ${getStatusColor(eventoData.nombreEtapa)}`}>
+                            {eventoData.nombreEtapa}
+                        </span>
+                        {renderEtiquetaDisponibilidad()}
+                    </div>
+
+                    {/* Row 3: Botones de acción */}
+                    <div className="flex items-center gap-2">
+                        {eventoData.telefono && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={onAbrirConversacion}
+                                className="bg-green-600 hover:bg-green-700 text-white border-green-600 h-8 px-3 flex-1"
+                            >
+                                <WhatsAppIcon className="h-4 w-4 mr-2" size={16} />
+                                <span className="truncate">Hola {eventoData.nombreCliente}</span>
+                            </Button>
+                        )}
+
+                        {puedeGestionarEvento && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={onGestionarEvento}
+                                className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600 h-8 px-3 flex-shrink-0"
+                            >
+                                <Settings className="h-4 w-4" />
+                                <span className="hidden sm:inline ml-1">Gestionar</span>
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Tablet Layout */}
+                <div className="hidden md:flex lg:hidden items-center justify-between gap-4">
+                    {/* Información principal */}
                     <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-zinc-400" />
+                        <div className="flex items-center gap-2 min-w-0">
+                            <User className="h-4 w-4 text-zinc-400 flex-shrink-0" />
                             <h1 className="text-lg font-semibold text-zinc-100 truncate">
                                 {eventoData.nombreCliente}
                             </h1>
                         </div>
 
-                        <span className={`px-2 py-1 rounded-md text-xs border ${getStatusColor(eventoData.nombreEtapa)}`}>
-                            {eventoData.nombreEtapa}
-                        </span>
-                        {/* 
-                        {eventoData.fechaEvento && (
-                            <div className="flex items-center gap-1 text-sm font-medium text-zinc-200">
-                                <Clock className="h-4 w-4" />
-                                <span>
-                                    {formatearFecha(eventoData.fechaEvento, {
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })}
-                                </span>
-                            </div>
-                        )} */}
-
-                        {/* Etiqueta de disponibilidad */}
-                        {renderEtiquetaDisponibilidad()}
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`px-2 py-1 rounded-md text-xs border ${getStatusColor(eventoData.nombreEtapa)}`}>
+                                {eventoData.nombreEtapa}
+                            </span>
+                            {renderEtiquetaDisponibilidad()}
+                        </div>
                     </div>
 
-                    {/* Acciones minimalistas */}
+                    {/* Acciones */}
                     <div className="flex items-center gap-2 flex-shrink-0">
+                        {eventoData.telefono && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={onAbrirConversacion}
+                                className="bg-green-600 hover:bg-green-700 text-white border-green-600 h-8 px-3"
+                            >
+                                <WhatsAppIcon className="h-4 w-4 mr-2" size={16} />
+                                WhatsApp
+                            </Button>
+                        )}
+
+                        {puedeGestionarEvento && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={onGestionarEvento}
+                                className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600 h-8 px-3"
+                            >
+                                <Settings className="h-4 w-4 mr-1" />
+                                Gestionar
+                            </Button>
+                        )}
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={onCerrar}
+                            className="bg-zinc-700 hover:bg-zinc-600 text-zinc-200 border-zinc-600 h-8 px-2"
+                        >
+                            <X className="h-4 w-4 mr-1" />
+                            Cerrar
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Desktop Layout (original mejorado) */}
+                <div className="hidden lg:flex items-center justify-between gap-6">
+                    {/* Información básica */}
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <User className="h-4 w-4 text-zinc-400 flex-shrink-0" />
+                            <h1 className="text-lg font-semibold text-zinc-100 truncate">
+                                {eventoData.nombreCliente}
+                            </h1>
+                        </div>
+
+                        <span className={`px-2 py-1 rounded-md text-xs border ${getStatusColor(eventoData.nombreEtapa)} flex-shrink-0`}>
+                            {eventoData.nombreEtapa}
+                        </span>
+
+                        {/* Etiqueta de disponibilidad */}
+                        <div className="flex-shrink-0">
+                            {renderEtiquetaDisponibilidad()}
+                        </div>
+                    </div>
+
+                    {/* Acciones */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
                         {eventoData.telefono && (
                             <Button
                                 variant="outline"

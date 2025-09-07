@@ -6,6 +6,9 @@ const config = {
   ],
   theme: {
     extend: {
+      screens: {
+        "2xl": "1600px", // Para monitores 2.7K/4K
+      },
       animation: {
         "infinite-scroll": "infinite-scroll 100s linear infinite",
         rotate: "rotate 10s linear infinite",

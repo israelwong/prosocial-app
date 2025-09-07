@@ -329,19 +329,19 @@ export default function FichaCitasWidget({ eventoCompleto }: Props) {
                         }
                     }}
                 >
-                    <div className="bg-zinc-900 rounded-lg border border-zinc-700 w-full max-w-md max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 space-y-4">
-                            <div className="flex items-center justify-between">
+                    <div className="bg-zinc-900 rounded-lg border border-zinc-700 w-full max-w-md max-h-[90vh] overflow-y-auto mx-auto">
+                        <div className="p-4 sm:p-6 space-y-4">
+                            <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-semibold text-zinc-100">Nueva Cita</h3>
                                 <button
                                     onClick={() => setMostrarModal(false)}
-                                    className="text-zinc-400 hover:text-zinc-200 text-xl"
+                                    className="text-zinc-400 hover:text-zinc-200 text-xl p-1"
                                 >
                                     ×
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-xs text-zinc-400 mb-1">Fecha</label>
                                     <input
@@ -362,7 +362,7 @@ export default function FichaCitasWidget({ eventoCompleto }: Props) {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-xs text-zinc-400 mb-1">Tipo</label>
                                     <select
