@@ -54,6 +54,12 @@ export async function POST(
             )
         }
 
+        // Obtener información del usuario para la bitácora
+        const usuario = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { username: true, email: true }
+        })
+
         // Asignar el evento al usuario actual
         const eventoActualizado = await prisma.evento.update({
             where: { id: eventoId },
@@ -63,11 +69,11 @@ export async function POST(
             }
         })
 
-        // Crear entrada en bitácora
+        // Crear entrada en bitácora con nombre del agente
         await prisma.eventoBitacora.create({
             data: {
                 eventoId: eventoId,
-                comentario: `👤 Prospecto tomado por agente. Evento asignado para seguimiento y creación de cotizaciones.`,
+                comentario: `👤 Prospecto tomado por agente ${usuario?.username || 'Usuario desconocido'}. Evento asignado para seguimiento y creación de cotizaciones.`,
                 importancia: 'media',
                 status: 'active'
             }
@@ -138,6 +144,12 @@ export async function DELETE(
             )
         }
 
+        // Obtener información del usuario para la bitácora
+        const usuario = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { username: true, email: true }
+        })
+
         // Desasignar el evento
         await prisma.evento.update({
             where: { id: eventoId },
@@ -147,11 +159,11 @@ export async function DELETE(
             }
         })
 
-        // Crear entrada en bitácora
+        // Crear entrada en bitácora con nombre del agente
         await prisma.eventoBitacora.create({
             data: {
                 eventoId: eventoId,
-                comentario: `🔄 Prospecto liberado por agente. Evento disponible para reasignación.`,
+                comentario: `🔄 Prospecto liberado por agente ${usuario?.username || 'Usuario desconocido'}. Evento disponible para reasignación.`,
                 importancia: 'baja',
                 status: 'active'
             }
