@@ -377,12 +377,6 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
-                    {/* Contador de visitas */}
-                    <div className={`flex items-center gap-1 text-zinc-500 text-sm ml-2 ${archivada ? 'opacity-30' : ''}`}>
-                        <Eye className="w-4 h-4" />
-                        <span>{cotizacion.visitas}</span>
-                    </div>
-
                     {/* Menú contextual - siempre visible */}
                     <div className="relative menu-container">
                         <button

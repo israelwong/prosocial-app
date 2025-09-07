@@ -351,6 +351,14 @@ export default function ListaEventosSimple({ eventosIniciales, etapas }: ListaEv
                                 </span>
                             </div>
                         )}
+                        {evento.Cotizacion[0].dias_minimos_contratacion && (
+                            <div className="flex justify-between items-center text-sm mt-1">
+                                <span className="text-zinc-400">Días mín.:</span>
+                                <span className="text-amber-400 font-medium">
+                                    {evento.Cotizacion[0].dias_minimos_contratacion}d
+                                </span>
+                            </div>
+                        )}
                     </div>
                 )}
 

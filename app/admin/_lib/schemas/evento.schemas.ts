@@ -27,6 +27,7 @@ const CotizacionSchema = z.object({
     id: z.string(),
     precio: z.number(),
     status: z.string(),
+    dias_minimos_contratacion: z.number().optional(),
     Pago: z.array(PagoSchema),
 });
 

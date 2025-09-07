@@ -119,6 +119,7 @@ export async function getEventosPendientesPorEtapa(etapas: number[], incluirArch
                         id: true,
                         precio: true,
                         status: true,
+                        dias_minimos_contratacion: true,
                         Pago: {
                             select: {
                                 id: true,
