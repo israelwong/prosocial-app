@@ -361,6 +361,14 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                             </div>
                         )}
 
+                        {/* Días mínimos de contratación - Solo mostrar si NO está aprobada */}
+                        {cotizacion.dias_minimos_contratacion && cotizacion.status !== COTIZACION_STATUS.APROBADA && (
+                            <div className="flex items-center gap-1 text-xs text-zinc-500 mt-1">
+                                <Calendar className="w-3 h-3" />
+                                <span>Contratar con {cotizacion.dias_minimos_contratacion} días de anticipación</span>
+                            </div>
+                        )}
+
                         {/* Badge de estado */}
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${getStatusBadgeStyles(cotizacion.status)} flex-shrink-0`}>
                             {getStatusDisplayName(cotizacion.status)}

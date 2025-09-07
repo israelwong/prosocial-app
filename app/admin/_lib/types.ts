@@ -242,6 +242,7 @@ export interface Cotizacion {
     nombre: string
     precio: number
     descripcion?: string | null
+    dias_minimos_contratacion?: number | null
     condicionesComercialesId?: string | null
     condicionesComercialesMetodoPagoId?: string | null
     status?: string
