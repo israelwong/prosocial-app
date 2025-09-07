@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 import { ArrowLeft, Check, X, Package, CreditCard, MessageCircle, Filter, Eye, EyeOff, Info, HelpCircle } from 'lucide-react'
@@ -59,10 +59,12 @@ interface Paquete {
 
 type TodasSecciones = Map<string, { posicion: number, categorias: Map<string, { posicion: number, servicios: Set<string> }> }>
 
-export default function ComparadorPaquetes() {
-    const searchParams = useSearchParams()
+interface ComparadorPaquetesProps {
+    eventoId: string
+}
+
+export default function ComparadorPaquetes({ eventoId }: ComparadorPaquetesProps) {
     const router = useRouter()
-    const eventoId = searchParams?.get('eventoId')
 
     const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]) // Cambio: array en lugar de una sola
     const [eventoData, setEventoData] = useState<any>(null) // Datos del evento
@@ -317,7 +319,7 @@ export default function ComparadorPaquetes() {
                         </Link>
                     ) : (
                         <Link
-                            href={`/evento/${eventoData?.id || '#'}`}
+                            href={`/evento/${eventoData?.id || eventoId}`}
                             className="text-zinc-400 hover:text-white transition-colors"
                         >
                             <ArrowLeft className="w-6 h-6" />

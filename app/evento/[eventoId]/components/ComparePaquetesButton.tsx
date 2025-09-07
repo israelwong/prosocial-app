@@ -17,7 +17,7 @@ export default function ComparePaquetesButton({
     showDescription = true
 }: ComparePaquetesButtonProps) {
 
-    const baseUrl = `/comparador-paquetes?eventoId=${eventoId}`
+    const baseUrl = `/evento/${eventoId}/comparador`
 
     // Variante Hero - Botón principal destacado
     if (variant === 'hero') {

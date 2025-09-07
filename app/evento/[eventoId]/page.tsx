@@ -14,9 +14,10 @@ import PortfolioSection from './components/sections/PortfolioSection'
 import TestimoniosSection from './components/sections/TestimoniosSection'
 import EventoMetadataProvider from './components/EventoMetadataProvider'
 import RedirectCliente from './components/RedirectCliente'
-import ComparePaquetesButton from './components/ComparePaquetesButton'
 // Componentes legacy (mantenemos para casos específicos)
 import FechaNoDisponible from './components/FechaNoDisponible'
+
+import ComparePaquetesButton from './components/ComparePaquetesButton'
 
 export const metadata: Metadata = {
     title: 'Cotizaciones - ProSocial Eventos'
@@ -143,16 +144,18 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                         eventoId={eventoId}
                     />
 
-                    {/* Botón adicional para comparar paquetes */}
-                    <section className="py-8 px-4">
-                        <div className="max-w-4xl mx-auto">
-                            <ComparePaquetesButton
-                                eventoId={eventoId}
-                                variant="minimal"
-                                showDescription={false}
-                            />
-                        </div>
-                    </section>
+                    {/* Botón adicional para comparar paquetes - Solo si hay múltiples paquetes */}
+                    {resultadoCotizaciones.paquetes.length > 1 && (
+                        <section className="py-8 px-4">
+                            <div className="max-w-4xl mx-auto">
+                                <ComparePaquetesButton
+                                    eventoId={eventoId}
+                                    variant="minimal"
+                                    showDescription={true}
+                                />
+                            </div>
+                        </section>
+                    )}
 
                     <PortfolioSection
                         tipoEvento={evento.EventoTipo?.nombre?.toLowerCase().includes('xv') ||
@@ -246,8 +249,8 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                 eventoId={eventoId}
             />
 
-            {/* Botón para comparar paquetes disponibles */}
-            {resultadoCotizaciones.paquetes && resultadoCotizaciones.paquetes.length > 0 && (
+            {/* Botón para comparar paquetes disponibles - Solo si hay múltiples paquetes */}
+            {resultadoCotizaciones.paquetes && resultadoCotizaciones.paquetes.length > 1 && (
                 <section className="py-12 px-4">
                     <div className="max-w-4xl mx-auto">
                         <ComparePaquetesButton
@@ -260,7 +263,7 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
             )}
 
             {/* Portfolio section */}
-            {(() => {
+            {/* {(() => {
                 const nombre = evento.EventoTipo?.nombre?.toLowerCase() || '';
                 if (nombre.includes('xv') || nombre.includes('15') || nombre.includes('boda')) {
                     const isXV = nombre.includes('xv') || nombre.includes('15');
@@ -271,18 +274,33 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                     );
                 }
                 return null;
-            })()}
+            })()} */}
 
             {/* Testimonios section */}
             <TestimoniosSection />
 
             {/* Paquetes como alternativa */}
             {resultadoCotizaciones.paquetes && resultadoCotizaciones.paquetes.length > 0 && (
-                <PaquetesSection
-                    paquetes={resultadoCotizaciones.paquetes}
-                    eventoId={eventoId}
-                    showAsAlternative={true}
-                />
+                <>
+                    <PaquetesSection
+                        paquetes={resultadoCotizaciones.paquetes}
+                        eventoId={eventoId}
+                        showAsAlternative={true}
+                    />
+
+                    {/* Botón para comparar paquetes alternativos - Solo si hay múltiples paquetes */}
+                    {resultadoCotizaciones.paquetes.length > 1 && (
+                        <section className="py-8 px-4">
+                            <div className="max-w-4xl mx-auto">
+                                <ComparePaquetesButton
+                                    eventoId={eventoId}
+                                    variant="hero"
+                                    showDescription={true}
+                                />
+                            </div>
+                        </section>
+                    )}
+                </>
             )}
 
             <EventoFooterWrapper />

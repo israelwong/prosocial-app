@@ -1,4 +1,6 @@
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
+import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento.actions'
 import ComparadorPaquetes from './components/ComparadorPaquetes'
 
 export const metadata = {
@@ -6,7 +8,26 @@ export const metadata = {
     description: 'Compara tu cotización personalizada con nuestros paquetes preconfigurados'
 }
 
-export default function ComparadorPaquetesPage() {
+interface PageProps {
+    params: Promise<{ eventoId: string }>
+}
+
+export default async function ComparadorPaquetesPage({ params }: PageProps) {
+    const { eventoId } = await params
+
+    // Verificar que el evento existe
+    let evento;
+    try {
+        evento = await obtenerEventoCompleto(eventoId)
+    } catch (error) {
+        console.error('❌ Error al obtener evento:', error)
+        redirect('/404')
+    }
+
+    if (!evento) {
+        redirect('/404')
+    }
+
     return (
         <div className="min-h-screen bg-zinc-900">
             <Suspense fallback={
@@ -17,7 +38,7 @@ export default function ComparadorPaquetesPage() {
                     </div>
                 </div>
             }>
-                <ComparadorPaquetes />
+                <ComparadorPaquetes eventoId={eventoId} />
             </Suspense>
         </div>
     )
