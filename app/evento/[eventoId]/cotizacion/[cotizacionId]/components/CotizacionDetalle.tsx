@@ -11,7 +11,7 @@ import { crearFechaLocal, formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import type { EventoExtendido, ServicioDetalle, EventoDetalleCompleto } from '@/app/admin/_lib/actions/seguimiento/seguimiento-detalle.schemas'
 import { verificarDisponibilidadFechaRootLegacy as verificarDisponibilidadFecha } from '@/app/admin/_lib/actions/agenda'
 import { verificarPaquetesDisponiblesPorTipoEvento } from '@/app/admin/_lib/actions/paquetes/paquetes.actions'
-import { Package } from 'lucide-react'
+import { Package, Clock, AlertTriangle } from 'lucide-react'
 import type { Cliente, EventoTipo, Cotizacion, Evento } from '@/app/admin/_lib/types'
 
 // 🔥 STRIPE ELEMENTS INTEGRATION
@@ -51,6 +51,8 @@ interface Props {
     esRealtime?: boolean
     esAdmin?: boolean
     esLegacy?: boolean
+    fechaLimiteContratacion?: Date | null
+    diasMinimos?: number
 }
 
 export default function CotizacionDetalle({
@@ -58,7 +60,9 @@ export default function CotizacionDetalle({
     evento,
     esRealtime = false,
     esAdmin = false,
-    esLegacy = false
+    esLegacy = false,
+    fechaLimiteContratacion,
+    diasMinimos = 5
 }: Props) {
     const [cotizacion, setCotizacion] = useState(cotizacionInicial)
     const [serviciosAgrupados, setServiciosAgrupados] = useState<ServiciosAgrupados>({})
@@ -88,6 +92,9 @@ export default function CotizacionDetalle({
 
     // 🎁 Estado para verificar si hay paquetes disponibles
     const [hayPaquetesDisponibles, setHayPaquetesDisponibles] = useState(false)
+
+    // 📅 Estado para modal de fecha límite
+    const [modalFechaLimiteAbierto, setModalFechaLimiteAbierto] = useState(false)
 
     const router = useRouter()
 
@@ -677,9 +684,41 @@ export default function CotizacionDetalle({
                 </div>
             </div>
 
-            {/* Estado de la cotización */}
-            <div className="p-4">
-                {esRealtime && !esAdmin && (
+            {/* ⚠️ FICHA INFORMATIVA SIMPLIFICADA - Fecha límite de contratación */}
+            {fechaLimiteContratacion && fechaDisponible && (
+                <div
+                    className="bg-amber-900/20 border border-amber-600/30 rounded-lg mx-4 mt-4 mb-2 cursor-pointer hover:bg-amber-900/30 transition-colors"
+                    onClick={() => setModalFechaLimiteAbierto(true)}
+                >
+                    <div className="p-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Clock className="w-5 h-5 text-amber-400" />
+                                <div>
+                                    <h3 className="text-amber-400 font-semibold text-sm">
+                                        ⏰ Fecha límite de contratación
+                                    </h3>
+                                    <p className="text-amber-200 text-xs">
+                                        Contratar antes del {formatearFecha(fechaLimiteContratacion, {
+                                            day: 'numeric',
+                                            month: 'short'
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="text-amber-400">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Estado de la cotización - Solo si hay contenido */}
+            {esRealtime && !esAdmin && (
+                <div className="px-4 pb-2">
                     <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-3">
                         <div className="flex items-center space-x-2 mb-1">
                             <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
@@ -689,8 +728,8 @@ export default function CotizacionDetalle({
                             Estás viendo esta cotización en tiempo real.
                         </p>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* Contenido principal */}
             <div className="p-4 pb-24 space-y-4">
@@ -845,6 +884,79 @@ export default function CotizacionDetalle({
                                 }`}
                         >
                             {cancelandoPago ? '🔄 Cancelando...' : 'Cancelar'}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* 📅 MODAL DE FECHA LÍMITE DE CONTRATACIÓN */}
+            {modalFechaLimiteAbierto && fechaLimiteContratacion && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+                    <div className="bg-zinc-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-amber-400 text-xl font-bold flex items-center gap-2">
+                                <Clock className="w-6 h-6" />
+                                Fecha límite de contratación
+                            </h2>
+                            <button
+                                onClick={() => setModalFechaLimiteAbierto(false)}
+                                className="text-zinc-400 hover:text-white text-2xl transition-colors"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Fecha límite destacada */}
+                            <div className="bg-amber-900/30 border border-amber-600/50 rounded-lg p-4">
+                                <div className="text-center">
+                                    <p className="text-amber-200 text-sm mb-2">Contratar antes del:</p>
+                                    <p className="text-amber-100 text-lg font-bold">
+                                        {formatearFecha(fechaLimiteContratacion, {
+                                            weekday: 'long',
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric'
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Explicación detallada */}
+                            <div className="text-zinc-300 space-y-3">
+                                <p className="text-sm leading-relaxed">
+                                    <strong className="text-amber-300">¿Por qué existe esta fecha límite?</strong>
+                                </p>
+                                <p className="text-sm leading-relaxed">
+                                    Para garantizar la mejor cobertura de tu evento, necesitamos tiempo suficiente para coordinar nuestro equipo,
+                                    revisar los detalles finales y asegurar que todo esté perfecto para tu día especial.
+                                </p>
+
+                                <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-3">
+                                    <div className="flex items-start gap-2">
+                                        <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-red-300 text-xs font-semibold mb-1">Importante:</p>
+                                            <p className="text-red-200 text-xs leading-relaxed">
+                                                Pasada esta fecha, la cotización ya no estará disponible para reserva
+                                                {diasMinimos > 0 && ` (se requieren mínimo ${diasMinimos} días de anticipación)`}.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p className="text-xs text-zinc-400 leading-relaxed">
+                                    Esta política nos permite mantener la calidad de nuestros servicios y cumplir con los estándares
+                                    que nos caracterizan en cada evento.
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setModalFechaLimiteAbierto(false)}
+                            className="w-full mt-6 bg-amber-600 hover:bg-amber-700 text-white py-2 px-4 rounded-lg transition-colors text-sm font-medium"
+                        >
+                            Entendido
                         </button>
                     </div>
                 </div>
