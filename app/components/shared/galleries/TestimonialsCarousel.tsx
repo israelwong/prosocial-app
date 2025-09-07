@@ -30,7 +30,7 @@ const defaultTestimonios: TestimonialData[] = [
         id: '1',
         nombre: 'Stephanie Moran',
         evento: 'Boda',
-        testimonio: 'Recomiendo ampliamente su servicio ! Son muy profesionales , puntuales  y realmente los mejores para capturar un momento tan importante en la vida ! El material que te entregan es excelente ! Muchas gracias por todo',
+        testimonio: 'Recomiendo ampliamente su servicio! Son muy profesionales, puntuales y realmente los mejores para capturar un momento tan importante en la vida! El material que te entregan es excelente! Muchas gracias por todo',
         rating: 5,
         fecha: '',
         avatar: ''
@@ -39,7 +39,7 @@ const defaultTestimonios: TestimonialData[] = [
         id: '2',
         nombre: 'Adris Escalante',
         evento: 'XV Años',
-        testimonio: 'El mejor equipo q pude elegir para recordar por siempre los mejores momentos de mi evento, siempre agradecida con ProSocial por su amabilidad, compromiso, profesionalismo, disponibilidad y paciencia .',
+        testimonio: 'El mejor equipo que pude elegir para recordar por siempre los mejores momentos de mi evento, siempre agradecida con ProSocial por su amabilidad, compromiso, profesionalismo, disponibilidad y paciencia.',
         rating: 5,
         fecha: '',
         avatar: ''
@@ -57,7 +57,7 @@ const defaultTestimonios: TestimonialData[] = [
         id: '4',
         nombre: 'Patricia Soriano',
         evento: 'XV Años',
-        testimonio: 'Son un excelente equipo de trabajo, muy profesionales y la calidad de su trabajo es de excelencia ... cumplidos en las fechas acordadas y bastante confiables ... ampliamente recomendables ... Isra ... felicidades por el Excel este equipo y la calidad de tus servicios 👏🏼👏🏼👏🏼.',
+        testimonio: 'Son un excelente equipo de trabajo, muy profesionales y la calidad de su trabajo es de excelencia, cumplidos en las fechas acordadas y bastante confiables, ampliamente recomendables. Felicidades por el excelente equipo y la calidad de sus servicios 👏🏼👏🏼👏🏼.',
         rating: 5,
         fecha: '',
         avatar: ''
@@ -84,7 +84,7 @@ const defaultTestimonios: TestimonialData[] = [
         id: '7',
         nombre: 'Norma Manzo',
         evento: 'XV Años',
-        testimonio: 'Gracias prosocial muy satisfecha con su trabajo, excelente equipo  todo de 10 de principio o fin. Fue un placer es algo que vale mucho la pena recuerdos de muy buena calidad!',
+        testimonio: 'Gracias prosocial muy satisfecha con su trabajo, excelente equipo todo de 10 de principio o fin. Fue un placer es algo que vale mucho la pena recuerdos de muy buena calidad!',
         rating: 5,
         fecha: '',
         avatar: ''
@@ -93,7 +93,7 @@ const defaultTestimonios: TestimonialData[] = [
         id: '8',
         nombre: 'Elia Gatell',
         evento: 'XV Años',
-        testimonio: 'Todos los servicios que ofrecen .  Sus atenciones , su compromiso por hacer su trabajo y darme una satisfacción plena a mi evento  y la actitud  de cada una de sus  integrantes en verdad son  personas que Aman y disfrutan su trabajo . Así ampliamente los recomiendo 👌.',
+        testimonio: 'Todos los servicios que ofrecen.  Sus atenciones, su compromiso por hacer su trabajo y darme una satisfacción plena a mi evento  y la actitud  de cada una de sus  integrantes en verdad son  personas que Aman y disfrutan su trabajo . Así ampliamente los recomiendo 👌.',
         rating: 5,
         fecha: '',
         avatar: ''
@@ -128,10 +128,10 @@ const TestimonialCard = ({
                     <h4 className={`font-semibold text-gray-900 ${variant === 'compact' ? 'text-base' : 'text-lg'}`}>
                         {testimonio.nombre}
                     </h4>
-                    <p className={`text-gray-600 ${variant === 'compact' ? 'text-xs' : 'text-sm'}`}>
+                    {/* <p className={`text-gray-600 ${variant === 'compact' ? 'text-xs' : 'text-sm'}`}>
                         {testimonio.evento}
-                        {/* • {testimonio.fecha} */}
-                    </p>
+                        • {testimonio.fecha}
+                    </p> */}
                 </div>
                 <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
