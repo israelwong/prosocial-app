@@ -45,12 +45,20 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Crear o buscar cliente existente por teléfono
+        // Validación inteligente de cliente existente
         let cliente = await prisma.cliente.findFirst({
             where: { telefono }
         })
 
+        let clienteLog = {
+            esClienteExistente: false,
+            accionRealizada: '',
+            emailCambiado: false,
+            statusAnterior: null as string | null
+        }
+
         if (!cliente) {
+            // Cliente nuevo - crear normalmente
             // Obtener canal "Landing Page" o crear uno
             let canal = await prisma.canal.findFirst({
                 where: { nombre: 'Landing Page' }
@@ -75,15 +83,54 @@ export async function POST(request: NextRequest) {
                     canalId: canal.id
                 }
             })
+
+            clienteLog.accionRealizada = 'Cliente nuevo creado'
         } else {
-            // Actualizar datos del cliente existente si es necesario
-            await prisma.cliente.update({
-                where: { id: cliente.id },
-                data: {
-                    email: email || cliente.email,
-                    status: CLIENTE_STATUS.PROSPECTO // Actualizar a prospecto si estaba en otro estado
+            // Cliente existente - validación inteligente
+            clienteLog.esClienteExistente = true
+            clienteLog.statusAnterior = cliente.status
+
+            // Verificar consistencia de datos
+            const datosActualizados: any = {}
+
+            // Actualizar nombre si es diferente (posible mejora de datos)
+            if (nombreCliente !== cliente.nombre) {
+                datosActualizados.nombre = nombreCliente
+                clienteLog.accionRealizada += 'Nombre actualizado. '
+            }
+
+            // Manejar email de forma inteligente
+            if (email && email !== cliente.email) {
+                if (!cliente.email) {
+                    // El cliente no tenía email, agregamos el nuevo
+                    datosActualizados.email = email
+                    clienteLog.accionRealizada += 'Email agregado. '
+                } else if (cliente.email !== email) {
+                    // El cliente tenía un email diferente - posible error o cambio legítimo
+                    // Por seguridad, mantenemos el original pero loggeamos la discrepancia
+                    console.log(`⚠️ Cliente ${cliente.id} intentó cambiar email de ${cliente.email} a ${email}`)
+                    clienteLog.emailCambiado = true
+                    clienteLog.accionRealizada += 'Discrepancia de email detectada. '
                 }
-            })
+            }
+
+            // Actualizar status a prospecto si estaba en otro estado (reactivación)
+            if (cliente.status !== CLIENTE_STATUS.PROSPECTO) {
+                datosActualizados.status = CLIENTE_STATUS.PROSPECTO
+                clienteLog.accionRealizada += `Status cambiado de ${cliente.status} a prospecto. `
+            }
+
+            // Aplicar actualizaciones si hay cambios
+            if (Object.keys(datosActualizados).length > 0) {
+                await prisma.cliente.update({
+                    where: { id: cliente.id },
+                    data: datosActualizados
+                })
+            }
+
+            if (!clienteLog.accionRealizada) {
+                clienteLog.accionRealizada = 'Cliente existente reutilizado sin cambios'
+            }
         }
 
         // Obtener la etapa "Nuevo" o la primera etapa disponible
@@ -120,19 +167,33 @@ export async function POST(request: NextRequest) {
             }
         })
 
-        // Crear entrada en bitácora
+        // Crear entrada en bitácora con información de validación
+        const comentarioBitacora = [
+            `Cliente contactó desde landing page${referencia ? ` (ref: ${referencia})` : ''}.`,
+            `Interesado en ${nombreEvento} para el ${new Date(fechaEvento).toLocaleDateString()}.`,
+            clienteLog.esClienteExistente
+                ? `📋 Cliente existente: ${clienteLog.accionRealizada}`
+                : `🆕 Cliente nuevo creado.`
+        ].join(' ')
+
         await prisma.eventoBitacora.create({
             data: {
                 eventoId: evento.id,
-                comentario: `Cliente contactó desde landing page${referencia ? ` (ref: ${referencia})` : ''}. Interesado en ${nombreEvento} para el ${new Date(fechaEvento).toLocaleDateString()}.`,
-                importancia: 'alta',
+                comentario: comentarioBitacora,
+                importancia: clienteLog.emailCambiado ? 'alta' : 'media',
                 status: 'active'
             }
         })
 
+        // Log adicional para casos que requieren atención
+        if (clienteLog.emailCambiado) {
+            console.log(`🔍 Validación requerida - Cliente ${cliente.id} (${telefono}) con discrepancia de email`)
+        }
+
         return NextResponse.json({
             success: true,
             eventoId: evento.id,
+            clienteExistente: clienteLog.esClienteExistente,
             message: 'Evento creado exitosamente'
         })
 

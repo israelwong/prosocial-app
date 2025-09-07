@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Package } from 'lucide-react'
+import { Plus, Package, UserPlus } from 'lucide-react'
 
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
 import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
@@ -35,6 +35,7 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
     const [paquetes, setPaquetes] = useState<Paquete[]>([])
     const [menuPaquetesAbierto, setMenuPaquetesAbierto] = useState(false)
     const [eliminandoCotizacion, setEliminandoCotizacion] = useState<string | null>(null)
+    const [asignandoEvento, setAsignandoEvento] = useState(false)
 
     const eventoId = eventoCompleto.id
     const eventoTipoId = eventoCompleto.eventoTipoId
@@ -217,6 +218,37 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
         }
     }
 
+    const handleTomarProspecto = async () => {
+        if (asignandoEvento) return
+
+        try {
+            setAsignandoEvento(true)
+
+            const response = await fetch(`/api/eventos/${eventoId}/asignar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+
+            const result = await response.json()
+
+            if (result.success) {
+                console.log('✅ Prospecto tomado exitosamente')
+                // Recargar la página para actualizar el estado
+                router.refresh()
+            } else {
+                console.error('❌ Error al tomar prospecto:', result.message)
+                alert('Error al tomar el prospecto: ' + result.message)
+            }
+        } catch (error) {
+            console.error('💥 Error al tomar prospecto:', error)
+            alert('Error al tomar el prospecto')
+        } finally {
+            setAsignandoEvento(false)
+        }
+    }
+
     if (loading) {
         return (
             <div className="space-y-4">
@@ -234,6 +266,19 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
                 <h3 className="text-lg font-semibold text-zinc-200">Cotizaciones</h3>
 
                 <div className="flex items-center gap-2">
+                    {/* Botón para tomar prospecto si no está asignado */}
+                    {!eventoAsignado && (
+                        <button
+                            onClick={handleTomarProspecto}
+                            disabled={asignandoEvento}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 text-white text-sm font-medium rounded-md transition-colors"
+                            title="Asignar este prospecto a mi cuenta"
+                        >
+                            <UserPlus className="w-4 h-4" />
+                            {asignandoEvento ? 'Tomando...' : 'Tomar prospecto'}
+                        </button>
+                    )}
+
                     {/* Menú de crear paquetes */}
                     {eventoAsignado && (
                         <div className="relative menu-container">

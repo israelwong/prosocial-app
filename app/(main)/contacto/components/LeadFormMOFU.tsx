@@ -187,7 +187,7 @@ export default function LeadFormMOFU({ refSource }: LeadFormMOFUProps) {
             case 'weddings':
                 return currentStep === 1
                     ? '¿Cuándo será tu Boda?'
-                    : 'Cuéntanos más sobre tu Matrimonio'
+                    : 'Cuéntanos más sobre tu boda'
             default:
                 return currentStep === 1
                     ? '¿Cuándo será tu Evento?'
@@ -425,7 +425,7 @@ export default function LeadFormMOFU({ refSource }: LeadFormMOFUProps) {
                             name="sede"
                             value={formData.sede}
                             onChange={handleInputChange}
-                            placeholder="Ej: Salón Los Pinos, Iglesia San José"
+                            placeholder="Ej: Salón Los Pinos, Jardín Andalucía"
                             className="w-full px-4 py-3 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         />
                         {errors.sede && (
