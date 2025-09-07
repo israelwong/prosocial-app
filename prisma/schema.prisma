@@ -94,6 +94,7 @@ model Evento {
   Agenda         Agenda[]
   Nomina         Nomina[]
   Gasto          Gasto[]
+  Cita           Cita[]
 }
 
 model EventoBitacora {
@@ -791,3 +792,84 @@ model SolicitudPaquete {
 // ========================================
 // CONSULTAS DE DISPONIBILIDAD
 // ========================================
+
+// ========================================
+// SISTEMA DE CITAS COMERCIALES
+// ========================================
+
+enum CitaTipo {
+  COMERCIAL
+  SEGUIMIENTO
+  CIERRE
+  POST_VENTA
+}
+
+enum CitaModalidad {
+  PRESENCIAL
+  VIRTUAL
+  TELEFONICA
+}
+
+enum CitaStatus {
+  PROGRAMADA
+  CONFIRMADA
+  EN_CURSO
+  COMPLETADA
+  CANCELADA
+  NO_ASISTIO
+}
+
+model Cita {
+  id          String        @id @default(cuid())
+  eventoId    String
+  Evento      Evento        @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  
+  fecha       DateTime
+  hora        String        // Formato HH:MM
+  tipo        CitaTipo
+  modalidad   CitaModalidad
+  status      CitaStatus    @default(PROGRAMADA)
+  
+  asunto      String
+  descripcion String?
+  ubicacion   String?       // Para citas presenciales
+  urlVirtual  String?       // Para citas virtuales
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  // Relaciones
+  CitaComentario   CitaComentario[]
+  CitaRecordatorio CitaRecordatorio[]
+  
+  @@index([eventoId])
+  @@index([fecha])
+  @@index([status])
+  @@index([tipo])
+}
+
+model CitaComentario {
+  id         String   @id @default(cuid())
+  citaId     String
+  Cita       Cita     @relation(fields: [citaId], references: [id], onDelete: Cascade)
+  
+  comentario String
+  createdAt  DateTime @default(now())
+  
+  @@index([citaId])
+}
+
+model CitaRecordatorio {
+  id                   String   @id @default(cuid())
+  citaId               String
+  Cita                 Cita     @relation(fields: [citaId], references: [id], onDelete: Cascade)
+  
+  tiempoAnticipacion   Int      // Minutos antes de la cita
+  enviado              Boolean  @default(false)
+  fechaEnvio           DateTime?
+  
+  createdAt            DateTime @default(now())
+  
+  @@index([citaId])
+  @@index([enviado])
+}

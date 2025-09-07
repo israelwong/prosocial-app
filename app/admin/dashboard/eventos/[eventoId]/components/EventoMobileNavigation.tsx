@@ -5,20 +5,23 @@ import {
     User,
     Calendar,
     DollarSign,
-    MessageSquare
+    MessageSquare,
+    CalendarDays
 } from 'lucide-react'
 
 interface Props {
     gestionContent: React.ReactNode
     cotizacionesContent: React.ReactNode
+    citasContent: React.ReactNode
     seguimientoContent: React.ReactNode
 }
 
-type Tab = 'gestion' | 'cotizaciones' | 'seguimiento'
+type Tab = 'gestion' | 'cotizaciones' | 'citas' | 'seguimiento'
 
 export default function EventoMobileNavigation({
     gestionContent,
     cotizacionesContent,
+    citasContent,
     seguimientoContent
 }: Props) {
     const [activeTab, setActiveTab] = useState<Tab>('gestion')
@@ -26,6 +29,7 @@ export default function EventoMobileNavigation({
     const tabs = [
         { id: 'gestion' as Tab, label: 'Gestión', icon: User },
         { id: 'cotizaciones' as Tab, label: 'Cotizaciones', icon: DollarSign },
+        { id: 'citas' as Tab, label: 'Citas', icon: CalendarDays },
         { id: 'seguimiento' as Tab, label: 'Seguimiento', icon: MessageSquare }
     ]
 
@@ -33,6 +37,7 @@ export default function EventoMobileNavigation({
         switch (activeTab) {
             case 'gestion': return gestionContent
             case 'cotizaciones': return cotizacionesContent
+            case 'citas': return citasContent
             case 'seguimiento': return seguimientoContent
             default: return gestionContent
         }

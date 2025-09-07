@@ -11,6 +11,7 @@ import FichaEventoUnificada from './FichaEventoUnificada'
 import FichaBitacoraUnificada from './FichaBitacoraUnificada'
 import FichaCotizacionesUnificada from './FichaCotizacionesUnificada'
 import FichaPaquetesCompartir from './FichaPaquetesCompartir'
+import FichaCitasWidget from './FichaCitasWidget'
 import EventoMobileNavigation from './EventoMobileNavigation'
 
 interface Props {
@@ -104,9 +105,9 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
             />
 
             {/* Contenido Principal */}
-            <div className="container  mx-auto px-4 py-6">
-                {/* Desktop: Grid de 4 columnas */}
-                <div className="hidden lg:grid lg:grid-cols-4 gap-6">
+            <div className="container mx-auto px-4 py-6">
+                {/* Desktop: Grid de 5 columnas */}
+                <div className="hidden xl:grid xl:grid-cols-5 gap-4">
 
                     {/* Columna 1: Información del Cliente */}
                     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
@@ -134,9 +135,54 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
                         />
                     </div>
 
-                    {/* Columna 4: Seguimiento (Bitácora) */}
+                    {/* Columna 4: Citas Comerciales */}
+                    <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+                        <FichaCitasWidget eventoCompleto={eventoCompleto} />
+                    </div>
+
+                    {/* Columna 5: Seguimiento (Bitácora) */}
                     <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
                         <FichaBitacoraUnificada eventoCompleto={eventoCompleto} />
+                    </div>
+                </div>
+
+                {/* Tablet: Grid de 4 columnas (agrupa citas con seguimiento) */}
+                <div className="hidden lg:grid xl:hidden lg:grid-cols-4 gap-4">
+
+                    {/* Columna 1: Información del Cliente */}
+                    <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+                        <FichaClienteUnificada
+                            eventoCompleto={eventoCompletoExtendido}
+                        />
+                    </div>
+
+                    {/* Columna 2: Información del Evento */}
+                    <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+                        <FichaEventoUnificada
+                            eventoCompleto={eventoCompleto}
+                            onAsignacionEvento={handleEventoAsignado}
+                        />
+                    </div>
+
+                    {/* Columna 3: Cotizaciones */}
+                    <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+                        {!tieneCotizacionAprobada && (
+                            <FichaPaquetesCompartir eventoCompleto={eventoCompleto} />
+                        )}
+                        <FichaCotizacionesUnificada
+                            eventoCompleto={eventoCompleto}
+                            eventoAsignado={eventoData.eventoAsignado}
+                        />
+                    </div>
+
+                    {/* Columna 4: Citas y Seguimiento */}
+                    <div className="space-y-4">
+                        <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+                            <FichaCitasWidget eventoCompleto={eventoCompleto} />
+                        </div>
+                        <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4">
+                            <FichaBitacoraUnificada eventoCompleto={eventoCompleto} />
+                        </div>
                     </div>
                 </div>
 
@@ -161,6 +207,11 @@ export default function EventoDetailView({ eventoCompleto }: Props) {
                                 eventoCompleto={eventoCompleto}
                                 eventoAsignado={eventoData.eventoAsignado}
                             />
+                        </div>
+                    }
+                    citasContent={
+                        <div className="p-4">
+                            <FichaCitasWidget eventoCompleto={eventoCompleto} />
                         </div>
                     }
                     seguimientoContent={
