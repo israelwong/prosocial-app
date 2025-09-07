@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast'
 import SolicitudPaqueteModal from '@/app/components/modals/SolicitudPaqueteModal'
 import ModalAyudaComparador from '@/app/components/modals/ModalAyudaComparador'
 import AyudaEleccionCotizaciones from '@/app/components/shared/AyudaEleccionCotizaciones'
+import FechaLimiteBadge from '@/app/components/ui/FechaLimiteBadge'
 
 // Tipos
 interface ServicioDetalle {
@@ -55,6 +56,8 @@ interface Paquete {
     eventoTipoId: string
     eventoTipo: string
     PaqueteServicio: any[]
+    dias_minimos_contratacion?: number
+    dias_minimos_explicacion?: string
 }
 
 type TodasSecciones = Map<string, { posicion: number, categorias: Map<string, { posicion: number, servicios: Set<string> }> }>
@@ -460,9 +463,14 @@ export default function ComparadorPaquetes({ eventoId }: ComparadorPaquetesProps
                                     {paquetes.filter(paquete => columnasVisibles[paquete.id]).map(paquete => (
                                         <th key={paquete.id} className="text-center p-3 text-white font-semibold min-w-[140px]">
                                             <div className="text-blue-400 font-bold">{paquete.nombre}</div>
-                                            <div className="text-blue-300 text-sm font-normal">
+                                            <div className="text-blue-300 text-sm font-normal mb-2">
                                                 {formatearPrecio(paquete.precio || 0)}
                                             </div>
+                                            <FechaLimiteBadge
+                                                fechaEvento={eventoData?.fecha_evento}
+                                                diasMinimosContratacion={paquete.dias_minimos_contratacion}
+                                                className="mx-auto"
+                                            />
                                         </th>
                                     ))}
                                 </tr>
@@ -604,13 +612,19 @@ export default function ComparadorPaquetes({ eventoId }: ComparadorPaquetesProps
                             id: paqueteSeleccionado.id,
                             nombre: paqueteSeleccionado.nombre,
                             precio: paqueteSeleccionado.precio || 0,
-                            eventoTipo: paqueteSeleccionado.eventoTipo
+                            eventoTipo: paqueteSeleccionado.eventoTipo,
+                            dias_minimos_contratacion: paqueteSeleccionado.dias_minimos_contratacion,
+                            dias_minimos_explicacion: paqueteSeleccionado.dias_minimos_explicacion
                         }}
                         eventoId={eventoId || ''}
                         cliente={{
                             nombre: cotizaciones[0]?.cliente?.nombre || eventoData?.cliente?.nombre,
                             email: cotizaciones[0]?.cliente?.email || eventoData?.cliente?.email,
                             telefono: cotizaciones[0]?.cliente?.telefono || eventoData?.cliente?.telefono
+                        }}
+                        evento={{
+                            fecha_evento: eventoData?.fecha_evento,
+                            tipo_evento: eventoData?.eventoTipo?.nombre
                         }}
                         onClose={() => {
                             setMostrarModal(false)

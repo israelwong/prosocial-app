@@ -10,7 +10,7 @@ import React from 'react'
 // Para reactivar: Descomentar configuración MSI en:
 // - pages/api/checkout/create-session.js (bloque MSI comentado)
 // 
-// Estado actual: Frontend muestra MSI, Backend procesa solo pagos únicos
+// Estado actual: Frontend muestra opciones MSI, Backend procesa solo pagos únicos
 //
 
 interface MetodoPago {
@@ -388,7 +388,7 @@ export default function CondicionesComerciales({
                                                                         )
                                                                     }
                                                                 })()}
-                                                                {infoPago.tieneAnticipo && (
+                                                                {infoPago.tieneAnticipo && condicion.porcentaje_anticipo !== 100 && (
                                                                     <div className="bg-blue-500/10 border border-blue-500/20 rounded p-2 mt-2">
                                                                         <div className="text-xs text-blue-300">
                                                                             Pago único del anticipo. Saldo restante se liquidará posteriormente.

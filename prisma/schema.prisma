@@ -185,6 +185,11 @@ model Cotizacion {
   status                             String                             @default("pendiente")
   archivada                          Boolean                            @default(false)
   visible_cliente                    Boolean?                           @default(true)
+  
+  // Nuevos campos para tiempo mínimo de contratación
+  dias_minimos_contratacion          Int?                               @default(5)
+  dias_minimos_explicacion           String?                            @default("Para garantizar la disponibilidad del equipo y coordinación del evento")
+  
   createdAt                          DateTime                           @default(now())
   updatedAt                          DateTime                           @updatedAt
   expiresAt                          DateTime?                          @default(dbgenerated("now() + interval '10 day'"))
@@ -367,6 +372,11 @@ model Paquete {
   precio          Float?
   status          String            @default("active")
   posicion        Int               @default(0)
+  
+  // Nuevos campos para tiempo mínimo de contratación
+  dias_minimos_contratacion Int?    @default(5)
+  dias_minimos_explicacion  String? @default("Para garantizar la disponibilidad del equipo y coordinación del evento")
+  
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   PaqueteServicio PaqueteServicio[]

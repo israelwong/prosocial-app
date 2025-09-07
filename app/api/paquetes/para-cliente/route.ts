@@ -45,13 +45,21 @@ export async function GET(request: NextRequest) {
         // Extraer solo los paquetes con su información completa
         const paquetesFormateados = paquetesFiltrados.flatMap(eventoTipo =>
             eventoTipo.Paquete.map(paquete => {
+                // Type assertion temporal hasta que los tipos se actualicen completamente
+                const paqueteConCamposNuevos = paquete as typeof paquete & {
+                    dias_minimos_contratacion?: number
+                    dias_minimos_explicacion?: string
+                }
+
                 const paqueteFormateado = {
                     id: paquete.id,
                     nombre: paquete.nombre,
                     precio: paquete.precio,
                     eventoTipoId: eventoTipo.id,
                     eventoTipo: eventoTipo.nombre,
-                    PaqueteServicio: paquete.PaqueteServicio
+                    PaqueteServicio: paquete.PaqueteServicio,
+                    dias_minimos_contratacion: paqueteConCamposNuevos.dias_minimos_contratacion,
+                    dias_minimos_explicacion: paqueteConCamposNuevos.dias_minimos_explicacion
                 }
 
                 // console.log(`\n✨ Paquete formateado: ${paquete.nombre}`)

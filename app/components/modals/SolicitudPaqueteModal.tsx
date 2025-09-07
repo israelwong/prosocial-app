@@ -1,7 +1,8 @@
 'use client'
 import React, { useState } from 'react'
-import { Check, MessageCircle, Package, X } from 'lucide-react'
+import { Check, MessageCircle, Package, X, Clock, AlertTriangle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { validarFechaEvento, type ValidacionFecha } from '@/app/lib/validaciones-fecha'
 
 interface Paquete {
     id: string
@@ -9,6 +10,8 @@ interface Paquete {
     precio: number
     eventoTipoId?: string
     eventoTipo?: string
+    dias_minimos_contratacion?: number
+    dias_minimos_explicacion?: string
 }
 
 interface Cliente {
@@ -17,10 +20,16 @@ interface Cliente {
     telefono?: string
 }
 
+interface Evento {
+    fecha_evento?: string | Date
+    tipo_evento?: string
+}
+
 interface SolicitudPaqueteModalProps {
     paquete: Paquete
     eventoId: string
     cliente?: Cliente
+    evento?: Evento
     onClose: () => void
     onSuccess?: () => void
 }
@@ -29,6 +38,7 @@ export default function SolicitudPaqueteModal({
     paquete,
     eventoId,
     cliente,
+    evento,
     onClose,
     onSuccess
 }: SolicitudPaqueteModalProps) {
@@ -42,6 +52,13 @@ export default function SolicitudPaqueteModal({
         }).format(precio)
     }
 
+    // Función para validar si la fecha del evento cumple con los días mínimos
+    const validacionFecha: ValidacionFecha = validarFechaEvento(
+        evento?.fecha_evento,
+        paquete.dias_minimos_contratacion,
+        paquete.dias_minimos_explicacion
+    )
+
     const confirmarSolicitudPaquete = async () => {
         setEnviandoSolicitud(true)
         try {
@@ -53,7 +70,12 @@ export default function SolicitudPaqueteModal({
                 body: JSON.stringify({
                     paqueteId: paquete.id,
                     eventoId,
-                    clienteId: cliente?.email
+                    clienteId: cliente?.email,
+                    validacionFecha: {
+                        cumpleRequisitos: validacionFecha.esValida,
+                        diasRestantes: validacionFecha.diasRestantes,
+                        diasMinimosRequeridos: paquete.dias_minimos_contratacion
+                    }
                 })
             })
 
@@ -211,11 +233,65 @@ export default function SolicitudPaqueteModal({
 
                     <div className="bg-zinc-800/50 rounded-lg p-4 mb-6">
                         <p className="text-sm text-zinc-300 leading-relaxed">
-                            ¿Deseas solicitar información adicional sobre este paquete?
-                            Un asesor se pondrá en contacto contigo para brindarte más detalles
-                            y resolver cualquier duda que puedas tener.
+                            {validacionFecha.esValida ? (
+                                <>
+                                    ¿Deseas solicitar información adicional sobre este paquete?
+                                    Un asesor se pondrá en contacto contigo para brindarte más detalles
+                                    y resolver cualquier duda que puedas tener.
+                                </>
+                            ) : (
+                                <>
+                                    Tu evento no cumple con el tiempo mínimo de contratación para este paquete.
+                                    Sin embargo, podemos consultar disponibilidad especial. Un asesor revisará
+                                    tu caso particular y te contactará con opciones disponibles.
+                                </>
+                            )}
                         </p>
                     </div>
+
+                    {/* Información de días mínimos de contratación */}
+                    {paquete.dias_minimos_contratacion && (
+                        <div className={`rounded-lg p-4 mb-6 border ${validacionFecha.esValida
+                            ? 'bg-amber-900/20 border-amber-700/30'
+                            : 'bg-red-900/20 border-red-700/30'
+                            }`}>
+                            <div className="flex items-center gap-2 mb-2">
+                                {validacionFecha.esValida ? (
+                                    <Clock className="w-4 h-4 text-amber-400" />
+                                ) : (
+                                    <AlertTriangle className="w-4 h-4 text-red-400" />
+                                )}
+                                <span className={`text-sm font-medium ${validacionFecha.esValida ? 'text-amber-400' : 'text-red-400'
+                                    }`}>
+                                    Tiempo mínimo de contratación
+                                </span>
+                            </div>
+                            <div className="text-sm text-zinc-300">
+                                <p className="font-medium mb-1">
+                                    {paquete.dias_minimos_contratacion} días naturales mínimo
+                                </p>
+                                <p className="text-zinc-400 leading-relaxed mb-2">
+                                    {paquete.dias_minimos_explicacion ||
+                                        "Tiempo mínimo requerido para garantizar la disponibilidad y coordinación del evento"}
+                                </p>
+                                {evento?.fecha_evento && (
+                                    <>
+                                        <p className={`text-sm leading-relaxed mb-2 ${validacionFecha.esValida ? 'text-amber-200' : 'text-red-200'
+                                            }`}>
+                                            {validacionFecha.mensaje}
+                                        </p>
+                                        {validacionFecha.mensajeFechaLimite && (
+                                            <p className={`text-sm leading-relaxed ${validacionFecha.esValida ? 'text-blue-200' : 'text-orange-200'
+                                                }`}>
+                                                <span className="font-medium">📅 </span>
+                                                {validacionFecha.mensajeFechaLimite}
+                                            </p>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Información del cliente */}
                     {cliente && (cliente.nombre || cliente.email) && (
@@ -247,17 +323,25 @@ export default function SolicitudPaqueteModal({
                     <button
                         onClick={confirmarSolicitudPaquete}
                         disabled={enviandoSolicitud}
-                        className="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${validacionFecha.esValida
+                            ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                            : 'bg-amber-600 hover:bg-amber-700 text-white'
+                            }`}
                     >
                         {enviandoSolicitud ? (
                             <>
                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                 Enviando...
                             </>
-                        ) : (
+                        ) : validacionFecha.esValida ? (
                             <>
                                 <MessageCircle className="w-4 h-4" />
                                 Enviar Solicitud
+                            </>
+                        ) : (
+                            <>
+                                <AlertTriangle className="w-4 h-4" />
+                                Consultar Disponibilidad
                             </>
                         )}
                     </button>

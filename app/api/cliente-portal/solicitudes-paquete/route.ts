@@ -4,13 +4,14 @@ import prisma from '@/app/admin/_lib/prismaClient'
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        let { paqueteId, cotizacionId, eventoId, clienteId } = body
+        let { paqueteId, cotizacionId, eventoId, clienteId, validacionFecha } = body
 
         console.log('📝 Nueva solicitud de paquete recibida:', {
             paqueteId,
             cotizacionId,
             eventoId,
-            clienteId
+            clienteId,
+            validacionFecha
         })
 
         // Validar datos requeridos - ahora cotizacionId es opcional si hay eventoId
@@ -140,7 +141,9 @@ export async function POST(request: NextRequest) {
                 clienteNombre: cliente?.nombre || 'Cliente',
                 clienteEmail: cliente?.email || clienteId,
                 clienteTelefono: cliente?.telefono,
-                mensaje: `Solicitud desde el comparador de paquetes`,
+                mensaje: validacionFecha?.cumpleRequisitos
+                    ? `Solicitud desde el comparador de paquetes`
+                    : `Solicitud especial - No cumple tiempo mínimo (${validacionFecha?.diasRestantes} días disponibles, ${validacionFecha?.diasMinimosRequeridos} requeridos)`,
                 // Datos del paquete (snapshot)
                 paqueteNombre: paquete.nombre,
                 precioPaquete: paquete.precio || 0,

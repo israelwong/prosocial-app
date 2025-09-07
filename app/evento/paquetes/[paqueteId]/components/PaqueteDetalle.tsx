@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, Package, DollarSign, Calendar, Users, CheckCircle, MessageCircle, Scale, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import SolicitudPaqueteModal from '@/app/components/modals/SolicitudPaqueteModal'
+import ValidacionFechaInfo from '@/app/components/ui/ValidacionFechaInfo'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
 
 // Tipos para la estructura de datos (reutilizando la lógica exitosa)
@@ -59,6 +60,8 @@ interface Paquete {
         nombre: string;
     };
     PaqueteServicio: PaqueteServicio[];
+    dias_minimos_contratacion?: number;
+    dias_minimos_explicacion?: string;
 }
 
 interface Props {
@@ -176,6 +179,18 @@ export default function PaqueteDetalle({ paquete, eventoInfo, eventoId }: Props)
                 </div>
             </div>
 
+            {/* Información de validación de fechas */}
+            {eventoInfo?.fecha_evento && paquete.dias_minimos_contratacion && (
+                <div className="mb-8">
+                    <ValidacionFechaInfo
+                        fechaEvento={eventoInfo.fecha_evento}
+                        diasMinimosContratacion={paquete.dias_minimos_contratacion}
+                        explicacion={paquete.dias_minimos_explicacion}
+                        tamaño="lg"
+                    />
+                </div>
+            )}
+
             {/* Servicios incluidos agrupados jerárquicamente */}
             <div className="bg-zinc-800 rounded-xl border border-zinc-700">
                 <div className="p-6 border-b border-zinc-700">
@@ -289,13 +304,19 @@ export default function PaqueteDetalle({ paquete, eventoInfo, eventoId }: Props)
                         id: paquete.id,
                         nombre: paquete.nombre,
                         precio: paquete.precio || 0,
-                        eventoTipo: paquete.EventoTipo.nombre
+                        eventoTipo: paquete.EventoTipo.nombre,
+                        dias_minimos_contratacion: paquete.dias_minimos_contratacion,
+                        dias_minimos_explicacion: paquete.dias_minimos_explicacion
                     }}
                     eventoId={eventoId || ''}
                     cliente={eventoInfo?.Cliente ? {
                         nombre: eventoInfo.Cliente.nombre,
                         email: eventoInfo.Cliente.email || '',
                         telefono: eventoInfo.Cliente.telefono || undefined
+                    } : undefined}
+                    evento={eventoInfo ? {
+                        fecha_evento: eventoInfo.fecha_evento,
+                        tipo_evento: eventoInfo.EventoTipo?.nombre
                     } : undefined}
                     onClose={() => setMostrarModal(false)}
                     onSuccess={() => setMostrarModal(false)}
