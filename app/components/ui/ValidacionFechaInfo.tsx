@@ -56,8 +56,8 @@ export default function ValidacionFechaInfo({
 
     return (
         <div className={`rounded-lg border ${estilos.contenedor} ${validacion.esValida
-                ? 'bg-green-900/20 border-green-700/30'
-                : 'bg-amber-900/20 border-amber-700/30'
+            ? 'bg-green-900/20 border-green-700/30'
+            : 'bg-amber-900/20 border-amber-700/30'
             } ${className}`}>
 
             {/* Header */}
@@ -88,7 +88,7 @@ export default function ValidacionFechaInfo({
                     <span className="text-zinc-400">Tu evento:</span>
                     <span className={`font-medium ${validacion.esValida ? 'text-green-200' : 'text-amber-200'
                         }`}>
-                        Faltan {validacion.diasRestantes} días
+                        En {validacion.diasRestantes} días
                     </span>
                 </div>
 

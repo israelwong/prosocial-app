@@ -24,7 +24,7 @@ export default function PaquetesSection({ paquetes, eventoId, showAsAlternative 
     // Función para abrir comparador de paquetes (sin cotización)
     const handleCompararpaquetes = () => {
         // Abrir en nueva pestaña el comparador de paquetes público
-        const url = `/comparador-paquetes?eventoId=${eventoId}`
+        const url = `/evento/${eventoId}/comparador`
         window.location.href = url
     }
 

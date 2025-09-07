@@ -41,6 +41,8 @@ export default async function PaqueteDetallePage({ params, searchParams }: PageP
             id: rawPaquete.id,
             nombre: rawPaquete.nombre,
             precio: rawPaquete.precio,
+            dias_minimos_contratacion: rawPaquete.dias_minimos_contratacion || undefined,
+            dias_minimos_explicacion: rawPaquete.dias_minimos_explicacion || undefined,
             EventoTipo: rawPaquete.EventoTipo,
             PaqueteServicio: rawPaquete.PaqueteServicio.map((ps: any) => ({
                 ...ps,

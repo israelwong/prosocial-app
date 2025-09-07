@@ -277,7 +277,7 @@ export default function PaqueteDetalle({ paquete, eventoInfo, eventoId }: Props)
                     <div className="space-y-3">
                         {/* Botón comparar paquetes */}
                         {eventoId && (
-                            <Link href={`/comparador-paquetes?eventoId=${eventoId}`}>
+                            <Link href={`/evento/${eventoId}/comparador`}>
                                 <button className="w-full py-3 px-6 rounded-lg font-medium text-white bg-blue-600/80 hover:bg-blue-600 border border-blue-500/50 hover:border-blue-400 transition-all duration-200 flex items-center justify-center gap-2">
                                     <Scale className="w-5 h-5" />
                                     Comparar Paquetes

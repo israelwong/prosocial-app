@@ -201,7 +201,7 @@ export default function CotizacionesSection({
                     {cotizaciones.length > 1 && (
                         <div className="mt-8 lg:mt-10 text-center">
                             <a
-                                href={`/comparador-paquetes?eventoId=${eventoId}`}
+                                href={`/evento/${eventoId}/comparador`}
                                 className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-base lg:text-lg"
                             >
                                 <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
