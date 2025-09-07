@@ -788,3 +788,6 @@ model SolicitudPaquete {
   @@index([fechaSolicitud])
 }
 
+// ========================================
+// CONSULTAS DE DISPONIBILIDAD
+// ========================================

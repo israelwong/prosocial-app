@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Bell, X, Eye, ExternalLink, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { Bell, X, Eye, ExternalLink, Clock, CheckCircle, AlertCircle, MessageCircle } from 'lucide-react'
 import { marcarComoLeida, ocultarNotificacion, obtenerNotificaciones } from '../_lib/actions/notificacion/notificacion.actions'
 import { supabase } from '../_lib/supabase'
 
@@ -183,6 +183,12 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                     ? `/admin/dashboard/eventos/${metadata.eventoId}`
                     : null
 
+            case 'consulta_disponibilidad':
+                // Consultas de disponibilidad van al dashboard del evento
+                return metadata.eventoId
+                    ? `/admin/dashboard/eventos/${metadata.eventoId}`
+                    : null
+
             case 'pago_confirmado':
             case 'pago_recibido':
                 // Pagos van a seguimiento
@@ -271,7 +277,8 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
     }
 
     // Obtener icono según tipo de notificación
-    const getIconoTipo = (titulo: string) => {
+    const getIconoTipo = (titulo: string, tipo: string) => {
+        if (tipo === 'consulta_disponibilidad') return <MessageCircle className="w-4 h-4 text-orange-400" />
         if (titulo.includes('Pago') || titulo.includes('💰')) return <CheckCircle className="w-4 h-4 text-green-400" />
         if (titulo.includes('Nueva') || titulo.includes('📝')) return <AlertCircle className="w-4 h-4 text-blue-400" />
         if (titulo.includes('Recordatorio')) return <Clock className="w-4 h-4 text-yellow-400" />
@@ -351,7 +358,7 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                             <div className="flex items-start space-x-3">
                                                 {/* Icono */}
                                                 <div className="flex-shrink-0 mt-1">
-                                                    {getIconoTipo(notificacion.titulo)}
+                                                    {getIconoTipo(notificacion.titulo, notificacion.tipo)}
                                                 </div>
 
                                                 {/* Contenido */}
@@ -385,8 +392,9 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                                                                     <span>
                                                                         {(notificacion.tipo === 'solicitud_paquete' ||
                                                                             notificacion.tipo === 'solicitud_personalizada') ? 'Ver evento' :
-                                                                            notificacion.tipo.includes('pago') ? 'Ver seguimiento' :
-                                                                                'Ver detalles'}
+                                                                            notificacion.tipo === 'consulta_disponibilidad' ? 'Ver consulta' :
+                                                                                notificacion.tipo.includes('pago') ? 'Ver seguimiento' :
+                                                                                    'Ver detalles'}
                                                                     </span>
                                                                 </span>
                                                             )}

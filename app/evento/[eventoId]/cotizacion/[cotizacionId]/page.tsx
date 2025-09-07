@@ -5,6 +5,7 @@ import { obtenerCotizacionCompleta } from '@/app/admin/_lib/actions/cotizacion/c
 import { verificarEstadoPagosCotizacion } from '@/app/admin/_lib/actions/cotizacion/verificar-estado-pagos.actions'
 import CotizacionDetalle from './components/CotizacionDetalle'
 import RedirectCliente from './components/RedirectCliente'
+import CotizacionNoDisponible from './components/CotizacionNoDisponible'
 import EventoMetadataProvider from '../../components/EventoMetadataProvider'
 
 
@@ -83,6 +84,48 @@ export default async function CotizacionDetallePage({ params, searchParams }: Pa
 
         // Verificar disponibilidad de fecha
         const fechaOcupada = datosCotizacion.cotizacion.Evento.status === 'contratado'
+
+        // 🎯 VALIDACIÓN: Verificar tiempo límite para contratación
+        const fechaEvento = datosCotizacion.cotizacion.Evento.fecha_evento ? new Date(datosCotizacion.cotizacion.Evento.fecha_evento) : null
+        const diasMinimos = datosCotizacion.cotizacion.dias_minimos_contratacion || 5
+
+        let fechaLimiteContratacion: Date | null = null
+        if (fechaEvento) {
+            fechaLimiteContratacion = new Date(fechaEvento)
+            fechaLimiteContratacion.setDate(fechaLimiteContratacion.getDate() - diasMinimos)
+        }
+
+        const estaFueraDeTiempo = fechaLimiteContratacion && hoy > fechaLimiteContratacion
+
+        // 🚫 VALIDACIONES: Mostrar mensaje de no disponible si aplica alguna
+        if (estaExpirada) {
+            return <CotizacionNoDisponible
+                eventoId={eventoId}
+                cotizacionId={cotizacionId}
+                motivo="expirada"
+                fechaEvento={fechaEvento}
+            />
+        }
+
+        if (fechaOcupada) {
+            return <CotizacionNoDisponible
+                eventoId={eventoId}
+                cotizacionId={cotizacionId}
+                motivo="fecha_ocupada"
+                fechaEvento={fechaEvento}
+            />
+        }
+
+        if (estaFueraDeTiempo) {
+            return <CotizacionNoDisponible
+                eventoId={eventoId}
+                cotizacionId={cotizacionId}
+                motivo="fecha_limite"
+                diasMinimos={diasMinimos}
+                fechaEvento={fechaEvento}
+                fechaLimite={fechaLimiteContratacion}
+            />
+        }
 
         return (
             <>
