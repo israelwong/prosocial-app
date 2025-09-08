@@ -292,7 +292,6 @@ export async function getProspectosNuevos(): Promise<ProspectoNuevo[]> {
             nombre: cliente.nombre,
             telefono: cliente.telefono,
             email: cliente.email,
-            status: cliente.status,
             createdAt: cliente.createdAt,
             evento_nombre: evento?.nombre || null,
             evento_fecha: evento?.fecha_evento || null,
