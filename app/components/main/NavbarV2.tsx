@@ -61,38 +61,31 @@ export default function NavbarV2() {
             status: 'active',
             submenu: [
                 { name: 'Fifteens', link: "/fifteens", description: "Quinceañeras únicas", status: 'active' },
-                { name: 'Weddings', link: "/weddings", description: "Bodas de ensueño", status: 'active' }
+                { name: 'Weddings', link: "/weddings", description: "Bodas de ensueño", status: 'active' },
+                { name: 'Cliente Portal', link: "/cliente", description: "Acceso clientes ProSocial Events", status: 'active' }
             ]
         },
         {
             name: 'Services',
             link: null,
             icon: <Cog className="w-4 h-4" />,
-            status: 'beta',
+            status: 'coming-soon',
             submenu: [
-                { name: 'Digital Invitations', link: "/servicios/invitaciones", description: "Invitaciones interactivas", status: 'coming-soon' },
-                { name: 'Media Storage', link: "/servicios/almacenamiento", description: "Archivo multimedia personal", status: 'coming-soon' }
+                { name: 'Digital Invitations', link: "#", description: "Invitaciones interactivas", status: 'coming-soon' },
+                { name: 'Media Storage', link: "#", description: "Archivo multimedia personal", status: 'coming-soon' }
             ]
         },
         {
             name: 'Studio',
             link: "/studio",
             icon: <Building2 className="w-4 h-4" />,
-            status: 'coming-soon',
-            timeline: 'Q2 2025'
+            status: 'coming-soon'
         },
         {
             name: 'Platform',
             link: "/platform",
             icon: <Layers className="w-4 h-4" />,
-            status: 'coming-soon',
-            timeline: 'Q4 2025'
-        },
-        {
-            name: 'Portal',
-            link: "/portal",
-            icon: <Users className="w-4 h-4" />,
-            status: 'active'
+            status: 'coming-soon'
         },
         {
             name: 'Contact',
@@ -172,9 +165,18 @@ export default function NavbarV2() {
                                                     {item.submenu.map((subItem, subIndex) => (
                                                         <Link
                                                             key={subIndex}
-                                                            href={subItem.link}
-                                                            className="block px-4 py-3 text-sm text-zinc-300 hover:text-white hover:bg-zinc-700/50 transition-colors"
-                                                            onClick={() => handleLinkClick(subItem.link)}
+                                                            href={subItem.status === 'coming-soon' ? '#' : subItem.link}
+                                                            className={`block px-4 py-3 text-sm transition-colors ${subItem.status === 'coming-soon'
+                                                                ? 'text-zinc-500 cursor-not-allowed'
+                                                                : 'text-zinc-300 hover:text-white hover:bg-zinc-700/50'
+                                                                }`}
+                                                            onClick={(e) => {
+                                                                if (subItem.status === 'coming-soon') {
+                                                                    e.preventDefault();
+                                                                    return;
+                                                                }
+                                                                handleLinkClick(subItem.link);
+                                                            }}
                                                         >
                                                             <div className="flex items-center justify-between">
                                                                 <div>
@@ -236,110 +238,148 @@ export default function NavbarV2() {
 
             {/* Mobile Navigation */}
             {isMenuOpen && (
-                <div className="lg:hidden fixed inset-0 bg-black/80 z-40" onClick={toggleMenu}>
-                    <div className="fixed top-0 right-0 h-full w-80 max-w-full bg-zinc-900 shadow-xl z-50 transform transition-transform duration-300" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex flex-col h-full">
-                            {/* Mobile Header */}
-                            <div className="flex items-center justify-between p-4 border-b border-zinc-800">
-                                <Image
-                                    src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_gris.svg"
-                                    width={100}
-                                    height={32}
-                                    alt="ProSocial"
-                                    className="h-6 w-auto"
-                                    unoptimized
-                                />
-                                <button
-                                    onClick={toggleMenu}
-                                    className="p-2 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
+                <>
+                    {/* Ocultar footer y otros elementos fixed cuando menu está abierto */}
+                    <style jsx global>{`
+                        /* Ocultar todos los elementos fixed excepto nuestro navbar */
+                        .fixed:not(header):not(header *),
+                        .sticky:not(header):not(header *),
+                        footer,
+                        [data-footer],
+                        .footer,
+                        div[class*="fixed bottom"],
+                        div[class*="sticky bottom"],
+                        div[class*="fixed inset-x-0 bottom"],
+                        div[class*="bottom-0"],
+                        div[class*="fixed"][class*="bottom"],
+                        div[class*="sticky"][class*="bottom"],
+                        .fixed.bottom-0,
+                        .sticky.bottom-0 {
+                            display: none !important;
+                            visibility: hidden !important;
+                            opacity: 0 !important;
+                        }
+                        /* Evitar scroll de la página */
+                        html, body {
+                            overflow: hidden !important;
+                            height: 100vh !important;
+                        }
+                    `}</style>
 
-                            {/* Mobile Menu Items */}
-                            <nav className="flex-1 px-4 py-6 overflow-y-auto">
-                                <div className="space-y-2">
-                                    {menu.map((item, index) => (
-                                        <div key={index}>
-                                            {item.submenu ? (
-                                                <div>
-                                                    <button
-                                                        className="w-full flex items-center justify-between px-4 py-3 text-base font-medium rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all duration-200"
-                                                        onClick={() => toggleDropdown(item.name)}
-                                                    >
-                                                        <div className="flex items-center">
-                                                            {item.icon}
-                                                            <span className="ml-3">{item.name}</span>
-                                                            {getStatusBadge(item.status, item.timeline)}
-                                                        </div>
-                                                        <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === item.name ? 'rotate-180' : ''}`} />
-                                                    </button>
-
-                                                    {openDropdown === item.name && (
-                                                        <div className="ml-6 mt-2 space-y-1">
-                                                            {item.submenu.map((subItem, subIndex) => (
-                                                                <Link
-                                                                    key={subIndex}
-                                                                    href={subItem.link}
-                                                                    className="block px-4 py-2 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-md transition-colors"
-                                                                    onClick={() => handleLinkClick(subItem.link)}
-                                                                >
-                                                                    <div>
-                                                                        <div className="font-medium">{subItem.name}</div>
-                                                                        <div className="text-xs text-zinc-500">{subItem.description}</div>
-                                                                    </div>
-                                                                </Link>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <Link
-                                                    href={item.link || '#'}
-                                                    className={`
-                                                        flex items-center px-4 py-3 text-base font-medium rounded-lg transition-all duration-200
-                                                        ${activeItem === item.link
-                                                            ? 'text-white bg-purple-600 shadow-sm'
-                                                            : item.status === 'coming-soon'
-                                                                ? 'text-zinc-500 cursor-not-allowed'
-                                                                : 'text-zinc-300 hover:text-white hover:bg-zinc-800'
-                                                        }
-                                                    `}
-                                                    onClick={(e) => {
-                                                        if (item.status === 'coming-soon') {
-                                                            e.preventDefault();
-                                                            return;
-                                                        }
-                                                        handleLinkClick(item.link || '');
-                                                    }}
-                                                >
-                                                    {item.icon}
-                                                    <span className="ml-3">{item.name}</span>
-                                                    {getStatusBadge(item.status, item.timeline)}
-                                                </Link>
-                                            )}
-                                        </div>
-                                    ))}
+                    <div className="lg:hidden fixed top-0 left-0 w-screen h-screen bg-black/90 z-[99999]" style={{ zIndex: 999999 }} onClick={toggleMenu}>
+                        <div className="fixed top-0 left-0 w-screen h-screen bg-zinc-900 z-[99999] transform transition-transform duration-300 overflow-hidden" style={{ zIndex: 999999 }} onClick={(e) => e.stopPropagation()}>
+                            <div className="w-full h-screen flex flex-col">
+                                {/* Mobile Header */}
+                                <div className="flex items-center justify-between p-4 border-b border-zinc-800 flex-shrink-0">
+                                    <Image
+                                        src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_gris.svg"
+                                        width={100}
+                                        height={32}
+                                        alt="ProSocial"
+                                        className="h-6 w-auto"
+                                        unoptimized
+                                    />
+                                    <button
+                                        onClick={toggleMenu}
+                                        className="p-2 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                                    >
+                                        <X size={24} />
+                                    </button>
                                 </div>
-                            </nav>
 
-                            {/* Mobile Footer */}
-                            <div className="p-4 border-t border-zinc-800 bg-zinc-950">
-                                <p className="text-center text-sm text-zinc-500 font-roboto">
-                                    Plataforma integral para eventos
-                                </p>
-                                <p className="text-center text-xs text-zinc-600 mt-1">
-                                    Tecnología • Creatividad • Escalabilidad
-                                </p>
+                                {/* Mobile Menu Items */}
+                                <nav className="flex-1 px-6 py-8 overflow-y-auto">
+                                    <div className="space-y-3">
+                                        {menu.map((item, index) => (
+                                            <div key={index}>
+                                                {item.submenu ? (
+                                                    <div>
+                                                        <button
+                                                            className="w-full flex items-center justify-between px-4 py-4 text-lg font-medium rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all duration-200"
+                                                            onClick={() => toggleDropdown(item.name)}
+                                                        >
+                                                            <div className="flex items-center">
+                                                                {item.icon}
+                                                                <span className="ml-4">{item.name}</span>
+                                                                {getStatusBadge(item.status, item.timeline)}
+                                                            </div>
+                                                            <ChevronDown className={`w-5 h-5 transition-transform ${openDropdown === item.name ? 'rotate-180' : ''}`} />
+                                                        </button>
+
+                                                        {openDropdown === item.name && (
+                                                            <div className="ml-8 mt-3 space-y-2">
+                                                                {item.submenu.map((subItem, subIndex) => (
+                                                                    <Link
+                                                                        key={subIndex}
+                                                                        href={subItem.status === 'coming-soon' ? '#' : subItem.link}
+                                                                        className={`block px-4 py-3 text-base rounded-md transition-colors ${subItem.status === 'coming-soon'
+                                                                            ? 'text-zinc-500 cursor-not-allowed'
+                                                                            : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                                                                            }`}
+                                                                        onClick={(e) => {
+                                                                            if (subItem.status === 'coming-soon') {
+                                                                                e.preventDefault();
+                                                                                return;
+                                                                            }
+                                                                            handleLinkClick(subItem.link);
+                                                                        }}
+                                                                    >
+                                                                        <div>
+                                                                            <div className="font-medium">{subItem.name}</div>
+                                                                            <div className="text-sm text-zinc-500 mt-1">{subItem.description}</div>
+                                                                        </div>
+                                                                    </Link>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <Link
+                                                        href={item.link || '#'}
+                                                        className={`
+                                                        flex items-center px-4 py-4 text-lg font-medium rounded-lg transition-all duration-200
+                                                        ${activeItem === item.link
+                                                                ? 'text-white bg-purple-600 shadow-sm'
+                                                                : item.status === 'coming-soon'
+                                                                    ? 'text-zinc-500 cursor-not-allowed'
+                                                                    : 'text-zinc-300 hover:text-white hover:bg-zinc-800'
+                                                            }
+                                                    `}
+                                                        onClick={(e) => {
+                                                            if (item.status === 'coming-soon') {
+                                                                e.preventDefault();
+                                                                return;
+                                                            }
+                                                            handleLinkClick(item.link || '');
+                                                        }}
+                                                    >
+                                                        {item.icon}
+                                                        <span className="ml-4">{item.name}</span>
+                                                        {getStatusBadge(item.status, item.timeline)}
+                                                    </Link>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </nav>
+
+                                {/* Mobile Footer */}
+                                <div className="p-6 border-t border-zinc-800 bg-zinc-950 flex-shrink-0">
+                                    <p className="text-center text-base text-zinc-500 font-roboto">
+                                        Plataforma integral para eventos
+                                    </p>
+                                    <p className="text-center text-sm text-zinc-600 mt-2">
+                                        Tecnología • Creatividad • Escalabilidad
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </>
             )}
 
             {/* Overlay para cerrar dropdowns */}
-            {openDropdown && (
+            {openDropdown && !isMenuOpen && (
                 <div
                     className="fixed inset-0 z-30"
                     onClick={() => setOpenDropdown(null)}
