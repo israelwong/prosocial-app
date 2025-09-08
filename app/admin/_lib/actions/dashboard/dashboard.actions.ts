@@ -202,7 +202,7 @@ export async function getBalanceFinanciero(): Promise<BalanceFinanciero> {
             // Solo si el saldo es mayor a 1 peso (evitar errores de precisión flotante)
             if (saldoPendiente > 1) {
                 totalPendiente += saldoPendiente
-                
+
                 pagosPendientesData.push({
                     id: `${evento.id}-${cotizacion.id}`,
                     monto: Math.round(saldoPendiente * 100) / 100, // Redondear a 2 decimales
