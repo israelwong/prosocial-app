@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Settings, Search, Calendar, X } from 'lucide-react';
+import { Settings, Search, Calendar, X, Plus, Filter } from 'lucide-react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCorners, pointerWithin, getFirstCollision, CollisionDetection } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { obtenerEventosKanban, obtenerEtapasGestion, actualizarEtapaEvento, archivarEvento } from '@/app/admin/_lib/actions/gestion/gestion.actions';
@@ -23,6 +23,7 @@ export default function KanbanBoard() {
     const [eventosOriginales, setEventosOriginales] = useState<KanbanData>({});
     const [loading, setLoading] = useState(true);
     const [activeEvent, setActiveEvent] = useState<EventoKanbanType | null>(null);
+    const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
     // Estados para filtros
     const [filtros, setFiltros] = useState({
@@ -423,105 +424,119 @@ export default function KanbanBoard() {
                     <h1 className="text-2xl font-bold text-zinc-100">Gestión de Pipeline</h1>
                     <p className="text-zinc-400">Vista kanban para gestionar el flujo de eventos</p>
                 </div>
-                {/* <button
-                    onClick={() => router.push('/admin/dashboard/gestion/pipeline')}
-                    className="flex items-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-100 px-4 py-2 rounded-lg transition-colors border border-zinc-600 hover:border-zinc-500"
-                    title="Configurar etapas del pipeline"
-                >
-                    <Settings className="w-4 h-4" />
-                    Editar pipeline
-                </button> */}
-
-            </div>
-
-            {/* Panel de filtros */}
-            <div className="mb-6 bg-zinc-800 border border-zinc-700 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Filtro por nombre del evento */}
-                    <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">
-                            Nombre del evento
-                        </label>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
-                            <input
-                                type="text"
-                                value={filtros.nombre}
-                                onChange={(e) => setFiltros(prev => ({ ...prev, nombre: e.target.value }))}
-                                placeholder="Buscar evento..."
-                                className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Filtro por cliente */}
-                    <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">
-                            Cliente
-                        </label>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
-                            <input
-                                type="text"
-                                value={filtros.cliente}
-                                onChange={(e) => setFiltros(prev => ({ ...prev, cliente: e.target.value }))}
-                                placeholder="Buscar cliente..."
-                                className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Filtro fecha desde */}
-                    <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">
-                            Fecha desde
-                        </label>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
-                            <input
-                                type="date"
-                                value={filtros.fechaDesde}
-                                onChange={(e) => setFiltros(prev => ({ ...prev, fechaDesde: e.target.value }))}
-                                className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Filtro fecha hasta */}
-                    <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">
-                            Fecha hasta
-                        </label>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
-                            <input
-                                type="date"
-                                value={filtros.fechaHasta}
-                                onChange={(e) => setFiltros(prev => ({ ...prev, fechaHasta: e.target.value }))}
-                                className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                    </div>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setMostrarFiltros(!mostrarFiltros)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium border ${mostrarFiltros
+                            ? 'bg-zinc-600 border-zinc-500 text-zinc-100'
+                            : 'bg-zinc-700 border-zinc-600 text-zinc-300 hover:bg-zinc-600 hover:border-zinc-500'
+                            }`}
+                        title="Mostrar/ocultar filtros"
+                    >
+                        <Filter className="w-4 h-4" />
+                        <span className="hidden sm:inline">Filtros</span>
+                    </button>
+                    <button
+                        onClick={() => router.push('/admin/dashboard/eventos/nuevo')}
+                        className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-colors font-medium"
+                        title="Crear nuevo evento"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span className="hidden sm:inline">Nuevo Evento</span>
+                    </button>
                 </div>
-
-                {/* Botón para limpiar filtros */}
-                {(filtros.nombre || filtros.cliente || filtros.fechaDesde || filtros.fechaHasta) && (
-                    <div className="mt-4 flex justify-end">
-                        <button
-                            onClick={() => setFiltros({
-                                nombre: '',
-                                cliente: '',
-                                fechaDesde: '',
-                                fechaHasta: ''
-                            })}
-                            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg transition-colors border border-zinc-600"
-                        >
-                            <X className="w-4 h-4" />
-                            Limpiar filtros
-                        </button>
-                    </div>
-                )}
             </div>
+
+            {/* Panel de filtros - Colapsable */}
+            {mostrarFiltros && (
+                <div className="mb-6 bg-zinc-800 border border-zinc-700 rounded-lg p-4 animate-in slide-in-from-top-2 duration-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Filtro por nombre del evento */}
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-300 mb-2">
+                                Nombre del evento
+                            </label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
+                                <input
+                                    type="text"
+                                    value={filtros.nombre}
+                                    onChange={(e) => setFiltros(prev => ({ ...prev, nombre: e.target.value }))}
+                                    placeholder="Buscar evento..."
+                                    className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Filtro por cliente */}
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-300 mb-2">
+                                Cliente
+                            </label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
+                                <input
+                                    type="text"
+                                    value={filtros.cliente}
+                                    onChange={(e) => setFiltros(prev => ({ ...prev, cliente: e.target.value }))}
+                                    placeholder="Buscar cliente..."
+                                    className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Filtro fecha desde */}
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-300 mb-2">
+                                Fecha desde
+                            </label>
+                            <div className="relative">
+                                <Calendar className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
+                                <input
+                                    type="date"
+                                    value={filtros.fechaDesde}
+                                    onChange={(e) => setFiltros(prev => ({ ...prev, fechaDesde: e.target.value }))}
+                                    className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Filtro fecha hasta */}
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-300 mb-2">
+                                Fecha hasta
+                            </label>
+                            <div className="relative">
+                                <Calendar className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
+                                <input
+                                    type="date"
+                                    value={filtros.fechaHasta}
+                                    onChange={(e) => setFiltros(prev => ({ ...prev, fechaHasta: e.target.value }))}
+                                    className="w-full pl-10 pr-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Botón para limpiar filtros */}
+                    {(filtros.nombre || filtros.cliente || filtros.fechaDesde || filtros.fechaHasta) && (
+                        <div className="mt-4 flex justify-end">
+                            <button
+                                onClick={() => setFiltros({
+                                    nombre: '',
+                                    cliente: '',
+                                    fechaDesde: '',
+                                    fechaHasta: ''
+                                })}
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg transition-colors border border-zinc-600"
+                            >
+                                <X className="w-4 h-4" />
+                                Limpiar filtros
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
 
             <DndContext
                 sensors={sensors}
