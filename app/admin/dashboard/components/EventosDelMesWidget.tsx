@@ -19,7 +19,7 @@ export function EventosDelMesWidget({ eventos }: EventosDelMesWidgetProps) {
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-blue-400" />
-                    Eventos del Mes
+                    Agenda del Mes
                 </h3>
                 <span className="bg-blue-950/50 text-blue-300 text-sm font-medium px-2.5 py-0.5 rounded border border-blue-800">
                     {eventos.length} eventos
@@ -30,7 +30,7 @@ export function EventosDelMesWidget({ eventos }: EventosDelMesWidgetProps) {
                 {eventos.length === 0 ? (
                     <div className="text-center py-8 text-zinc-500">
                         <Calendar className="h-8 w-8 mx-auto mb-2 text-zinc-600" />
-                        <p>No hay eventos programados este mes</p>
+                        <p>No hay eventos en agenda este mes</p>
                     </div>
                 ) : (
                     eventos.map((evento) => (
@@ -82,7 +82,7 @@ export function EventosDelMesWidget({ eventos }: EventosDelMesWidgetProps) {
                         href="/admin/dashboard/eventos"
                         className="w-full text-center text-sm text-blue-400 hover:text-blue-300 font-medium block py-2 hover:bg-zinc-800 rounded transition-colors"
                     >
-                        Ver todos los eventos →
+                        Ver toda la agenda →
                     </Link>
                 </div>
             )}

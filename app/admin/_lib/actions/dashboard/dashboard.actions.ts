@@ -12,6 +12,7 @@ import {
     MetricasRendimiento,
     DashboardStats
 } from '@/types/dashboard'
+import { COTIZACION_STATUS, PAGO_STATUS } from '@/app/admin/_lib/constants/status'
 
 /**
  * Revalida el cache del dashboard
@@ -58,163 +59,183 @@ export async function getDashboardData(): Promise<DashboardData> {
 }
 
 /**
- * Obtiene eventos del mes actual con paginación y optimización
+ * Obtiene la agenda del mes actual desde la tabla Agenda
  */
 export async function getEventosDelMes(): Promise<EventoResumen[]> {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
     const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
 
-    const eventos = await prisma.evento.findMany({
+    const agendaItems = await prisma.agenda.findMany({
         where: {
-            fecha_evento: {
+            fecha: {
                 gte: startOfMonth,
                 lte: endOfMonth
             },
-            status: 'active'
+            status: {
+                not: 'cancelado'
+            }
         },
         select: {
             id: true,
-            nombre: true,
-            fecha_evento: true,
-            sede: true,
+            concepto: true,
+            descripcion: true,
+            fecha: true,
+            hora: true,
             direccion: true,
-            Cliente: {
+            status: true,
+            agendaTipo: true,
+            Evento: {
                 select: {
-                    nombre: true
-                }
-            },
-            EventoEtapa: {
-                select: {
+                    id: true,
                     nombre: true,
-                    codigo: true
-                }
-            }
-        },
-        orderBy: {
-            fecha_evento: 'asc'
-        },
-        take: 10 // Limitar para el widget
-    })
-
-    return eventos.map(evento => ({
-        id: evento.id,
-        nombre: evento.nombre,
-        fecha_evento: evento.fecha_evento,
-        sede: evento.sede,
-        direccion: evento.direccion,
-        cliente_nombre: evento.Cliente.nombre,
-        etapa_nombre: evento.EventoEtapa?.nombre || 'Sin etapa',
-        etapa_color: null // Ya no hay campo color
-    }))
-}
-
-/**
- * Obtiene balance financiero del mes
- */
-export async function getBalanceFinanciero(): Promise<BalanceFinanciero> {
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-
-    // Total facturado (cotizaciones aprobadas)
-    const totalFacturadoResult = await prisma.cotizacion.aggregate({
-        where: {
-            status: 'aprobada',
-            createdAt: {
-                gte: startOfMonth
-            }
-        },
-        _sum: {
-            precio: true
-        }
-    })
-
-    // Total pagado
-    const totalPagadoResult = await prisma.pago.aggregate({
-        where: {
-            status: 'paid',
-            createdAt: {
-                gte: startOfMonth
-            },
-            tipo_transaccion: 'ingreso'
-        },
-        _sum: {
-            monto: true
-        }
-    })
-
-    // Pagos pendientes del mes
-    const pagosPendientesData = await prisma.pago.findMany({
-        where: {
-            status: {
-                in: ['pending', 'processing']
-            },
-            createdAt: {
-                gte: startOfMonth
-            },
-            tipo_transaccion: 'ingreso'
-        },
-        include: {
-            Cotizacion: {
-                include: {
-                    Evento: {
-                        include: {
-                            Cliente: {
-                                select: {
-                                    nombre: true
-                                }
-                            }
+                    sede: true,
+                    direccion: true,
+                    Cliente: {
+                        select: {
+                            nombre: true
+                        }
+                    },
+                    EventoEtapa: {
+                        select: {
+                            nombre: true,
+                            codigo: true
                         }
                     }
                 }
             }
         },
         orderBy: {
-            createdAt: 'asc'
+            fecha: 'asc'
+        },
+        take: 10 // Limitar para el widget
+    })
+
+    return agendaItems.map(agendaItem => ({
+        id: agendaItem.Evento.id,
+        nombre: agendaItem.concepto || agendaItem.Evento.nombre,
+        fecha_evento: agendaItem.fecha || new Date(),
+        sede: agendaItem.Evento.sede,
+        direccion: agendaItem.direccion || agendaItem.Evento.direccion,
+        cliente_nombre: agendaItem.Evento.Cliente.nombre,
+        etapa_nombre: agendaItem.Evento.EventoEtapa?.nombre || 'Sin etapa',
+        etapa_color: null // Ya no hay campo color
+    }))
+}
+
+/**
+ * Obtiene balance financiero del mes basado en eventos que se celebran en el mes actual
+ */
+export async function getBalanceFinanciero(): Promise<BalanceFinanciero> {
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+
+    // 1. BALANCE DEL MES: Suma de todos los pagos del mes actual
+    const pagosDelMes = await prisma.pago.findMany({
+        where: {
+            createdAt: {
+                gte: startOfMonth,
+                lte: endOfMonth
+            },
+            status: {
+                in: [PAGO_STATUS.PAID, PAGO_STATUS.COMPLETADO]
+            }
+        },
+        select: {
+            monto: true
         }
     })
 
-    const totalFacturado = totalFacturadoResult._sum.precio || 0
-    const totalPagado = totalPagadoResult._sum.monto || 0
-    const totalPendiente = pagosPendientesData.reduce((sum, pago) => sum + pago.monto, 0)
+    const totalPagado = pagosDelMes.reduce((sum, pago) => sum + pago.monto, 0)
+
+    // 2. PENDIENTE POR COBRAR: Saldos diferentes a 0 donde evento se celebra este mes o en meses anteriores
+    const eventosConSaldos = await prisma.evento.findMany({
+        where: {
+            fecha_evento: {
+                lte: endOfMonth // Este mes o meses anteriores
+            }
+        },
+        include: {
+            Cliente: {
+                select: {
+                    nombre: true
+                }
+            },
+            Cotizacion: {
+                where: {
+                    status: {
+                        in: [COTIZACION_STATUS.APROBADA, COTIZACION_STATUS.AUTORIZADO]
+                    }
+                },
+                include: {
+                    Pago: {
+                        where: {
+                            status: {
+                                in: [PAGO_STATUS.PAID, PAGO_STATUS.COMPLETADO]
+                            }
+                        },
+                        select: {
+                            monto: true
+                        }
+                    }
+                }
+            }
+        }
+    })
+
+    // Calcular saldos pendientes
+    let totalFacturado = 0
+    let totalPendiente = 0
+    const pagosPendientesData: any[] = []
+
+    eventosConSaldos.forEach(evento => {
+        evento.Cotizacion.forEach(cotizacion => {
+            // Total facturado = precio - descuento
+            const montoFacturado = (cotizacion.precio || 0) - (cotizacion.descuento || 0)
+            totalFacturado += montoFacturado
+
+            // Calcular pagos realizados por esta cotización
+            const totalPagadoCotizacion = cotizacion.Pago.reduce((sum, pago) => sum + pago.monto, 0)
+
+            // Calcular saldo pendiente
+            const saldoPendiente = montoFacturado - totalPagadoCotizacion
+
+            // Solo si el saldo es mayor a 1 peso (evitar errores de precisión flotante)
+            if (saldoPendiente > 1) {
+                totalPendiente += saldoPendiente
+                
+                pagosPendientesData.push({
+                    id: `${evento.id}-${cotizacion.id}`,
+                    monto: Math.round(saldoPendiente * 100) / 100, // Redondear a 2 decimales
+                    eventoId: evento.id,
+                    evento_nombre: evento.nombre,
+                    cliente_nombre: evento.Cliente.nombre,
+                    fecha_evento: evento.fecha_evento
+                })
+            }
+        })
+    })
 
     const porcentajePagado = totalFacturado > 0 ? (totalPagado / totalFacturado) * 100 : 0
 
-    // Para simplificar, consideramos pagos vencidos los que tienen más de 30 días de creados y están pendientes
-    const now = new Date()
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(now.getDate() - 30)
-
-    const pagosPendientes = pagosPendientesData
-        .filter(pago => pago.createdAt > thirtyDaysAgo)
-        .map(pago => ({
-            id: pago.id,
-            monto: pago.monto,
-            concepto: pago.concepto,
-            eventoId: pago.Cotizacion?.Evento?.id || '',
-            evento_nombre: pago.Cotizacion?.Evento?.nombre || 'Sin evento',
-            cliente_nombre: pago.Cotizacion?.Evento?.Cliente?.nombre || 'Sin cliente',
-            fecha_vencimiento: null
-        }))
-
-    const pagosVencidos = pagosPendientesData
-        .filter(pago => pago.createdAt <= thirtyDaysAgo)
-        .map(pago => ({
-            id: pago.id,
-            monto: pago.monto,
-            concepto: pago.concepto,
-            eventoId: pago.Cotizacion?.Evento?.id || '',
-            evento_nombre: pago.Cotizacion?.Evento?.nombre || 'Sin evento',
-            cliente_nombre: pago.Cotizacion?.Evento?.Cliente?.nombre || 'Sin cliente',
-            fecha_vencimiento: null,
-            diasVencido: Math.floor((now.getTime() - pago.createdAt.getTime()) / (1000 * 60 * 60 * 24))
-        }))
+    // Formatear datos para la respuesta
+    const pagosPendientes = pagosPendientesData.map(pago => ({
+        id: pago.id,
+        monto: pago.monto,
+        concepto: 'Saldo pendiente',
+        eventoId: pago.eventoId,
+        evento_nombre: pago.evento_nombre,
+        cliente_nombre: pago.cliente_nombre,
+        fecha_evento: pago.fecha_evento,
+        fecha_vencimiento: null
+    }))
 
     return {
         totalFacturado,
-        totalPagado,
-        totalPendiente,
+        totalPagado, // Balance del mes
+        totalPendiente, // Pendiente por cobrar
         porcentajePagado,
         pagosPendientes,
-        pagosVencidos
+        pagosVencidos: [] // Por ahora sin lógica de vencidos
     }
 }
 
@@ -538,10 +559,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         prisma.evento.count({
             where: { status: 'active' }
         }),
-        prisma.evento.count({
+        prisma.agenda.count({
             where: {
-                fecha_evento: { gte: startOfMonth },
-                status: 'active'
+                fecha: { gte: startOfMonth },
+                status: { not: 'cancelado' }
             }
         }),
         prisma.cliente.count({

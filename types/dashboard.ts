@@ -22,11 +22,14 @@ export interface BalanceFinanciero {
 export interface PagoPendiente {
     id: string
     monto: number
-    concepto: string
+    concepto?: string
     eventoId: string
     evento_nombre: string
     cliente_nombre: string
-    fecha_vencimiento: Date | null
+    fecha_evento: Date
+    fecha_vencimiento?: Date | null
+    diasDespuesEvento?: number // Para pagos pendientes después del evento
+    esPendienteRemanente?: boolean // Flag para identificar pagos remanentes
 }
 
 export interface PagoVencido extends PagoPendiente {
@@ -91,6 +94,7 @@ export interface MetricasRendimiento {
 }
 
 export interface DashboardData {
+    /** Items de la agenda del mes actual */
     eventosDelMes: EventoResumen[]
     balanceFinanciero: BalanceFinanciero
     prospectosNuevos: ProspectoNuevo[]

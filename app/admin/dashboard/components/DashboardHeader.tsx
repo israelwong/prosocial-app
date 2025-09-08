@@ -23,7 +23,7 @@ export function DashboardHeader({ stats, ultimaActualizacion }: DashboardHeaderP
             description: 'Total en sistema'
         },
         {
-            title: 'Eventos del Mes',
+            title: 'Agenda del Mes',
             value: stats.totalEventosMes,
             icon: Calendar,
             color: 'text-green-400 bg-green-950/50',
