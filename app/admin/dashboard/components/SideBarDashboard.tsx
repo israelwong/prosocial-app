@@ -18,7 +18,7 @@ import { validarPagoStripe } from '../../_lib/actions/pago/pago.actions'
 import { EVENTO_STATUS, AGENDA_STATUS } from '../../_lib/constants/status'
 
 const links = [
-    // { href: '/admin/dashboard', label: 'Inicio', icon: Home, alt: 'Inicio' },
+    { href: '/admin/dashboard', label: 'Dashboard', icon: Home, alt: 'Dashboard' },
     { href: '/admin/dashboard/gestion', label: 'Kanban', icon: Columns, alt: 'Kanban' },
     { href: '/admin/dashboard/eventos', label: 'Eventos', icon: Calendar, alt: 'Eventos' },
     { href: '/admin/dashboard/seguimiento', label: 'Seguimiento', icon: Inbox, alt: 'Seguimiento' },
