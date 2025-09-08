@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast'
 import SolicitudPaqueteModal from '../../components/modals/SolicitudPaqueteModal'
 import ModalAyudaComparador from '../../components/modals/ModalAyudaComparador'
 import AyudaEleccionCotizaciones from '../../components/ui/AyudaEleccionCotizaciones'
-import FechaLimiteBadge from '@/app/components/ui/FechaLimiteBadge'
+import FechaLimiteBadge from '@/app/evento/components/ui/FechaLimiteBadge'
 
 // Tipos
 interface ServicioDetalle {

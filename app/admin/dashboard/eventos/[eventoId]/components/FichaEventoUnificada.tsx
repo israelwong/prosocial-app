@@ -26,7 +26,7 @@ import {
     archivarEvento,
     desarchivarEvento
 } from '@/app/admin/_lib/actions/evento/evento.actions'
-import ModalConfirmacionEliminacion from '@/app/components/ui/ModalConfirmacionEliminacion'
+import ModalConfirmacionEliminacion from '@/app/admin/components/ui/ModalConfirmacionEliminacion'
 import { useModalEliminacionEvento } from '@/app/hooks/useModalEliminacionEvento'
 import {
     Calendar,

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, Package, DollarSign, Calendar, Users, CheckCircle, MessageCircle, Scale, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import SolicitudPaqueteModal from '../../../[eventoId]/components/modals/SolicitudPaqueteModal'
-import ValidacionFechaInfo from '@/app/components/ui/ValidacionFechaInfo'
+import ValidacionFechaInfo from '@/app/evento/components/ui/ValidacionFechaInfo'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
 
 // Tipos para la estructura de datos (reutilizando la lógica exitosa)

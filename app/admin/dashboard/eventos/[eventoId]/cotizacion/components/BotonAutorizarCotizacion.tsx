@@ -7,7 +7,7 @@ import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
 import { EVENTO_ETAPAS } from '@/app/admin/_lib/constants/evento-etapas';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import ModalConfirmacionEliminacion from '@/app/components/ui/ModalConfirmacionEliminacion';
+import ModalConfirmacionEliminacion from '@/app/admin/components/ui/ModalConfirmacionEliminacion';
 import { useEliminacionCotizacion } from '@/app/hooks/useModalEliminacion';
 
 interface BotonAutorizarCotizacionProps {

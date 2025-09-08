@@ -50,7 +50,7 @@ const getStatusDisplayName = (status: string | undefined) => {
     }
 }
 import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
-import ModalConfirmacionEliminacion from '@/app/components/ui/ModalConfirmacionEliminacion'
+import ModalConfirmacionEliminacion from '@/app/admin/components/ui/ModalConfirmacionEliminacion'
 import { useEliminacionCotizacion } from '@/app/hooks/useModalEliminacion'
 import { toast } from 'sonner'
 

@@ -1,8 +1,11 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Header from '@/app/components/ui/Header';
-import Footer from '@/app/components/ui/Footer';
+import { Metadata } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
+import Header from '@/app/checkout/components/ui/Header';
+import Footer from '@/app/checkout/components/ui/Footer';
 import PagoExitoso from '../components/PagoExitoso';
 
 export default function Page() {

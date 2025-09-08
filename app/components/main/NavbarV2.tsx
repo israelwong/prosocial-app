@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Menu, X, ChevronDown, Calendar, Cog, Building2, Layers, Users, Mail } from 'lucide-react';
 import { usePathname } from 'next/navigation'
@@ -24,6 +24,7 @@ interface MenuItem {
 
 export default function NavbarV2() {
     const pathname = usePathname()
+    const navbarRef = useRef<HTMLElement>(null)
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [activeItem, setActiveItem] = useState('');
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -31,6 +32,25 @@ export default function NavbarV2() {
     useEffect(() => {
         setActiveItem(pathname || '')
     }, [pathname])
+
+    // Effect para cerrar dropdown al hacer click fuera del navbar
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (navbarRef.current && !navbarRef.current.contains(event.target as Node)) {
+                setOpenDropdown(null);
+            }
+        };
+
+        // Solo agregar el listener si hay un dropdown abierto
+        if (openDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        // Cleanup del event listener
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [openDropdown]);
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -116,7 +136,7 @@ export default function NavbarV2() {
     };
 
     return (
-        <header className="bg-zinc-900/95 backdrop-blur-sm border-b border-zinc-800 text-white sticky top-0 z-50">
+        <header ref={navbarRef} className="bg-zinc-900/95 backdrop-blur-sm border-b border-zinc-800 text-white sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
 
