@@ -61,15 +61,6 @@ export function BalanceFinancieroWidget({ balance }: BalanceFinancieroWidgetProp
                 </div>
             </div>
 
-            {/* Total facturado */}
-            <div className="flex items-center gap-2 mb-4 p-3 bg-blue-950/30 rounded-lg border border-blue-800">
-                <TrendingUp className="h-4 w-4 text-blue-400" />
-                <span className="text-sm text-blue-300">Total facturado:</span>
-                <span className="font-semibold text-blue-200">
-                    {formatCurrency(balance.totalFacturado)}
-                </span>
-            </div>
-
             {/* Pagos pendientes/vencidos */}
             {(balance.pagosPendientes.length > 0 || balance.pagosVencidos.length > 0) && (
                 <div className="space-y-2">
