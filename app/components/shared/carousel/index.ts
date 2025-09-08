@@ -1,6 +1,7 @@
 // Exportaciones principales del sistema de carrusel
 export { default as ImageCarousel } from './ImageCarousel'
 export { XVCarousel, BodaCarousel, CorporativoCarousel, EventCarousel } from './EventCarousels'
+export { default as TestimonialsCarousel } from './TestimonialsCarousel';
 
 // Tipos para facilitar el uso
 export interface CarouselConfig {

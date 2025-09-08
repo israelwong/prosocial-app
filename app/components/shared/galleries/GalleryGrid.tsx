@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import Image from 'next/image'
-import { EventCarousel } from '@/app/components/ui/carousel'
+import { EventCarousel } from '@/app/components/shared/carousel'
 import GallerySlider from './GallerySlider'
 
 // Tipos más flexibles para diferentes contextos

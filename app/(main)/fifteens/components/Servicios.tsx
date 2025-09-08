@@ -5,7 +5,7 @@ import TitlePulse from '@/app/components/main/TitlePulse';
 // import SlideFotosSesionesVestido from '@/app/components/main/Fifteens/SlideFotosSesionesVestido';
 // import SlideFotosSesionesCasuales from '@/app/components/main/Fifteens/SlideFotosSesionesCasuales';
 // import SlideFotosEvento from '@/app/components/main/Fifteens/SlideFotosEvento';
-import VideoPlayer from '@/app/components/main/VideoPlayer';
+import { VideoPlayer } from '@/app/components/shared/video';
 import Hook from '@/app/components/main/Hook';
 import { ArrowDown } from 'lucide-react';
 

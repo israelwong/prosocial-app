@@ -9,7 +9,7 @@ Este sistema proporciona componentes de carrusel flexibles y reutilizables para 
 Carrusel genérico y totalmente configurable.
 
 ```tsx
-import { ImageCarousel } from "@/app/components/ui/carousel";
+import { ImageCarousel } from "@/app/components/shared/carousel";
 
 <ImageCarousel
   images={["1.jpg", "2.jpg", "3.jpg"]}
@@ -29,7 +29,7 @@ import { ImageCarousel } from "@/app/components/ui/carousel";
 Selecciona automáticamente las imágenes y configuración según el tipo de evento.
 
 ```tsx
-import { EventCarousel } from "@/app/components/ui/carousel";
+import { EventCarousel } from "@/app/components/shared/carousel";
 
 <EventCarousel
   tipoEvento="xv" // o "boda"
@@ -42,7 +42,7 @@ import { EventCarousel } from "@/app/components/ui/carousel";
 Carruseles preconfigurados para cada tipo de evento.
 
 ```tsx
-import { XVCarousel, BodaCarousel } from '@/app/components/ui/carousel'
+import { XVCarousel, BodaCarousel } from '@/app/components/shared/carousel'
 
 <XVCarousel />
 <BodaCarousel />

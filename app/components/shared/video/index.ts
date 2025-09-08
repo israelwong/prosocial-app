@@ -1,4 +1,5 @@
 // Video Components - Single videos and carousels
+export { default as VideoPlayer } from './VideoPlayer';
 export { default as VideoSingle } from './VideoSingle';
 export { default as VideoCarousel } from './VideoCarousel';
 

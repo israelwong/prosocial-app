@@ -1,21 +1,17 @@
 import React from 'react'
 import type { Metadata } from 'next'
-import {
-  HeroMarketing,
-  ServiceSection,
-  VideoSection,
-  PortfolioGallery,
-  TestimonialsCarousel
-} from '@/app/components/shared'
+import Testimonios from '@/app/components/main/Testimonios'
 import LeadFormMOFU from './components/LeadFormMOFU'
+import CTASection from '@/app/components/main/CTASection'
+import { ContactHero } from '@/app/components/shared/heroes'
 
 export const metadata: Metadata = {
-  title: 'Contacto',
-  description: 'Contáctanos para conocer nuestros servicios de fotografía y video profesional. Te ayudamos a crear el evento perfecto.',
-  keywords: ['contacto', 'cotización', 'presupuesto', 'fotografía profesional', 'video profesional'],
+  title: 'Contáctanos Hoy Mismo - ProSocial',
+  description: 'Nos emociona saber que nos estás considerando para cubrir tu evento. Verificamos disponibilidad y te enviamos nuestros paquetes personalizados.',
+  keywords: ['contacto', 'cotización', 'disponibilidad', 'paquetes', 'fotografía profesional', 'video profesional'],
   openGraph: {
-    title: 'Contacto - ProSocial',
-    description: 'Contáctanos para conocer nuestros servicios de fotografía y video profesional.',
+    title: 'Contáctanos Hoy Mismo - ProSocial',
+    description: 'Verificamos disponibilidad para tu fecha y te enviamos nuestros paquetes personalizados.',
   },
 }
 
@@ -32,24 +28,27 @@ export default async function ContactoPage({ searchParams }: ContactoPageProps) 
     switch (ref) {
       case 'fifteens':
         return {
+          evento: "XV Años",
           titulo: "¡Tu Celebración de XV Años te Espera!",
-          subtitulo: "Capturamos cada momento especial de tu quinceañera",
-          descripcion: "Especialistas en XV años con más de 10 años de experiencia. Fotografía y video profesional para que este día sea perfecto y memorable.",
-          overlayGradient: "from-purple-900/10 via-transparent to-pink-900/20"
+          descripcion: "Especialistas en quinceañeras con más de 10 años de experiencia. Capturamos cada momento especial de esta fecha única.",
+          gradientFrom: "from-purple-600",
+          gradientTo: "to-pink-600"
         }
       case 'weddings':
         return {
+          evento: "Bodas",
           titulo: "¡Tu Boda Perfecta te Espera!",
-          subtitulo: "Documentamos tu historia de amor de manera única",
-          descripcion: "Especialistas en bodas con más de 10 años de experiencia. Fotografía y video profesional para que tu día especial sea perfecto y memorable.",
-          overlayGradient: "from-blue-900/10 via-transparent to-purple-900/20"
+          descripcion: "Especialistas en bodas con más de 10 años de experiencia. Documentamos tu historia de amor de manera única.",
+          gradientFrom: "from-blue-600",
+          gradientTo: "to-purple-600"
         }
       default:
         return {
-          titulo: "¿Listo para capturar momentos únicos?",
-          subtitulo: "Contáctanos y hagamos realidad la fotografía de tus sueños",
-          descripcion: "Especialistas en bodas, XV años y eventos corporativos con más de 10 años de experiencia. Te ayudamos a crear recuerdos que durarán para siempre.",
-          overlayGradient: "from-blue-900/10 via-transparent to-purple-900/20"
+          evento: "Eventos",
+          titulo: "Contáctanos Hoy Mismo",
+          descripcion: "Nos emociona saber que nos estás considerando para cubrir tu evento. Especialistas en bodas, XV años y eventos corporativos.",
+          gradientFrom: "from-purple-600",
+          gradientTo: "to-blue-600"
         }
     }
   }
@@ -57,116 +56,43 @@ export default async function ContactoPage({ searchParams }: ContactoPageProps) 
   const heroContent = getHeroContent()
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section con variant landing */}
-      <HeroMarketing
-        variant="landing"
+    <div className="min-h-screen bg-black">
+
+      {/* Hero Section */}
+      <ContactHero
+        evento={heroContent.evento}
         titulo={heroContent.titulo}
-        subtitulo={heroContent.subtitulo}
         descripcion={heroContent.descripcion}
-        overlayGradient={heroContent.overlayGradient}
+        gradientFrom={heroContent.gradientFrom}
+        gradientTo={heroContent.gradientTo}
         showScrollIndicator={true}
       />
 
-      {/* Formulario MOFU */}
-      <section className="py-16 bg-zinc-900">
-        <div className="container mx-auto px-4">
+      {/* Lead Form Section */}
+      <section className="py-20 bg-zinc-900 relative">
+        {/* Background accent */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-800/20 to-transparent" />
+
+        <div className="container mx-auto px-4 relative z-10">
           <LeadFormMOFU refSource={ref} />
         </div>
       </section>
 
-      {/* Sección de Portfolio - Solo para referencia genérica */}
-      {!ref && (
-        <>
-          <section className="py-16 bg-zinc-900">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-white mb-4">
-                  Nuestro Trabajo Habla por Sí Solo
-                </h2>
-                <p className="text-zinc-400 max-w-2xl mx-auto">
-                  Explora nuestra galería y descubre el estilo que mejor se adapte a tu evento especial
-                </p>
-              </div>
+      {/* Testimonials Section */}
+      <Testimonios />
 
-              {/* Galería de Bodas */}
-              <div className="mb-16">
-                <PortfolioGallery
-                  tipoEvento="boda"
-                  variant="grid"
-                  titulo="Bodas"
-                  descripcion="Momentos únicos e irrepetibles capturados con elegancia y profesionalismo"
-                  imagenes={[
-                    'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/1.jpg',
-                    'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/2.jpg',
-                    'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/3.jpg'
-                  ]}
-                />
-              </div>
-
-              {/* Galería de XV Años */}
-              <div className="mb-16">
-                <PortfolioGallery
-                  tipoEvento="xv"
-                  variant="carousel"
-                  titulo="XV Años"
-                  descripcion="Celebraciones llenas de alegría y tradición, documentadas con el mejor estilo"
-                  imagenes={[
-                    'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/6.jpg',
-                    'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/7.jpg',
-                    'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/porfatolio/8.jpg'
-                  ]}
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Sección de Testimonios */}
-          <section className="py-16 bg-zinc-800">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-white mb-4">
-                  Lo que Dicen Nuestros Clientes
-                </h2>
-                <p className="text-zinc-400">
-                  La satisfacción de nuestros clientes es nuestra mejor carta de presentación
-                </p>
-              </div>
-
-              <TestimonialsCarousel
-                variant="centered"
-                autoplay={true}
-              />
-            </div>
-          </section>
-        </>
-      )}
-
-      {/* CTA Final */}
-      <section className="py-16 bg-gradient-to-r from-purple-900 to-blue-900">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            ¿Listo para Comenzar?
-          </h2>
-          <p className="text-white/90 mb-8 max-w-2xl mx-auto">
-            No esperes más para crear recuerdos únicos. Contáctanos hoy mismo y comencemos a planificar la fotografía perfecta para tu evento.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="https://wa.me/5215512345678"
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors"
-            >
-              📱 WhatsApp
-            </a>
-            <a
-              href="tel:+525512345678"
-              className="bg-white hover:bg-gray-100 text-gray-900 font-semibold py-3 px-8 rounded-lg transition-colors"
-            >
-              📞 Llamar Ahora
-            </a>
-          </div>
-        </div>
-      </section>
+      {/* CTA Final - Componente reutilizable */}
+      <CTASection
+        badge="✨ Listo para Comenzar"
+        title="Estamos Aquí Para Ti"
+        description="No esperes más para crear recuerdos únicos. Contáctanos ahora y comencemos a planificar la cobertura perfecta para tu evento."
+        whatsappNumber="5215512345678"
+        phoneNumber="+525512345678"
+        whatsappText="WhatsApp Directo"
+        phoneText="Llamar Ahora"
+        additionalInfo="Respuesta inmediata • Disponibilidad en tiempo real • Paquetes personalizados"
+        variant="purple"
+      />
     </div>
   )
 }

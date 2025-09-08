@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 import HeroRefactorizado from './components/HeroRefactorizado';
 import CTA from './components/CTA';
 import Hook from '@/app/components/main/Hook';
-import Nosotros from '@/app/components/main/Nosotros';
+import PorqueNosotros from '@/app/components/main/PorqueNosotros';
 import Servicios from './components/ServiciosRefactorizado';
 import Entregas from '@/app/components/main/Entregas';
-import Testomonios from '@/app/components/main/Testomonios';
+// import Testomonios from '@/app/components/main/Testomonios';
 import { FAQSection, GuaranteesSection, TrustBadges } from '@/app/components/shared';
 // import Galeria from '@/app/components/main/Galeria';
 
@@ -41,7 +41,7 @@ function page() {
         <Hook message={"Este momento especial solo se vive una vez, nosotros somos expertos en capturarlo."} />
       </section>
       <section>
-        <Nosotros />
+        <PorqueNosotros />
       </section>
       <section>
         <CTA />
@@ -59,7 +59,7 @@ function page() {
         <Entregas />
       </section>
       <section>
-        <Testomonios />
+        {/* <Testomonios /> */}
       </section>
 
       {/* Sección de Garantías */}

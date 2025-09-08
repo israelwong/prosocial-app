@@ -293,56 +293,6 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                 cantidadOpciones={resultadoCotizaciones.cotizaciones?.length || 0}
             />
 
-            {/* Alerta de tiempo mínimo de contratación */}
-            {/* {diasRestantes <= 30 && (
-                <section className="py-4 px-4">
-                    <div className="max-w-4xl mx-auto">
-                        <div className={`rounded-xl p-4 border backdrop-blur-sm ${diasRestantes <= 7
-                                ? 'bg-red-900/20 border-red-700/30'
-                                : diasRestantes <= 15
-                                    ? 'bg-amber-900/20 border-amber-700/30'
-                                    : 'bg-blue-900/20 border-blue-700/30'
-                            }`}>
-                            <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${diasRestantes <= 7
-                                        ? 'bg-red-600/20'
-                                        : diasRestantes <= 15
-                                            ? 'bg-amber-600/20'
-                                            : 'bg-blue-600/20'
-                                    }`}>
-                                    <svg className={`w-4 h-4 ${diasRestantes <= 7
-                                            ? 'text-red-400'
-                                            : diasRestantes <= 15
-                                                ? 'text-amber-400'
-                                                : 'text-blue-400'
-                                        }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                    </svg>
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className={`font-semibold text-sm ${diasRestantes <= 7
-                                            ? 'text-red-300'
-                                            : diasRestantes <= 15
-                                                ? 'text-amber-300'
-                                                : 'text-blue-300'
-                                        }`}>
-                                        {diasRestantes <= 7
-                                            ? '⚠️ Tiempo muy limitado para contratación'
-                                            : diasRestantes <= 15
-                                                ? '⏰ Tiempo limitado para algunos paquetes'
-                                                : '📅 Verifica tiempo mínimo de contratación'
-                                        }
-                                    </h3>
-                                    <p className="text-zinc-300 text-sm mt-1">
-                                        Tu evento es en {diasRestantes} días. Algunos paquetes requieren más tiempo de anticipación.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            )} */}
-
             {/* Cotizaciones principales */}
             <CotizacionesSection
                 cotizaciones={resultadoCotizaciones.cotizaciones || []}
@@ -361,20 +311,6 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
                     </div>
                 </section>
             )}
-
-            {/* Portfolio section */}
-            {/* {(() => {
-                const nombre = evento.EventoTipo?.nombre?.toLowerCase() || '';
-                if (nombre.includes('xv') || nombre.includes('15') || nombre.includes('boda')) {
-                    const isXV = nombre.includes('xv') || nombre.includes('15');
-                    return (
-                        <PortfolioSection
-                            tipoEvento={isXV ? 'xv' : 'boda'}
-                        />
-                    );
-                }
-                return null;
-            })()} */}
 
             {/* Testimonios section */}
             <TestimoniosSection />

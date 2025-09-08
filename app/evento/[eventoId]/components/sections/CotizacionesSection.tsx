@@ -4,7 +4,7 @@ import { supabase } from '@/app/admin/_lib/supabase'
 import { REALTIME_CONFIG } from '../../../config/realtime.config'
 import CotizacionCard from '../cards/CotizacionCard'
 import NotificacionRealtime from '../ui/NotificacionRealtime'
-import AyudaEleccionCotizaciones from '@/app/components/shared/AyudaEleccionCotizaciones'
+import AyudaEleccionCotizaciones from '../ui/AyudaEleccionCotizaciones'
 
 interface Cotizacion {
     id: string

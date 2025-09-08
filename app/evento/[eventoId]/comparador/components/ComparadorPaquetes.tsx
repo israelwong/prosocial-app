@@ -7,7 +7,7 @@ import { ArrowLeft, Check, X, Package, CreditCard, MessageCircle, Filter, Eye, E
 import { toast } from 'react-hot-toast'
 import SolicitudPaqueteModal from '../../components/modals/SolicitudPaqueteModal'
 import ModalAyudaComparador from '../../components/modals/ModalAyudaComparador'
-import AyudaEleccionCotizaciones from '@/app/components/shared/AyudaEleccionCotizaciones'
+import AyudaEleccionCotizaciones from '../../components/ui/AyudaEleccionCotizaciones'
 import FechaLimiteBadge from '@/app/components/ui/FechaLimiteBadge'
 
 // Tipos
