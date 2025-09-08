@@ -1,5 +1,5 @@
 import { ProspectoNuevo } from '@/types/dashboard'
-import { UserPlus, Phone, Mail, Calendar, TrendingUp } from 'lucide-react'
+import { UserPlus, Mail, Calendar, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 
 interface ProspectosNuevosWidgetProps {
@@ -88,11 +88,6 @@ export function ProspectosNuevosWidget({ prospectos }: ProspectosNuevosWidgetPro
                                     </p>
 
                                     <div className="space-y-1">
-                                        <div className="flex items-center gap-1 text-xs text-zinc-400">
-                                            <Phone className="h-3 w-3" />
-                                            {prospecto.telefono}
-                                        </div>
-
                                         {prospecto.email && (
                                             <div className="flex items-center gap-1 text-xs text-zinc-400">
                                                 <Mail className="h-3 w-3" />
@@ -126,7 +121,7 @@ export function ProspectosNuevosWidget({ prospectos }: ProspectosNuevosWidgetPro
             {prospectos.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-zinc-800">
                     <Link
-                        href="/admin/dashboard/clientes?filter=prospectos"
+                        href="/admin/dashboard/kanban"
                         className="w-full text-center text-sm text-purple-400 hover:text-purple-300 font-medium block py-2 hover:bg-zinc-800 rounded transition-colors"
                     >
                         Ver todos los prospectos →
