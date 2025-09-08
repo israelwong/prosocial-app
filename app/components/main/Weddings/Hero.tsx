@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
-// import VideoPlayer from '@/app/ui/main/VideoPlayer'
-import BtnPromocion from '@/app/ui/main/BtnPromocion'
+// import VideoPlayer from '@/app/components/main/VideoPlayer'
+import BtnPromocion from '@/app/components/main/BtnPromocion'
 
 function Hero() {
     return (

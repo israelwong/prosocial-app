@@ -6,7 +6,7 @@ import {
     VideoSingle,
     PortfolioGallery
 } from '@/app/components/shared'
-import Hook from '@/app/ui/main/Hook'
+import Hook from '@/app/components/main/Hook'
 
 // Configuración de imágenes para cada tipo de sesión
 const imagenesConfig = {

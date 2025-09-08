@@ -1,6 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import SlideTestimonios from '@/app/ui/main/SlideTestimonios';
+import SlideTestimonios from '@/app/components/main/SlideTestimonios';
 
 function Testomonios() {
     return (

@@ -29,6 +29,7 @@ export default function Navbar() {
         { name: 'Fifteens', link: "/fifteens" },
         { name: 'Weddings', link: "/weddings" },
         { name: 'Contacto', link: "/contacto" },
+        { name: 'Clientes', link: "/clientes" },
     ];
 
     return (
@@ -37,10 +38,10 @@ export default function Navbar() {
                 <div className="flex items-center justify-between h-16">
 
                     {/* Logo */}
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 align-middle">
                         <Link href="/" onClick={() => handleLinkClick('/')}>
                             <Image
-                                src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_blanco.svg"
+                                src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_gris.svg"
                                 width={120}
                                 height={40}
                                 alt="ProSocial"
@@ -57,17 +58,18 @@ export default function Navbar() {
                                 key={index}
                                 href={item.link}
                                 className={`
-                                    relative px-3 py-2 text-sm font-medium transition-all duration-200
+                                    relative px-4 py-2 text-sm font-medium transition-all duration-300 rounded-md
+                                    font-roboto tracking-wide
                                     ${activeItem === item.link
-                                        ? 'text-white'
-                                        : 'text-zinc-400 hover:text-white'
+                                        ? 'text-white bg-zinc-800/50 shadow-lg border border-zinc-700'
+                                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800/30'
                                     }
                                 `}
                                 onClick={() => handleLinkClick(item.link)}
                             >
                                 {item.name}
                                 {activeItem === item.link && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"></div>
+                                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-white rounded-full"></div>
                                 )}
                             </Link>
                         ))}
@@ -92,7 +94,7 @@ export default function Navbar() {
                             {/* Mobile Header */}
                             <div className="flex items-center justify-between p-4 border-b border-zinc-800">
                                 <Image
-                                    src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_blanco.svg"
+                                    src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_gris.svg"
                                     width={100}
                                     height={32}
                                     alt="ProSocial"

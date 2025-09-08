@@ -1,7 +1,7 @@
 // 'use client';
 // import { Fade } from 'react-awesome-reveal';
 import { CircleCheck, Clock8, Calendar, User, Camera, Award } from 'lucide-react';
-import NosotrosItem from '@/app/ui/main/NosotrosItem';
+import NosotrosItem from '@/app/components/main/NosotrosItem';
 
 function Nosotros() {
 

@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import BtnBorderSpin from '@/app/ui/main/BtnBorderSpin';
+import BtnBorderSpin from '@/app/components/main/BtnBorderSpin';
 import Link from 'next/link';
 
 interface CTASectionProps {

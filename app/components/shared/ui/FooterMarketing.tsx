@@ -143,22 +143,29 @@ function Footer({
         <footer className="bg-zinc-900 text-white">
             {/* Sección principal del footer */}
             <div className="container mx-auto px-4 py-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                     {/* Logo y descripción */}
-                    <div className="lg:col-span-1">
-                        <div className="mb-6">
-                            <h3 className="text-2xl font-bold mb-4">ProSocial</h3>
-                            <p className="text-zinc-400 text-sm leading-relaxed">
-                                Capturamos los momentos más importantes de tu vida con profesionalismo y arte.
-                                Especialistas en XV años, bodas y eventos especiales.
-                            </p>
+                    <div className="lg:col-span-5 mb-5">
+                        <div className="mb-6 flex items-center space-x-3">
+                            <Image
+                                src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/isotipo_gris.svg"
+                                alt="ProSocial Isotipo"
+                                width={30}
+                                height={30}
+                                className="mb-0"
+                            />
+                            <h3 className="text-2xl font-bold font-roboto">ProSocial</h3>
                         </div>
+
+                        <p className="text-zinc-400 text-sm leading-relaxed font-roboto max-w-md">
+                            Siempre presentes en momentos especiales, creando recuerdos inolvidables para toda la vida.
+                        </p>
 
                         {/* Redes sociales */}
                         {showSocial && (
-                            <div>
-                                <h4 className="text-lg font-semibold mb-3">Síguenos</h4>
+                            <div className='mt-5'>
+                                <h4 className="text-lg font-semibold mb-3 font-roboto">Síguenos</h4>
                                 <div className="flex space-x-4">
                                     {socialLinks.map((social) => (
                                         <Link
@@ -166,7 +173,7 @@ function Footer({
                                             href={social.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className={`text-zinc-400 transition-colors duration-300 ${social.color}`}
+                                            className={`text-zinc-400 transition-colors duration-300 ${social.color} p-2 hover:bg-zinc-800 rounded-lg`}
                                             aria-label={social.name}
                                         >
                                             <i className={`${social.icon} text-xl`}></i>
@@ -177,42 +184,48 @@ function Footer({
                         )}
                     </div>
 
-                    {/* Sitemap */}
-                    {showSitemap && sitemapSections.map((section) => (
-                        <div key={section.title}>
-                            <h4 className="text-lg font-semibold mb-4">{section.title}</h4>
-                            <ul className="space-y-2">
-                                {section.links.map((link) => (
-                                    <li key={link.name}>
-                                        <Link
-                                            href={link.href}
-                                            className="text-zinc-400 hover:text-white transition-colors duration-300 text-sm"
-                                        >
-                                            {link.name}
-                                        </Link>
-                                    </li>
+                    {/* Sitemap en grid compacto */}
+                    {showSitemap && (
+                        <div className="lg:col-span-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 gap-6">
+                                {sitemapSections.map((section) => (
+                                    <div key={section.title}>
+                                        <h4 className="text-lg font-semibold mb-4 font-roboto">{section.title}</h4>
+                                        <ul className="space-y-2">
+                                            {section.links.map((link) => (
+                                                <li key={link.name}>
+                                                    <Link
+                                                        href={link.href}
+                                                        className="text-zinc-400 hover:text-white transition-colors duration-300 text-sm font-roboto hover:pl-2"
+                                                    >
+                                                        {link.name}
+                                                    </Link>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
                                 ))}
-                            </ul>
+                            </div>
                         </div>
-                    ))}
+                    )}
 
                     {/* Información de contacto */}
                     {showContact && (
-                        <div>
-                            <h4 className="text-lg font-semibold mb-4">Contacto</h4>
+                        <div className="lg:col-span-3">
+                            <h4 className="text-lg font-semibold mb-4 font-roboto">Contacto</h4>
                             <ul className="space-y-3">
                                 {contactInfo.map((info, index) => (
-                                    <li key={index} className="flex items-start space-x-3">
-                                        <span className="text-zinc-400 mt-1">{info.icon}</span>
+                                    <li key={index} className="flex items-start space-x-3 group">
+                                        <span className="text-zinc-400 mt-1 group-hover:text-white transition-colors">{info.icon}</span>
                                         {info.href ? (
                                             <Link
                                                 href={info.href}
-                                                className="text-zinc-400 hover:text-white transition-colors duration-300 text-sm"
+                                                className="text-zinc-400 hover:text-white transition-colors duration-300 text-sm font-roboto"
                                             >
                                                 {info.text}
                                             </Link>
                                         ) : (
-                                            <span className="text-zinc-400 text-sm">{info.text}</span>
+                                            <span className="text-zinc-400 text-sm font-roboto">{info.text}</span>
                                         )}
                                     </li>
                                 ))}
@@ -226,18 +239,18 @@ function Footer({
             <div className="border-t border-zinc-800">
                 <div className="container mx-auto px-4 py-6">
                     <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                        <div className="text-zinc-400 text-sm">
+                        <div className="text-zinc-400 text-sm font-roboto">
                             © {currentYear} ProSocial. Todos los derechos reservados.
                         </div>
 
                         {/* Crédito de diseño */}
-                        <div className="flex items-center space-x-2">
-                            <span className="text-zinc-500 text-xs">Sitio web diseñado por</span>
+                        <div className="flex items-center space-x-3">
+                            <span className="text-zinc-500 text-xs font-roboto">Sitio web diseñado por</span>
                             <Link
                                 href="https://promedia.mx"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="hover:opacity-80 transition-opacity"
+                                className="hover:opacity-80 transition-opacity flex items-center"
                             >
                                 <Image
                                     src="https://sfsjdyuwttrcgchbsxim.supabase.co/storage/v1/object/public/ProMedia/logo_dark_gray.svg"

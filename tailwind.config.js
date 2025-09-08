@@ -29,6 +29,7 @@ const config = {
       },
       fontFamily: {
         "Bebas-Neue": ["Bebas Neue", "sans-serif"],
+        roboto: ["var(--font-roboto)", "Roboto", "sans-serif"],
         "FunnelSans-Bold": ["FunnelSans-Bold", "sans-serif"],
         "FunnelSans-BoldItalic": ["FunnelSans-BoldItalic", "sans-serif"],
         "FunnelSans-ExtraBold": ["FunnelSans-ExtraBold", "sans-serif"],

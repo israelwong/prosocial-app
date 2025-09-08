@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import VideoPlayer from '@/app/ui/main/VideoPlayer'
+import VideoPlayer from '@/app/components/main/VideoPlayer'
 
 interface VideoSingleProps {
     src: string

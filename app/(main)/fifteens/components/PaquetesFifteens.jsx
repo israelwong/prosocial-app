@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import ColumnaPaquete from "@/app/ui/main/ColumnaPaquete";
+import ColumnaPaquete from "@/app/components/main/ColumnaPaquete";
 import Link from "next/link";
 
 export default function PaquetesFifteens() {

@@ -2,13 +2,13 @@ import React from 'react'
 import type { Metadata } from "next";
 import HeroRefactorizado from './components/HeroRefactorizado';
 import CTA from './components/CTA';
-import Hook from '@/app/ui/main/Hook';
-import Nosotros from '@/app/ui/main/Nosotros';
+import Hook from '@/app/components/main/Hook';
+import Nosotros from '@/app/components/main/Nosotros';
 import Servicios from './components/ServiciosRefactorizado';
-import Entregas from '@/app/ui/main/Entregas';
-import Testomonios from '@/app/ui/main/Testomonios';
+import Entregas from '@/app/components/main/Entregas';
+import Testomonios from '@/app/components/main/Testomonios';
 import { FAQSection, GuaranteesSection, TrustBadges } from '@/app/components/shared';
-// import Galeria from '@/app/ui/main/Galeria';
+// import Galeria from '@/app/components/main/Galeria';
 
 export const metadata: Metadata = {
   title: "XV Años",

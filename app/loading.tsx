@@ -1,5 +1,5 @@
 import React from 'react'
-import SkeletonPage from '@/app/ui/main/SkeletonPage'
+import SkeletonPage from '@/app/components/main/SkeletonPage'
 
 function loading() {
     return (

@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useRef } from 'react'
 import Glide from '@glidejs/glide'
-import VideoPlayer from '@/app/ui/main/VideoPlayer'
+import VideoPlayer from '@/app/components/main/VideoPlayer'
 
 export type VideoCarouselVariant = 'single' | 'multiple' | 'fullwidth'
 

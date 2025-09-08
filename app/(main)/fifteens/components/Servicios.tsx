@@ -1,12 +1,12 @@
 'use client';
 import React from 'react'
-import TitlePulse from '@/app/ui/main/TitlePulse';
+import TitlePulse from '@/app/components/main/TitlePulse';
 // Importaciones comentadas - componentes eliminados, reemplazados por MediaSlider
-// import SlideFotosSesionesVestido from '@/app/ui/main/Fifteens/SlideFotosSesionesVestido';
-// import SlideFotosSesionesCasuales from '@/app/ui/main/Fifteens/SlideFotosSesionesCasuales';
-// import SlideFotosEvento from '@/app/ui/main/Fifteens/SlideFotosEvento';
-import VideoPlayer from '@/app/ui/main/VideoPlayer';
-import Hook from '@/app/ui/main/Hook';
+// import SlideFotosSesionesVestido from '@/app/components/main/Fifteens/SlideFotosSesionesVestido';
+// import SlideFotosSesionesCasuales from '@/app/components/main/Fifteens/SlideFotosSesionesCasuales';
+// import SlideFotosEvento from '@/app/components/main/Fifteens/SlideFotosEvento';
+import VideoPlayer from '@/app/components/main/VideoPlayer';
+import Hook from '@/app/components/main/Hook';
 import { ArrowDown } from 'lucide-react';
 
 function Servicios() {

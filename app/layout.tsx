@@ -1,18 +1,21 @@
 import Script from "next/script";
 import type { Metadata } from "next";
+import { Roboto } from 'next/font/google';
 import "./globals.css";
+
+const roboto = Roboto({
+  weight: ['300', '400', '500', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-roboto',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://prosocial.mx'),
   title: {
     template: '%s | ProSocial',
-    default: 'ProSocial - Fotografía y Video Profesional para Eventos Sociales'
+    default: 'ProSocial - Plataforma Integral para Eventos'
   },
-  description: 'Especialistas en fotografía y video profesional para bodas, XV años y eventos corporativos. Más de 10 años de experiencia capturando momentos únicos.',
-  keywords: ['fotografía profesional', 'video profesional', 'bodas', 'XV años', 'eventos corporativos', 'México'],
-  authors: [{ name: 'ProSocial' }],
-  creator: 'ProSocial',
-  publisher: 'ProSocial',
   robots: {
     index: true,
     follow: true,
@@ -23,28 +26,6 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'es_MX',
-    url: 'https://prosocial.mx',
-    title: 'ProSocial - Fotografía y Video Profesional',
-    description: 'Especialistas en fotografía y video profesional para bodas, XV años y eventos corporativos.',
-    siteName: 'ProSocial',
-    images: [
-      {
-        url: 'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_blanco.svg',
-        width: 1200,
-        height: 630,
-        alt: 'ProSocial - Fotografía y Video Profesional',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'ProSocial - Fotografía y Video Profesional',
-    description: 'Especialistas en fotografía y video profesional para bodas, XV años y eventos corporativos.',
-    images: ['https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_blanco.svg'],
   },
   icons: {
     icon: [
@@ -68,7 +49,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es-MX">
-      <body className="antialiased min-h-screen bg-zinc-950/95">
+      <body className={`antialiased min-h-screen bg-zinc-950/95 ${roboto.variable}`}>
         {children}
 
         {/* FontAwesome Script al final del body para mejor performance */}
