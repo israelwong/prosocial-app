@@ -12,7 +12,7 @@ import {
     MetricasRendimiento,
     DashboardStats
 } from '@/types/dashboard'
-import { COTIZACION_STATUS, PAGO_STATUS } from '@/app/admin/_lib/constants/status'
+import { COTIZACION_STATUS, PAGO_STATUS, EVENTO_STATUS } from '@/app/admin/_lib/constants/status'
 
 /**
  * Revalida el cache del dashboard
@@ -202,7 +202,7 @@ export async function getBalanceFinanciero(): Promise<BalanceFinanciero> {
             // Solo si el saldo es mayor a 1 peso (evitar errores de precisión flotante)
             if (saldoPendiente > 1) {
                 totalPendiente += saldoPendiente
-                
+
                 pagosPendientesData.push({
                     id: `${evento.id}-${cotizacion.id}`,
                     monto: Math.round(saldoPendiente * 100) / 100, // Redondear a 2 decimales
@@ -307,21 +307,16 @@ export async function getProspectosNuevos(): Promise<ProspectoNuevo[]> {
  * Obtiene distribución por etapas
  */
 export async function getDistribucionEtapas(): Promise<EtapaDistribucion[]> {
-    // Obtener total de eventos activos
-    const totalEventos = await prisma.evento.count({
-        where: {
-            status: 'active'
-        }
-    })
-
-    // Obtener distribución por etapas
+    // Obtener distribución por etapas excluyendo eventos archivados
     const distribucion = await prisma.eventoEtapa.findMany({
         include: {
             _count: {
                 select: {
                     Evento: {
                         where: {
-                            status: 'active'
+                            status: {
+                                notIn: [EVENTO_STATUS.ARCHIVADO, EVENTO_STATUS.ARCHIVED] // Excluir archivados (nuevo y legacy)
+                            }
                         }
                     }
                 }
@@ -332,7 +327,13 @@ export async function getDistribucionEtapas(): Promise<EtapaDistribucion[]> {
         }
     })
 
-    return distribucion.map(etapa => ({
+    // Filtrar solo etapas que tienen eventos (mayor a 0)
+    const etapasConEventos = distribucion.filter(etapa => etapa._count.Evento > 0)
+
+    // Calcular total de eventos solo de las etapas con eventos
+    const totalEventos = etapasConEventos.reduce((sum, etapa) => sum + etapa._count.Evento, 0)
+
+    return etapasConEventos.map(etapa => ({
         etapa_id: etapa.id,
         etapa_nombre: etapa.nombre,
         etapa_color: null, // No hay campo color en el schema

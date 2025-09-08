@@ -54,11 +54,11 @@ export function DistribucionEtapasWidget({ etapas }: DistribucionEtapasWidgetPro
                     <p>No hay datos de etapas disponibles</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Gráfica de pastel */}
+                <div className="space-y-6">
+                    {/* Gráfica de pastel - Más grande y centrada */}
                     <div className="flex items-center justify-center">
                         <div className="relative">
-                            <svg width="120" height="120" viewBox="0 0 100 100" className="transform -rotate-90">
+                            <svg width="200" height="200" viewBox="0 0 100 100" className="transform -rotate-90">
                                 {etapas.map((etapa, index) => {
                                     const percentage = (etapa.total_eventos / totalEventos) * 100
                                     const startAngle = etapas.slice(0, index).reduce((sum, e) => sum + (e.total_eventos / totalEventos) * 360, 0)
@@ -75,37 +75,37 @@ export function DistribucionEtapasWidget({ etapas }: DistribucionEtapasWidgetPro
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="text-center">
-                                    <div className="text-sm font-semibold text-zinc-100">{totalEventos}</div>
-                                    <div className="text-xs text-zinc-400">Total</div>
+                                    <div className="text-2xl font-bold text-zinc-100">{totalEventos}</div>
+                                    <div className="text-sm text-zinc-400">Total</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Lista de etapas */}
-                    <div className="space-y-3">
+                    {/* Lista de etapas - Mejorada */}
+                    <div className="space-y-2">
                         {etapas.map((etapa, index) => {
                             const percentage = ((etapa.total_eventos / totalEventos) * 100).toFixed(1)
                             return (
                                 <Link
                                     key={etapa.etapa_nombre}
                                     href={`/admin/dashboard/eventos?etapa=${encodeURIComponent(etapa.etapa_nombre)}`}
-                                    className="flex items-center justify-between p-2 rounded-lg hover:bg-zinc-800 transition-colors border border-zinc-800"
+                                    className="flex items-center justify-between p-3 rounded-lg hover:bg-zinc-800 transition-colors border border-zinc-800 hover:border-zinc-700"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div
-                                            className="w-3 h-3 rounded-full flex-shrink-0"
+                                            className="w-4 h-4 rounded-full flex-shrink-0"
                                             style={{ backgroundColor: colors[index % colors.length] }}
                                         />
-                                        <span className="text-sm text-zinc-300 truncate">
+                                        <span className="text-base font-medium text-zinc-200">
                                             {etapa.etapa_nombre}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-sm font-medium text-zinc-100">
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-lg font-bold text-zinc-100">
                                             {etapa.total_eventos}
                                         </span>
-                                        <span className="text-xs text-zinc-500 min-w-[3rem] text-right">
+                                        <span className="text-sm text-zinc-400 min-w-[3.5rem] text-right">
                                             {percentage}%
                                         </span>
                                     </div>
