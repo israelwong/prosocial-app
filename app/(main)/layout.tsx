@@ -1,4 +1,4 @@
-import Navbar from "@/app/components/main/NavbarV2";
+import Navbar from "@/app/components/main/Navbar";
 import { FooterMarketing } from "@/app/components/shared";
 import { GoogleTagManager } from '@next/third-parties/google';
 import type { Metadata } from "next";
