@@ -5,7 +5,8 @@ import {
     GallerySlider,
     VideoSingle,
     PortfolioGallery,
-    GalleryGrid
+    GalleryGrid,
+    GalleryMasonry
 } from '@/app/components/shared'
 import QuoteSection from '@/app/components/main/QuoteSection'
 
@@ -75,6 +76,22 @@ function ServiciosRefactorizado() {
                 />
             </ServiceSection>
 
+            {/* Comparación: Masonry real con react-photo-album */}
+            <ServiceSection
+                titulo="Sesión fotográfica casual (Masonry verdadero)"
+                descripcion="Mismas imágenes pero con layout masonry real que respeta aspect ratios naturales - Click para ver en lightbox"
+                titleGradient="from-teal-400 via-cyan-500 to-blue-500"
+            >
+                <GalleryMasonry
+                    imagenes={imagenesConfig.casual}
+                    columns={3}
+                    spacing={12}
+                    noPadding={true}
+                    alt="Sesión casual masonry real"
+                    enableLightbox={true}
+                />
+            </ServiceSection>
+
             {/* Impresión de cuadros */}
             <ServiceSection
                 titulo="Impresión de cuadros"
@@ -137,21 +154,21 @@ function ServiciosRefactorizado() {
                 />
             </ServiceSection>
 
-            {/* Ejemplo de Masonry Layout */}
+            {/* Ejemplo de Masonry Layout Real */}
             <ServiceSection
-                titulo="Galería Masonry"
-                descripcion="Layout tipo Pinterest con alturas variables para una presentación más dinámica"
+                titulo="Galería Masonry (react-photo-album)"
+                descripcion="Layout masonry verdadero con aspect ratio natural y alturas que se ajustan al contenido"
                 titleGradient="from-teal-500 to-cyan-500"
-                showSeparator={false}
             >
-                <GalleryGrid
+                <GalleryMasonry
                     imagenes={imagenesConfig.vestido}
-                    variant="masonry"
                     columns={3}
-                    gap="md"
+                    spacing={16}
                     noPadding={true}
+                    alt="Sesión de vestido masonry"
                 />
             </ServiceSection>
+
         </div>
     )
 }
