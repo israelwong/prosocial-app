@@ -1,13 +1,25 @@
 'use client'
 import React from 'react'
-import Link from 'next/link'
+import { Button } from '../ui'
+import type { ButtonVariant, ButtonSize } from '../ui'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient'
-export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl'
+/**
+ * Componente HeroVideo - Refactorizado siguiendo ESTILO_MAESTRO_MAIN.md
+ * 
+ * Hero con video de fondo y elementos decorativos mejorados
+ * 
+ * Características aplicadas:
+ * - Sistema de colores zinc como estándar con acentos purple-pink
+ * - Gradientes purple-pink para elementos destacados
+ * - Elementos decorativos sutiles pero pronunciados
+ * - Tipografía mejorada con jerarquía clara
+ * - Efectos de profundidad y separación visual
+ */
+
 export type TextAlignment = 'left' | 'center' | 'right'
 
 interface ButtonConfig {
-    text: string
+    text: React.ReactNode
     href?: string
     onClick?: () => void
     variant?: ButtonVariant
@@ -35,6 +47,10 @@ interface HeroVideoProps {
     className?: string
     contentMaxWidth?: string
     minHeight?: string
+    /** Mostrar elementos decorativos */
+    showDecorative?: boolean
+    /** Tamaño de los elementos decorativos */
+    decorativeSize?: 'sm' | 'md' | 'lg' | 'xl'
 }
 
 export default function HeroVideo({
@@ -56,30 +72,6 @@ export default function HeroVideo({
     minHeight = 'min-h-screen'
 }: HeroVideoProps) {
 
-    const getButtonStyles = (button: ButtonConfig) => {
-        const baseStyles = 'inline-flex items-center justify-center font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2'
-
-        const variants = {
-            primary: 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg hover:scale-105 focus:ring-purple-500',
-            secondary: 'bg-zinc-800 text-white hover:bg-zinc-700 focus:ring-zinc-500',
-            outline: 'border-2 border-white text-white hover:bg-white hover:text-zinc-900 focus:ring-white',
-            ghost: 'text-white hover:bg-white/20 focus:ring-white',
-            gradient: 'bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white hover:shadow-xl hover:scale-105 focus:ring-purple-500'
-        }
-
-        const sizes = {
-            sm: 'px-4 py-2 text-sm',
-            md: 'px-6 py-3 text-base',
-            lg: 'px-8 py-4 text-lg',
-            xl: 'px-10 py-5 text-xl'
-        }
-
-        const borderStyles = button.withBorder ? 'border border-white/30 backdrop-blur-sm' : ''
-        const widthStyles = button.fullWidth ? 'w-full' : ''
-
-        return `${baseStyles} ${variants[button.variant || 'primary']} ${sizes[button.size || 'md']} ${borderStyles} ${widthStyles} ${button.className || ''}`
-    }
-
     const textAlignmentClasses = {
         left: 'text-left',
         center: 'text-center',
@@ -100,6 +92,26 @@ export default function HeroVideo({
                 <source src={videoSrc} type="video/mp4" />
                 Tu navegador no soporta el elemento video.
             </video>
+
+            {/* Elementos decorativos de fondo */}
+            <div className="absolute inset-0 -z-5 overflow-hidden">
+                {/* Gradient overlay principal */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-transparent to-pink-900/30"></div>
+
+                {/* Círculos decorativos */}
+                <div className="absolute top-1/4 -left-32 w-64 h-64 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-full blur-3xl animate-pulse"></div>
+                <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-gradient-to-br from-pink-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-128 h-128 bg-gradient-to-br from-fuchsia-500/5 to-purple-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+
+                {/* Líneas decorativas */}
+                <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-purple-400/20 to-transparent"></div>
+                <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-pink-400/20 to-transparent"></div>
+
+                {/* Elementos geométricos */}
+                <div className="absolute top-1/3 left-1/6 w-4 h-4 bg-gradient-to-br from-purple-400/40 to-pink-400/40 rotate-45 animate-pulse" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute bottom-1/3 right-1/6 w-6 h-6 bg-gradient-to-br from-pink-400/40 to-purple-400/40 rotate-45 animate-pulse" style={{ animationDelay: '3s' }}></div>
+                <div className="absolute top-2/3 left-3/4 w-8 h-8 border border-fuchsia-400/30 rotate-45 animate-pulse" style={{ animationDelay: '5s' }}></div>
+            </div>
 
             {/* Overlay */}
             {overlay && (
@@ -134,25 +146,19 @@ export default function HeroVideo({
                     {buttons.length > 0 && (
                         <div className={`flex flex-col sm:flex-row gap-4 ${textAlignment === 'center' ? 'justify-center' : textAlignment === 'right' ? 'justify-end' : 'justify-start'}`}>
                             {buttons.map((button, index) => (
-                                button.href ? (
-                                    <Link
-                                        key={index}
-                                        href={button.href}
-                                        target={button.target || '_self'}
-                                        className={getButtonStyles(button)}
-                                        onClick={button.onClick}
-                                    >
-                                        {button.text}
-                                    </Link>
-                                ) : (
-                                    <button
-                                        key={index}
-                                        onClick={button.onClick}
-                                        className={getButtonStyles(button)}
-                                    >
-                                        {button.text}
-                                    </button>
-                                )
+                                <Button
+                                    key={index}
+                                    variant={button.variant}
+                                    size={button.size}
+                                    href={button.href}
+                                    target={button.target}
+                                    onClick={button.onClick}
+                                    fullWidth={button.fullWidth}
+                                    withBorder={button.withBorder}
+                                    className={button.className}
+                                >
+                                    {button.text}
+                                </Button>
                             ))}
                         </div>
                     )}

@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
-import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { Button } from '../shared/ui'
 
 /**
  * Componente CTA Paquetes siguiendo el Estilo Maestro v1.9
@@ -26,7 +26,7 @@ interface CTAPaquetesProps {
     /** ID para tracking del botón */
     buttonId?: string
     /** Target del enlace */
-    buttonTarget?: string
+    buttonTarget?: '_blank' | '_self'
     /** Mostrar separación visual superior */
     showTopSeparator?: boolean
     /** Mostrar separación visual inferior */
@@ -114,15 +114,17 @@ export default function CTAPaquetes({
 
                         {/* Botón principal mejorado - Sin ícono de teléfono */}
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-lg mx-auto">
-                            <Link
+                            <Button
                                 href={buttonHref}
                                 target={buttonTarget}
-                                id={buttonId}
-                                className="group inline-flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto min-w-[200px]"
+                                variant="primary"
+                                size="lg"
+                                fullWidth={false}
+                                className="sm:w-auto min-w-[200px]"
                             >
                                 <span>{buttonText}</span>
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                            </Link>
+                            </Button>
                         </div>
 
                         {/* Información adicional sutil */}

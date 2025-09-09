@@ -1,6 +1,7 @@
 import React from 'react'
 import type { Metadata } from "next";
-import HeroRefactorizado from './components/HeroRefactorizado';
+import { ArrowRight } from 'lucide-react'
+import HeroVideo from '@/app/components/shared/heroes/HeroVideo';
 import QuoteSection from '@/app/components/main/QuoteSection';
 import PorqueNosotros from '@/app/components/main/PorqueNosotros';
 import Servicios from './components/ServiciosRefactorizado';
@@ -34,8 +35,36 @@ function page() {
     <div className=''>
 
       <section>
-        <HeroRefactorizado />
+        <HeroVideo
+          videoSrc="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/hero-30fps.webm?t=2024-09-28T23%3A53%3A21.149Z"
+          title="XV Años Inolvidables"
+          subtitle="Fotografía y Video Profesional"
+          description="Capturamos la magia de tu celebración de XV años con el mejor equipo profesional y años de experiencia"
+          buttons={[
+            {
+              text: (
+                <span className="flex items-center gap-2">
+                  Ver Paquetes
+                  <ArrowRight className="w-5 h-5" />
+                </span>
+              ),
+              href: "/contacto?ref=fifteen-hero",
+              variant: "translucent" as const,
+              size: "lg" as const
+            },
+            {
+              text: "Ver Galería",
+              href: "/galeria?categoria=xv-anos",
+              variant: "outline" as const,
+              size: "lg" as const
+            }
+          ]}
+          autoPlay={true}
+          muted={true}
+          loop={true}
+        />
       </section>
+
       <section>
         <CTAPaquetes
           title="¡Contacta hoy mismo!"
@@ -48,6 +77,7 @@ function page() {
         />
         <QuoteSection message="Este momento especial solo se vive una vez, nosotros somos expertos en capturarlo." />
       </section>
+
       <section>
         <PorqueNosotros />
       </section>

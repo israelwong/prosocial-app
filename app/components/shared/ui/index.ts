@@ -1,4 +1,6 @@
 // UI Components - Shared reusable interface components
+export { default as Button } from './Button';
+export type { ButtonVariant, ButtonSize } from './Button';
 export { default as HeroMarketing } from './HeroMarketing';
 export { default as ServiceSection } from './ServiceSection';
 export { default as CTASection } from './CTASection';

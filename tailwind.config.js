@@ -23,9 +23,18 @@ const config = {
           "100%": { transform: "rotate(-360deg) scale(10)" },
         },
       },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-conic":
+          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        zinc: {
+          750: "#3f3f46",
+          850: "#27272a",
+        },
       },
       fontFamily: {
         "Bebas-Neue": ["Bebas Neue", "sans-serif"],
