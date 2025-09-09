@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import BtnBorderSpin from '@/app/components/main/BtnBorderSpin';
+import Button from './Button';
 import Link from 'next/link';
 
 interface CTASectionProps {
@@ -36,12 +36,15 @@ function CTASection({
                 </p>
 
                 <div className="flex items-center justify-center text-center w-full max-w-lg mx-auto">
-                    <BtnBorderSpin
-                        id={buttonId}
-                        title={buttonText}
+                    <Button
+                        variant="primary"
+                        size="lg"
                         href={buttonHref}
-                        target={buttonTarget}
-                    />
+                        target={buttonTarget === "_blank" ? "_blank" : "_self"}
+                        className="w-full"
+                    >
+                        {buttonText}
+                    </Button>
                 </div>
 
                 {secondaryLinkText && secondaryLinkHref && (
