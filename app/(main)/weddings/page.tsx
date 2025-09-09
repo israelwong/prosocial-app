@@ -84,7 +84,7 @@ function WeddingsPage() {
 
       {/* Galería de Bodas */}
       <GalleryGrid
-        tipoEvento="boda"
+        imagenes={[]} // TODO: Agregar imágenes reales
         variant="fullwidth"
         titulo="Momentos Inolvidables"
         descripcion="Cada boda cuenta una historia única. Aquí tienes algunos de nuestros trabajos más especiales"

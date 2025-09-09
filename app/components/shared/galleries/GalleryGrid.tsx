@@ -1,84 +1,92 @@
 'use client'
 import React from 'react'
 import Image from 'next/image'
-import { EventCarousel } from '@/app/components/shared/carousel'
 import GallerySlider from './GallerySlider'
 
+/**
+ * Componente GalleryGrid - Completamente reusable y agnóstico
+ * 
+ * Galería de imágenes sin contenido hardcodeado, todo viene por props
+ * 
+ * Características:
+ * - 100% dependiente de props - sin contenido predefinido
+ * - Sin diferenciación entre tipos de evento
+ * - Múltiples variantes: grid, slider, carousel, masonry, fullwidth, etc.
+ * - Configuración flexible de columnas y espaciado
+ * - Títulos, descripciones y emojis completamente opcionales
+ * - CTA opcional con acción configurable
+ * - Se adapta a cualquier contexto sin lógica específica
+ * 
+ * Ejemplo de uso:
+ * <GalleryGrid
+ *   imagenes={['img1.jpg', 'img2.jpg', 'img3.jpg']}
+ *   titulo="Mi Galería"                    // Opcional
+ *   descripcion="Descripción personalizada" // Opcional
+ *   emoji="📸"                             // Opcional
+ *   variant="grid"
+ *   columns={3}
+ *   gap="md"
+ * />
+ * 
+ * Uso mínimo (solo imágenes):
+ * <GalleryGrid imagenes={imagenes} />
+ */
+
 // Tipos más flexibles para diferentes contextos
-export type EventType = 'boda' | 'xv' | 'xv años' | '15 años' | 'corporativo'
 export type GalleryVariant = 'default' | 'compact' | 'landing' | 'grid' | 'masonry' | 'slider' | 'fullwidth' | 'carousel'
 
 interface GalleryGridProps {
-    tipoEvento?: EventType
+    imagenes: string[] // Requerido - las imágenes que se van a mostrar
     variant?: GalleryVariant
     titulo?: string
     descripcion?: string
-    imagenes?: string[] // Nueva prop para imágenes personalizadas
     showCTA?: boolean
     ctaText?: string
     ctaAction?: () => void
     className?: string
     columns?: 2 | 3 | 4 | 5 | 6 // Columnas configurables
     gap?: 'sm' | 'md' | 'lg' // Espaciado configurable
+    // Props para personalización completa
+    emoji?: string
+    gradiente?: string
+    altText?: string
 }
 
 export default function GalleryGrid({
-    tipoEvento = 'boda',
+    imagenes, // Ahora requerido
     variant = 'grid',
     titulo,
     descripcion,
-    imagenes = [],
     showCTA = false,
     ctaText = 'Ver más trabajos',
     ctaAction,
     className = "",
     columns = 3,
-    gap = 'md'
+    gap = 'md',
+    emoji,
+    gradiente,
+    altText
 }: GalleryGridProps) {
 
-    // Imágenes de demostración por defecto si no se proporcionan
-    const defaultImages = [
-        '/images/galeria/boda-1.jpg',
-        '/images/galeria/boda-2.jpg',
-        '/images/galeria/boda-3.jpg',
-        '/images/galeria/boda-4.jpg',
-        '/images/galeria/boda-5.jpg',
-        '/images/galeria/boda-6.jpg',
-        '/images/galeria/boda-7.jpg',
-        '/images/galeria/boda-8.jpg',
-        '/images/galeria/boda-9.jpg',
-        '/images/galeria/boda-10.jpg',
-        '/images/galeria/boda-11.jpg',
-        '/images/galeria/boda-12.jpg',
-    ]
-
-    const imagenesAMostrar = imagenes.length > 0 ? imagenes : defaultImages
+    // Validación temprana - si no hay imágenes, mostrar mensaje
+    if (!imagenes || imagenes.length === 0) {
+        return (
+            <section className={`py-16 bg-zinc-900 ${className}`}>
+                <div className="max-w-4xl mx-auto px-4 text-center">
+                    <div className="bg-zinc-800 rounded-lg p-8">
+                        <p className="text-zinc-400 text-lg">No hay imágenes disponibles para mostrar</p>
+                    </div>
+                </div>
+            </section>
+        )
+    }
 
     const getContenidoPorTipo = () => {
-        const isXV = tipoEvento === 'xv' || tipoEvento.toLowerCase().includes('xv') || tipoEvento.toLowerCase().includes('15')
-        const isCorporativo = tipoEvento === 'corporativo'
-
-        if (isCorporativo) {
-            return {
-                titulo: titulo || 'Eventos Corporativos Profesionales',
-                descripcion: descripcion || 'Capturamos la esencia profesional de tus eventos empresariales con elegancia y distinción.',
-                emoji: '🏢',
-                gradiente: 'from-blue-500/20 via-cyan-500/20 to-blue-500/20'
-            }
-        } else if (isXV) {
-            return {
-                titulo: titulo || 'Momentos únicos de XV Años',
-                descripcion: descripcion || 'Capturamos la magia de tu celebración de quince años con elegancia y estilo único.',
-                emoji: '👑',
-                gradiente: 'from-pink-500/20 via-purple-500/20 to-pink-500/20'
-            }
-        } else {
-            return {
-                titulo: titulo || 'Momentos inolvidables de Boda',
-                descripcion: descripcion || 'Inmortalizamos cada momento especial de tu día más importante con profesionalismo y arte.',
-                emoji: '💍',
-                gradiente: 'from-rose-500/20 via-pink-500/20 to-rose-500/20'
-            }
+        return {
+            titulo: titulo || '', // Solo usa lo que se pasa por props
+            descripcion: descripcion || '', // Solo usa lo que se pasa por props
+            emoji: emoji || '', // Solo usa lo que se pasa por props
+            gradiente: gradiente || 'from-purple-500/20 via-pink-500/20 to-purple-500/20' // Gradiente por defecto neutral
         }
     }
 
@@ -152,35 +160,41 @@ export default function GalleryGrid({
     const gridStyles = getGridStyles()
 
     return (
-        <section className={`${variantStyles.sectionPadding} bg-zinc-900 ${className}`}>
+        <section className={`${variantStyles.sectionPadding} ${className}`}>
             <div className={variantStyles.containerClass}>
-                {/* Header */}
-                <div className={`text-center ${variantStyles.headerMargin}`}>
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                        <span className="text-3xl">{contenido.emoji}</span>
-                        <h2 className={`${variantStyles.titleSize} font-bold text-zinc-200`}>
-                            {contenido.titulo}
-                        </h2>
-                    </div>
+                {/* Header - Solo se muestra si hay contenido proporcionado */}
+                {(contenido.titulo || contenido.descripcion || contenido.emoji) && (
+                    <div className={`text-center ${variantStyles.headerMargin}`}>
+                        {(contenido.titulo || contenido.emoji) && (
+                            <div className="flex items-center justify-center gap-3 mb-4">
+                                {contenido.emoji && <span className="text-3xl">{contenido.emoji}</span>}
+                                {contenido.titulo && (
+                                    <h2 className={`${variantStyles.titleSize} font-bold text-zinc-200`}>
+                                        {contenido.titulo}
+                                    </h2>
+                                )}
+                            </div>
+                        )}
 
-                    {variantStyles.showDescription && (
-                        <p className={`${variantStyles.descriptionSize} text-gray-600 max-w-2xl mx-auto leading-relaxed`}>
-                            {contenido.descripcion}
-                        </p>
-                    )}
-                </div>
+                        {variantStyles.showDescription && contenido.descripcion && (
+                            <p className={`${variantStyles.descriptionSize} text-gray-600 max-w-2xl mx-auto leading-relaxed`}>
+                                {contenido.descripcion}
+                            </p>
+                        )}
+                    </div>
+                )}
 
                 {/* Renderizado condicional según variante */}
                 <div className="relative">
                     {variant === 'slider' || variant === 'carousel' ? (
                         <GallerySlider
-                            imagenes={imagenesAMostrar}
+                            imagenes={imagenes}
                             variant="multiple"
                             autoplay={3000}
                             perView={3.5}
                             gap={0}
                             className="w-full"
-                            alt={contenido.titulo}
+                            alt={altText || contenido.titulo}
                             breakpoints={{
                                 1024: { perView: 4 },
                                 640: { perView: 1.3 }
@@ -188,11 +202,11 @@ export default function GalleryGrid({
                         />
                     ) : variant === 'grid' || variant === 'masonry' || variant === 'fullwidth' ? (
                         <div className={gridStyles.gridClass}>
-                            {imagenesAMostrar.map((imagen, index) => (
+                            {imagenes.map((imagen, index) => (
                                 <div key={index} className={gridStyles.itemClass}>
                                     <Image
                                         src={imagen}
-                                        alt={`${contenido.titulo} - Imagen ${index + 1}`}
+                                        alt={altText ? `${altText} - Imagen ${index + 1}` : `${contenido.titulo} - Imagen ${index + 1}`}
                                         fill
                                         className="object-cover transition-transform duration-500 group-hover:scale-110"
                                         sizes={
@@ -206,31 +220,16 @@ export default function GalleryGrid({
                             ))}
                         </div>
                     ) : (
-                        <EventCarousel
-                            tipoEvento={tipoEvento}
-                            imagenes={imagenesAMostrar}
+                        <GallerySlider
+                            imagenes={imagenes}
+                            variant="showcase"
                             className="w-full"
+                            alt={titulo || 'Imagen de galería'}
+                            imagenBordeRedondeado={true}
+                            autoplay={4000}
                         />
                     )}
                 </div>
-
-                {/* CTA opcional */}
-                {showCTA && (
-                    <div className="text-center mt-12">
-                        <p className="text-gray-600 mb-6">
-                            ¿Te gusta lo que ves? Contáctanos para crear momentos únicos
-                        </p>
-                        <button
-                            onClick={ctaAction}
-                            className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105"
-                        >
-                            <span>{ctaText}</span>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                    </div>
-                )}
             </div>
         </section>
     )

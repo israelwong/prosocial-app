@@ -50,7 +50,6 @@ export default function PortfolioSection({
 
     return (
         <GalleryGrid
-            tipoEvento={isXV ? 'xv' : 'boda'}
             imagenes={isXV ? imagenesXV : imagenesBoda}
             variant="fullwidth"
             titulo={titulo}

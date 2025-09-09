@@ -4,7 +4,8 @@ import {
     ServiceSection,
     GallerySlider,
     VideoSingle,
-    PortfolioGallery
+    PortfolioGallery,
+    GalleryGrid
 } from '@/app/components/shared'
 import QuoteSection from '@/app/components/main/QuoteSection'
 
@@ -21,9 +22,16 @@ const imagenesConfig = {
         "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/vestido/7.jpg"
     ],
     casual: [
-        // Aquí irían las imágenes de sesiones casuales
         "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/1.jpg",
-        // ... más imágenes
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/2.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/3.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/4.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/5.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/6.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/7.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/8.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/9.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/10.jpg",
     ],
     evento: [
         // Aquí irían las imágenes de eventos
@@ -39,18 +47,6 @@ const imagenesConfig = {
 function ServiciosRefactorizado() {
     return (
         <div>
-            {/* Encabezado principal */}
-            <div className="px-10 md:max-w-screen-md mx-auto mt-10">
-                <p className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 mb-4 font-semibold md:text-2xl">
-                    ¿Qué te ofrecemos?
-                </p>
-                <h2 className="font-Bebas-Neue text-4xl md:text-5xl">
-                    Calidad y resultados profesionales
-                </h2>
-                <p className="font-light text-xl md:text-2xl">
-                    Te prometemos atención personalizada en cada momento.
-                </p>
-            </div>
 
             {/* Sesión fotográfica de vestido */}
             <ServiceSection
@@ -67,18 +63,16 @@ function ServiciosRefactorizado() {
             </ServiceSection>
 
             {/* Sesión fotográfica casual */}
-            {/* <ServiceSection
+            <ServiceSection
                 titulo="Sesión fotográfica casual"
                 descripcion="Tu esencia y personalidad en fotografías casuales en locaciones urbanas y naturales"
-                titleGradient="from-blue-500 to-green-500"
+                titleGradient="from-pink-400 via-fuchsia-500 to-red-500"
             >
-                <GallerySlider
+                <GalleryGrid
                     imagenes={imagenesConfig.casual}
-                    variant="multiple"
-                    autoplay={3000}
-                    alt="Sesión casual"
+
                 />
-            </ServiceSection> */}
+            </ServiceSection>
 
             {/* Impresión de cuadros */}
             <ServiceSection
@@ -101,9 +95,11 @@ function ServiciosRefactorizado() {
                 showSeparator={false} // No mostrar separador antes del Hook
             >
                 {/* Video comentado en el original, podemos agregarlo después */}
-                <div className="max-w-screen-md mx-auto text-center py-12">
-                    <p className="text-zinc-400 italic">Video próximamente disponible</p>
-                </div>
+                <VideoSingle
+                    src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/reels/fifteens/reel_sesiones_2019.mp4"
+                    autoPlay={true}
+                    loop={true}
+                />
             </ServiceSection>
 
             {/* QuoteSection/CTA intermedio */}
@@ -122,6 +118,23 @@ function ServiciosRefactorizado() {
                     variant="multiple"
                     autoplay={3000}
                     alt="Fotografía de evento"
+                    imagenBordeRedondeado={false}
+                />
+            </ServiceSection>
+
+            {/* Comparación: Mismo contenido con variante showcase */}
+            <ServiceSection
+                titulo="Fotografía para evento (Showcase)"
+                descripcion="La misma galería usando variant='showcase' para imágenes cuadradas"
+                titleGradient="from-orange-500 to-red-500"
+            >
+                <GallerySlider
+                    imagenes={imagenesConfig.evento}
+                    variant="showcase"
+                    autoplay={3000}
+                    alt="Fotografía de evento showcase"
+                    imagenBordeRedondeado={true}
+                    margenEntreFotos={16}
                 />
             </ServiceSection>
 

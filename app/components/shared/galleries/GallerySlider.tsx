@@ -4,7 +4,7 @@ import Glide from '@glidejs/glide'
 import Image from 'next/image'
 
 // Nuevos tipos
-export type GallerySliderVariant = 'centered' | 'multiple' | 'fullwidth'
+export type GallerySliderVariant = 'centered' | 'multiple' | 'fullwidth' | 'showcase'
 export type MediaSliderVariant = GallerySliderVariant // Para compatibilidad hacia atrás
 
 interface GallerySliderProps {
@@ -16,6 +16,8 @@ interface GallerySliderProps {
     animationDuration?: number
     className?: string
     alt?: string
+    imagenBordeRedondeado?: boolean
+    margenEntreFotos?: number
     // Configuración responsive
     breakpoints?: {
         [key: number]: {
@@ -37,6 +39,8 @@ export default function GallerySlider({
     animationDuration = 700,
     className = '',
     alt = 'Imagen',
+    imagenBordeRedondeado = true,
+    margenEntreFotos = 0,
     breakpoints = {
         1024: { perView: 4 },
         640: { perView: 1.3 }
@@ -70,6 +74,20 @@ export default function GallerySlider({
                     gap: 0,
                     breakpoints: {
                         768: { perView: 1 }
+                    }
+                }
+            case 'showcase':
+                return {
+                    type: 'carousel' as const,
+                    focusAt: 'center' as const,
+                    perView: 3.5,
+                    autoplay: autoplay,
+                    animationDuration,
+                    gap: 16,
+                    breakpoints: {
+                        1024: { perView: 4, gap: 20 },
+                        768: { perView: 2.5, gap: 16 },
+                        640: { perView: 1.3, gap: 12 }
                     }
                 }
             case 'multiple':
@@ -106,7 +124,7 @@ export default function GallerySlider({
                 glideRef.current = null
             }
         }
-    }, [imagenes, variant, autoplay, perView, gap, animationDuration])
+    }, [imagenes, variant, autoplay, perView, gap, animationDuration, imagenBordeRedondeado, margenEntreFotos])
 
     if (!imagenes.length) {
         return (
@@ -124,16 +142,33 @@ export default function GallerySlider({
             <div className="overflow-hidden" data-glide-el="track">
                 <ul className="whitespace-no-wrap flex-no-wrap [backface-visibility: hidden] [transform-style: preserve-3d] [touch-action: pan-Y] [will-change: transform] relative flex w-full overflow-hidden p-0">
                     {imagenes.map((imagen, index) => (
-                        <li key={index} className="flex-shrink-0">
-                            <div className="relative overflow-hidden rounded-lg">
-                                <Image
-                                    src={imagen}
-                                    alt={`${alt} ${index + 1}`}
-                                    width={500}
-                                    height={500}
-                                    className="m-auto max-h-full w-full max-w-full object-cover transition-transform duration-300 hover:scale-105"
-                                    unoptimized={true}
-                                />
+                        <li
+                            key={index}
+                            className={variant === 'showcase' ? "glide__slide" : "flex-shrink-0"}
+                            style={{
+                                marginRight: index < imagenes.length - 1 ? `${margenEntreFotos}px` : '0px'
+                            }}
+                        >
+                            <div className={`relative overflow-hidden ${imagenBordeRedondeado ? (variant === 'showcase' ? 'rounded-xl' : 'rounded-lg') : ''} ${variant === 'showcase' ? 'aspect-square' : ''}`}>
+                                {variant === 'showcase' ? (
+                                    <Image
+                                        src={imagen}
+                                        alt={`${alt} ${index + 1}`}
+                                        fill
+                                        className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
+                                        unoptimized={true}
+                                        sizes="(max-width: 640px) 80vw, (max-width: 1024px) 25vw, 20vw"
+                                    />
+                                ) : (
+                                    <Image
+                                        src={imagen}
+                                        alt={`${alt} ${index + 1}`}
+                                        width={500}
+                                        height={500}
+                                        className="m-auto max-h-full w-full max-w-full object-cover transition-transform duration-300 hover:scale-105"
+                                        unoptimized={true}
+                                    />
+                                )}
                             </div>
                         </li>
                     ))}
