@@ -1,20 +1,24 @@
-'use client';
-import React from 'react';
-import { CTASection } from '@/app/components/shared';
+'use client'
+import React from 'react'
+import { CTAPaquetes } from '@/app/components/cta'
+
+/**
+ * Componente CTA optimizado para XV Años
+ * Usa el nuevo CTAPaquetes con separación visual y diseño mejorado
+ */
 
 function CTA() {
     return (
-        <CTASection
+        <CTAPaquetes
             title="¡Contacta hoy mismo!"
             subtitle="tenemos fechas limitadas."
             buttonText="Ver Paquetes XV Años"
-            buttonHref="/contacto?ref=fifteens"
+            buttonHref="/contacto?ref=fifteen"
             buttonId="btn-contacto-desde-hero-fifteens"
-            secondaryLinkText="Conoce más de nuestros servicios"
-            secondaryLinkHref="/contacto?ref=fifteens"
-            secondaryLinkTitle="Contacto - Servicios XV años"
+            showTopSeparator={true}
+            showBottomSeparator={false}
         />
-    );
+    )
 }
 
-export default CTA;
+export default CTA

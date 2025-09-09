@@ -5,6 +5,7 @@
 export { default as CTASection } from './CTASection'
 export { default as CTACard } from './CTACard'
 export { default as CTAInline } from './CTAInline'
+export { default as CTAPaquetes } from './CTAPaquetes'
 
 // Base y tipos
 export { CTAButtons, CTABadge, defaultCTAProps } from './CTABase'

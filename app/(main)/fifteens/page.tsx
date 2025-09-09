@@ -1,14 +1,13 @@
 import React from 'react'
 import type { Metadata } from "next";
 import HeroRefactorizado from './components/HeroRefactorizado';
-import CTA from './components/CTA';
 import Hook from '@/app/components/main/Hook';
 import PorqueNosotros from '@/app/components/main/PorqueNosotros';
 import Servicios from './components/ServiciosRefactorizado';
 import Entregas from '@/app/components/main/Entregas';
-// import Testomonios from '@/app/components/main/Testomonios';
+import Testimonios from '@/app/components/main/Testimonios';
 import { FAQSection, TrustBadges, Garantias } from '@/app/components/shared';
-import { CTASection, ctaConfigs } from '@/app/components/cta';
+import { CTASection, CTAPaquetes, ctaConfigs } from '@/app/components/cta';
 // import Galeria from '@/app/components/main/Galeria';
 
 export const metadata: Metadata = {
@@ -32,20 +31,36 @@ export const metadata: Metadata = {
 function page() {
 
   return (
-    <div className='space-y-14'>
+    <div className=''>
 
       <section>
         <HeroRefactorizado />
       </section>
       <section>
-        <CTA />
+        <CTAPaquetes
+          title="¡Contacta hoy mismo!"
+          subtitle="tenemos fechas limitadas."
+          buttonText="Ver Paquetes XV Años"
+          buttonHref="/contacto?ref=fifteen"
+          buttonId="btn-contacto-desde-hero-fifteens"
+          showTopSeparator={true}
+          showBottomSeparator={false}
+        />
         <Hook message={"Este momento especial solo se vive una vez, nosotros somos expertos en capturarlo."} />
       </section>
       <section>
         <PorqueNosotros />
       </section>
       <section>
-        <CTA />
+        <CTAPaquetes
+          title="¡Reserva tu fecha ahora!"
+          subtitle="cupos limitados disponibles."
+          buttonText="Ver Paquetes XV Años"
+          buttonHref="/contacto?ref=fifteen"
+          buttonId="btn-cta-porque-nosotros"
+          showTopSeparator={true}
+          showBottomSeparator={true}
+        />
         <span className='my-5 flex'>
           <Hook message={"Cuidamos todos los detalles para entregarte los mejores resultados."} />
         </span>
@@ -53,38 +68,43 @@ function page() {
       <section>
         <Servicios />
       </section>
-      <section>
-        <CTA />
-      </section>
+
+      <CTAPaquetes
+        title="¡Reserva tu fecha ahora!"
+        subtitle="cupos limitados disponibles."
+        buttonText="Ver Paquetes XV Años"
+        buttonHref="/contacto?ref=fifteen"
+        buttonId="btn-cta-video-servicios"
+        showTopSeparator={true}
+        showBottomSeparator={true}
+      />
+
       <section>
         <Entregas />
       </section>
+
       <section>
-        {/* <Testomonios /> */}
+        <Testimonios />
       </section>
 
       {/* Sección de Garantías */}
-      <section className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
-        <Garantias
-          variant="full"
-          title="Nuestras Garantías"
-          subtitle="Trabajamos con la confianza y tranquilidad que mereces para tu celebración de XV años"
-          showBadges={true}
-          ctaBadgeText="✨ XV Años Únicos"
-        />
-      </section>
+      <Garantias
+        variant="full"
+        title="Nuestras Garantías"
+        subtitle="Trabajamos con la confianza y tranquilidad que mereces para tu celebración de XV años"
+        showBadges={true}
+        ctaBadgeText="✨ XV Años Únicos"
+        backgroundClassName="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900"
+      />
 
       {/* Sección de Preguntas Frecuentes */}
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-6">
-          <FAQSection
-            variant="full"
-            showCategories={false}
-            title="Preguntas Frecuentes"
-            subtitle="Resolvemos las dudas más comunes sobre nuestros servicios para XV años"
-          />
-        </div>
-      </section>
+      <FAQSection
+        variant="full"
+        showCategories={false}
+        title="Preguntas Frecuentes"
+        subtitle="Resolvemos las dudas más comunes sobre nuestros servicios para XV años"
+        className="py-20"
+      />
 
       {/* CTA Final Unificado */}
       <CTASection
@@ -95,6 +115,10 @@ function page() {
         showAdditionalInfo={true}
       />
 
+      {/* Línea sutil inferior */}
+      <div className="relative">
+        <div className="h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent" />
+      </div>
 
     </div>
   )

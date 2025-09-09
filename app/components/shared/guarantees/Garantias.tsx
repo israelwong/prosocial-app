@@ -3,6 +3,18 @@ import React from 'react'
 import { Shield, Star, Clock, Headphones, CheckCircle, Award } from 'lucide-react'
 import { CTACard, ctaConfigs } from '@/app/components/cta'
 
+/**
+ * Componente de Garantías siguiendo el Estilo Maestro v1.9
+ * 
+ * Características:
+ * - Sistema de colores zinc como estándar
+ * - Gradientes purple-pink para elementos destacados
+ * - Espaciado responsivo (py-16 lg:py-24)
+ * - Transiciones suaves (transition-all duration-300)
+ * - Tipografía con jerarquía clara
+ * - Accesibilidad con estructura semántica
+ */
+
 interface GuaranteeItem {
     id: string
     title: string
@@ -12,13 +24,22 @@ interface GuaranteeItem {
 }
 
 interface GarantiasProps {
-    variant?: 'default' | 'compact' | 'full'
+    /** Variante del componente - compact para versión simplificada, full para versión completa */
+    variant?: 'compact' | 'full'
+    /** Clases CSS adicionales */
     className?: string
+    /** Título principal de la sección */
     title?: string
+    /** Subtítulo descriptivo */
     subtitle?: string
+    /** Mostrar badges de confianza */
     showBadges?: boolean
+    /** Texto del badge CTA personalizado */
     ctaBadgeText?: string
+    /** Clases CSS para el fondo (gradientes, etc.) */
+    backgroundClassName?: string
 }
+
 
 const defaultGuarantees: GuaranteeItem[] = [
     {
@@ -100,19 +121,20 @@ export default function Garantias({
     title = 'Nuestras Garantías',
     subtitle = 'Trabajamos con la confianza y tranquilidad que mereces para tu evento especial',
     showBadges = true,
-    ctaBadgeText
+    ctaBadgeText,
+    backgroundClassName = ''
 }: GarantiasProps) {
 
     if (variant === 'compact') {
         return (
-            <div className={`py-16 lg:py-20 ${className}`}>
+            <section className={`py-16 lg:py-24 ${backgroundClassName} ${className}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Header */}
                     <div className="text-center mb-12 lg:mb-16">
-                        <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
+                        <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
                             {title}
                         </h2>
-                        <p className="text-zinc-400 text-lg lg:text-xl max-w-3xl mx-auto">
+                        <p className="text-zinc-300 text-lg lg:text-xl max-w-3xl mx-auto leading-relaxed">
                             {subtitle}
                         </p>
                     </div>
@@ -122,15 +144,15 @@ export default function Garantias({
                         {defaultGuarantees.map((guarantee) => (
                             <div
                                 key={guarantee.id}
-                                className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center hover:border-zinc-600 transition-all duration-300 hover:transform hover:scale-105"
+                                className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center hover:border-zinc-600 transition-all duration-300 hover:scale-105"
                             >
-                                <div className="text-blue-400 mb-4 flex justify-center">
+                                <div className="text-purple-400 mb-4 flex justify-center">
                                     {guarantee.icon}
                                 </div>
                                 <h3 className="text-lg font-semibold text-white mb-2">
                                     {guarantee.title}
                                 </h3>
-                                <p className="text-zinc-400 text-sm">
+                                <p className="text-zinc-400 text-sm leading-relaxed">
                                     {guarantee.description}
                                 </p>
                             </div>
@@ -143,7 +165,7 @@ export default function Garantias({
                             {trustBadges.map((badge, index) => (
                                 <div
                                     key={index}
-                                    className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-4 text-center"
+                                    className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-4 text-center hover:border-zinc-600/50 transition-colors"
                                 >
                                     <div className="text-zinc-400 mb-2 flex justify-center">
                                         {badge.icon}
@@ -159,20 +181,20 @@ export default function Garantias({
                         </div>
                     )}
                 </div>
-            </div>
+            </section>
         )
     }
 
     // Variant Full (default)
     return (
-        <div className={`py-16 lg:py-24 ${className}`}>
+        <section className={`py-16 lg:py-24 ${backgroundClassName} ${className}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="text-center mb-16 lg:mb-20">
                     <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
                         {title}
                     </h2>
-                    <p className="text-zinc-400 text-lg lg:text-xl max-w-4xl mx-auto leading-relaxed">
+                    <p className="text-zinc-300 text-lg lg:text-xl max-w-4xl mx-auto leading-relaxed">
                         {subtitle}
                     </p>
                 </div>
@@ -182,18 +204,18 @@ export default function Garantias({
                     {defaultGuarantees.map((guarantee, index) => (
                         <div
                             key={guarantee.id}
-                            className="bg-zinc-800 border border-zinc-700 rounded-2xl p-8 hover:border-zinc-600 transition-all duration-300 group"
+                            className="bg-zinc-800 border border-zinc-700 rounded-xl p-8 hover:border-zinc-600 transition-all duration-300 group"
                         >
                             {/* Header de la garantía */}
                             <div className="flex items-start gap-4 mb-6">
-                                <div className="text-blue-400 group-hover:text-blue-300 transition-colors">
+                                <div className="text-purple-400 group-hover:text-purple-300 transition-colors">
                                     {guarantee.icon}
                                 </div>
                                 <div className="flex-1">
                                     <h3 className="text-xl lg:text-2xl font-bold text-white mb-3">
                                         {guarantee.title}
                                     </h3>
-                                    <p className="text-zinc-400 leading-relaxed">
+                                    <p className="text-zinc-300 leading-relaxed">
                                         {guarantee.description}
                                     </p>
                                 </div>
@@ -213,27 +235,18 @@ export default function Garantias({
                                     </div>
                                 ))}
                             </div>
-
-                            {/* Badge para el primer elemento */}
-                            {index === 0 && (
-                                <div className="mt-6">
-                                    <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium">
-                                        Más Popular
-                                    </span>
-                                </div>
-                            )}
                         </div>
                     ))}
                 </div>
 
                 {/* Trust Badges Full */}
                 {showBadges && (
-                    <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-2xl p-8">
+                    <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-xl p-8">
                         <div className="text-center mb-8">
                             <h3 className="text-xl lg:text-2xl font-bold text-white mb-2">
                                 Respaldados por la Experiencia
                             </h3>
-                            <p className="text-zinc-400">
+                            <p className="text-zinc-300 leading-relaxed">
                                 Números que hablan por nuestra calidad y profesionalismo
                             </p>
                         </div>
@@ -244,13 +257,13 @@ export default function Garantias({
                                     key={index}
                                     className="text-center p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-zinc-600/50 transition-colors"
                                 >
-                                    <div className="text-zinc-400 mb-3 flex justify-center">
+                                    <div className="text-purple-400 mb-3 flex justify-center">
                                         {badge.icon}
                                     </div>
                                     <div className="text-white font-bold text-lg lg:text-xl mb-1">
                                         {badge.title}
                                     </div>
-                                    <div className="text-zinc-500 text-sm">
+                                    <div className="text-zinc-400 text-sm">
                                         {badge.subtitle}
                                     </div>
                                 </div>
@@ -271,6 +284,6 @@ export default function Garantias({
                     />
                 </div>
             </div>
-        </div>
+        </section>
     )
 }
