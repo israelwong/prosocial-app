@@ -4,7 +4,7 @@ import Image from 'next/image'
 import GallerySlider from './GallerySlider'
 
 /**
- * Componente GalleryGrid - Completamente reusable y agnóstico
+ * Componente GalleryGrid - Completamente reusable y container-agnóstico
  * 
  * Galería de imágenes sin contenido hardcodeado, todo viene por props
  * 
@@ -15,6 +15,8 @@ import GallerySlider from './GallerySlider'
  * - Configuración flexible de columnas y espaciado
  * - Títulos, descripciones y emojis completamente opcionales
  * - CTA opcional con acción configurable
+ * - Container-agnóstico: control de padding interno
+ * - Layout masonry con alturas variables (tipo Pinterest)
  * - Se adapta a cualquier contexto sin lógica específica
  * 
  * Ejemplo de uso:
@@ -23,13 +25,22 @@ import GallerySlider from './GallerySlider'
  *   titulo="Mi Galería"                    // Opcional
  *   descripcion="Descripción personalizada" // Opcional
  *   emoji="📸"                             // Opcional
- *   variant="grid"
+ *   variant="masonry"                      // grid | masonry | slider | carousel | fullwidth
  *   columns={3}
  *   gap="md"
+ *   noPadding={true}                       // Para uso dentro de containers
  * />
  * 
+ * Layout Masonry (Pinterest-style):
+ * <GalleryGrid imagenes={imagenes} variant="masonry" columns={3} />
+ * 
  * Uso mínimo (solo imágenes):
- * <GalleryGrid imagenes={imagenes} />
+ * <GalleryGrid imagenes={imagenes} noPadding={true} />
+ * 
+ * Control de padding:
+ * - noPadding={true}: Sin padding interno (ideal para containers)
+ * - lightPadding={true}: Padding ligero (4px)
+ * - Por defecto: Padding moderado según variante
  */
 
 // Tipos más flexibles para diferentes contextos
@@ -50,6 +61,9 @@ interface GalleryGridProps {
     emoji?: string
     gradiente?: string
     altText?: string
+    // Props para container-agnostic behavior
+    noPadding?: boolean // Si true, elimina padding interno
+    lightPadding?: boolean // Si true, usa padding ligero
 }
 
 export default function GalleryGrid({
@@ -65,15 +79,20 @@ export default function GalleryGrid({
     gap = 'md',
     emoji,
     gradiente,
-    altText
+    altText,
+    noPadding = false,
+    lightPadding = false
 }: GalleryGridProps) {
 
     // Validación temprana - si no hay imágenes, mostrar mensaje
     if (!imagenes || imagenes.length === 0) {
+        const errorPadding = noPadding ? '' : lightPadding ? 'py-4' : 'py-8';
+        const errorContainer = noPadding ? 'w-full' : 'max-w-4xl mx-auto px-2 sm:px-4';
+
         return (
-            <section className={`py-16 bg-zinc-900 ${className}`}>
-                <div className="max-w-4xl mx-auto px-4 text-center">
-                    <div className="bg-zinc-800 rounded-lg p-8">
+            <section className={`${errorPadding} bg-zinc-900 ${className}`}>
+                <div className={errorContainer}>
+                    <div className="bg-zinc-800 rounded-lg p-4 text-center">
                         <p className="text-zinc-400 text-lg">No hay imágenes disponibles para mostrar</p>
                     </div>
                 </div>
@@ -94,42 +113,65 @@ export default function GalleryGrid({
 
     // Configuración por variante
     const getVariantStyles = () => {
+        // Control de padding basado en props
+        const getPaddingStyle = () => {
+            if (noPadding) return '';
+            if (lightPadding) return 'py-4';
+
+            // Padding por variante (más ligero por defecto)
+            switch (variant) {
+                case 'compact': return 'py-4';
+                case 'landing': return 'py-12';
+                case 'fullwidth': return 'py-8';
+                default: return 'py-8';
+            }
+        };
+
         switch (variant) {
             case 'compact':
                 return {
-                    sectionPadding: 'py-8',
-                    headerMargin: 'mb-6',
+                    sectionPadding: getPaddingStyle(),
+                    headerMargin: 'mb-4',
                     titleSize: 'text-xl sm:text-2xl',
                     descriptionSize: 'text-base',
                     showDescription: false,
-                    containerClass: 'max-w-4xl mx-auto px-4 sm:px-6 lg:px-8'
+                    containerClass: 'max-w-4xl mx-auto px-2 sm:px-4'
+                }
+            case 'masonry':
+                return {
+                    sectionPadding: getPaddingStyle(),
+                    headerMargin: 'mb-8',
+                    titleSize: 'text-2xl sm:text-3xl',
+                    descriptionSize: 'text-lg',
+                    showDescription: true,
+                    containerClass: 'max-w-7xl mx-auto px-2 sm:px-4 lg:px-6'
                 }
             case 'landing':
                 return {
-                    sectionPadding: 'py-20',
-                    headerMargin: 'mb-16',
+                    sectionPadding: getPaddingStyle(),
+                    headerMargin: 'mb-12',
                     titleSize: 'text-3xl sm:text-5xl',
                     descriptionSize: 'text-xl',
                     showDescription: true,
-                    containerClass: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'
+                    containerClass: 'max-w-7xl mx-auto px-2 sm:px-4 lg:px-6'
                 }
             case 'fullwidth':
                 return {
-                    sectionPadding: 'py-16',
-                    headerMargin: 'mb-12',
+                    sectionPadding: getPaddingStyle(),
+                    headerMargin: 'mb-8',
                     titleSize: 'text-2xl sm:text-4xl',
                     descriptionSize: 'text-lg',
                     showDescription: true,
-                    containerClass: 'w-full px-4 sm:px-6 lg:px-8' // Sin max-width para full width
+                    containerClass: noPadding ? 'w-full' : 'w-full px-2 sm:px-4' // Sin max-width para full width
                 }
             default:
                 return {
-                    sectionPadding: 'py-16',
-                    headerMargin: 'mb-12',
+                    sectionPadding: getPaddingStyle(),
+                    headerMargin: 'mb-8',
                     titleSize: 'text-2xl sm:text-4xl',
                     descriptionSize: 'text-lg',
                     showDescription: true,
-                    containerClass: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'
+                    containerClass: 'max-w-7xl mx-auto px-2 sm:px-4 lg:px-6'
                 }
         }
     }
@@ -148,6 +190,14 @@ export default function GalleryGrid({
             4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
             5: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5',
             6: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6'
+        }
+
+        // Configuración específica para masonry
+        if (variant === 'masonry') {
+            return {
+                gridClass: `columns-1 sm:columns-2 lg:columns-${columns} ${gapStyles[gap]} space-y-${gap === 'sm' ? '2' : gap === 'md' ? '4' : '6'}`,
+                itemClass: 'break-inside-avoid mb-2 sm:mb-4 group relative overflow-hidden rounded-lg bg-zinc-800 transition-all duration-300 hover:scale-105 hover:shadow-xl'
+            }
         }
 
         return {
@@ -200,7 +250,28 @@ export default function GalleryGrid({
                                 640: { perView: 1.3 }
                             }}
                         />
-                    ) : variant === 'grid' || variant === 'masonry' || variant === 'fullwidth' ? (
+                    ) : variant === 'masonry' ? (
+                        <div className={gridStyles.gridClass}>
+                            {imagenes.map((imagen, index) => {
+                                // Alturas variables para efecto masonry
+                                const heights = ['h-48', 'h-64', 'h-56', 'h-72', 'h-60', 'h-80', 'h-52'];
+                                const randomHeight = heights[index % heights.length];
+
+                                return (
+                                    <div key={index} className={`${gridStyles.itemClass} ${randomHeight}`}>
+                                        <Image
+                                            src={imagen}
+                                            alt={altText ? `${altText} - Imagen ${index + 1}` : `${contenido.titulo} - Imagen ${index + 1}`}
+                                            fill
+                                            className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                        />
+                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    ) : variant === 'grid' || variant === 'fullwidth' ? (
                         <div className={gridStyles.gridClass}>
                             {imagenes.map((imagen, index) => (
                                 <div key={index} className={gridStyles.itemClass}>

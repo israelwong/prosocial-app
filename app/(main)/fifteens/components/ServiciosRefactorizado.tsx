@@ -70,7 +70,8 @@ function ServiciosRefactorizado() {
             >
                 <GalleryGrid
                     imagenes={imagenesConfig.casual}
-
+                    variant='masonry'
+                    noPadding={true}
                 />
             </ServiceSection>
 
@@ -119,22 +120,7 @@ function ServiciosRefactorizado() {
                     autoplay={3000}
                     alt="Fotografía de evento"
                     imagenBordeRedondeado={false}
-                />
-            </ServiceSection>
 
-            {/* Comparación: Mismo contenido con variante showcase */}
-            <ServiceSection
-                titulo="Fotografía para evento (Showcase)"
-                descripcion="La misma galería usando variant='showcase' para imágenes cuadradas"
-                titleGradient="from-orange-500 to-red-500"
-            >
-                <GallerySlider
-                    imagenes={imagenesConfig.evento}
-                    variant="showcase"
-                    autoplay={3000}
-                    alt="Fotografía de evento showcase"
-                    imagenBordeRedondeado={true}
-                    margenEntreFotos={16}
                 />
             </ServiceSection>
 
@@ -143,12 +129,27 @@ function ServiciosRefactorizado() {
                 titulo="Cinematografía para evento"
                 descripcion="Grabamos tu evento con 1 o 2 cámaras en piso, dron para tomas aéreas y grúa con cabezal robótico para tomas elevadas"
                 titleGradient="from-red-500 to-pink-500"
-                showSeparator={false} // Último elemento
             >
                 <VideoSingle
                     src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/reels/fifteens/reel_evento_2019.mp4?t=2024-09-29T01%3A58%3A00.130Z"
                     autoPlay={true}
                     loop={true}
+                />
+            </ServiceSection>
+
+            {/* Ejemplo de Masonry Layout */}
+            <ServiceSection
+                titulo="Galería Masonry"
+                descripcion="Layout tipo Pinterest con alturas variables para una presentación más dinámica"
+                titleGradient="from-teal-500 to-cyan-500"
+                showSeparator={false}
+            >
+                <GalleryGrid
+                    imagenes={imagenesConfig.vestido}
+                    variant="masonry"
+                    columns={3}
+                    gap="md"
+                    noPadding={true}
                 />
             </ServiceSection>
         </div>
