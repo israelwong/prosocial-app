@@ -8,8 +8,7 @@ import {
   ServiceSection,
   VideoSingle,
   FAQSection,
-  GuaranteesSection,
-  TrustBadges
+  Garantias
 } from '@/app/components/shared'
 
 function WeddingsPage() {
@@ -162,14 +161,13 @@ function WeddingsPage() {
       />
 
       {/* Sección de Garantías */}
-      <section className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <GuaranteesSection
-            variant="full"
-            className="mb-16"
-          />
-          <TrustBadges variant="inline" />
-        </div>
+      <section className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
+        <Garantias
+          variant="full"
+          title="Nuestras Garantías"
+          subtitle="Trabajamos con la confianza y tranquilidad que mereces para tu boda perfecta"
+          showBadges={true}
+        />
       </section>
 
       {/* Sección de Preguntas Frecuentes */}

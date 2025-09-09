@@ -137,7 +137,7 @@ export default function FAQSection({
                 }
             case 'inline':
                 return {
-                    sectionPadding: 'py-12',
+                    sectionPadding: 'py-6',
                     titleSize: 'text-2xl sm:text-3xl',
                     subtitleSize: 'text-lg',
                     showSubtitle: true,
@@ -145,7 +145,7 @@ export default function FAQSection({
                 }
             default: // full
                 return {
-                    sectionPadding: 'py-16',
+                    sectionPadding: 'py-6',
                     titleSize: 'text-3xl sm:text-4xl',
                     subtitleSize: 'text-xl',
                     showSubtitle: true,
@@ -157,7 +157,7 @@ export default function FAQSection({
     const variantStyles = getVariantStyles()
 
     return (
-        <section className={`${variantStyles.sectionPadding} bg-zinc-900 ${className}`}>
+        <section className={`${variantStyles.sectionPadding} ${className}`}>
             <div className={variantStyles.containerClass}>
                 {/* Header */}
                 <div className="text-center mb-12">

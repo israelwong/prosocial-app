@@ -7,7 +7,8 @@ import PorqueNosotros from '@/app/components/main/PorqueNosotros';
 import Servicios from './components/ServiciosRefactorizado';
 import Entregas from '@/app/components/main/Entregas';
 // import Testomonios from '@/app/components/main/Testomonios';
-import { FAQSection, GuaranteesSection, TrustBadges } from '@/app/components/shared';
+import { FAQSection, TrustBadges, Garantias } from '@/app/components/shared';
+import { CTASection, ctaConfigs } from '@/app/components/cta';
 // import Galeria from '@/app/components/main/Galeria';
 
 export const metadata: Metadata = {
@@ -63,18 +64,18 @@ function page() {
       </section>
 
       {/* Sección de Garantías */}
-      <section className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <GuaranteesSection
-            variant="full"
-            className="mb-16"
-          />
-          <TrustBadges variant="inline" />
-        </div>
+      <section className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
+        <Garantias
+          variant="full"
+          title="Nuestras Garantías"
+          subtitle="Trabajamos con la confianza y tranquilidad que mereces para tu celebración de XV años"
+          showBadges={true}
+          ctaBadgeText="✨ XV Años Únicos"
+        />
       </section>
 
       {/* Sección de Preguntas Frecuentes */}
-      <section className="py-20 bg-zinc-900">
+      <section className="py-20">
         <div className="max-w-4xl mx-auto px-6">
           <FAQSection
             variant="full"
@@ -85,34 +86,14 @@ function page() {
         </div>
       </section>
 
-      <section>
-        <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 py-20">
-          <div className="px-10 mx-auto md:max-w-screen-md text-center">
-
-            <h2 className="font-Bebas-Neue text-4xl md:text-6xl text-white mb-6">
-              ¿Listos para Empezar?
-            </h2>
-            <p className="font-light text-xl md:text-2xl mb-10 text-zinc-300">
-              Ofrecemos paquetes preconfigurados, pero si necesitas algo especial podemos armar un paquete a tu medida.
-            </p>
-            <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-              <a
-                href="https://calendly.com/prosocial-mx"
-                target="_blank"
-                className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-4 rounded-lg font-medium text-lg transition-colors duration-300"
-              >
-                Agenda una Cita Virtual
-              </a>
-              <a
-                href="/fifteens/paquetes"
-                className="border-2 border-zinc-400 hover:border-white text-zinc-300 hover:text-white px-8 py-4 rounded-lg font-medium text-lg transition-colors duration-300"
-              >
-                Ver Paquetes
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* CTA Final Unificado */}
+      <CTASection
+        {...ctaConfigs.fifteens}
+        title="¿Listos para Empezar?"
+        description="Ofrecemos paquetes preconfigurados, pero si necesitas algo especial podemos armar un paquete a tu medida."
+        additionalInfo="Agenda tu cita virtual gratuita • Consulta paquetes disponibles • Cotización personalizada"
+        showAdditionalInfo={true}
+      />
 
 
     </div>
