@@ -6,7 +6,7 @@ import TitlePulse from '@/app/components/main/TitlePulse';
 // import SlideFotosSesionesCasuales from '@/app/components/main/Fifteens/SlideFotosSesionesCasuales';
 // import SlideFotosEvento from '@/app/components/main/Fifteens/SlideFotosEvento';
 import { VideoPlayer } from '@/app/components/shared/video';
-import Hook from '@/app/components/main/Hook';
+import QuoteSection from '@/app/components/main/QuoteSection';
 import { ArrowDown } from 'lucide-react';
 
 function Servicios() {
@@ -124,8 +124,8 @@ function Servicios() {
             </div>
             {/* </Fade> */}
 
-            <Hook
-                message={"Vive al máximo tu evento, nosotros nos encargamos de inmortalizarlo."}
+            <QuoteSection
+                message="Vive al máximo tu evento, nosotros nos encargamos de inmortalizarlo."
             />
 
             {/* <!-- FOTOGRAFÍA PARA EVENTO --> */}

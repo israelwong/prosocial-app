@@ -1,7 +1,7 @@
 import React from 'react'
 import type { Metadata } from "next";
 import HeroRefactorizado from './components/HeroRefactorizado';
-import Hook from '@/app/components/main/Hook';
+import QuoteSection from '@/app/components/main/QuoteSection';
 import PorqueNosotros from '@/app/components/main/PorqueNosotros';
 import Servicios from './components/ServiciosRefactorizado';
 import Entregas from '@/app/components/main/Entregas';
@@ -46,11 +46,12 @@ function page() {
           showTopSeparator={true}
           showBottomSeparator={false}
         />
-        <Hook message={"Este momento especial solo se vive una vez, nosotros somos expertos en capturarlo."} />
+        <QuoteSection message="Este momento especial solo se vive una vez, nosotros somos expertos en capturarlo." />
       </section>
       <section>
         <PorqueNosotros />
       </section>
+
       <section>
         <CTAPaquetes
           title="¡Reserva tu fecha ahora!"
@@ -61,10 +62,9 @@ function page() {
           showTopSeparator={true}
           showBottomSeparator={true}
         />
-        <span className='my-5 flex'>
-          <Hook message={"Cuidamos todos los detalles para entregarte los mejores resultados."} />
-        </span>
-      </section>
+
+        <QuoteSection message="Cuidamos todos los detalles para entregarte los mejores resultados." />      </section>
+
       <section>
         <Servicios />
       </section>

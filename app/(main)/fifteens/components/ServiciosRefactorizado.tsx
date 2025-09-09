@@ -6,7 +6,7 @@ import {
     VideoSingle,
     PortfolioGallery
 } from '@/app/components/shared'
-import Hook from '@/app/components/main/Hook'
+import QuoteSection from '@/app/components/main/QuoteSection'
 
 // Configuración de imágenes para cada tipo de sesión
 const imagenesConfig = {
@@ -106,8 +106,8 @@ function ServiciosRefactorizado() {
                 </div>
             </ServiceSection>
 
-            {/* Hook/CTA intermedio */}
-            <Hook
+            {/* QuoteSection/CTA intermedio */}
+            <QuoteSection
                 message="Vive al máximo tu evento, nosotros nos encargamos de inmortalizarlo."
             />
 
