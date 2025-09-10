@@ -9,123 +9,111 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  username  String?
-  email     String?
-  password  String
-  role      String   @default("user")
-  // puesto    String?// added
-  telefono  String?
-  status    String   @default("inactive")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Sesion    Sesion[]
-  Agenda    Agenda[]
-  Pago      Pago[]
-  Evento    Evento[]
+  id                 String               @id @default(cuid())
+  username           String?
+  email              String?
+  password           String
+  role               String               @default("user")
+  telefono           String?
+  status             String               @default("inactive")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  Agenda             Agenda[]
   CotizacionServicio CotizacionServicio[]
-  
-  // === RELACIONES NOMINA ===
-  Nomina              Nomina[]              @relation("NominaUsuario")
-  NominaAutorizada    Nomina[]              @relation("AutorizadoPor")
-  NominaPagada        Nomina[]              @relation("PagadoPor")
-  
-  // === RELACIONES GASTOS ===
-  Gasto               Gasto[]
-  // Notificacion Notificacion[]
+  Evento             Evento[]
+  Gasto              Gasto[]
+  NominaAutorizada   Nomina[]             @relation("AutorizadoPor")
+  NominaPagada       Nomina[]             @relation("PagadoPor")
+  Nomina             Nomina[]             @relation("NominaUsuario")
+  Pago               Pago[]
+  Sesion             Sesion[]
 }
 
 model Sesion {
   id        String   @id @default(cuid())
   userId    String
-  User      User     @relation(fields: [userId], references: [id])
   token     String   @unique
   status    String   @default("active")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  User      User     @relation(fields: [userId], references: [id])
 }
 
 model Cliente {
-  id        String   @id @default(cuid())
-  nombre    String
-  email     String?
-  telefono  String?  @unique
-  direccion String?
-  status    String   @default("activo") //prospecto, cliente
-  canalId   String?
-  Canal     Canal?   @relation(fields: [canalId], references: [id])
-  userId    String?
-  
-  // Campos para autenticación cliente
-  passwordHash    String?   // null hasta onboarding
-  emailVerified   Boolean   @default(false)
-  isActive        Boolean   @default(true)
-  lastLogin       DateTime?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Evento    Evento[]
-  Pago      Pago[]
-  Suscripcion Suscripcion?
+  id            String       @id @default(cuid())
+  nombre        String
+  email         String?
+  telefono      String?      @unique
+  direccion     String?
+  status        String       @default("activo")
+  canalId       String?
+  userId        String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  emailVerified Boolean      @default(false)
+  isActive      Boolean      @default(true)
+  lastLogin     DateTime?
+  passwordHash  String?
+  Canal         Canal?       @relation(fields: [canalId], references: [id])
+  Evento        Evento[]
+  Pago          Pago[]
+  Suscripcion   Suscripcion?
 }
 
 model Evento {
-  id           String      @id @default(cuid())
-  clienteId    String
-  Cliente      Cliente     @relation(fields: [clienteId], references: [id])
-  eventoTipoId String?
-  EventoTipo   EventoTipo? @relation(fields: [eventoTipoId], references: [id])
-  nombre       String?     @default("Pendiente")
-  fecha_evento DateTime
-  sede         String?
-  direccion    String?
-  status       String       @default("active")
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-
-  userId String?
-  User   User?   @relation(fields: [userId], references: [id])
-
-  eventoEtapaId String?
-  EventoEtapa   EventoEtapa? @relation(fields: [eventoEtapaId], references: [id])
-
-  EventoBitacora EventoBitacora[]
-  Cotizacion     Cotizacion[]
+  id             String           @id @default(cuid())
+  clienteId      String
+  eventoTipoId   String?
+  nombre         String?          @default("Pendiente")
+  fecha_evento   DateTime
+  sede           String?
+  direccion      String?
+  status         String           @default("active")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  userId         String?
+  eventoEtapaId  String?
   Agenda         Agenda[]
-  Nomina         Nomina[]
-  Gasto          Gasto[]
   Cita           Cita[]
+  Cotizacion     Cotizacion[]
+  Cliente        Cliente          @relation(fields: [clienteId], references: [id])
+  EventoEtapa    EventoEtapa?     @relation(fields: [eventoEtapaId], references: [id])
+  EventoTipo     EventoTipo?      @relation(fields: [eventoTipoId], references: [id])
+  User           User?            @relation(fields: [userId], references: [id])
+  EventoBitacora EventoBitacora[]
+  Gasto          Gasto[]
+  Nomina         Nomina[]
 }
 
 model EventoBitacora {
   id          String   @id @default(cuid())
   eventoId    String
-  Evento      Evento   @relation(fields: [eventoId], references: [id])
   comentario  String
   importancia String   @default("1")
   status      String   @default("active")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  Evento      Evento   @relation(fields: [eventoId], references: [id])
 }
 
 model EventoTipo {
   id         String       @id @default(cuid())
-  nombre     String //XV años Boda, Bautizo, Cumpleaños, etc
+  nombre     String
   posicion   Int          @default(0)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
+  Cotizacion Cotizacion[]
   Evento     Evento[]
   Paquete    Paquete[]
-  Cotizacion Cotizacion[]
 }
 
 model EventoEtapa {
   id        String   @id @default(cuid())
   nombre    String
-  codigo    String?  @unique // Identificador inmutable para lógica de negocio
   posicion  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  codigo    String?  @unique
   Evento    Evento[]
 }
 
@@ -140,19 +128,13 @@ model Canal {
 
 model Pago {
   id                                 String                            @id @default(cuid())
-  clienteId                          String? //id del cliente
-  Cliente                            Cliente?                          @relation(fields: [clienteId], references: [id])
+  clienteId                          String?
   cotizacionId                       String?
-  Cotizacion                         Cotizacion?                       @relation(fields: [cotizacionId], references: [id], onDelete: SetNull)
   condicionesComercialesId           String?
-  CondicionesComerciales             CondicionesComerciales?           @relation(fields: [condicionesComercialesId], references: [id])
   condicionesComercialesMetodoPagoId String?
-  CondicionesComercialesMetodoPago   CondicionesComercialesMetodoPago? @relation(fields: [condicionesComercialesMetodoPagoId], references: [id])
   metodoPagoId                       String?
-  MetodoPago                         MetodoPago?                       @relation(fields: [metodoPagoId], references: [id])
   metodo_pago                        String
   monto                              Float
-  comisionStripe                      Float?
   concepto                           String
   descripcion                        String?
   stripe_session_id                  String?                           @unique
@@ -160,244 +142,203 @@ model Pago {
   status                             String                            @default("pending")
   createdAt                          DateTime                          @default(now())
   updatedAt                          DateTime                          @updatedAt
-  //agregadas
+  categoria_transaccion              String?                           @default("abono")
+  tipo_transaccion                   String?                           @default("ingreso")
   userId                             String?
+  comisionStripe                     Float?
+  Cliente                            Cliente?                          @relation(fields: [clienteId], references: [id])
+  CondicionesComerciales             CondicionesComerciales?           @relation(fields: [condicionesComercialesId], references: [id])
+  CondicionesComercialesMetodoPago   CondicionesComercialesMetodoPago? @relation(fields: [condicionesComercialesMetodoPagoId], references: [id])
+  Cotizacion                         Cotizacion?                       @relation(fields: [cotizacionId], references: [id])
+  MetodoPago                         MetodoPago?                       @relation(fields: [metodoPagoId], references: [id])
   User                               User?                             @relation(fields: [userId], references: [id])
-  tipo_transaccion                   String?                           @default("ingreso") //ingreso, egreso
-  categoria_transaccion              String?                           @default("abono") //abono, honorarios, servicio, producto, comision, ajuste
 }
 
 model Cotizacion {
   id                                 String                             @id @default(cuid())
   eventoTipoId                       String
-  EventoTipo                         EventoTipo                         @relation(fields: [eventoTipoId], references: [id])
   eventoId                           String
-  Evento                             Evento                             @relation(fields: [eventoId], references: [id])
-  
   nombre                             String
   precio                             Float
-  descuento                          Float?
-  
-  descripcion                        String?
   condicionesComercialesId           String?
-  CondicionesComerciales             CondicionesComerciales?            @relation(fields: [condicionesComercialesId], references: [id])
   condicionesComercialesMetodoPagoId String?
-  CondicionesComercialesMetodoPago   CondicionesComercialesMetodoPago[]
   status                             String                             @default("pendiente")
-  archivada                          Boolean                            @default(false)
-  visible_cliente                    Boolean?                           @default(true)
-  
-  // Nuevos campos para tiempo mínimo de contratación
-  dias_minimos_contratacion          Int?                               @default(5)
-  dias_minimos_explicacion           String?                            @default("Para garantizar la disponibilidad del equipo y coordinación del evento")
-  
   createdAt                          DateTime                           @default(now())
   updatedAt                          DateTime                           @updatedAt
-  expiresAt                          DateTime?                          @default(dbgenerated("now() + interval '10 day'"))
-  Servicio                           CotizacionServicio[]
+  expiresAt                          DateTime?                          @default(dbgenerated("(now() + '10 days'::interval)"))
+  visible_cliente                    Boolean?                           @default(true)
+  descripcion                        String?
+  archivada                          Boolean                            @default(false)
+  descuento                          Float?
+  dias_minimos_contratacion          Int?                               @default(5)
+  dias_minimos_explicacion           String?                            @default("Para garantizar la disponibilidad del equipo y coordinación del evento")
+  CondicionesComerciales             CondicionesComerciales?            @relation(fields: [condicionesComercialesId], references: [id])
+  Evento                             Evento                             @relation(fields: [eventoId], references: [id])
+  EventoTipo                         EventoTipo                         @relation(fields: [eventoTipoId], references: [id])
   Costos                             CotizacionCosto[]
-  Pago                               Pago[]
+  Servicio                           CotizacionServicio[]
   CotizacionVisita                   CotizacionVisita[]
+  Pago                               Pago[]
   SolicitudPaquete                   SolicitudPaquete[]
+  CondicionesComercialesMetodoPago   CondicionesComercialesMetodoPago[] @relation("CondicionesComercialesMetodoPagoToCotizacion")
 }
 
 model CotizacionServicio {
-  id                  String            @id @default(cuid())
-  cotizacionId        String
-  Cotizacion          Cotizacion        @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
-  servicioId          String?           // Opcional para servicios personalizados
-  Servicio            Servicio?         @relation(fields: [servicioId], references: [id])
-  servicioCategoriaId String?           // Opcional para servicios personalizados
-  ServicioCategoria   ServicioCategoria? @relation(fields: [servicioCategoriaId], references: [id])
-
-  // --- CAMPOS OPERACIONALES ---
-  cantidad            Int               @default(1)
-  posicion            Int               @default(0)
-  userId              String?
-  User                User?             @relation(fields: [userId], references: [id])
-  fechaAsignacion     DateTime?
-  FechaEntrega        DateTime?
-  status              String            @default("pendiente")
-  
-  // --- CAMPOS SNAPSHOT PARA TRAZABILIDAD ---
-  // Jerarquía: Sección → Categoría → Servicio
-  seccion_nombre_snapshot    String?           // Nombre de sección al momento de cotizar
-  categoria_nombre_snapshot  String?           // Nombre de categoría al momento de cotizar
-  nombre_snapshot            String            @default("Servicio migrado") // Nombre del servicio al momento de cotizar
-  descripcion_snapshot       String?           // Descripción completa del servicio
-  
-  // Precios y costos snapshot
-  precio_unitario_snapshot   Float             @default(0)
-  costo_snapshot             Float             @default(0)
-  gasto_snapshot             Float             @default(0)
-  utilidad_snapshot          Float             @default(0)
-  precio_publico_snapshot    Float             @default(0)
-  tipo_utilidad_snapshot     String            @default("servicio") // servicio, producto
-  
-  // Campos calculados (actuales, no snapshot)
-  precioUnitario      Float             @default(0)  // Precio actual para cálculos
-  subtotal            Float             @default(0)  // cantidad * precioUnitario
-  
-  // --- CAMPOS LEGACY TEMPORALES (migrar y eliminar después) ---
-  // MANTENER TEMPORALMENTE para migración segura de datos
-  nombre              String?           // LEGACY: migrar a nombre_snapshot
-  descripcion         String?           // LEGACY: migrar a descripcion_snapshot  
-  costo               Float?            @default(0) // LEGACY: migrar a costo_snapshot
-  gasto               Float?            @default(0) // LEGACY: migrar a gasto_snapshot
-  utilidad            Float?            @default(0) // LEGACY: migrar a utilidad_snapshot
-  precio_publico      Float?            @default(0) // LEGACY: migrar a precio_publico_snapshot
-  tipo_utilidad       String?           @default("servicio") // LEGACY: migrar a tipo_utilidad_snapshot
-  categoria_nombre    String?           // LEGACY: migrar a categoria_nombre_snapshot
-  seccion_nombre      String?           // LEGACY: migrar a seccion_nombre_snapshot
-  
-  // --- CAMPOS PERSONALIZACIÓN ---
-  es_personalizado    Boolean           @default(false)     // true si es un servicio agregado al vuelo
-  servicio_original_id String?          // ID del servicio original si es personalizado
-
-  // === RELACIÓN CON NÓMINA ===
-  NominaServicio      NominaServicio[]
-
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
+  id                        String             @id @default(cuid())
+  cotizacionId              String
+  servicioId                String?
+  servicioCategoriaId       String?
+  cantidad                  Int                @default(1)
+  posicion                  Int                @default(0)
+  userId                    String?
+  fechaAsignacion           DateTime?
+  FechaEntrega              DateTime?
+  status                    String             @default("pendiente")
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+  nombre                    String?
+  precioUnitario            Float              @default(0)
+  subtotal                  Float              @default(0)
+  costo                     Float?             @default(0)
+  categoria_nombre          String?
+  descripcion               String?
+  es_personalizado          Boolean            @default(false)
+  gasto                     Float?             @default(0)
+  precio_publico            Float?             @default(0)
+  seccion_nombre            String?
+  servicio_original_id      String?
+  tipo_utilidad             String?            @default("servicio")
+  utilidad                  Float?             @default(0)
+  categoria_nombre_snapshot String?
+  costo_snapshot            Float              @default(0)
+  descripcion_snapshot      String?
+  gasto_snapshot            Float              @default(0)
+  nombre_snapshot           String             @default("Servicio migrado")
+  precio_publico_snapshot   Float              @default(0)
+  precio_unitario_snapshot  Float              @default(0)
+  seccion_nombre_snapshot   String?
+  tipo_utilidad_snapshot    String             @default("servicio")
+  utilidad_snapshot         Float              @default(0)
+  Cotizacion                Cotizacion         @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
+  ServicioCategoria         ServicioCategoria? @relation(fields: [servicioCategoriaId], references: [id])
+  Servicio                  Servicio?          @relation(fields: [servicioId], references: [id])
+  User                      User?              @relation(fields: [userId], references: [id])
+  NominaServicio            NominaServicio[]
 }
 
-// Nueva tabla para costos adicionales
 model CotizacionCosto {
-  id            String     @id @default(cuid())
-  cotizacionId  String
-  Cotizacion    Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
-  
-  nombre        String     // Nombre del costo adicional
-  descripcion   String?    // Descripción opcional
-  costo         Float      @default(0)
-  tipo          String     @default("adicional") // adicional, descuento, impuesto, comision
-  posicion      Int        @default(0)
-  
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id           String     @id @default(cuid())
+  cotizacionId String
+  nombre       String
+  descripcion  String?
+  costo        Float      @default(0)
+  tipo         String     @default("adicional")
+  posicion     Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  Cotizacion   Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
 }
 
 model CotizacionVisita {
   id           String     @id @default(cuid())
   cotizacionId String
-  Cotizacion   Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
+  Cotizacion   Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
 }
 
 model Servicio {
   id                  String               @id @default(cuid())
   servicioCategoriaId String
-  ServicioCategoria   ServicioCategoria    @relation(fields: [servicioCategoriaId], references: [id])
-  
-  // --- CAMPOS PRINCIPALES ---
   nombre              String
-  
-  // --- CAMPOS FINANCIEROS ---
   costo               Float                @default(0)
   gasto               Float                @default(0)
   utilidad            Float                @default(0)
   precio_publico      Float                @default(0)
-  tipo_utilidad       String               @default("servicio") //servicio, producto
-  
-  // --- CAMPOS OPERACIONALES ---
   posicion            Int                  @default(0)
+  visible_cliente     Boolean              @default(true)
+  tipo_utilidad       String               @default("servicio")
   status              String               @default("active")
-  
-  // --- CAMPOS LEGACY (mantener por compatibilidad) ---
-  visible_cliente     Boolean              @default(true)  // LEGACY: No se usa, mantener por compatibilidad
-  
-  // --- METADATOS ---
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
-  
-  // --- RELACIONES ---
-  ServicioGasto       ServicioGasto[]
   CotizacionServicio  CotizacionServicio[]
   PaqueteServicio     PaqueteServicio[]
+  ServicioCategoria   ServicioCategoria    @relation(fields: [servicioCategoriaId], references: [id])
+  ServicioGasto       ServicioGasto[]
 }
 
 model ServicioSeccion {
-  id          String   @id @default(cuid())
-  nombre      String   @unique
-  descripcion String?
-  posicion    Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relación: Una Sección está enlazada a muchas entradas de SeccionCategoria
+  id                String             @id @default(cuid())
+  nombre            String             @unique
+  descripcion       String?
+  posicion          Int                @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
   seccionCategorias SeccionCategoria[]
 }
 
-
 model SeccionCategoria {
-  id          String @id @default(cuid())
-  seccionId   String
-  categoriaId String @unique // ¡Clave! Esto asegura que una categoría solo puede estar en una sección.
-
-  // Relaciones
-  Seccion           ServicioSeccion   @relation(fields: [seccionId], references: [id], onDelete: Cascade)
+  id                String            @id @default(cuid())
+  seccionId         String
+  categoriaId       String            @unique
   ServicioCategoria ServicioCategoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  Seccion           ServicioSeccion   @relation(fields: [seccionId], references: [id], onDelete: Cascade)
 }
-
 
 model ServicioGasto {
   id         String   @id @default(cuid())
   servicioId String
-  Servicio   Servicio @relation(fields: [servicioId], references: [id])
   nombre     String
   costo      Float
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  Servicio   Servicio @relation(fields: [servicioId], references: [id])
 }
 
 model ServicioCategoria {
   id                 String               @id @default(cuid())
-  nombre             String               @unique //Fotografia, Video, Entregable, etc
+  nombre             String               @unique
   posicion           Int                  @default(0)
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
-  seccionCategoria  SeccionCategoria? 
-  Servicio           Servicio[]
-  PaqueteServicio    PaqueteServicio[]
   CotizacionServicio CotizacionServicio[]
+  PaqueteServicio    PaqueteServicio[]
+  seccionCategoria   SeccionCategoria?
+  Servicio           Servicio[]
 }
 
 model Paquete {
-  id              String            @id @default(cuid())
-  eventoTipoId    String
-  EventoTipo      EventoTipo        @relation(fields: [eventoTipoId], references: [id])
-  nombre          String
-  costo           Float?
-  gasto           Float?
-  utilidad        Float?
-  precio          Float?
-  status          String            @default("active")
-  posicion        Int               @default(0)
-  
-  // Nuevos campos para tiempo mínimo de contratación
-  dias_minimos_contratacion Int?    @default(5)
-  dias_minimos_explicacion  String? @default("Para garantizar la disponibilidad del equipo y coordinación del evento")
-  
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  PaqueteServicio PaqueteServicio[]
-  SolicitudPaquete SolicitudPaquete[]
+  id                        String             @id @default(cuid())
+  eventoTipoId              String
+  nombre                    String
+  costo                     Float?
+  gasto                     Float?
+  utilidad                  Float?
+  precio                    Float?
+  status                    String             @default("active")
+  posicion                  Int                @default(0)
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+  dias_minimos_contratacion Int?               @default(5)
+  dias_minimos_explicacion  String?            @default("Para garantizar la disponibilidad del equipo y coordinación del evento")
+  EventoTipo                EventoTipo         @relation(fields: [eventoTipoId], references: [id])
+  PaqueteServicio           PaqueteServicio[]
+  SolicitudPaquete          SolicitudPaquete[]
 }
 
 model PaqueteServicio {
   id                  String            @id @default(cuid())
   paqueteId           String
-  Paquete             Paquete           @relation(fields: [paqueteId], references: [id], onDelete: Cascade)
   servicioId          String
-  Servicio            Servicio          @relation(fields: [servicioId], references: [id])
   servicioCategoriaId String
-  ServicioCategoria   ServicioCategoria @relation(fields: [servicioCategoriaId], references: [id])
   cantidad            Int               @default(1)
   posicion            Int               @default(0)
   visible_cliente     Boolean           @default(true)
   status              String            @default("active")
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
+  Paquete             Paquete           @relation(fields: [paqueteId], references: [id], onDelete: Cascade)
+  ServicioCategoria   ServicioCategoria @relation(fields: [servicioCategoriaId], references: [id])
+  Servicio            Servicio          @relation(fields: [servicioId], references: [id])
 }
 
 model Configuracion {
@@ -407,41 +348,40 @@ model Configuracion {
   utilidad_producto           Float
   comision_venta              Float
   sobreprecio                 Float
-  claveAutorizacion           String? //!added
-  numeroMaximoServiciosPorDia Int? //!added
   status                      String   @default("active")
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
+  claveAutorizacion           String?
+  numeroMaximoServiciosPorDia Int?
 }
 
 model MetodoPago {
   id                               String                             @id @default(cuid())
-  metodo_pago                      String //efectivo, tarjeta de crédito, tarjeta de debito, transferencia interbancaria, oxxo
-  comision_porcentaje_base         Float?                             @map("comision_porcentaje_base") //3.6
-  comision_fija_monto              Float? //3
-  num_msi                          Int? // 3, 6, 9, 12
+  metodo_pago                      String
+  comision_fija_monto              Float?
+  num_msi                          Int?
   comision_msi_porcentaje          Float?
   orden                            Int?                               @default(0)
   payment_method                   String?                            @default("card")
   status                           String                             @default("active")
   createdAt                        DateTime                           @default(now())
   updatedAt                        DateTime                           @updatedAt
+  comision_porcentaje_base         Float?                             @map("comision_porcentaje_base")
   CondicionesComercialesMetodoPago CondicionesComercialesMetodoPago[]
   Pago                             Pago[]
 }
 
 model CondicionesComerciales {
   id                               String                             @id @default(cuid())
-  nombre                           String // 3/6/9/12 msi / 10% de desc plan estandar (30% anticipo / 70 en exibiciones) 
+  nombre                           String
   descripcion                      String?
-  descuento                        Float? // 10
-  porcentaje_anticipo              Float?                             @default(0) // 30
+  descuento                        Float?
+  porcentaje_anticipo              Float?                             @default(0)
   status                           String                             @default("active")
   orden                            Int?                               @default(0)
-  // tipoEvento                       String? //! social / empresarial
   createdAt                        DateTime                           @default(now())
   updatedAt                        DateTime                           @updatedAt
-  CondicionesComercialesMetodoPago CondicionesComercialesMetodoPago[] 
+  CondicionesComercialesMetodoPago CondicionesComercialesMetodoPago[]
   Cotizacion                       Cotizacion[]
   Pago                             Pago[]
 }
@@ -449,18 +389,17 @@ model CondicionesComerciales {
 model CondicionesComercialesMetodoPago {
   id                       String                 @id @default(cuid())
   condicionesComercialesId String
-  CondicionesComerciales   CondicionesComerciales @relation(fields: [condicionesComercialesId], references: [id], onDelete: Cascade) 
   metodoPagoId             String
-  MetodoPago               MetodoPago             @relation(fields: [metodoPagoId], references: [id])
   orden                    Int?                   @default(0)
   status                   String                 @default("active")
   createdAt                DateTime               @default(now())
   updatedAt                DateTime               @updatedAt
-  Cotizacion               Cotizacion[]
+  CondicionesComerciales   CondicionesComerciales @relation(fields: [condicionesComercialesId], references: [id], onDelete: Cascade)
+  MetodoPago               MetodoPago             @relation(fields: [metodoPagoId], references: [id])
   Pago                     Pago[]
+  Cotizacion               Cotizacion[]           @relation("CondicionesComercialesMetodoPagoToCotizacion")
 }
 
-//Anuncio
 model Campania {
   id        String    @id @default(cuid())
   nombre    String
@@ -472,7 +411,7 @@ model Campania {
 
 model AnuncioPlataforma {
   id        String    @id @default(cuid())
-  nombre    String //facebook, instagram, google, youtube, impreso
+  nombre    String
   status    String    @default("active")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -481,7 +420,7 @@ model AnuncioPlataforma {
 
 model AnuncioTipo {
   id        String    @id @default(cuid())
-  nombre    String //imagen, video, carousel
+  nombre    String
   status    String    @default("active")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -490,7 +429,7 @@ model AnuncioTipo {
 
 model AnuncioCategoria {
   id        String    @id @default(cuid())
-  nombre    String //banner, video, carousel
+  nombre    String
   status    String    @default("active")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -500,18 +439,18 @@ model AnuncioCategoria {
 model Anuncio {
   id                  String            @id @default(cuid())
   campaniaId          String
-  Campania            Campania          @relation(fields: [campaniaId], references: [id])
   nombre              String
   anuncioTipoId       String
-  AnuncioTipo         AnuncioTipo       @relation(fields: [anuncioTipoId], references: [id])
   anuncioCategoriaId  String
-  AnuncioCategoria    AnuncioCategoria  @relation(fields: [anuncioCategoriaId], references: [id])
   anuncioPlataformaId String
-  AnuncioPlataforma   AnuncioPlataforma @relation(fields: [anuncioPlataformaId], references: [id])
   imagen_url          String
   status              String            @default("active")
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
+  AnuncioCategoria    AnuncioCategoria  @relation(fields: [anuncioCategoriaId], references: [id])
+  AnuncioPlataforma   AnuncioPlataforma @relation(fields: [anuncioPlataformaId], references: [id])
+  AnuncioTipo         AnuncioTipo       @relation(fields: [anuncioTipoId], references: [id])
+  Campania            Campania          @relation(fields: [campaniaId], references: [id])
 }
 
 model AnuncioVisita {
@@ -524,19 +463,19 @@ model AnuncioVisita {
 model Agenda {
   id            String    @id @default(cuid())
   userId        String?
-  User          User?     @relation(fields: [userId], references: [id])
   eventoId      String
-  Evento        Evento    @relation(fields: [eventoId], references: [id])
   concepto      String?
   descripcion   String?
   googleMapsUrl String?
   direccion     String?
   fecha         DateTime?
   hora          String?
-  status        String       @default("pendiente")
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  status        String    @default("pendiente")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   agendaTipo    String?
+  Evento        Evento    @relation(fields: [eventoId], references: [id])
+  User          User?     @relation(fields: [userId], references: [id])
 }
 
 model AgendaTipo {
@@ -551,251 +490,230 @@ model Notificacion {
   userId       String?
   titulo       String
   mensaje      String
-  tipo         String   @default("general")  // 🆕 NUEVO: tipo de notificación
-  metadata     Json?                         // 🆕 NUEVO: datos estructurados
   status       String   @default("active")
   cotizacionId String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  metadata     Json?
+  tipo         String   @default("general")
 }
-
-// ========================================
-// MODELOS PARA SISTEMA DE NOMINA
-// ========================================
 
 model Nomina {
-  id                    String                @id @default(cuid())
-  
-  // === RELACIONES PRINCIPALES ===
-  userId                String
-  User                  User                  @relation("NominaUsuario", fields: [userId], references: [id])
-  eventoId              String?               // Para reportes por evento
-  Evento                Evento?               @relation(fields: [eventoId], references: [id])
-  
-  // === INFORMACIÓN DEL PAGO ===
-  concepto              String                // Ej: "Fotografía Boda María", "Servicio múltiple Evento X"
-  descripcion           String?               // Detalle adicional
-  monto_bruto           Float                 // Monto antes de deducciones
-  deducciones           Float                 @default(0) // ISR, retenciones, etc.
-  monto_neto            Float                 // Monto final a pagar
-  
-  // === AGRUPACIÓN DE SERVICIOS ===
-  tipo_pago             String                @default("individual") // "individual", "agrupado", "comision"
-  servicios_incluidos   Int                   @default(1) // Cantidad de servicios
-  
-  // === CONTROL DE FECHAS ===
-  fecha_asignacion      DateTime              @default(now())
-  fecha_autorizacion    DateTime?             // Cuando se autoriza el pago
-  fecha_pago            DateTime?             // Cuando se efectúa el pago
-  periodo_inicio        DateTime?             // Para pagos por periodo
-  periodo_fin           DateTime?
-  
-  // === STATUS Y CONTROL ===
-  status                String                @default("pendiente") // pendiente, autorizado, pagado, cancelado
-  autorizado_por        String?               // userId de quien autoriza
-  AutorizadoPor         User?                 @relation("AutorizadoPor", fields: [autorizado_por], references: [id])
-  pagado_por            String?               // userId de quien ejecuta el pago
-  PagadoPor             User?                 @relation("PagadoPor", fields: [pagado_por], references: [id])
-  metodo_pago           String?               @default("transferencia") // transferencia, efectivo, cheque
-  
-  // === TRAZABILIDAD FINANCIERA ===
-  // Snapshots para reportes y auditoría
-  costo_total_snapshot  Float                 @default(0) // Suma de costos de servicios
-  gasto_total_snapshot  Float                 @default(0) // Suma de gastos de servicios
-  comision_porcentaje   Float?                // Si es pago por comisión
-  
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
-  
-  // === RELACIONES CON SERVICIOS ===
-  NominaServicio        NominaServicio[]
+  id                   String           @id @default(cuid())
+  userId               String
+  eventoId             String?
+  concepto             String
+  descripcion          String?
+  monto_bruto          Float
+  deducciones          Float            @default(0)
+  monto_neto           Float
+  tipo_pago            String           @default("individual")
+  servicios_incluidos  Int              @default(1)
+  fecha_asignacion     DateTime         @default(now())
+  fecha_autorizacion   DateTime?
+  fecha_pago           DateTime?
+  periodo_inicio       DateTime?
+  periodo_fin          DateTime?
+  status               String           @default("pendiente")
+  autorizado_por       String?
+  pagado_por           String?
+  metodo_pago          String?          @default("transferencia")
+  costo_total_snapshot Float            @default(0)
+  gasto_total_snapshot Float            @default(0)
+  comision_porcentaje  Float?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  AutorizadoPor        User?            @relation("AutorizadoPor", fields: [autorizado_por], references: [id])
+  Evento               Evento?          @relation(fields: [eventoId], references: [id])
+  PagadoPor            User?            @relation("PagadoPor", fields: [pagado_por], references: [id])
+  User                 User             @relation("NominaUsuario", fields: [userId], references: [id])
+  NominaServicio       NominaServicio[]
 }
 
-// Tabla intermedia para relacionar nómina con servicios específicos
 model NominaServicio {
-  id                    String                @id @default(cuid())
-  nominaId              String
-  Nomina                Nomina                @relation(fields: [nominaId], references: [id], onDelete: Cascade)
-  cotizacionServicioId  String?
-  CotizacionServicio    CotizacionServicio?   @relation(fields: [cotizacionServicioId], references: [id], onDelete: SetNull)
-  
-  // === SNAPSHOT DEL SERVICIO AL MOMENTO DEL PAGO ===
-  servicio_nombre       String                // Snapshot del nombre
-  seccion_nombre        String?               // Snapshot de la sección
-  categoria_nombre      String?               // Snapshot de la categoría
-  costo_asignado        Float                 // Costo específico para este pago
-  cantidad_asignada     Int                   @default(1)
+  id                   String              @id @default(cuid())
+  nominaId             String
+  cotizacionServicioId String?
+  servicio_nombre      String
+  seccion_nombre       String?
+  categoria_nombre     String?
+  costo_asignado       Float
+  cantidad_asignada    Int                 @default(1)
+  createdAt            DateTime            @default(now())
+  CotizacionServicio   CotizacionServicio? @relation(fields: [cotizacionServicioId], references: [id])
+  Nomina               Nomina              @relation(fields: [nominaId], references: [id], onDelete: Cascade)
 
-  createdAt             DateTime              @default(now())
-  
-  @@unique([nominaId, cotizacionServicioId]) // Un servicio solo puede estar en una nómina
+  @@unique([nominaId, cotizacionServicioId])
 }
 
-// === NUEVOS MODELOS PARA PORTAL CLIENTE ===
-
-// Suscripciones (para funcionalidad futura)
 model Suscripcion {
-  id                String   @id @default(cuid())
-  clienteId         String   @unique  // 1 cliente = 1 suscripción global
-  tipo              String   @default("evento") // 'evento', 'mensual', 'anual'
-  status            String   @default("activa") // 'activa', 'inactiva', 'vencida'
-  fechaInicio       DateTime @default(now())
-  fechaVencimiento  DateTime?
-  precio            Float?
-  descripcion       String?
-  
-  // Relaciones
-  cliente           Cliente  @relation(fields: [clienteId], references: [id])
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String    @id @default(cuid())
+  clienteId        String    @unique
+  tipo             String    @default("evento")
+  status           String    @default("activa")
+  fechaInicio      DateTime  @default(now())
+  fechaVencimiento DateTime?
+  precio           Float?
+  descripcion      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  cliente          Cliente   @relation(fields: [clienteId], references: [id])
 }
 
-// === MODELO GASTO INDEPENDIENTE ===
 model Gasto {
-  id              String   @id @default(cuid())
-  concepto        String
-  descripcion     String?
-  monto           Float
-  categoria       String   // oficina, transporte, marketing, servicios, equipamiento, otros
-  subcategoria    String?  // detalle específico
-  fecha           DateTime @default(now())
-  fechaFactura    DateTime? // fecha real del gasto
-  status          String   @default("activo") // activo, cancelado
-  metodoPago      String?  // efectivo, transferencia, tarjeta, cheque
-  numeroFactura   String?
-  proveedor       String?
-  
-  // Relaciones
-  eventoId        String?  // Si está asociado a un evento específico
-  Evento          Evento?  @relation(fields: [eventoId], references: [id])
-  usuarioId       String
-  Usuario         User     @relation(fields: [usuarioId], references: [id])
-  
-  // Archivos
-  comprobanteUrl  String?  // URL del comprobante
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  id             String    @id @default(cuid())
+  concepto       String
+  descripcion    String?
+  monto          Float
+  categoria      String
+  subcategoria   String?
+  fecha          DateTime  @default(now())
+  fechaFactura   DateTime?
+  status         String    @default("activo")
+  metodoPago     String?
+  numeroFactura  String?
+  proveedor      String?
+  eventoId       String?
+  usuarioId      String
+  comprobanteUrl String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  Evento         Evento?   @relation(fields: [eventoId], references: [id])
+  Usuario        User      @relation(fields: [usuarioId], references: [id])
+
   @@index([fecha, categoria])
   @@index([eventoId])
 }
 
-// ========================================
-// CONFIGURACIÓN DE NEGOCIO
-// ========================================
-
 model Negocio {
-  id          String   @id @default(cuid())
-  nombre      String   // Nombre del negocio
-  descripcion String?  // Descripción breve
-  direccion   String?  // Dirección física
-  telefono    String?  // Teléfono principal
-  email       String?  // Email de contacto
-  sitioWeb    String?  // URL del sitio web
-  
-  // Imágenes
-  logoUrl     String?  // URL del logotipo
-  isotipoUrl  String?  // URL del isotipo (icono)
-  
-  // Configuración adicional
-  moneda      String   @default("MXN")   // Moneda por defecto
-  timezone    String   @default("America/Mexico_City") // Zona horaria
-  idioma      String   @default("es")    // Idioma por defecto
-  
-  status      String   @default("active")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relaciones
-  NegocioRRSS     NegocioRRSS[]
+  id              String            @id @default(cuid())
+  nombre          String
+  descripcion     String?
+  direccion       String?
+  telefono        String?
+  email           String?
+  sitioWeb        String?
+  logoUrl         String?
+  isotipoUrl      String?
+  moneda          String            @default("MXN")
+  timezone        String            @default("America/Mexico_City")
+  idioma          String            @default("es")
+  status          String            @default("active")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
   NegocioHorarios NegocioHorarios[]
+  NegocioRRSS     NegocioRRSS[]
+  NegocioBanco    NegocioBanco[]
 }
 
 model NegocioRRSS {
-  id          String   @id @default(cuid())
-  negocioId   String
-  Negocio     Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
-  
-  plataforma  String   // facebook, instagram, twitter, linkedin, tiktok, youtube, etc.
-  username    String?  // Nombre de usuario o handle
-  url         String   // URL completa del perfil
-  activo      Boolean  @default(true)
-  orden       Int      @default(0) // Para ordenar en la UI
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id         String   @id @default(cuid())
+  negocioId  String
+  plataforma String
+  username   String?
+  url        String
+  activo     Boolean  @default(true)
+  orden      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  Negocio    Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+
   @@unique([negocioId, plataforma])
   @@index([negocioId, activo])
 }
 
 model NegocioHorarios {
-  id          String   @id @default(cuid())
-  negocioId   String
-  Negocio     Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
-  
-  diaSemana   Int      // 0=Domingo, 1=Lunes, ..., 6=Sábado
-  horaInicio  String?  // "09:00" - null si está cerrado
-  horaFin     String?  // "18:00" - null si está cerrado
-  cerrado     Boolean  @default(false) // Si está cerrado todo el día
-  
-  // Para horarios especiales (opcional)
-  fechaEspecial DateTime? // Para días específicos (feriados, etc.)
-  notas       String?     // "Solo citas", "Horario reducido", etc.
-  
-  activo      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id            String    @id @default(cuid())
+  negocioId     String
+  diaSemana     Int
+  horaInicio    String?
+  horaFin       String?
+  cerrado       Boolean   @default(false)
+  fechaEspecial DateTime?
+  notas         String?
+  activo        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  Negocio       Negocio   @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+
   @@unique([negocioId, diaSemana])
   @@index([negocioId, activo])
 }
 
 model SolicitudPaquete {
-  id              String    @id @default(cuid())
-  cotizacionId    String
-  Cotizacion      Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
-  paqueteId       String
-  Paquete         Paquete   @relation(fields: [paqueteId], references: [id])
-  
-  // Datos del cliente
-  clienteNombre   String
-  clienteEmail    String
-  clienteTelefono String?
-  mensaje         String?
-  
-  // Datos del paquete (snapshot para referencia)
-  paqueteNombre   String
-  precioPaquete   Float
-  diferenciaPrecio Float? // Diferencia con cotización original
-  
-  // Datos del evento (para referencia rápida)
-  eventoFecha     DateTime?
-  eventoLugar     String?
-  
-  // Estado de la solicitud
-  estado          String    @default("pendiente") // pendiente, procesando, completada, rechazada
-  notas           String?   // Notas del asesor
-  fechaSolicitud  DateTime  @default(now())
-  fechaProcesada  DateTime?
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  id               String     @id @default(cuid())
+  cotizacionId     String
+  paqueteId        String
+  clienteNombre    String
+  clienteEmail     String
+  clienteTelefono  String?
+  mensaje          String?
+  paqueteNombre    String
+  precioPaquete    Float
+  diferenciaPrecio Float?
+  eventoFecha      DateTime?
+  eventoLugar      String?
+  estado           String     @default("pendiente")
+  notas            String?
+  fechaSolicitud   DateTime   @default(now())
+  fechaProcesada   DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  Cotizacion       Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
+  Paquete          Paquete    @relation(fields: [paqueteId], references: [id])
+
   @@index([cotizacionId])
   @@index([paqueteId])
   @@index([estado])
   @@index([fechaSolicitud])
 }
 
-// ========================================
-// CONSULTAS DE DISPONIBILIDAD
-// ========================================
+model Cita {
+  id               String             @id @default(cuid())
+  eventoId         String
+  fecha            DateTime
+  hora             String
+  tipo             CitaTipo
+  modalidad        CitaModalidad
+  status           CitaStatus         @default(PROGRAMADA)
+  asunto           String
+  descripcion      String?
+  ubicacion        String?
+  urlVirtual       String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  Evento           Evento             @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  CitaComentario   CitaComentario[]
+  CitaRecordatorio CitaRecordatorio[]
 
-// ========================================
-// SISTEMA DE CITAS COMERCIALES
-// ========================================
+  @@index([eventoId])
+  @@index([fecha])
+  @@index([status])
+  @@index([tipo])
+}
+
+model CitaComentario {
+  id         String   @id @default(cuid())
+  citaId     String
+  comentario String
+  createdAt  DateTime @default(now())
+  Cita       Cita     @relation(fields: [citaId], references: [id], onDelete: Cascade)
+
+  @@index([citaId])
+}
+
+model CitaRecordatorio {
+  id                 String    @id @default(cuid())
+  citaId             String
+  tiempoAnticipacion Int
+  enviado            Boolean   @default(false)
+  fechaEnvio         DateTime?
+  createdAt          DateTime  @default(now())
+  Cita               Cita      @relation(fields: [citaId], references: [id], onDelete: Cascade)
+
+  @@index([citaId])
+  @@index([enviado])
+}
 
 enum CitaTipo {
   COMERCIAL
@@ -819,57 +737,20 @@ enum CitaStatus {
   NO_ASISTIO
 }
 
-model Cita {
-  id          String        @id @default(cuid())
-  eventoId    String
-  Evento      Evento        @relation(fields: [eventoId], references: [id], onDelete: Cascade)
-  
-  fecha       DateTime
-  hora        String        // Formato HH:MM
-  tipo        CitaTipo
-  modalidad   CitaModalidad
-  status      CitaStatus    @default(PROGRAMADA)
-  
-  asunto      String
-  descripcion String?
-  ubicacion   String?       // Para citas presenciales
-  urlVirtual  String?       // Para citas virtuales
-  
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  
-  // Relaciones
-  CitaComentario   CitaComentario[]
-  CitaRecordatorio CitaRecordatorio[]
-  
-  @@index([eventoId])
-  @@index([fecha])
+model NegocioBanco {
+  id           String   @id @default(cuid())
+  negocioId    String
+  banco        String
+  beneficiario String
+  clabe        String   @unique
+  cuenta       String?
+  sucursal     String?
+  status       String   @default("active")
+  principal    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  Negocio      Negocio  @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+
+  @@index([negocioId])
   @@index([status])
-  @@index([tipo])
-}
-
-model CitaComentario {
-  id         String   @id @default(cuid())
-  citaId     String
-  Cita       Cita     @relation(fields: [citaId], references: [id], onDelete: Cascade)
-  
-  comentario String
-  createdAt  DateTime @default(now())
-  
-  @@index([citaId])
-}
-
-model CitaRecordatorio {
-  id                   String   @id @default(cuid())
-  citaId               String
-  Cita                 Cita     @relation(fields: [citaId], references: [id], onDelete: Cascade)
-  
-  tiempoAnticipacion   Int      // Minutos antes de la cita
-  enviado              Boolean  @default(false)
-  fechaEnvio           DateTime?
-  
-  createdAt            DateTime @default(now())
-  
-  @@index([citaId])
-  @@index([enviado])
 }

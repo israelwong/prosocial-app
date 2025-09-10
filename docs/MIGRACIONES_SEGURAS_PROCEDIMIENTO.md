@@ -14,46 +14,57 @@ Este documento establece el procedimiento estándar para aplicar migraciones de 
 ## 🔄 Procedimiento Estándar (Probado y Seguro)
 
 ### **Paso 1: Verificar Estado Actual**
+
 ```bash
 # Verificar migraciones pendientes
 npx prisma migrate status
 ```
 
 ### **Paso 2: Sincronizar Schema Local**
+
 ```bash
 # Actualizar schema local con estado real de la BD
 npx prisma db pull
 ```
+
 **✅ Resultado esperado:** Schema actualizado sin errores
 
 ### **Paso 3: Generar Cliente Actualizado**
+
 ```bash
 # Regenerar cliente Prisma con schema sincronizado
 npx prisma generate
 ```
+
 **✅ Resultado esperado:** Cliente generado exitosamente
 
 ### **Paso 4: Resolver Migraciones Conflictivas**
+
 ```bash
 # Marcar migraciones como aplicadas (una por una)
 npx prisma migrate resolve --applied NOMBRE_MIGRACION_1
 npx prisma migrate resolve --applied NOMBRE_MIGRACION_2
 npx prisma migrate resolve --applied NOMBRE_MIGRACION_N
 ```
+
 **✅ Resultado esperado:** Cada migración marcada como aplicada
 
 ### **Paso 5: Confirmar Sincronización**
+
 ```bash
 # Verificar que no hay drift
 npx prisma migrate status
 ```
+
 **✅ Resultado esperado:** "Database schema is up to date!"
 
 ### **Paso 6: Validar Compilación**
+
 ```bash
 # Verificar que todo compila correctamente
 npm run build
 ```
+
 **✅ Resultado esperado:** Build exitoso sin errores
 
 ## 🚨 Qué NO hacer
@@ -66,12 +77,14 @@ npm run build
 ## 📊 Caso de Estudio - Septiembre 2025
 
 ### Problema Inicial
+
 - Error: "mismatch between server and client bindings"
 - 3 migraciones pendientes
 - Schema drift detectado
 - Realtime deshabilitado temporalmente
 
 ### Aplicación del Procedimiento
+
 ```bash
 # 1. Estado inicial
 npx prisma migrate status
@@ -96,6 +109,7 @@ npx prisma migrate status
 ```
 
 ### Resultado
+
 - ✅ Cero pérdida de datos
 - ✅ Schema sincronizado
 - ✅ Realtime restaurado
@@ -105,14 +119,17 @@ npx prisma migrate status
 ## 🔍 Diagnóstico de Problemas
 
 ### Error: "relation already exists"
+
 **Causa:** La tabla ya existe en la BD pero la migración intenta crearla
 **Solución:** Usar `migrate resolve --applied` para marcarla como aplicada
 
 ### Error: "drift detected"
+
 **Causa:** Cambios aplicados directamente en BD fuera de migraciones
 **Solución:** Seguir el procedimiento completo desde el paso 1
 
 ### Error: "mismatch in realtime"
+
 **Causa:** Schema local desactualizado vs BD real
 **Solución:** `db pull` + `generate` + resolver migraciones
 
@@ -127,11 +144,13 @@ npx prisma migrate status
 ## 🔧 Herramientas de Respaldo
 
 ### Backups Automáticos Supabase
+
 - Backups diarios automáticos
 - Point-in-time recovery disponible
 - Acceso via Dashboard → Database → Backups
 
 ### Comandos de Emergencia
+
 ```bash
 # Si algo sale mal, verificar conexión
 npx prisma db pull --force
@@ -153,6 +172,7 @@ npx prisma generate
 ## 📞 Escalación
 
 Si el procedimiento falla:
+
 1. **NO continuar** con comandos destructivos
 2. Documentar el error exacto
 3. Verificar estado de backup más reciente
@@ -160,8 +180,8 @@ Si el procedimiento falla:
 
 ## 📅 Historial de Aplicación
 
-| Fecha | Proyecto | Resultado | Notas |
-|-------|----------|-----------|-------|
+| Fecha      | Proyecto         | Resultado  | Notas                                              |
+| ---------- | ---------------- | ---------- | -------------------------------------------------- |
 | 2025-09-10 | ProSocial v1.9.1 | ✅ Exitoso | Resuelto drift + 3 migraciones. Cero pérdida datos |
 
 ---
@@ -169,4 +189,4 @@ Si el procedimiento falla:
 **Documentado por:** Sistema de IA - GitHub Copilot  
 **Fecha:** 10 de septiembre de 2025  
 **Proyecto:** ProSocial Platform v1.9.1  
-**Estado:** Procedimiento validado y probado  
+**Estado:** Procedimiento validado y probado

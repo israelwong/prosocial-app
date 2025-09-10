@@ -18,7 +18,8 @@ import {
     Clock,
     Share2,
     Image,
-    Palette
+    Palette,
+    Landmark
 } from 'lucide-react';
 
 interface NavItem {
@@ -54,6 +55,12 @@ const navCategories: NavCategory[] = [
                 label: 'Redes sociales',
                 Icon: Share2,
                 description: 'Enlaces de redes sociales'
+            },
+            {
+                href: '/admin/configurar/cuenta-bancaria',
+                label: 'Cuenta bancaria',
+                Icon: Landmark,
+                description: 'Configurar datos bancarios para pagos'
             }
         ]
     },
