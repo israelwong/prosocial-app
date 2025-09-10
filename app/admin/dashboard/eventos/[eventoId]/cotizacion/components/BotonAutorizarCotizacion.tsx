@@ -52,8 +52,8 @@ export default function BotonAutorizarCotizacion({
             return;
         }
 
-        // Redirigir a la página dedicada de autorización
-        router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/${cotizacionId}/autorizar`);
+        // TODO: Implementar modal de autorización
+        console.log('Abrir modal de autorización para cotización:', cotizacionId);
     };
 
     const confirmarAutorizacion = async () => {
@@ -236,14 +236,22 @@ export default function BotonAutorizarCotizacion({
         setEstaAprobado(estadoInicial === COTIZACION_STATUS.APROBADA);
     }, [cotizacionId, estadoInicial]);
 
-    // Si está aprobado, mostrar botones de seguimiento y cancelar
-    if (estaAprobado || estadoInicial === COTIZACION_STATUS.APROBADA) {
+    // Si está aprobado o autorizado, mostrar botones de seguimiento y cancelar
+    if (estaAprobado || estaAutorizado || estadoInicial === COTIZACION_STATUS.APROBADA || estadoInicial === COTIZACION_STATUS.AUTORIZADO) {
+        const esAutorizado = estaAutorizado || estadoInicial === COTIZACION_STATUS.AUTORIZADO;
+        const esAprobado = estaAprobado || estadoInicial === COTIZACION_STATUS.APROBADA;
+
         return (
             <div className={`space-y-2 ${className}`}>
-                {/* Estado aprobado */}
-                <div className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg">
+                {/* Estado aprobado o autorizado */}
+                <div className={`flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg ${esAutorizado ? 'bg-blue-600' : 'bg-green-600'
+                    }`}>
                     <CheckCircle size={16} />
-                    {mostrarTexto && <span className="text-sm font-medium text-center">Cotización Aprobada</span>}
+                    {mostrarTexto && (
+                        <span className="text-sm font-medium text-center">
+                            {esAutorizado ? 'Cotización Autorizada' : 'Cotización Aprobada'}
+                        </span>
+                    )}
                 </div>
 
                 {/* Botones de acción */}
@@ -283,16 +291,6 @@ export default function BotonAutorizarCotizacion({
                         </button>
                     )}
                 </div>
-            </div>
-        );
-    }
-
-    // Si está autorizado
-    if (estaAutorizado) {
-        return (
-            <div className={`flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg ${className}`}>
-                <CheckCircle size={16} />
-                {mostrarTexto && <span className="text-sm font-medium text-center">Autorizado</span>}
             </div>
         );
     }

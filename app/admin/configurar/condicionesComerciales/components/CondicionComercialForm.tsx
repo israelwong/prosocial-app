@@ -95,14 +95,20 @@ export default function CondicionComercialForm({ condicion, metodosPagoDisponibl
                 </div>
 
                 <div className="p-4 rounded-lg border border-zinc-700/70 bg-zinc-800/50">
-                    <h3 className="text-base font-medium text-zinc-200 mb-3">Métodos de Pago Aplicables</h3>
+                    <h3 className="text-base font-medium text-zinc-200 mb-3">
+                        Métodos de Pago Aplicables
+                        <span className="text-red-400 ml-1">*</span>
+                    </h3>
+                    <p className="text-sm text-zinc-400 mb-3">
+                        Selecciona los métodos de pago que estarán disponibles para esta condición comercial
+                    </p>
                     <Controller
                         name="metodosPagoIds"
                         control={control}
                         render={({ field }) => (
                             <div className="space-y-2">
                                 {metodosPagoDisponibles.map((metodo) => (
-                                    <label key={metodo.id} className="flex items-center gap-3 text-sm text-zinc-300">
+                                    <label key={metodo.id} className="flex items-center gap-3 text-sm text-zinc-300 hover:text-zinc-200 cursor-pointer">
                                         <input
                                             type="checkbox"
                                             value={metodo.id}
@@ -113,15 +119,30 @@ export default function CondicionComercialForm({ condicion, metodosPagoDisponibl
                                                     : (field.value ?? []).filter(id => id !== e.target.value);
                                                 field.onChange(newValues);
                                             }}
-                                            className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-blue-600 focus:ring-blue-500"
+                                            className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-blue-600 focus:ring-blue-500 focus:ring-2"
                                         />
-                                        {metodo.metodo_pago}
+                                        <span className="flex-1">{metodo.metodo_pago}</span>
+                                        {field.value?.includes(metodo.id) && (
+                                            <span className="text-green-400 text-xs">✓ Seleccionado</span>
+                                        )}
                                     </label>
                                 ))}
+                                {metodosPagoDisponibles.length === 0 && (
+                                    <div className="text-amber-400 text-sm p-3 bg-amber-900/20 border border-amber-700/50 rounded-md">
+                                        ⚠️ No hay métodos de pago disponibles.
+                                        <a href="/admin/configurar/metodoPago" className="text-amber-300 underline ml-1">
+                                            Crear método de pago
+                                        </a>
+                                    </div>
+                                )}
                             </div>
                         )}
                     />
-                    {errors.metodosPagoIds && <p className="text-red-400 text-xs mt-1.5">{errors.metodosPagoIds.message}</p>}
+                    {errors.metodosPagoIds && (
+                        <p className="text-red-400 text-xs mt-2 flex items-center gap-1">
+                            <span>⚠️</span> {errors.metodosPagoIds.message}
+                        </p>
+                    )}
                 </div>
 
                 <div>

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Cotizacion } from '@/app/admin/_lib/types'
-import { clonarCotizacion, archivarCotizacion, desarchivarCotizacion, eliminarCotizacion, autorizarCotizacion, cancelarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
+import { clonarCotizacion, archivarCotizacion, desarchivarCotizacion, eliminarCotizacion, autorizarCotizacion, cancelarCotizacion, autorizarCotizacionConDatos } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 import { cambiarEtapaEvento } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.actions'
 import { useRouter } from 'next/navigation'
 import BotonAutorizarCotizacion from '@/app/admin/dashboard/eventos/[eventoId]/cotizacion/components/BotonAutorizarCotizacion'
+import ModalAutorizarCotizacion from '@/app/admin/dashboard/eventos/[eventoId]/components/ModalAutorizarCotizacion'
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status'
 import { EVENTO_ETAPAS } from '@/app/admin/_lib/constants/evento-etapas'
 
@@ -71,6 +72,9 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
     const [autorizando, setAutorizando] = useState(false)
     const [cancelando, setCancelando] = useState(false)
     const [archivada, setArchivada] = useState<boolean>(cotizacion?.archivada ?? false)
+
+    // Estado para el modal de autorización
+    const [modalAutorizacionAbierto, setModalAutorizacionAbierto] = useState(false)
 
     // Hook para modal de eliminación
     const modalEliminacion = useEliminacionCotizacion()
@@ -209,45 +213,48 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
         }
     }
 
-    //! Archivar cotización
-    const handleArchivarCotizacion = async () => {
-        if (!cotizacion.id) return
-
-        try {
-            const resultado = await archivarCotizacion(cotizacion.id)
-            if (resultado.success) {
-                setArchivada(true)
-                toast.success('Cotización archivada exitosamente')
-            } else {
-                toast.error(resultado.message || 'Error al archivar cotización')
-            }
-        } catch (error) {
-            console.error('Error archivando cotización:', error)
-            toast.error('Error al archivar cotización')
-        }
+    // Función para abrir modal de autorización
+    const handleAbrirModalAutorizacion = () => {
+        setModalAutorizacionAbierto(true)
         setMenuAbierto(false)
     }
 
-    //! Desarchivar cotización
-    const handleDesarchivarCotizacion = async () => {
-        if (!cotizacion.id) return
-
+    // Función para manejar la autorización con modal
+    const handleAutorizarConModal = async (data: {
+        condicionComercialId: string
+        metodoPagoId: string
+        montoAPagar: number
+    }) => {
         try {
-            const resultado = await desarchivarCotizacion(cotizacion.id)
-            if (resultado.success) {
-                setArchivada(false)
-                toast.success('Cotización desarchivada exitosamente')
+            if (!cotizacion.id) {
+                throw new Error('ID de cotización no encontrado')
+            }
+
+            console.log('Autorizando cotización:', cotizacion.id, data)
+
+            const response = await autorizarCotizacionConDatos({
+                cotizacionId: cotizacion.id,
+                condicionComercialId: data.condicionComercialId,
+                metodoPagoId: data.metodoPagoId,
+                montoAPagar: data.montoAPagar
+            })
+
+            if (response.success) {
+                toast.success('Cotización autorizada exitosamente')
+                setModalAutorizacionAbierto(false)
+                router.refresh()
             } else {
-                toast.error(resultado.message || 'Error al desarchivar cotización')
+                toast.error(response.message || 'Error al autorizar cotización')
+                throw new Error(response.message || 'Error al autorizar cotización')
             }
         } catch (error) {
-            console.error('Error desarchivando cotización:', error)
-            toast.error('Error al desarchivar cotización')
+            console.error('Error al autorizar:', error)
+            toast.error(error instanceof Error ? error.message : 'Error al autorizar cotización')
+            throw error // Re-throw para que el modal maneje el error
         }
-        setMenuAbierto(false)
     }
 
-    //! Cancelar cotización aprobada
+    //! Cancelar cotización aprobada o autorizada
     const handleCancelarCotizacion = async () => {
         if (!cotizacion.id) return
 
@@ -310,6 +317,44 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
             setCancelando(false)
             setMenuAbierto(false)
         }
+    }
+
+    //! Archivar cotización
+    const handleArchivarCotizacion = async () => {
+        if (!cotizacion.id) return
+
+        try {
+            const resultado = await archivarCotizacion(cotizacion.id)
+            if (resultado.success) {
+                setArchivada(true)
+                toast.success('Cotización archivada exitosamente')
+            } else {
+                toast.error(resultado.message || 'Error al archivar cotización')
+            }
+        } catch (error) {
+            console.error('Error archivando cotización:', error)
+            toast.error('Error al archivar cotización')
+        }
+        setMenuAbierto(false)
+    }
+
+    //! Desarchivar cotización
+    const handleDesarchivarCotizacion = async () => {
+        if (!cotizacion.id) return
+
+        try {
+            const resultado = await desarchivarCotizacion(cotizacion.id)
+            if (resultado.success) {
+                setArchivada(false)
+                toast.success('Cotización desarchivada exitosamente')
+            } else {
+                toast.error(resultado.message || 'Error al desarchivar cotización')
+            }
+        } catch (error) {
+            console.error('Error desarchivando cotización:', error)
+            toast.error('Error al desarchivar cotización')
+        }
+        setMenuAbierto(false)
     }
 
     return (
@@ -390,38 +435,23 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                         {menuAbierto && (
                             <div className="absolute right-0 top-8 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg py-1 z-10 min-w-48">
 
-
-
                                 {/* Autorizar - Solo si está en pendiente */}
                                 {cotizacion.status === COTIZACION_STATUS.PENDIENTE && (
                                     <>
                                         <button
-                                            onClick={handleAutorizar}
-                                            disabled={autorizando}
-                                            className="w-full px-3 py-2 text-left text-green-400 hover:bg-zinc-700 flex items-center gap-2 text-sm disabled:opacity-50"
+                                            onClick={handleAbrirModalAutorizacion}
+                                            className="w-full px-3 py-2 text-left text-green-400 hover:bg-zinc-700 flex items-center gap-2 text-sm"
                                         >
                                             <CheckCircle className="w-4 h-4" />
-                                            {autorizando ? 'Aprobando...' : 'Aprobar cotización'}
+                                            Autorizar cotización
                                         </button>
                                         <div className="border-t border-zinc-700 my-1"></div>
                                     </>
                                 )}
 
-                                {/* Ir a seguimiento - Solo si está aprobada */}
+                                {/* Cancelar cotización - Solo si está aprobada */}
                                 {cotizacion.status === COTIZACION_STATUS.APROBADA && (
                                     <>
-                                        <button
-                                            onClick={() => {
-                                                router.push(`/admin/dashboard/seguimiento/${eventoId}`)
-                                                setMenuAbierto(false)
-                                            }}
-                                            className="w-full px-3 py-2 text-left text-blue-400 hover:bg-zinc-700 flex items-center gap-2 text-sm"
-                                        >
-                                            <Calendar className="w-4 h-4" />
-                                            Ir a seguimiento
-                                        </button>
-
-                                        {/* Cancelar cotización - Solo si está aprobada */}
                                         <button
                                             onClick={handleCancelarCotizacion}
                                             disabled={cancelando}
@@ -430,7 +460,21 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                                             <XCircle className="w-4 h-4" />
                                             {cancelando ? 'Cancelando...' : 'Cancelar cotización'}
                                         </button>
+                                        <div className="border-t border-zinc-700 my-1"></div>
+                                    </>
+                                )}
 
+                                {/* Cancelar cotización - Solo si está autorizada */}
+                                {cotizacion.status === COTIZACION_STATUS.AUTORIZADO && (
+                                    <>
+                                        <button
+                                            onClick={handleCancelarCotizacion}
+                                            disabled={cancelando}
+                                            className="w-full px-3 py-2 text-left text-orange-400 hover:bg-zinc-700 flex items-center gap-2 text-sm disabled:opacity-50"
+                                        >
+                                            <XCircle className="w-4 h-4" />
+                                            {cancelando ? 'Cancelando...' : 'Cancelar cotización'}
+                                        </button>
                                         <div className="border-t border-zinc-700 my-1"></div>
                                     </>
                                 )}
@@ -507,9 +551,17 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
             {/* Status autorizado o aprobado */}
             {cotizacion.status === COTIZACION_STATUS.AUTORIZADO && (
                 <div className={`mt-3 p-3 bg-blue-900/30 border border-blue-700 rounded-lg ${archivada ? 'opacity-30' : ''}`}>
-                    <div className="flex items-center gap-2 text-blue-400 text-sm font-medium">
-                        <CheckCircle className="w-4 h-4" />
-                        Cotización Autorizada
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-blue-400 text-sm font-medium">
+                            <CheckCircle className="w-4 h-4" />
+                            Cotización Autorizada
+                        </div>
+                        <button
+                            onClick={() => router.push(`/admin/dashboard/seguimiento/${eventoId}`)}
+                            className="text-blue-300 hover:text-blue-200 text-xs px-2 py-1 bg-blue-800/50 hover:bg-blue-800/70 rounded transition-colors"
+                        >
+                            Ir a seguimiento
+                        </button>
                     </div>
                 </div>
             )}
@@ -548,6 +600,18 @@ export default function FichaCotizacionDetalle({ cotizacion, onEliminarCotizacio
                     mostrarBotonArchivar={!archivada}
                 />
             )}
+
+            {/* Modal de autorización */}
+            <ModalAutorizarCotizacion
+                isOpen={modalAutorizacionAbierto}
+                onClose={() => setModalAutorizacionAbierto(false)}
+                cotizacion={{
+                    id: cotizacion.id || '',
+                    nombre: cotizacion.nombre,
+                    total: cotizacion.precio
+                }}
+                onAutorizar={handleAutorizarConModal}
+            />
         </div>
     )
 }

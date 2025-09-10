@@ -8,7 +8,7 @@ import { obtenerCatalogoCompleto } from '@/app/admin/_lib/actions/catalogo/catal
 import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
 import { obtenerMetodosPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions';
 import { obtenerPaquete } from '@/app/admin/_lib/actions/paquetes/paquetes.actions';
-import { COTIZACION_STATUS, AGENDA_STATUS, EVENTO_STATUS } from '@/app/admin/_lib/constants/status';
+import { COTIZACION_STATUS, AGENDA_STATUS, EVENTO_STATUS, PAGO_STATUS } from '@/app/admin/_lib/constants/status';
 import { revalidatePath } from 'next/cache';
 import {
     CotizacionNuevaSchema,
@@ -1713,7 +1713,243 @@ export async function verificarEstadoAutorizacion(cotizacionId: string) {
 }
 
 /**
- * Cancela una cotización aprobada y revierte el evento a pendiente
+ * Autorizar cotización con condiciones comerciales
+ * Nueva función que maneja la autorización con datos específicos del modal
+ */
+interface AutorizarCotizacionConDatosParams {
+    cotizacionId: string;
+    condicionComercialId: string;
+    metodoPagoId: string;
+    montoAPagar: number;
+}
+
+interface AutorizarCotizacionConDatosResult {
+    success?: boolean;
+    error?: string;
+    message?: string;
+    cotizacionesArchivadas?: number;
+}
+
+export async function autorizarCotizacionConDatos(params: AutorizarCotizacionConDatosParams): Promise<AutorizarCotizacionConDatosResult> {
+    try {
+        console.log('🔥 Iniciando autorización de cotización con datos:', params);
+
+        const { cotizacionId, condicionComercialId, metodoPagoId, montoAPagar } = params;
+
+        // 1. Obtener la cotización completa
+        const cotizacion = await prisma.cotizacion.findUnique({
+            where: { id: cotizacionId },
+            include: {
+                Evento: {
+                    include: {
+                        Cliente: true,
+                        EventoTipo: true
+                    }
+                }
+            }
+        });
+
+        if (!cotizacion) {
+            return { error: 'Cotización no encontrada' };
+        }
+
+        if (cotizacion.status === COTIZACION_STATUS.APROBADA) {
+            return { error: 'La cotización ya está aprobada' };
+        }
+
+        if (cotizacion.status === COTIZACION_STATUS.AUTORIZADO) {
+            return { error: 'La cotización ya está autorizada' };
+        }
+
+        // 2. Verificar que existan las condiciones comerciales y método de pago
+        const [condicionComercial, metodoPago] = await Promise.all([
+            prisma.condicionesComerciales.findUnique({
+                where: { id: condicionComercialId }
+            }),
+            prisma.metodoPago.findUnique({
+                where: { id: metodoPagoId }
+            })
+        ]);
+
+        if (!condicionComercial) {
+            return { error: 'Condición comercial no encontrada' };
+        }
+
+        if (!metodoPago) {
+            return { error: 'Método de pago no encontrado' };
+        }
+
+        const evento = cotizacion.Evento;
+
+        // 3. Buscar la etapa "Autorizado" 
+        const etapaAutorizado = await prisma.eventoEtapa.findFirst({
+            where: {
+                OR: [
+                    { nombre: { contains: 'autorizado', mode: 'insensitive' } },
+                    { nombre: { contains: 'aprobado', mode: 'insensitive' } },
+                    { posicion: 2 }
+                ]
+            },
+            orderBy: { posicion: 'asc' }
+        });
+
+        if (!etapaAutorizado) {
+            return { error: 'No se encontró la etapa de autorización en el sistema' };
+        }
+
+        console.log('📋 Etapa de autorización encontrada:', etapaAutorizado.nombre);
+
+        // 4. Realizar las actualizaciones en una transacción
+        const result = await prisma.$transaction(async (tx) => {
+            // Actualizar status de la cotización a autorizada
+            await tx.cotizacion.update({
+                where: { id: cotizacionId },
+                data: {
+                    status: COTIZACION_STATUS.AUTORIZADO,
+                    condicionesComercialesId: condicionComercialId,
+                    updatedAt: new Date()
+                }
+            });
+
+            // Buscar la relación CondicionesComercialesMetodoPago
+            const condicionMetodoPago = await tx.condicionesComercialesMetodoPago.findFirst({
+                where: {
+                    condicionesComercialesId: condicionComercialId,
+                    metodoPagoId: metodoPagoId,
+                    status: 'active'
+                }
+            });
+
+            if (!condicionMetodoPago) {
+                throw new Error('No se encontró la relación entre la condición comercial y el método de pago');
+            }
+
+            // Crear el pago inicial con los datos proporcionados
+            await tx.pago.create({
+                data: {
+                    cotizacionId: cotizacionId,
+                    condicionesComercialesId: condicionComercialId,
+                    condicionesComercialesMetodoPagoId: condicionMetodoPago.id,
+                    metodoPagoId: metodoPagoId,
+                    metodo_pago: metodoPago.metodo_pago,
+                    monto: montoAPagar,
+                    concepto: `Anticipo - ${cotizacion.nombre}`,
+                    status: PAGO_STATUS.PAID // Cambiar a PAID que es el status correcto para pagos completados
+                }
+            });
+
+            // Archivar otras cotizaciones del mismo evento
+            const archivadas = await tx.cotizacion.updateMany({
+                where: {
+                    eventoId: evento.id,
+                    id: { not: cotizacionId },
+                    status: { notIn: [COTIZACION_STATUS.ARCHIVADA] }
+                },
+                data: {
+                    archivada: true,
+                    status: COTIZACION_STATUS.ARCHIVADA,
+                    updatedAt: new Date()
+                }
+            });
+
+            // Actualizar evento: cambiar etapa y status
+            await tx.evento.update({
+                where: { id: evento.id },
+                data: {
+                    eventoEtapaId: etapaAutorizado.id,
+                    status: EVENTO_STATUS.APROBADO,
+                    updatedAt: new Date()
+                }
+            });
+
+            // Agregar o actualizar evento en agenda
+            const agendaExistente = await tx.agenda.findFirst({
+                where: { eventoId: evento.id }
+            });
+
+            if (!agendaExistente) {
+                await tx.agenda.create({
+                    data: {
+                        eventoId: evento.id,
+                        fecha: evento.fecha_evento,
+                        concepto: `${evento.EventoTipo?.nombre || 'Evento'} - ${evento.Cliente.nombre}`,
+                        status: AGENDA_STATUS.CONFIRMADO,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    }
+                });
+                console.log('📅 Evento agregado a la agenda como confirmado');
+            } else {
+                await tx.agenda.update({
+                    where: { id: agendaExistente.id },
+                    data: {
+                        status: AGENDA_STATUS.CONFIRMADO,
+                        updatedAt: new Date()
+                    }
+                });
+                console.log('📅 Evento existente en agenda actualizado a confirmado');
+            }
+
+            // Crear entrada en bitácora del evento
+            const comentarioBitacora = `Cotización "${cotizacion.nombre}" autorizada con condición "${condicionComercial.nombre}" y método de pago "${metodoPago.metodo_pago}". ` +
+                `Pago inicial de $${montoAPagar.toLocaleString('es-MX')} programado. ` +
+                `Evento movido a etapa: ${etapaAutorizado.nombre}` +
+                (archivadas.count > 0 ? `. ${archivadas.count} cotización(es) adicional(es) archivadas automáticamente.` : '') +
+                '. Evento confirmado en agenda.';
+
+            await tx.eventoBitacora.create({
+                data: {
+                    eventoId: evento.id,
+                    comentario: comentarioBitacora,
+                    importancia: '2',
+                    status: 'active',
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                }
+            });
+
+            return {
+                cotizacionId,
+                eventoId: evento.id,
+                etapaId: etapaAutorizado.id,
+                etapaNombre: etapaAutorizado.nombre,
+                cotizacionesArchivadas: archivadas.count,
+                pagoCreado: true,
+                montoAPagar
+            };
+        });
+
+        // 5. Revalidar caches
+        revalidatePath('/admin/dashboard/eventos');
+        revalidatePath('/admin/dashboard/seguimiento');
+        revalidatePath(`/admin/dashboard/eventos/${evento.id}`);
+        revalidatePath(`/admin/dashboard/eventos/${evento.id}/cotizacion`);
+
+        const mensaje = `Cotización autorizada exitosamente con condición "${condicionComercial.nombre}". ` +
+            `Pago inicial de $${montoAPagar.toLocaleString('es-MX')} programado con ${metodoPago.metodo_pago}. ` +
+            `El evento fue movido a la etapa: ${result.etapaNombre}` +
+            (result.cotizacionesArchivadas > 0 ? `. ${result.cotizacionesArchivadas} cotización(es) adicional(es) fueron archivadas automáticamente.` : '') +
+            '. Evento confirmado en agenda.';
+
+        return {
+            success: true,
+            message: mensaje,
+            cotizacionesArchivadas: result.cotizacionesArchivadas
+        };
+
+    } catch (error: unknown) {
+        console.error('❌ Error al autorizar cotización con datos:', error);
+
+        if (error instanceof Error) {
+            return { error: `Error al autorizar cotización: ${error.message}` };
+        }
+
+        return { error: 'Error desconocido al autorizar cotización' };
+    }
+}
+
+/**
+ * Cancela una cotización aprobada o autorizada y revierte el evento a pendiente
  * Incluye cancelación de pagos, eliminación de agenda si existe, y reseteo del descuento
  */
 export async function cancelarCotizacion(cotizacionId: string) {
@@ -1744,11 +1980,11 @@ export async function cancelarCotizacion(cotizacionId: string) {
             return { success: false, message: 'Cotización no encontrada' };
         }
 
-        // Verificar que la cotización esté aprobada
-        if (cotizacion.status !== COTIZACION_STATUS.APROBADA) {
+        // Verificar que la cotización esté aprobada o autorizada
+        if (![COTIZACION_STATUS.APROBADA, COTIZACION_STATUS.AUTORIZADO].includes(cotizacion.status as any)) {
             return {
                 success: false,
-                message: 'Solo se pueden cancelar cotizaciones aprobadas'
+                message: 'Solo se pueden cancelar cotizaciones aprobadas o autorizadas'
             };
         }
 

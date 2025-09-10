@@ -5,8 +5,18 @@
 import { type CondicionesComerciales } from '@prisma/client';
 import { useRouter } from 'next/navigation';
 
+// Tipo extendido que incluye las relaciones con métodos de pago
+type CondicionExtendida = CondicionesComerciales & {
+    CondicionesComercialesMetodoPago: {
+        MetodoPago: {
+            id: string;
+            metodo_pago: string;
+        };
+    }[];
+};
+
 interface Props {
-    condiciones: CondicionesComerciales[];
+    condiciones: CondicionExtendida[];
 }
 
 export default function ListaCondicionesComercialesCliente({ condiciones }: Props) {
@@ -20,6 +30,7 @@ export default function ListaCondicionesComercialesCliente({ condiciones }: Prop
                         <th className="py-3 px-4 text-left font-medium">Nombre</th>
                         <th className="py-3 px-4 text-center font-medium">Anticipo</th>
                         <th className="py-3 px-4 text-center font-medium">Descuento</th>
+                        <th className="py-3 px-4 text-left font-medium">Métodos de Pago</th>
                         <th className="py-3 px-4 text-center font-medium">Estado</th>
                         <th className="py-3 px-4 text-right font-medium">Acciones</th>
                     </tr>
@@ -30,6 +41,21 @@ export default function ListaCondicionesComercialesCliente({ condiciones }: Prop
                             <td className="py-3 px-4 font-medium">{condicion.nombre}</td>
                             <td className="py-3 px-4 text-center">{condicion.porcentaje_anticipo ? `${condicion.porcentaje_anticipo}%` : 'N/A'}</td>
                             <td className="py-3 px-4 text-center">{condicion.descuento ? `${condicion.descuento}%` : 'N/A'}</td>
+                            <td className="py-3 px-4">
+                                <div className="flex flex-wrap gap-1">
+                                    {condicion.CondicionesComercialesMetodoPago.map((relacion) => (
+                                        <span
+                                            key={relacion.MetodoPago.id}
+                                            className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-900/30 text-blue-300 border border-blue-700/50"
+                                        >
+                                            {relacion.MetodoPago.metodo_pago}
+                                        </span>
+                                    ))}
+                                    {condicion.CondicionesComercialesMetodoPago.length === 0 && (
+                                        <span className="text-zinc-500 text-xs">Sin métodos asignados</span>
+                                    )}
+                                </div>
+                            </td>
                             <td className="py-3 px-4 text-center">
                                 <span className={`h-2.5 w-2.5 rounded-full inline-block ${condicion.status === 'active' ? 'bg-green-500' : 'bg-zinc-500'}`}></span>
                             </td>
