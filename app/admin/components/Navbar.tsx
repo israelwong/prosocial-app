@@ -10,6 +10,9 @@ import { Bell, Menu, X, LogOut, ChevronDown, User as UserIcon, Settings, LayoutD
 import { supabase } from '../_lib/supabase';
 import NotificacionesDropdown from './NotificacionesDropdown';
 
+// 🔧 CONFIGURACIÓN: Deshabilitar realtime para notificaciones temporalmente
+const ENABLE_NOTIFICACIONES_REALTIME = false // Deshabilitado por schema mismatch
+
 function Navbar() {
     const [user, setUser] = useState<User | null>(null);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -21,6 +24,13 @@ function Navbar() {
 
     //! NOTIFICACIONES
     const suscripcionNotificaciones = useCallback(async () => {
+        // Si realtime está deshabilitado, no crear suscripción
+        if (!ENABLE_NOTIFICACIONES_REALTIME) {
+            console.log('ℹ️ Realtime de notificaciones deshabilitado temporalmente por schema mismatch')
+            return () => { } // Retornar función vacía de cleanup
+        }
+
+        console.log('🔔 Configurando suscripción realtime para Notificacion')
         const subscriptionNotificaciones = supabase
             .channel('realtime:notificaciones')
             .on(
@@ -31,7 +41,11 @@ function Navbar() {
                 }
             ).subscribe((status, err) => {
                 if (err) {
-                    console.error('Error en la suscripción:', err);
+                    console.error('Error en la suscripción de notificaciones:', err);
+                    // Si hay error de schema mismatch, logearlo específicamente
+                    if (err.message?.includes('mismatch between server and client bindings')) {
+                        console.error('🚨 Schema mismatch detectado en tabla Notificacion')
+                    }
                 } else {
                     console.log('Estado de la suscripción en notificaciones:', status);
                 }
