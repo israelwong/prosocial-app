@@ -32,7 +32,6 @@ export interface ActualizarCuentaBancariaData extends CrearCuentaBancariaData {
 // Obtener todas las cuentas bancarias
 export async function obtenerCuentasBancarias(): Promise<NegocioBanco[]> {
     try {
-        // Por ahora asumimos que hay un solo negocio, en el futuro se puede hacer dinámico
         const cuentas = await prisma.negocioBanco.findMany({
             orderBy: [
                 { principal: 'desc' },
@@ -44,6 +43,23 @@ export async function obtenerCuentasBancarias(): Promise<NegocioBanco[]> {
     } catch (error) {
         console.error('Error obteniendo cuentas bancarias:', error)
         return []
+    }
+}
+
+// Obtener cuenta bancaria principal
+export async function obtenerCuentaPrincipal(): Promise<NegocioBanco | null> {
+    try {
+        const cuentaPrincipal = await prisma.negocioBanco.findFirst({
+            where: {
+                principal: true,
+                status: 'active'
+            }
+        })
+
+        return cuentaPrincipal
+    } catch (error) {
+        console.error('Error obteniendo cuenta principal:', error)
+        return null
     }
 }
 
@@ -210,7 +226,7 @@ export async function establecerCuentaPrincipal(id: string) {
         console.error('Error estableciendo cuenta principal:', error)
         return {
             success: false,
-            message: 'Error al establecer la cuenta como principal'
+            message: 'Error al establecer cuenta principal'
         }
     }
 }

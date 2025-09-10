@@ -60,7 +60,7 @@ export default function HeroMarketing({
     evento,
     diasRestantes = 0,
     cantidadOpciones = 0,
-    videoSrc = "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/hero-30fps.webm",
+    videoSrc = "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fifteens/hero-30fps.mp4",
     posterSrc = "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/logos/logotipo_blanco.svg",
     overlayGradient = "from-purple-900/10 via-transparent to-purple-900/20",
     showScrollIndicator = false,

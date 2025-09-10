@@ -106,11 +106,6 @@ export default async function EventoPage({ params, searchParams }: PageProps) {
         return <FechaNoDisponible evento={evento} diasRestantes={diasRestantes} />
     }
 
-    // COMENTADO: Ya no redirigimos automáticamente, siempre mostramos la página del evento
-    // if (resultadoCotizaciones.accion === 'redireccion_automatica' && resultadoCotizaciones.cotizacionUnica) {
-    //     redirect(`/evento/${eventoId}/cotizacion/${resultadoCotizaciones.cotizacionUnica.id}`)
-    // }
-
     // Si no hay cotizaciones
     if (resultadoCotizaciones.accion === 'sin_cotizaciones') {
         // Si hay paquetes, mostrarlos en el layout completo

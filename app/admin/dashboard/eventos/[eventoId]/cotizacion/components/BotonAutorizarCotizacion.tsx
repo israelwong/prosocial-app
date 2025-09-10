@@ -1,7 +1,8 @@
 'use client'
 import React, { useState } from 'react';
 import { CheckCircle, Loader2, Calendar, XCircle, Trash2 } from 'lucide-react';
-import { autorizarCotizacion, verificarEstadoAutorizacion, cancelarCotizacion, eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
+import { autorizarCotizacion, verificarEstadoAutorizacion, cancelarCotizacion, eliminarCotizacion, obtenerCotizacionCompleta } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions';
+import { obtenerCuentaPrincipal } from '@/app/admin/_lib/actions/negocio/negocioBanco.actions';
 import { cambiarEtapaEvento } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.actions';
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
 import { EVENTO_ETAPAS } from '@/app/admin/_lib/constants/evento-etapas';
@@ -51,18 +52,11 @@ export default function BotonAutorizarCotizacion({
             return;
         }
 
-        // Confirmación del usuario
-        const confirmacion = window.confirm(
-            '¿Estás seguro de que deseas autorizar esta cotización?\n\n' +
-            'Esto realizará las siguientes acciones:\n' +
-            '• Cambiará el estatus de la cotización a "Aprobada"\n' +
-            '• Moverá el evento a la etapa "Aprobado" en el pipeline\n' +
-            '• Agregará el evento a la agenda\n' +
-            '• Creará una entrada en la bitácora del evento'
-        );
+        // Redirigir a la página dedicada de autorización
+        router.push(`/admin/dashboard/eventos/${eventoId}/cotizacion/${cotizacionId}/autorizar`);
+    };
 
-        if (!confirmacion) return;
-
+    const confirmarAutorizacion = async () => {
         setProcesando(true);
 
         try {
@@ -332,8 +326,8 @@ export default function BotonAutorizarCotizacion({
                 )}
             </button>
 
-            {/* Modal de confirmación de eliminación */}
-            {modalEliminacion.datos && (
+            {/* Modal de eliminación */}
+            {modalEliminacion.isOpen && modalEliminacion.datos && (
                 <ModalConfirmacionEliminacion
                     isOpen={modalEliminacion.isOpen}
                     onClose={modalEliminacion.cerrarModal}
