@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import { CheckCircle, Package, Clock, Shield } from 'lucide-react'
+import EntregaGarantizada from '@/app/components/shared/EntregaGarantizada'
 
 /**
  * Componente de Entregas siguiendo el Estilo Maestro v1.9
@@ -28,20 +29,20 @@ const deliverables = [
         id: 'photos',
         title: 'Fotografías en Alta Resolución',
         description: 'Listas para impresión o compartir en redes sociales',
-        details: 'Formato RAW y JPEG procesados profesionalmente',
+        details: 'Formato JPEG procesados profesionalmente',
         icon: <Package className="w-6 h-6" />
     },
     {
         id: 'videos',
-        title: 'Videos Cinemáticos HD',
-        description: 'Entre 45min y 2hrs que capturan la esencia de tu evento',
+        title: 'Videos Cinemáticos 4K',
+        description: 'Entregamos un video Entre 90min y 2hrs que capturan la esencia de tu evento',
         details: 'Edición profesional con música y efectos incluidos',
         icon: <Clock className="w-6 h-6" />
     },
     {
         id: 'guarantee',
         title: 'Garantías Post-Producción',
-        description: 'Edición de video sin costo adicional',
+        description: 'Edición y ajustes en video sin costo adicional',
         details: 'Revisiones y ajustes hasta tu completa satisfacción',
         icon: <Shield className="w-6 h-6" />
     },
@@ -58,8 +59,8 @@ export default function Entregas({
     variant = 'default',
     className = '',
     title = '¿Qué entregamos?',
-    subtitle = 'Garantías y resultados por contrato',
-    description = 'Nos comprometemos a entregarte en 20 días hábiles posteriores a tu evento'
+    subtitle = 'Garantías y resultados',
+    description = 'Nos comprometemos a entregarte en 40 días hábiles posteriores a tu evento'
 }: EntregasProps) {
 
     if (variant === 'compact') {
@@ -160,62 +161,15 @@ export default function Entregas({
                     ))}
                 </div>
 
-                {/* CTA Section - Entrega Garantizada Full Width */}
+                {/* CTA Section - Entrega Garantizada */}
                 <div className="mt-16">
-                    <div className="bg-gradient-to-br from-zinc-800/80 to-zinc-900/80 border border-zinc-700/50 rounded-xl p-8 relative overflow-hidden">
-                        {/* Subtle gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 to-pink-600/5" />
-
-                        {/* Content */}
-                        <div className="relative">
-                            <div className="flex items-start gap-6">
-                                <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex-shrink-0 shadow-lg">
-                                    <Clock className="w-8 h-8 text-white" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="mb-6">
-                                        <h3 className="text-xl lg:text-2xl font-bold text-white mb-2">
-                                            Entrega Garantizada
-                                        </h3>
-                                        <p className="text-zinc-300 leading-relaxed">
-                                            Cumplimos con los tiempos de entrega establecidos en el contrato.
-                                            Tu material estará listo cuando lo prometemos.
-                                        </p>
-                                    </div>
-
-                                    {/* Features grid */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                                        <div className="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-lg border border-zinc-700/30">
-                                            <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                                            <span className="text-zinc-300 text-sm font-medium">20 días hábiles garantizados</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-lg border border-zinc-700/30">
-                                            <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                                            <span className="text-zinc-300 text-sm font-medium">Preview en 48-72 horas</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-lg border border-zinc-700/30">
-                                            <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                                            <span className="text-zinc-300 text-sm font-medium">Notificaciones de progreso</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-lg border border-zinc-700/30">
-                                            <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                                            <span className="text-zinc-300 text-sm font-medium">Entrega sin costo adicional</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Timeline indicator */}
-                                    <div className="flex items-center gap-2 text-purple-400">
-                                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-                                        <span className="text-sm font-medium">Compromiso contractual respaldado</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Decorative elements */}
-                        <div className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-purple-600/10 to-pink-600/10 rounded-full blur-xl" />
-                        <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-purple-600/5 to-pink-600/5 rounded-full blur-lg" />
-                    </div>
+                    <EntregaGarantizada
+                        variant="default"
+                        title="Entrega Garantizada"
+                        description="Cumplimos con los tiempos de entrega establecidos en el contrato. Tu material estará listo cuando lo prometemos."
+                        guaranteeDays={40}
+                        showDecorative={true}
+                    />
                 </div>
             </div>
         </section>

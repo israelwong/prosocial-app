@@ -1,177 +1,148 @@
-'use client';
+'use client'
 import React from 'react'
-import TitlePulse from '@/app/components/main/TitlePulse';
-// Importaciones comentadas - componentes eliminados, reemplazados por MediaSlider
-// import SlideFotosSesionesVestido from '@/app/components/main/Fifteens/SlideFotosSesionesVestido';
-// import SlideFotosSesionesCasuales from '@/app/components/main/Fifteens/SlideFotosSesionesCasuales';
-// import SlideFotosEvento from '@/app/components/main/Fifteens/SlideFotosEvento';
-import { VideoPlayer } from '@/app/components/shared/video';
-import QuoteSection from '@/app/components/main/QuoteSection';
-import { ArrowDown } from 'lucide-react';
+import {
+    ServiceSection,
+    GallerySlider,
+    VideoSingle,
+    PortfolioGallery,
+    GalleryGrid,
+    GalleryMasonry
+} from '@/app/components/shared'
+import QuoteSection from '@/app/components/main/QuoteSection'
 
-function Servicios() {
+// Configuración de imágenes para cada tipo de sesión
+const imagenesConfig = {
+    vestido: [
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/vestido/1.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/vestido/2.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/vestido/3.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/vestido/4.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/vestido/8.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/vestido/5.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/vestido/6.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/vestido/7.jpg"
+    ],
+    casual: [
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/1.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/2.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/3.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/4.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/5.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/6.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/7.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/8.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/9.jpg",
+        // "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/10.jpg",
+    ],
+    evento: [
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/1.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/2.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/3.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/4.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/5.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/6.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/7.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/8.jpg",
+        // "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/9.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/10.jpg",
+    ]
+}
 
+function ServiciosRefactorizado() {
     return (
         <div>
 
-            {/* <!-- TITULO --> */}
-            <div className="px-10 md:max-w-screen-md mx-auto mt-10">
-                <p className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 mb-4 font-semibold md:text-2xl">
-                    ¿Qué te ofrecemos?
-                </p>
-                <h2 className="font-Bebas-Neue text-4xl md:text-5xl">
-                    Calidad y resultados profesionales
-                </h2>
-                <p className="font-light text-xl md:text-2xl">
-                    Te prometemos atención personalizada en cada momento.
-                </p>
-            </div>
+            {/* Sesión fotográfica de vestido */}
+            <ServiceSection
+                titulo="Sesión fotográfica de vestido"
+                descripcion="Capturamos los mejores momentos de tu sesión de vestido en locaciones increíbles"
+                titleGradient="from-pink-500 to-violet-500"
+            >
+                <GallerySlider
+                    imagenes={imagenesConfig.vestido}
+                    variant="multiple"
+                    autoplay={3000}
+                    alt="Sesión de vestido"
 
-            {/* <!-- FOTOGRAFÍA DE VESTIDO --> */}
-            {/* <Fade > */}
-            <div className="mb-10">
-                <div className="py-10 px-10 md:max-w-screen-md mx-auto">
-                    <TitlePulse titulo={"Sesión fotográfica de vestido"} />
-                    <p className="md:text-xl text-md font-light text-slate-200">
-                        Capturamos los mejores momentos de tu sesión de vestido en locaciones increíbles
-                    </p>
-                </div>
-                {/* <SlideFotosSesionesVestido /> */}
-                <div className="p-8 text-center text-slate-400">
-                    <p>Componente reemplazado por MediaSlider en ServiciosRefactorizado.tsx</p>
-                </div>
+                />
+            </ServiceSection>
 
-            </div>
-            {/* </Fade> */}
+            {/* Sesión fotográfica casual */}
+            <ServiceSection
+                titulo="Sesión fotográfica casual"
+                descripcion="Tu esencia y personalidad en fotografías casuales en locaciones urbanas y naturales - Click para ver en lightbox"
+                titleGradient="from-pink-400 via-fuchsia-500 to-red-500"
+            >
+                <GalleryGrid
+                    imagenes={imagenesConfig.casual}
+                    variant='grid'
+                    noPadding={true}
+                    enableLightbox={true}
+                />
+            </ServiceSection>
 
-            {/* <!-- Separador --> */}
-            <div className="text-center mx-auto animate-pulse">
-                <ArrowDown className="mx-auto" />
-            </div>
-            {/* <!-- Separador --> */}
+            {/* Impresión de cuadros */}
+            <ServiceSection
+                titulo="Impresión de cuadros"
+                descripcion='Puedes imprimir una de las fotografías de sesión en un cuadro de acrílico de 24x36"'
+                titleGradient="from-purple-500 to-pink-500"
+            >
+                <VideoSingle
+                    src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/cuadro-acrilico.mp4"
+                    autoPlay={true}
+                    loop={true}
+                />
+            </ServiceSection>
 
-            {/* <!-- FOTOGRAFÍA CASUAL --> */}
-            {/* <Fade > */}
-            <div className="mb-10">
-                <div className="py-10 px-10 md:max-w-screen-md mx-auto">
-                    <TitlePulse titulo={"Sesión fotográfica casual"} />
-                    <p className="md:text-xl text-md font-light text-slate-200">
-                        Tu esencia y personalidad en fotografías casuales en locaciones urbanas y naturales
-                    </p>
-                </div>
-                {/* <SlideFotosSesionesCasuales /> */}
-                <div className="p-8 text-center text-slate-400">
-                    <p>Componente reemplazado por MediaSlider en ServiciosRefactorizado.tsx</p>
-                </div>
-            </div>
-            {/* </Fade> */}
+            {/* Sesión video cinemático */}
+            <ServiceSection
+                titulo="Sesión de video cinemático"
+                descripcion="Toda la esencia en una sesión cinemática con dinámicas y tomas creativas"
+                titleGradient="from-indigo-500 to-purple-500"
+                showSeparator={false} // No mostrar separador antes del Hook
+            >
+                {/* Video comentado en el original, podemos agregarlo después */}
+                <VideoSingle
+                    src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/reels/fifteens/reel_sesiones_2019.mp4"
+                    autoPlay={true}
+                    loop={true}
+                />
+            </ServiceSection>
 
-            {/* <!-- Separador --> */}
-            <div className="text-center mx-auto animate-pulse">
-                <ArrowDown className="mx-auto" />
-            </div>
-            {/* <!-- Separador --> */}
-
-            {/* <!-- IMPRESIÓN CUADROS  --> */}
-            {/* <Fade > */}
-            <div className="mb-10">
-
-                <div className="pt-10 pb-5 px-10 md:max-w-screen-md mx-auto">
-                    <TitlePulse titulo={"Impresión de cuadros"} />
-                    <p className="md:text-xl text-md font-light text-slate-200">
-                        Puedes imprimir una de las fotografías de sesión en un cuadro de acrílico de 24x36&quot;
-                    </p>
-                </div>
-
-                <div className="max-w-screen-md mx-auto">
-                    <VideoPlayer
-                        src={'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/cuadro-acrilico.mp4'}
-                        autoPlay={true}
-                        loop={true}
-                    />
-                </div>
-
-            </div>
-            {/* </Fade> */}
-
-            {/* <!-- Separador --> */}
-            <div className="text-center mx-auto animate-pulse">
-                <ArrowDown className="mx-auto" />
-            </div>
-            {/* <!-- Separador --> */}
-
-
-            {/* <!-- SESIÓN VIDEO CINEMÁTICO --> */}
-            {/* <Fade > */}
-            <div className="mb-10">
-
-                <div className="pt-10 px-10 pb-0 md:max-w-screen-md mx-auto">
-                    <TitlePulse titulo={"Sesión de video cinemático"} />
-                    <p className="md:text-xl text-md font-light text-slate-200">
-                        Toda la esencia en una sesión cinemática con dinámicas y tomas creativas
-                    </p>
-                </div>
-
-                {/* <div className="max-w-screen-md mx-auto">
-                    <VideoPlayer
-                        src={'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/reels/fifteens/reel_sesiones_2019.mp4?t=2024-09-29T01%3A57%3A43.146Z'}
-                        autoPlay={true}
-                        muted={true}
-                        loop={true}
-                    />
-                </div> */}
-
-            </div>
-            {/* </Fade> */}
-
+            {/* QuoteSection/CTA intermedio */}
             <QuoteSection
                 message="Vive al máximo tu evento, nosotros nos encargamos de inmortalizarlo."
             />
 
-            {/* <!-- FOTOGRAFÍA PARA EVENTO --> */}
-            {/* <Fade > */}
-            <div className="mb-10 mt-10">
-                <div className="pb-10 px-10 md:max-w-screen-md mx-auto">
-                    <TitlePulse titulo={"Fotografía para evento"} />
-                    <p className="md:text-xl text-md font-light text-slate-200">
-                        Nosotros nos encargamos de capturar los mejores momentos de tu evento
-                    </p>
-                </div>
-                {/* <SlideFotosEvento /> */}
-                <div className="p-8 text-center text-slate-400">
-                    <p>Componente reemplazado por MediaSlider en ServiciosRefactorizado.tsx</p>
-                </div>
-            </div>
-            {/* </Fade> */}
+            {/* Fotografía para evento */}
+            <ServiceSection
+                titulo="Fotografía para evento"
+                descripcion="Nosotros nos encargamos de capturar los mejores momentos de tu evento"
+                titleGradient="from-yellow-500 to-orange-500"
+            >
+                <GalleryGrid
+                    imagenes={imagenesConfig.evento}
+                    variant='grid'
+                    noPadding={true}
+                    enableLightbox={true}
+                />
+            </ServiceSection>
 
-
-            {/* <!-- Separador --> */}
-            <div className="text-center mx-auto animate-pulse">
-                <ArrowDown className="mx-auto" />
-            </div>
-            {/* <!-- Separador --> */}
-
-            {/* <!-- VIDEO DE EVENTO --> */}
-            <div className="mb-5">
-                <div className="pt-10 px-10 md:max-w-screen-md mx-auto">
-                    <TitlePulse titulo={"Cinematografía para evento"} />
-                    <p className="md:text-xl text-md font-light text-slate-200">
-                        Grabamos tu evento con 1 o 2 cámaras en piso, dron para tomas aéreas y grúa con cabezal robótico para tomas elevedas
-                    </p>
-                </div>
-
-                <div className="max-w-screen-md mx-auto">
-                    <VideoPlayer
-                        src={'https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/reels/fifteens/reel_evento_2019.mp4?t=2024-09-29T01%3A58%3A00.130Z'}
-                        autoPlay={true}
-                        loop={true}
-                    />
-                </div>
-
-            </div>
+            {/* Video de evento */}
+            <ServiceSection
+                titulo="Cinematografía para evento"
+                descripcion="Grabamos tu evento con 1 o 2 cámaras en piso, dron para tomas aéreas y grúa con cabezal robótico para tomas elevadas"
+                titleGradient="from-red-500 to-pink-500"
+            >
+                <VideoSingle
+                    src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/reels/fifteens/reel_evento_2019.mp4?t=2024-09-29T01%3A58%3A00.130Z"
+                    autoPlay={true}
+                    loop={true}
+                />
+            </ServiceSection>
 
         </div>
     )
 }
 
-export default Servicios
+export default ServiciosRefactorizado

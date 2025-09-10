@@ -86,6 +86,12 @@ export default function NavbarV2() {
             ]
         },
         {
+            name: 'Studio',
+            link: "/studio",
+            icon: <Building2 className="w-4 h-4" />,
+            status: 'coming-soon'
+        },
+        {
             name: 'Services',
             link: null,
             icon: <Cog className="w-4 h-4" />,
@@ -94,12 +100,6 @@ export default function NavbarV2() {
                 { name: 'Digital Invitations', link: "#", description: "Invitaciones interactivas", status: 'coming-soon' },
                 { name: 'Media Storage', link: "#", description: "Archivo multimedia personal", status: 'coming-soon' }
             ]
-        },
-        {
-            name: 'Studio',
-            link: "/studio",
-            icon: <Building2 className="w-4 h-4" />,
-            status: 'coming-soon'
         },
         {
             name: 'Platform',

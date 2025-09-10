@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import HeroVideo from '@/app/components/shared/heroes/HeroVideo';
 import QuoteSection from '@/app/components/main/QuoteSection';
 import PorqueNosotros from '@/app/components/main/PorqueNosotros';
-import Servicios from './components/ServiciosRefactorizado';
+import Servicios from './components/Servicios';
 import Entregas from '@/app/components/main/Entregas';
 import Testimonios from '@/app/components/main/Testimonios';
 import { FAQSection, TrustBadges, Garantias } from '@/app/components/shared';
@@ -83,18 +83,8 @@ function page() {
       </section>
 
       <section>
-        {/* <CTAPaquetes
-          title="¡Reserva tu fecha ahora!"
-          subtitle="cupos limitados disponibles."
-          buttonText="Ver Paquetes XV Años"
-          buttonHref="/contacto?ref=fifteen"
-          buttonId="btn-cta-porque-nosotros"
-          showTopSeparator={true}
-          showBottomSeparator={true}
-        /> */}
-
-        <QuoteSection message="Cuidamos todos los detalles para entregarte los mejores resultados." />      </section>
-
+        <QuoteSection message="Cuidamos todos los detalles para entregarte los mejores resultados." />
+      </section>
       <section>
         <Servicios />
       </section>
@@ -118,22 +108,22 @@ function page() {
       </section>
 
       {/* Sección de Garantías */}
-      <Garantias
+      {/* <Garantias
         variant="full"
         title="Nuestras Garantías"
         subtitle="Trabajamos con la confianza y tranquilidad que mereces para tu celebración de XV años"
         showBadges={true}
         ctaBadgeText="✨ XV Años Únicos"
         backgroundClassName="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900"
-      />
+      /> */}
 
       {/* Sección de Preguntas Frecuentes */}
       <FAQSection
         variant="full"
         showCategories={false}
         title="Preguntas Frecuentes"
-        subtitle="Resolvemos las dudas más comunes sobre nuestros servicios para XV años"
-        className="py-20"
+        subtitle="Resolvemos las dudas más comunes sobre nuestros servicios"
+        className="py-24"
       />
 
       {/* CTA Final Unificado */}

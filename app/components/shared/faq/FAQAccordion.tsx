@@ -16,35 +16,6 @@ export default function FAQAccordion({
     className = ''
 }: FAQAccordionProps) {
 
-    const getCategoryIcon = (category: string) => {
-        switch (category) {
-            case 'bodas':
-                return (
-                    <svg className="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                )
-            case 'xv-anos':
-                return (
-                    <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-                    </svg>
-                )
-            case 'corporativo':
-                return (
-                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                )
-            default:
-                return (
-                    <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                )
-        }
-    }
-
     const getCategoryBadge = (category: string) => {
         const badges = {
             'bodas': { label: 'Bodas', color: 'bg-pink-900 text-pink-300' },
@@ -74,7 +45,6 @@ export default function FAQAccordion({
                     <div className="flex-1 mr-4">
                         {/* Question */}
                         <div className="flex items-start gap-3 mb-2">
-                            {getCategoryIcon(item.category)}
                             <h3 className="text-lg font-semibold text-zinc-100 leading-6">
                                 {item.question}
                             </h3>
@@ -126,33 +96,35 @@ export default function FAQAccordion({
                     }`}
             >
                 <div className="px-6">
-                    <div className="pl-8 border-l-2 border-zinc-600">
-                        <p className="text-zinc-300 leading-relaxed whitespace-pre-line">
-                            {item.answer}
-                        </p>
+                    <div className="pl-0 border-l-2 border-zinc-600 ml-4">
+                        <div className="pl-4">
+                            <p className="text-zinc-300 leading-relaxed whitespace-pre-line">
+                                {item.answer}
+                            </p>
 
-                        {/* Additional info for featured items */}
-                        {item.featured && (
-                            <div className="mt-4 p-3 bg-purple-900/30 rounded-lg border border-purple-800">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span className="text-sm font-medium text-purple-300">
-                                        ¿Necesitas más información?
-                                    </span>
+                            {/* Additional info for featured items */}
+                            {/* {item.featured && (
+                                <div className="mt-4 p-3 bg-purple-900/30 rounded-lg border border-purple-800">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span className="text-sm font-medium text-purple-300">
+                                            ¿Necesitas más información?
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-purple-200">
+                                        Contáctanos por WhatsApp para una consulta personalizada gratuita.
+                                    </p>
+                                    <button className="mt-2 text-sm text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1">
+                                        <span>Consulta gratuita</span>
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
                                 </div>
-                                <p className="text-sm text-purple-200">
-                                    Contáctanos por WhatsApp para una consulta personalizada gratuita.
-                                </p>
-                                <button className="mt-2 text-sm text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1">
-                                    <span>Consulta gratuita</span>
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-                            </div>
-                        )}
+                            )} */}
+                        </div>
                     </div>
                 </div>
             </div>

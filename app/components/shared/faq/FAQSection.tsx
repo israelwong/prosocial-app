@@ -29,67 +29,51 @@ interface FAQSectionProps {
 }
 
 const defaultFAQs: FAQItem[] = [
-    // BODAS
+    // SERVICIOS GENERALES
     {
-        id: 'boda-1',
-        question: '¿Cuánto tiempo antes debo reservar para mi boda?',
-        answer: 'Recomendamos reservar con al menos 6-12 meses de anticipación, especialmente para bodas en temporada alta (mayo-septiembre). Esto nos permite planificar mejor y asegurar la disponibilidad de nuestro equipo principal.',
-        category: 'bodas',
+        id: 'gen-1',
+        question: '¿Cuánto tiempo antes debo reservar mi evento?',
+        answer: 'Recomendamos reservar con al menos 45 días de anticipación para eventos importantes. Esto nos permite planificar mejor y asegurar la disponibilidad de nuestro equipo principal para tu fecha especial.',
+        category: 'general',
         tags: ['reservas', 'tiempo', 'planificación'],
         featured: true
     },
     {
-        id: 'boda-2',
-        question: '¿Qué incluye el paquete de boda completo?',
-        answer: 'Nuestro paquete completo incluye: fotografía y video de la ceremonia y recepción, sesión de novios, álbum digital de alta resolución, video highlight de 3-5 minutos, y entrega en USB personalizado. También incluimos una sesión pre-boda sin costo adicional.',
-        category: 'bodas',
+        id: 'gen-2',
+        question: '¿Qué incluyen sus paquetes de fotografía y video?',
+        answer: 'Nuestros paquetes incluyen: cobertura fotográfica y de video del evento, sesión previa, álbum digital de alta resolución, video highlight de 3-5 minutos, y entrega en USB personalizado. También incluimos servicios de edición profesional.',
+        category: 'general',
         tags: ['paquetes', 'incluye', 'servicios']
     },
     {
-        id: 'boda-3',
-        question: '¿Pueden cubrir bodas fuera de la ciudad?',
-        answer: 'Sí, cubrimos bodas en todo México. Para eventos fuera del área metropolitana, aplicamos un cargo adicional por traslado que varía según la distancia y logística requerida. Contáctanos para una cotización personalizada.',
-        category: 'bodas',
-        tags: ['destino', 'viajes', 'cobertura']
-    },
-
-    // XV AÑOS
-    {
-        id: 'xv-1',
-        question: '¿Incluyen la sesión de vestido en los paquetes de XV años?',
-        answer: 'Sí, todos nuestros paquetes de XV años incluyen la sesión de vestido. Realizamos esta sesión en locaciones especiales como jardines, estudios o lugares significativos para la quinceañera. Las fotos se entregan en alta resolución.',
-        category: 'xv-anos',
-        tags: ['sesión', 'vestido', 'incluido'],
+        id: 'gen-4',
+        question: '¿Incluyen sesiones previas al evento?',
+        answer: 'Sí, las sesiones previas pueden en fotograía y/o video. Las realizamos en locaciones especiales como jardines, estudios o lugares significativos. Las fotos se entregan en alta resolución con edición profesional y el vide es en 4K.',
+        category: 'general',
+        tags: ['sesión', 'previa', 'incluido'],
         featured: true
     },
-    {
-        id: 'xv-2',
-        question: '¿Qué opciones de video tienen para XV años?',
-        answer: 'Ofrecemos video cinematográfico completo del evento y video highlight de 3-5 minutos con música. También creamos un video especial de la sesión de vestido con efectos cinematográficos profesionales.',
-        category: 'xv-anos',
-        tags: ['video', 'cinematográfico', 'sesión']
-    },
 
-    // GENERAL
+    // MÉTODOS DE PAGO Y GARANTÍAS
     {
-        id: 'gen-1',
+        id: 'pago-1',
         question: '¿Cuáles son sus métodos de pago?',
-        answer: 'Aceptamos pagos con tarjeta de crédito/débito (con opción a meses sin intereses), transferencias bancarias, y efectivo. Manejamos un esquema de apartado del 50% y liquidación antes del evento.',
+        answer: 'Aceptamos pagos con tarjeta de crédito/débito (con opción a meses sin intereses por temporadas), transferencias bancarias, y efectivo. Los esquema de apartado van cambiando según las condiciones comerciales vigentes en ese momento.',
         category: 'general',
         tags: ['pagos', 'métodos', 'financiamiento']
     },
     {
-        id: 'gen-2',
+        id: 'garantia-1',
         question: '¿Qué garantías ofrecen en sus servicios?',
-        answer: 'Ofrecemos garantía de satisfacción al 100%. Si no quedas completamente satisfecho con el resultado, reharemos las tomas necesarias sin costo adicional. También garantizamos la entrega en tiempo y forma según lo acordado.',
+        answer: 'Ofrecemos garantía de satisfacción al 100%. Si no quedas completamente satisfecho con el resultado, hacemos los ajustes en edición de video si es necesario sin costo adicional. También garantizamos la entrega en tiempo y forma según lo acordado.',
         category: 'general',
         tags: ['garantías', 'satisfacción', 'calidad'],
         featured: true
     },
     {
-        id: 'gen-3',
+        id: 'entrega-1',
         question: '¿En cuánto tiempo entregan el material final?',
-        answer: 'Para fotografías: 7-14 días laborales. Para videos editados: 3-4 semanas. Para álbumes físicos: 4-6 semanas. Siempre entregamos una galería preview en 48-72 horas para que puedas compartir con familia y amigos.',
+        answer: 'Para fotografías: 7-14 días hábiles. Para videos editados: 40 días hábiles máximo. Para álbumes físicos: 4-6 semanas. Siempre entregamos una galería preview en 48-72 horas para que puedas compartir con familia y amigos.',
         category: 'general',
         tags: ['tiempos', 'entrega', 'plazos']
     }
