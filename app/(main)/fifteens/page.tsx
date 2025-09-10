@@ -36,7 +36,7 @@ function page() {
 
       <section>
         <HeroVideo
-          videoSrc="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/hero-30fps.webm?t=2024-09-28T23%3A53%3A21.149Z"
+          videoSrc="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fifteens/hero-30fps.mp4"
           title="XV Años Inolvidables"
           subtitle="Fotografía y Video Profesional"
           description="Capturamos la magia de tu celebración de XV años con el mejor equipo profesional y años de experiencia"
