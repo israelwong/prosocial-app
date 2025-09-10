@@ -4,12 +4,21 @@ import {
   HeroVideo,
   HeroImage,
   HeroText,
-  GalleryGrid,
   ServiceSection,
   VideoSingle,
   FAQSection,
-  Garantias
+  Garantias,
+  TrustBadges
 } from '@/app/components/shared'
+
+import GalleryMasonry from '@/app/components/shared/galleries/GalleryMasonry'
+
+import Entregas from '@/app/components/main/Entregas';
+import Testimonios from '@/app/components/main/Testimonios';
+import QuoteSection from '@/app/components/main/QuoteSection';
+import PorqueNosotros from '@/app/components/main/PorqueNosotros'
+import { CTASection, CTAPaquetes, ctaConfigs } from '@/app/components/cta';
+import { ArrowRight } from 'lucide-react'
 
 function WeddingsPage() {
   const handleContact = () => {
@@ -20,197 +29,186 @@ function WeddingsPage() {
     window.location.href = '/cotizacion'
   }
 
+  // Configuración de imágenes para cada tipo de sesión
+  const imagenesConfig = {
+    portafolio_1: [
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/100.jpg",
+      // "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/101.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/102.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/103.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/104.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/105.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/106.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/107.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/108.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/109.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/110.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/111.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/112.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/113.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/114.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/115.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/116.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/117.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/118.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/119.jpg",
+      "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/120.jpg",
+    ],
+    portafolio_2: [
+      // 50 al 70
+      ...Array.from({ length: 21 }, (_, i) =>
+        `https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portafolio/${50 + i}.jpg`
+      )
+    ]
+  }
+
+
   return (
     <>
-      {/* Hero Principal con Video */}
-      <HeroVideo
-        videoSrc="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/reels/weddings/reel_boda_2019.mp4"
+      {/* Hero Principal con Imagen */}
+      <HeroImage
+        imageSrc="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/portada_1.jpg"
+        imageAlt="Boda de ensueño"
         title="Tu Día Perfecto"
         subtitle="Bodas de Ensueño"
         description="Inmortalizamos cada momento especial de tu día más importante con profesionalismo y arte"
         buttons={[
           {
-            text: "Ver Portafolio",
-            href: "/galeria/bodas",
-            variant: "primary",
-            size: "lg"
-          },
-          {
-            text: "WhatsApp",
-            href: "https://wa.me/5544546582",
-            variant: "outline",
-            size: "lg",
-            target: "_blank",
-            withBorder: true
+            text: (
+              <span className="flex items-center gap-2">
+                Ver Paquetes
+                <ArrowRight className="w-5 h-5" />
+              </span>
+            ),
+            href: "/contacto?ref=weddings",
+            variant: "primary" as const,
+            size: "lg" as const
           }
         ]}
         overlay={true}
         overlayOpacity={40}
         textAlignment="center"
-        autoPlay={true}
-        muted={true}
-        loop={true}
-        controls={false}
+        imagePosition="center"
         minHeight="min-h-screen"
       />
 
-      {/* Hero con Imagen - Servicios */}
-      <HeroImage
-        imageSrc="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/boda/1.jpg"
-        imageAlt="Boda profesional"
-        title="Servicios Completos"
-        subtitle="Todo lo que Necesitas"
-        description="Desde la sesión de compromiso hasta el gran día, nosotros nos encargamos de todo"
-        buttons={[
-          {
-            text: "Ver Paquetes Bodas",
-            href: "/contacto?ref=weddings",
-            variant: "primary",
-            size: "xl"
-          },
-          {
-            text: "Solicitar Cotización",
-            onClick: handleQuote,
-            variant: "secondary",
-            size: "lg"
-          }
-        ]}
-        overlay={true}
-        overlayOpacity={50}
-        textAlignment="left"
-        imagePosition="center"
-        minHeight="min-h-[80vh]"
-      />
+
+      <section>
+        <CTAPaquetes
+          title="¡Contacta hoy mismo!"
+          subtitle="tenemos fechas limitadas."
+          buttonText="Ver Paquetes de Boda"
+          buttonHref="/contacto?ref=weddings"
+          buttonId="btn-contacto-desde-hero-weddings"
+          showTopSeparator={true}
+          showBottomSeparator={true}
+        />
+      </section>
+
+      <section>
+        <PorqueNosotros />
+      </section>
+
+      <section>
+        <QuoteSection message="Cuidamos todos los detalles para entregarte los mejores resultados." />
+      </section>
+
+      {/* Video de Bodas */}
+      <section className="py-16">
+        <VideoSingle
+          src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/weddings/reels_evento_2018.mp4"
+          autoPlay={true}
+          muted={true}
+          loop={true}
+          maxWidth="max-w-4xl"
+          className="px-4"
+        />
+      </section>
+
+
+      <section>
+        <CTAPaquetes
+          title="Reserva tu fecha"
+          subtitle="no dejes pasar esta oportunidad."
+          buttonText="Ver Paquetes de Boda"
+          buttonHref="/contacto?ref=weddings"
+          buttonId="btn-contacto-desde-video-weddings"
+          showTopSeparator={true}
+          showBottomSeparator={true}
+        />
+      </section>
 
       {/* Galería de Bodas */}
-      <GalleryGrid
-        imagenes={[]} // TODO: Agregar imágenes reales
-        variant="fullwidth"
+      <GalleryMasonry
+        imagenes={[
+          ...imagenesConfig.portafolio_1
+        ]} // TODO: Agregar imágenes reales
+        fullWidth={true}
         titulo="Momentos Inolvidables"
         descripcion="Cada boda cuenta una historia única. Aquí tienes algunos de nuestros trabajos más especiales"
         columns={4}
-        gap="md"
-        showCTA={true}
-        ctaText="Ver Galería Completa"
-        ctaAction={() => window.location.href = '/galeria/bodas'}
+        spacing={16}
+        enableLightbox={true}
+        rounded={true}
       />
 
-      {/* Servicios con Video */}
-      <ServiceSection
-        titulo="Cinematografía de Boda"
-        descripcion="Capturamos la esencia de tu historia de amor con la más alta calidad cinematográfica"
-        titleGradient="from-rose-500 via-pink-500 to-rose-500"
-      >
-        <VideoSingle
-          src="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/video/reels/weddings/reel_boda_2020.mp4"
-          autoPlay={true}
-          loop={true}
-          muted={true}
-          maxWidth="max-w-4xl"
-        />
-      </ServiceSection>
+      <section>
+        <Entregas />
+      </section>
 
-      {/* Hero Solo Texto - Proceso */}
-      <HeroText
-        title="Un Proceso Simple"
-        subtitle="Cómo Trabajamos"
-        description="Desde la primera consulta hasta la entrega final, te acompañamos en cada paso del camino"
-        buttons={[
-          {
-            text: "Conocer Proceso",
-            href: "/proceso",
-            variant: "gradient",
-            size: "lg"
-          },
-          {
-            text: "Agendar Cita",
-            onClick: handleContact,
-            variant: "outline",
-            size: "lg",
-            withBorder: true
-          }
-        ]}
-        backgroundVariant="gradient"
-        backgroundGradient="from-rose-900 via-pink-900 to-purple-900"
-        textAlignment="center"
-        pattern="dots"
-        patternOpacity={8}
-        minHeight="min-h-[70vh]"
-      />
+      <section>
+        <Testimonios />
+      </section>
 
-      {/* Hero con Imagen - Testimonios */}
-      <HeroImage
-        imageSrc="https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/boda/5.jpg"
-        imageAlt="Pareja feliz"
-        title="Historias de Amor"
-        subtitle="Lo que Dicen Nuestras Parejas"
-        description="Más de 100 parejas han confiado en nosotros para capturar su día especial"
-        buttons={[
-          {
-            text: "Leer Testimonios",
-            href: "/testimonios",
-            variant: "primary",
-            size: "lg"
-          }
-        ]}
-        overlay={true}
-        overlayOpacity={60}
-        textAlignment="right"
-        imagePosition="center"
-        minHeight="min-h-[60vh]"
-      />
 
-      {/* Sección de Garantías */}
-      <section className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
-        <Garantias
-          variant="full"
-          title="Nuestras Garantías"
-          subtitle="Trabajamos con la confianza y tranquilidad que mereces para tu boda perfecta"
-          showBadges={true}
+      <section>
+        <CTAPaquetes
+          title="Reserva tu fecha"
+          subtitle="no dejes pasar esta oportunidad."
+          buttonText="Ver Paquetes de Boda"
+          buttonHref="/contacto?ref=weddings"
+          buttonId="btn-contacto-desde-video-weddings"
+          showTopSeparator={true}
+          showBottomSeparator={true}
         />
       </section>
+
+      {/* Galería de Bodas */}
+      <GalleryMasonry
+        imagenes={[
+          ...imagenesConfig.portafolio_2
+        ]} // TODO: Agregar imágenes reales
+        fullWidth={true}
+        titulo="Momentos Inolvidables"
+        descripcion="Cada boda cuenta una historia única. Aquí tienes algunos de nuestros trabajos más especiales"
+        columns={4}
+        spacing={16}
+        enableLightbox={true}
+        rounded={true}
+      />
 
       {/* Sección de Preguntas Frecuentes */}
-      <section className="py-20 bg-zinc-900">
-        <div className="max-w-4xl mx-auto px-6">
-          <FAQSection
-            variant="full"
-            showCategories={true}
-            title="Preguntas Frecuentes"
-            subtitle="Todo lo que necesitas saber sobre nuestros servicios de boda"
-          />
-        </div>
-      </section>
-
-      {/* Hero Final - Contacto */}
-      <HeroText
-        title="¿Listos para Empezar?"
-        subtitle="Tu Historia de Amor Merece lo Mejor"
-        description="Contáctanos ahora y comencemos a planear la documentación perfecta de tu día especial"
-        buttons={[
-          {
-            text: "Ver Paquetes Bodas",
-            href: "/contacto?ref=weddings",
-            variant: "primary",
-            size: "xl",
-            fullWidth: false
-          },
-          {
-            text: "Agenda una Cita Virtual",
-            href: "https://calendly.com/prosocial-mx",
-            variant: "secondary",
-            size: "lg",
-            fullWidth: false
-          }
-        ]}
-        backgroundVariant="solid"
-        backgroundColor="bg-gradient-to-br from-zinc-900 to-zinc-800"
-        textAlignment="center"
-        pattern="grid"
-        patternOpacity={5}
-        minHeight="min-h-[60vh]"
-        contentMaxWidth="max-w-3xl"
+      <FAQSection
+        variant="full"
+        showCategories={false}
+        title="Preguntas Frecuentes"
+        subtitle="Resolvemos las dudas más comunes sobre nuestros servicios"
+        className="py-24"
       />
+
+      {/* CTA Final Unificado */}
+      <CTASection
+        {...ctaConfigs.fifteens}
+        title="¿Listos para Empezar?"
+        description="Ofrecemos paquetes preconfigurados, pero si necesitas algo especial podemos armar un paquete a tu medida."
+        additionalInfo="Agenda tu cita virtual gratuita • Consulta paquetes disponibles • Cotización personalizada"
+        showAdditionalInfo={true}
+      />
+
+      {/* Línea sutil inferior */}
+      <div className="relative">
+        <div className="h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent" />
+      </div>
     </>
   )
 }

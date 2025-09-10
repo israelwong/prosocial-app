@@ -48,16 +48,16 @@ function page() {
                   <ArrowRight className="w-5 h-5" />
                 </span>
               ),
-              href: "/contacto?ref=fifteen-hero",
+              href: "/contacto?ref=fifteens",
               variant: "translucent" as const,
               size: "lg" as const
             },
-            {
-              text: "Ver Galería",
-              href: "/galeria?categoria=xv-anos",
-              variant: "outline" as const,
-              size: "lg" as const
-            }
+            // {
+            //   text: "Ver Galería",
+            //   href: "/galeria?categoria=xv-anos",
+            //   variant: "outline" as const,
+            //   size: "lg" as const
+            // }
           ]}
           autoPlay={true}
           muted={true}
@@ -70,7 +70,7 @@ function page() {
           title="¡Contacta hoy mismo!"
           subtitle="tenemos fechas limitadas."
           buttonText="Ver Paquetes XV Años"
-          buttonHref="/contacto?ref=fifteen"
+          buttonHref="/contacto?ref=fifteens"
           buttonId="btn-contacto-desde-hero-fifteens"
           showTopSeparator={true}
           showBottomSeparator={true}
@@ -85,6 +85,7 @@ function page() {
       <section>
         <QuoteSection message="Cuidamos todos los detalles para entregarte los mejores resultados." />
       </section>
+
       <section>
         <Servicios />
       </section>
@@ -93,7 +94,7 @@ function page() {
         title="¡Reserva tu fecha ahora!"
         subtitle="cupos limitados disponibles."
         buttonText="Ver Paquetes XV Años"
-        buttonHref="/contacto?ref=fifteen"
+        buttonHref="/contacto?ref=fifteens"
         buttonId="btn-cta-video-servicios"
         showTopSeparator={true}
         showBottomSeparator={true}
@@ -106,16 +107,6 @@ function page() {
       <section>
         <Testimonios />
       </section>
-
-      {/* Sección de Garantías */}
-      {/* <Garantias
-        variant="full"
-        title="Nuestras Garantías"
-        subtitle="Trabajamos con la confianza y tranquilidad que mereces para tu celebración de XV años"
-        showBadges={true}
-        ctaBadgeText="✨ XV Años Únicos"
-        backgroundClassName="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900"
-      /> */}
 
       {/* Sección de Preguntas Frecuentes */}
       <FAQSection

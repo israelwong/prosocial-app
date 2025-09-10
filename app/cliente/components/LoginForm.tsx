@@ -5,7 +5,6 @@ import { loginCliente } from '../_lib/actions/auth.actions'
 
 export default function LoginForm() {
     const [formData, setFormData] = useState({
-        email: '',
         telefono: ''
     })
     const [loading, setLoading] = useState(false)
@@ -28,33 +27,22 @@ export default function LoginForm() {
 
         try {
             // Validaciones básicas
-            if (!formData.email && !formData.telefono) {
-                setError('Por favor ingresa tu email o teléfono')
+            if (!formData.telefono) {
+                setError('Por favor ingresa tu número de teléfono')
                 return
             }
 
-            // Validar formato de email si se proporciona
-            if (formData.email) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-                if (!emailRegex.test(formData.email)) {
-                    setError('Por favor ingresa un email válido')
-                    return
-                }
-            }
-
-            // Validar formato de teléfono si se proporciona
-            if (formData.telefono) {
-                const telefonoRegex = /^[0-9]{10}$/
-                if (!telefonoRegex.test(formData.telefono.replace(/\s/g, ''))) {
-                    setError('Por favor ingresa un teléfono válido de 10 dígitos')
-                    return
-                }
+            // Validar formato de teléfono
+            const telefonoRegex = /^[0-9]{10}$/
+            if (!telefonoRegex.test(formData.telefono.replace(/\s/g, ''))) {
+                setError('Por favor ingresa un teléfono válido de 10 dígitos')
+                return
             }
 
             // Llamada a action para validar credenciales
             const response = await loginCliente({
-                email: formData.email || '',
-                telefono: formData.telefono || '' // Corregido: usar telefono en lugar de password
+                email: '',
+                telefono: formData.telefono
             })
 
             if (!response.success) {
@@ -88,29 +76,6 @@ export default function LoginForm() {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Campo de email */}
-            <div>
-                <label htmlFor="email" className="block text-sm font-medium text-zinc-300 mb-2">
-                    Correo electrónico
-                </label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-zinc-700/50 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="tu@email.com"
-                />
-            </div>
-
-            {/* Divider */}
-            <div className="flex items-center">
-                <div className="flex-1 border-t border-zinc-600"></div>
-                <div className="px-3 text-zinc-500 text-sm">o</div>
-                <div className="flex-1 border-t border-zinc-600"></div>
-            </div>
-
             {/* Campo de teléfono */}
             <div>
                 <label htmlFor="telefono" className="block text-sm font-medium text-zinc-300 mb-2">
@@ -123,7 +88,7 @@ export default function LoginForm() {
                     value={formData.telefono}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 bg-zinc-700/50 border border-zinc-600 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="5544546582"
+                    placeholder="Ingresa tu número de teléfono"
                 />
             </div>
 
@@ -153,7 +118,7 @@ export default function LoginForm() {
             {/* Ayuda */}
             <div className="text-center">
                 <p className="text-zinc-500 text-sm">
-                    Usa el email o teléfono registrado en tu evento
+                    Usa el teléfono registrado en tu evento
                 </p>
             </div>
         </form>

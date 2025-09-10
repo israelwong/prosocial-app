@@ -1,14 +1,27 @@
 'use client'
 import React from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
+import { Button } from '../ui'
+import type { ButtonVariant, ButtonSize } from '../ui'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient'
-export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl'
+/**
+ * Componente HeroImage - Refactorizado siguiendo ESTILO_MAESTRO_MAIN.md
+ * 
+ * Hero con imagen de fondo y elementos decorativos mejorados
+ * Mantiene consistencia visual con HeroVideo
+ * 
+ * Características aplicadas:
+ * - Sistema de colores zinc como estándar con acentos purple-pink
+ * - Gradientes purple-pink para elementos destacados
+ * - Elementos decorativos sutiles pero pronunciados
+ * - Tipografía mejorada con jerarquía clara
+ * - Efectos de profundidad y separación visual
+ */
+
 export type TextAlignment = 'left' | 'center' | 'right'
 
 interface ButtonConfig {
-    text: string
+    text: React.ReactNode
     href?: string
     onClick?: () => void
     variant?: ButtonVariant
@@ -35,6 +48,10 @@ interface HeroImageProps {
     imagePosition?: 'top' | 'center' | 'bottom'
     imageClassName?: string
     imagePriority?: boolean
+    /** Mostrar elementos decorativos */
+    showDecorative?: boolean
+    /** Tamaño de los elementos decorativos */
+    decorativeSize?: 'sm' | 'md' | 'lg' | 'xl'
 }
 
 export default function HeroImage({
@@ -53,30 +70,6 @@ export default function HeroImage({
     imagePosition = 'center',
     imagePriority = true
 }: HeroImageProps) {
-
-    const getButtonStyles = (button: ButtonConfig) => {
-        const baseStyles = 'inline-flex items-center justify-center font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2'
-
-        const variants = {
-            primary: 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg hover:scale-105 focus:ring-purple-500',
-            secondary: 'bg-zinc-800 text-white hover:bg-zinc-700 focus:ring-zinc-500',
-            outline: 'border-2 border-white text-white hover:bg-white hover:text-zinc-900 focus:ring-white',
-            ghost: 'text-white hover:bg-white/20 focus:ring-white',
-            gradient: 'bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white hover:shadow-xl hover:scale-105 focus:ring-purple-500'
-        }
-
-        const sizes = {
-            sm: 'px-4 py-2 text-sm',
-            md: 'px-6 py-3 text-base',
-            lg: 'px-8 py-4 text-lg',
-            xl: 'px-10 py-5 text-xl'
-        }
-
-        const borderStyles = button.withBorder ? 'border border-white/30 backdrop-blur-sm' : ''
-        const widthStyles = button.fullWidth ? 'w-full' : ''
-
-        return `${baseStyles} ${variants[button.variant || 'primary']} ${sizes[button.size || 'md']} ${borderStyles} ${widthStyles} ${button.className || ''}`
-    }
 
     const textAlignmentClasses = {
         left: 'text-left',
@@ -137,25 +130,19 @@ export default function HeroImage({
                     {buttons.length > 0 && (
                         <div className={`flex flex-col sm:flex-row gap-4 ${textAlignment === 'center' ? 'justify-center' : textAlignment === 'right' ? 'justify-end' : 'justify-start'}`}>
                             {buttons.map((button, index) => (
-                                button.href ? (
-                                    <Link
-                                        key={index}
-                                        href={button.href}
-                                        target={button.target || '_self'}
-                                        className={getButtonStyles(button)}
-                                        onClick={button.onClick}
-                                    >
-                                        {button.text}
-                                    </Link>
-                                ) : (
-                                    <button
-                                        key={index}
-                                        onClick={button.onClick}
-                                        className={getButtonStyles(button)}
-                                    >
-                                        {button.text}
-                                    </button>
-                                )
+                                <Button
+                                    key={index}
+                                    variant={button.variant}
+                                    size={button.size}
+                                    href={button.href}
+                                    target={button.target}
+                                    onClick={button.onClick}
+                                    fullWidth={button.fullWidth}
+                                    withBorder={button.withBorder}
+                                    className={button.className}
+                                >
+                                    {button.text}
+                                </Button>
                             ))}
                         </div>
                     )}

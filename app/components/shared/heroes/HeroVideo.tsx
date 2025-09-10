@@ -93,26 +93,6 @@ export default function HeroVideo({
                 Tu navegador no soporta el elemento video.
             </video>
 
-            {/* Elementos decorativos de fondo */}
-            <div className="absolute inset-0 -z-5 overflow-hidden">
-                {/* Gradient overlay principal */}
-                {/* <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-transparent to-pink-900/30"></div> */}
-
-                {/* Círculos decorativos */}
-                {/* <div className="absolute top-1/4 -left-32 w-64 h-64 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-full blur-3xl animate-pulse"></div> */}
-                {/* <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-gradient-to-br from-pink-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div> */}
-                {/* <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-128 h-128 bg-gradient-to-br from-fuchsia-500/5 to-purple-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div> */}
-
-                {/* Líneas decorativas */}
-                {/* <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-purple-400/20 to-transparent"></div> */}
-                {/* <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-pink-400/20 to-transparent"></div> */}
-
-                {/* Elementos geométricos */}
-                {/* <div className="absolute top-1/3 left-1/6 w-4 h-4 bg-gradient-to-br from-purple-400/40 to-pink-400/40 rotate-45 animate-pulse" style={{ animationDelay: '1s' }}></div> */}
-                {/* <div className="absolute bottom-1/3 right-1/6 w-6 h-6 bg-gradient-to-br from-pink-400/40 to-purple-400/40 rotate-45 animate-pulse" style={{ animationDelay: '3s' }}></div> */}
-                {/* <div className="absolute top-2/3 left-3/4 w-8 h-8 border border-fuchsia-400/30 rotate-45 animate-pulse" style={{ animationDelay: '5s' }}></div> */}
-            </div>
-
             {/* Overlay */}
             {overlay && (
                 <div

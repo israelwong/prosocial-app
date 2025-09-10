@@ -48,7 +48,7 @@ export default function Button({
 }: ButtonProps) {
 
     const getButtonStyles = () => {
-        const baseStyles = 'relative group inline-flex items-center justify-center gap-3 font-medium transition-all duration-300 transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-offset-2 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
+        const baseStyles = 'relative group inline-flex items-center justify-center gap-3 font-medium transition-all duration-300 transform hover:scale-[1.01] focus:outline-none overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
 
         const variants = {
             primary: `
@@ -74,7 +74,7 @@ export default function Button({
                 ${fullWidth ? 'w-full' : 'min-w-fit px-1'}
             `,
             outline: `
-                border-2 border-zinc-300/70 dark:border-white/70 
+                border-2 border-white/70 dark:border-white/70 
                 text-zinc-700 dark:text-white 
                 hover:bg-gradient-to-br hover:from-purple-50/20 hover:via-pink-50/10 hover:to-purple-50/20 
                 dark:hover:from-white/15 dark:hover:via-white/8 dark:hover:to-white/15 
@@ -126,7 +126,7 @@ export default function Button({
             xl: `py-4 px-10 text-lg font-semibold tracking-wide ${fullWidth ? '' : 'min-w-[200px]'}`
         }
 
-        const borderStyles = withBorder ? 'ring-2 ring-white/20 ring-offset-2 ring-offset-transparent' : ''
+        const borderStyles = withBorder ? 'ring-2 ring-white/20' : ''
 
         // Limpiar clases CSS para evitar conflictos
         const cleanVariantStyles = variants[variant].replace(/\s+/g, ' ').trim()

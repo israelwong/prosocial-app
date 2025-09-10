@@ -10,6 +10,9 @@ import { MetricasRendimientoWidget } from './components/MetricasRendimientoWidge
 import { ReloadButton } from './components/ReloadButton'
 import { Loader2 } from 'lucide-react'
 
+// Importar limpieza automática de Realtime (se ejecuta automáticamente)
+import '@/lib/realtime-cleanup'
+
 export const metadata = {
   title: 'Dashboard General - ProSocial',
   description: 'Dashboard principal con métricas y estadísticas en tiempo real',
