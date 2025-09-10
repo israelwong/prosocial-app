@@ -88,6 +88,9 @@ export default function HeroVideo({
                 loop={loop}
                 controls={controls}
                 poster={videoPoster}
+                playsInline
+                webkit-playsinline="true"
+                preload="metadata"
             >
                 <source src={videoSrc} type="video/mp4" />
                 Tu navegador no soporta el elemento video.
