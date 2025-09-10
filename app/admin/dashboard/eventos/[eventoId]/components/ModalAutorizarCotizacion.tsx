@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { X, CreditCard, Banknote, Building2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { obtenerCondicionesComerciales } from '@/app/admin/_lib/actions/condicionesComerciales/condicionesComerciales.actions'
+import { obtenerMetodosPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions'
 
 interface CondicionComercial {
     id: string
@@ -11,6 +12,13 @@ interface CondicionComercial {
     descuento?: number | null
     porcentaje_anticipo?: number | null
     status: string
+    CondicionesComercialesMetodoPago?: Array<{
+        metodoPagoId: string
+        MetodoPago: {
+            id: string
+            metodo_pago: string
+        }
+    }>
 }
 
 interface MetodoPago {
@@ -42,24 +50,36 @@ export default function ModalAutorizarCotizacion({ isOpen, onClose, cotizacion, 
     const [loading, setLoading] = useState(true)
     const [procesando, setProcesando] = useState(false)
 
-    // Métodos de pago disponibles con sus IDs reales
-    const metodosPago: MetodoPago[] = [
-        {
-            id: 'cm5fznj2z000ggu700dvpkw1p', // Transferencia directa
-            nombre: 'Transferencia directa',
-            icono: <Building2 className="w-5 h-5" />
-        },
-        {
-            id: 'cm41r1whx0000j1l1k6hpbdwb', // Efectivo
-            nombre: 'Efectivo',
-            icono: <Banknote className="w-5 h-5" />
-        },
-        {
-            id: 'cm5povit50002guopj9jphrna', // Depósito bancario
-            nombre: 'Depósito bancario',
-            icono: <CreditCard className="w-5 h-5" />
+    // Obtener iconos para métodos de pago
+    const obtenerIconoMetodoPago = (nombre: string) => {
+        const nombreLower = nombre.toLowerCase()
+        if (nombreLower.includes('transferencia')) {
+            return <Building2 className="w-5 h-5" />
+        } else if (nombreLower.includes('efectivo')) {
+            return <Banknote className="w-5 h-5" />
+        } else if (nombreLower.includes('depósito') || nombreLower.includes('deposito')) {
+            return <CreditCard className="w-5 h-5" />
+        } else {
+            return <CreditCard className="w-5 h-5" />
         }
-    ]
+    }
+
+    // Filtrar solo métodos de pago internos (para autorización manual)
+    const esMetodoInterno = (nombreMetodo: string) => {
+        const metodosInternosNombres = [
+            'efectivo',
+            'depósito bancario',
+            'deposito bancario',
+            'transferencia directa',
+            'transferencia bancaria'
+        ];
+
+        const nombreLower = nombreMetodo.toLowerCase().trim();
+        return metodosInternosNombres.some(nombre =>
+            nombreLower === nombre.toLowerCase() ||
+            nombreLower.includes(nombre.toLowerCase())
+        );
+    }
 
     // Cargar condiciones comerciales
     useEffect(() => {
@@ -71,6 +91,7 @@ export default function ModalAutorizarCotizacion({ isOpen, onClose, cotizacion, 
     const cargarCondicionesComerciales = async () => {
         try {
             setLoading(true)
+            // Cargar condiciones comerciales con sus métodos de pago incluidos
             const condiciones = await obtenerCondicionesComerciales()
             setCondicionesComerciales(condiciones.filter(c => c.status === 'active'))
         } catch (error) {
@@ -287,34 +308,61 @@ export default function ModalAutorizarCotizacion({ isOpen, onClose, cotizacion, 
                             {/* Métodos de pago */}
                             {condicionSeleccionada && (
                                 <div>
-                                    <h3 className="text-lg font-medium text-zinc-200 mb-4">Método de Pago</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                        {metodosPago.map((metodo) => {
-                                            const isSelected = metodoPagoSeleccionado === metodo.id
+                                    <h3 className="text-lg font-medium text-zinc-200 mb-4">
+                                        🏢 Método de Pago Interno
+                                        <span className="text-sm text-zinc-400 ml-2">(Para autorización manual)</span>
+                                    </h3>
+                                    {(() => {
+                                        const condicion = condicionesComerciales.find(c => c.id === condicionSeleccionada)
+                                        const todosLosMetodos = condicion?.CondicionesComercialesMetodoPago || []
+
+                                        // Filtrar solo métodos de pago internos para autorización
+                                        const metodosInternosDisponibles = todosLosMetodos.filter(metodoPagoRelacion =>
+                                            esMetodoInterno(metodoPagoRelacion.MetodoPago.metodo_pago)
+                                        )
+
+                                        if (metodosInternosDisponibles.length === 0) {
                                             return (
-                                                <div
-                                                    key={metodo.id}
-                                                    onClick={() => setMetodoPagoSeleccionado(metodo.id)}
-                                                    className={`
-                                                        p-4 rounded-lg border cursor-pointer transition-all text-center
-                                                        ${isSelected
-                                                            ? 'border-blue-500 bg-blue-500/10'
-                                                            : 'border-zinc-700 hover:border-zinc-600 bg-zinc-800/50'
-                                                        }
-                                                    `}
-                                                >
-                                                    <div className="flex flex-col items-center space-y-2">
-                                                        <div className={`p-2 rounded-lg ${isSelected ? 'text-blue-400' : 'text-zinc-400'}`}>
-                                                            {metodo.icono}
-                                                        </div>
-                                                        <span className={`text-sm font-medium ${isSelected ? 'text-blue-100' : 'text-zinc-300'}`}>
-                                                            {metodo.nombre}
-                                                        </span>
-                                                    </div>
+                                                <div className="text-center py-8 text-zinc-400">
+                                                    <p>No hay métodos de pago internos configurados para esta condición comercial.</p>
+                                                    <p className="text-sm mt-2 text-amber-400">
+                                                        ⚠️ Se requieren métodos internos (Efectivo, Depósito bancario, Transferencia directa) para autorizar.
+                                                    </p>
                                                 </div>
                                             )
-                                        })}
-                                    </div>
+                                        }
+
+                                        return (
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                {metodosInternosDisponibles.map((metodoPagoRelacion) => {
+                                                    const metodo = metodoPagoRelacion.MetodoPago
+                                                    const isSelected = metodoPagoSeleccionado === metodo.id
+                                                    return (
+                                                        <div
+                                                            key={metodo.id}
+                                                            onClick={() => setMetodoPagoSeleccionado(metodo.id)}
+                                                            className={`
+                                                                p-4 rounded-lg border cursor-pointer transition-all text-center
+                                                                ${isSelected
+                                                                    ? 'border-blue-500 bg-blue-500/10'
+                                                                    : 'border-zinc-700 hover:border-zinc-600 bg-zinc-800/50'
+                                                                }
+                                                            `}
+                                                        >
+                                                            <div className="flex flex-col items-center space-y-2">
+                                                                <div className={`p-2 rounded-lg ${isSelected ? 'text-blue-400' : 'text-zinc-400'}`}>
+                                                                    {obtenerIconoMetodoPago(metodo.metodo_pago)}
+                                                                </div>
+                                                                <span className={`text-sm font-medium ${isSelected ? 'text-blue-100' : 'text-zinc-300'}`}>
+                                                                    {metodo.metodo_pago}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        )
+                                    })()}
                                 </div>
                             )}
                         </>
