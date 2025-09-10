@@ -29,33 +29,106 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     }
 })
 
-// TEMPORAL: Funciones de realtime deshabilitadas para evitar conflictos de schema
+// Funciones de suscripción para tiempo real con manejo de errores mejorado
 export const suscribirCotizacion = (cotizacionId: string, callback: (payload: any) => void) => {
-    console.warn('Realtime temporalmente deshabilitado debido a drift de schema')
-    return null
+    // Verificar si ya hay demasiadas conexiones activas
+    if (supabase.realtime.channels.length > 3) {
+        console.warn('Demasiadas conexiones Realtime activas, limpiando...')
+        // Limpiar conexiones huérfanas
+        supabase.realtime.channels.forEach((channel, index) => {
+            if (index < supabase.realtime.channels.length - 3) {
+                supabase.removeChannel(channel)
+            }
+        })
+    }
+
+    const channel = supabase
+        .channel(`cotizacion:${cotizacionId}`, {
+            config: {
+                presence: { key: 'user' },
+                broadcast: { self: false }
+            }
+        })
+        .on('postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
+                table: 'Cotizacion',
+                filter: `id=eq.${cotizacionId}`
+            },
+            (payload) => {
+                console.log('Cotización actualizada:', payload)
+                callback({ ...payload, table: 'Cotizacion' })
+            }
+        )
+        .on('postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
+                table: 'CotizacionServicio',
+                filter: `cotizacionId=eq.${cotizacionId}`
+            },
+            (payload) => {
+                console.log('Servicios actualizados:', payload)
+                callback({ ...payload, table: 'CotizacionServicio' })
+            }
+        )
+        .on('postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
+                table: 'CotizacionCosto',
+                filter: `cotizacionId=eq.${cotizacionId}`
+            },
+            (payload) => {
+                console.log('Costos actualizados:', payload)
+                callback({ ...payload, table: 'CotizacionCosto' })
+            }
+        )
+        .subscribe()
+
+    return channel
 }
 
 export const desuscribirCotizacion = (channel: any) => {
-    console.warn('Realtime temporalmente deshabilitado')
+    if (channel) {
+        return supabase.removeChannel(channel)
+    }
     return Promise.resolve()
 }
 
 export const limpiarConexionesRealtime = () => {
-    console.warn('Realtime temporalmente deshabilitado')
-    return 0
+    const channels = supabase.realtime.channels
+    console.log(`Limpiando ${channels.length} conexiones Realtime`)
+
+    channels.forEach(channel => {
+        supabase.removeChannel(channel)
+    })
+
+    return channels.length
 }
 
 export const verificarConexionRealtime = () => {
+    const isConnected = supabase.realtime.isConnected()
+    const channelCount = supabase.realtime.channels.length
+
     return {
-        isConnected: false,
-        channelCount: 0,
-        status: 'deshabilitado temporalmente',
-        warning: 'Realtime deshabilitado debido a drift de schema'
+        isConnected,
+        channelCount,
+        status: isConnected ? 'conectado' : 'desconectado',
+        warning: channelCount > 5 ? 'Demasiadas conexiones activas' : null
     }
 }
 
 export const monitorearConexiones = () => {
-    console.warn('Realtime temporalmente deshabilitado')
+    const info = verificarConexionRealtime()
+    console.log('Estado Realtime:', info)
+
+    if (info.channelCount > 5) {
+        console.warn('⚠️ Demasiadas conexiones Realtime activas:', info.channelCount)
+        return false
+    }
+
     return true
 }
 
