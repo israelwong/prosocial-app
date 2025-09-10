@@ -32,16 +32,19 @@ const imagenesConfig = {
         "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/7.jpg",
         "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/8.jpg",
         "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/9.jpg",
-        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/10.jpg",
+        // "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/casual/10.jpg",
     ],
     evento: [
-        // Aquí irían las imágenes de eventos
         "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/1.jpg",
         "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/2.jpg",
         "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/3.jpg",
         "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/4.jpg",
         "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/5.jpg",
-        // ... más imágenes
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/6.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/7.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/8.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/9.jpg",
+        "https://bgtapcutchryzhzooony.supabase.co/storage/v1/object/public/ProSocial/fofografia/evento/10.jpg",
     ]
 }
 
@@ -60,24 +63,26 @@ function ServiciosRefactorizado() {
                     variant="multiple"
                     autoplay={3000}
                     alt="Sesión de vestido"
+
                 />
             </ServiceSection>
 
             {/* Sesión fotográfica casual */}
             <ServiceSection
                 titulo="Sesión fotográfica casual"
-                descripcion="Tu esencia y personalidad en fotografías casuales en locaciones urbanas y naturales"
+                descripcion="Tu esencia y personalidad en fotografías casuales en locaciones urbanas y naturales - Click para ver en lightbox"
                 titleGradient="from-pink-400 via-fuchsia-500 to-red-500"
             >
                 <GalleryGrid
                     imagenes={imagenesConfig.casual}
-                    variant='masonry'
+                    variant='grid'
                     noPadding={true}
+                    enableLightbox={true}
                 />
             </ServiceSection>
 
             {/* Comparación: Masonry real con react-photo-album */}
-            <ServiceSection
+            {/* <ServiceSection
                 titulo="Sesión fotográfica casual (Masonry verdadero)"
                 descripcion="Mismas imágenes pero con layout masonry real que respeta aspect ratios naturales - Click para ver en lightbox"
                 titleGradient="from-teal-400 via-cyan-500 to-blue-500"
@@ -90,7 +95,7 @@ function ServiciosRefactorizado() {
                     alt="Sesión casual masonry real"
                     enableLightbox={true}
                 />
-            </ServiceSection>
+            </ServiceSection> */}
 
             {/* Impresión de cuadros */}
             <ServiceSection
@@ -131,13 +136,14 @@ function ServiciosRefactorizado() {
                 descripcion="Nosotros nos encargamos de capturar los mejores momentos de tu evento"
                 titleGradient="from-yellow-500 to-orange-500"
             >
-                <GallerySlider
+                <GalleryMasonry
                     imagenes={imagenesConfig.evento}
-                    variant="multiple"
-                    autoplay={3000}
-                    alt="Fotografía de evento"
-                    imagenBordeRedondeado={false}
-
+                    columns={4}
+                    spacing={16}
+                    noPadding={true}
+                    alt="Sesión de vestido masonry"
+                    rounded={false}
+                    enableLightbox={true}
                 />
             </ServiceSection>
 
@@ -155,7 +161,7 @@ function ServiciosRefactorizado() {
             </ServiceSection>
 
             {/* Ejemplo de Masonry Layout Real */}
-            <ServiceSection
+            {/* <ServiceSection
                 titulo="Galería Masonry (react-photo-album)"
                 descripcion="Layout masonry verdadero con aspect ratio natural y alturas que se ajustan al contenido"
                 titleGradient="from-teal-500 to-cyan-500"
@@ -167,7 +173,7 @@ function ServiciosRefactorizado() {
                     noPadding={true}
                     alt="Sesión de vestido masonry"
                 />
-            </ServiceSection>
+            </ServiceSection> */}
 
         </div>
     )

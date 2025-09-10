@@ -16,7 +16,8 @@ interface GallerySliderProps {
     animationDuration?: number
     className?: string
     alt?: string
-    imagenBordeRedondeado?: boolean
+    rounded?: boolean // Prop estandarizado para redondeado (mantiene compatibilidad con imagenBordeRedondeado)
+    imagenBordeRedondeado?: boolean // Deprecated: usar 'rounded' en su lugar
     margenEntreFotos?: number
     // Configuración responsive
     breakpoints?: {
@@ -39,7 +40,8 @@ export default function GallerySlider({
     animationDuration = 700,
     className = '',
     alt = 'Imagen',
-    imagenBordeRedondeado = true,
+    rounded,
+    imagenBordeRedondeado = true, // Valor por defecto para retrocompatibilidad
     margenEntreFotos = 0,
     breakpoints = {
         1024: { perView: 4 },
@@ -48,6 +50,9 @@ export default function GallerySlider({
 }: GallerySliderProps) {
     const sliderRef = useRef<HTMLDivElement>(null)
     const glideRef = useRef<Glide | null>(null)
+
+    // Determinar si aplicar redondeado (prioridad a 'rounded', fallback a 'imagenBordeRedondeado')
+    const shouldRound = rounded !== undefined ? rounded : imagenBordeRedondeado
 
     // Configuraciones predefinidas por variante
     const getVariantConfig = (): any => {
@@ -149,7 +154,7 @@ export default function GallerySlider({
                                 marginRight: index < imagenes.length - 1 ? `${margenEntreFotos}px` : '0px'
                             }}
                         >
-                            <div className={`relative overflow-hidden ${imagenBordeRedondeado ? (variant === 'showcase' ? 'rounded-xl' : 'rounded-lg') : ''} ${variant === 'showcase' ? 'aspect-square' : ''}`}>
+                            <div className={`relative overflow-hidden ${shouldRound ? (variant === 'showcase' ? 'rounded-xl' : 'rounded-lg') : ''} ${variant === 'showcase' ? 'aspect-square' : ''}`}>
                                 {variant === 'showcase' ? (
                                     <Image
                                         src={imagen}

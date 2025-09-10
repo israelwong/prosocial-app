@@ -73,9 +73,9 @@ function page() {
           buttonHref="/contacto?ref=fifteen"
           buttonId="btn-contacto-desde-hero-fifteens"
           showTopSeparator={true}
-          showBottomSeparator={false}
+          showBottomSeparator={true}
         />
-        <QuoteSection message="Este momento especial solo se vive una vez, nosotros somos expertos en capturarlo." />
+        {/* <QuoteSection message="Este momento especial solo se vive una vez, nosotros somos expertos en capturarlo." /> */}
       </section>
 
       <section>
@@ -83,7 +83,7 @@ function page() {
       </section>
 
       <section>
-        <CTAPaquetes
+        {/* <CTAPaquetes
           title="¡Reserva tu fecha ahora!"
           subtitle="cupos limitados disponibles."
           buttonText="Ver Paquetes XV Años"
@@ -91,7 +91,7 @@ function page() {
           buttonId="btn-cta-porque-nosotros"
           showTopSeparator={true}
           showBottomSeparator={true}
-        />
+        /> */}
 
         <QuoteSection message="Cuidamos todos los detalles para entregarte los mejores resultados." />      </section>
 
