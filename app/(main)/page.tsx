@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ComingSoon } from '@/app/components/shared/announcements';
 
 export const metadata: Metadata = {
     title: "ProSocial - Fotografía y Video Profesional | Especialistas en Bodas y XV Años",
@@ -20,22 +21,13 @@ export const metadata: Metadata = {
 
 export default function Home() {
     return (
-        <div className="bg-black min-h-screen">
+        <div className="bg-zinc-950 min-h-screen">
 
-            {/* Contenido Principal - Vacío por ahora */}
-            <section className="min-h-screen flex items-center justify-center px-4">
-                <div className="max-w-4xl mx-auto text-center">
 
-                    {/* Placeholder - Aquí irá el contenido */}
-                    <div className="text-white">
-                        <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                            Contenido Principal
-                        </h1>
-                        <p className="text-xl text-gray-300 mb-8">
-                            Aquí irá el contenido del HOME
-                        </p>
-                    </div>
-
+            {/* Coming Soon Section */}
+            <section className="py-16 lg:py-24 px-4">
+                <div className="max-w-7xl mx-auto">
+                    <ComingSoon />
                 </div>
             </section>
 

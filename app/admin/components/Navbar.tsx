@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { User } from '@/app/admin/_lib/types';
 import { verifyToken, cerrarSesion } from '@/app/lib/auth';
-import { Bell, Menu, X, LogOut, ChevronDown, User as UserIcon, Settings, LayoutDashboard } from 'lucide-react'
+import { Bell, Menu, X, LogOut, ChevronDown, User as UserIcon, Settings, LayoutDashboard, Sparkles } from 'lucide-react'
 import { supabase } from '../_lib/supabase';
 import NotificacionesDropdown from './NotificacionesDropdown';
 
@@ -91,8 +91,8 @@ function Navbar() {
         }
     }
 
-    const links: { href: string; label: string }[] = [
-        // { href: '/admin/presentacion', label: 'Presentar' }
+    const links: { href: string; label: string; icon?: React.ReactNode; badge?: string }[] = [
+        { href: '/coming-soon', label: 'Soon', icon: <Sparkles size={16} />, badge: 'New' }
     ];
 
     return (
@@ -120,11 +120,17 @@ function Navbar() {
                     <div className='hidden md:flex items-center space-x-1'>
                         {links.map((link) => (
                             <Link key={link.href} href={link.href}>
-                                <span className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${pathname && pathname.includes(link.href)
+                                <span className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${pathname && pathname.includes(link.href)
                                     ? 'bg-zinc-800 text-white'
                                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50'
                                     }`}>
-                                    {link.label}
+                                    {link.icon}
+                                    <span>{link.label}</span>
+                                    {link.badge && (
+                                        <span className="absolute -top-1 -right-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">
+                                            {link.badge}
+                                        </span>
+                                    )}
                                 </span>
                             </Link>
                         ))}
@@ -200,13 +206,19 @@ function Navbar() {
                             {links.map((link) => (
                                 <Link key={link.href} href={link.href}>
                                     <span
-                                        className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${pathname && pathname.includes(link.href)
+                                        className={`relative flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${pathname && pathname.includes(link.href)
                                             ? 'bg-zinc-800 text-white'
                                             : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50'
                                             }`}
                                         onClick={() => setMenuOpen(false)}
                                     >
-                                        {link.label}
+                                        {link.icon}
+                                        <span>{link.label}</span>
+                                        {link.badge && (
+                                            <span className="ml-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                                                {link.badge}
+                                            </span>
+                                        )}
                                     </span>
                                 </Link>
                             ))}

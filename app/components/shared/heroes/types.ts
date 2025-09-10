@@ -1,7 +1,8 @@
 // Shared types for Hero components
+import type { ButtonVariant, ButtonSize } from '../ui/Button'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient'
-export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl'
+// Re-export button types for convenience
+export type { ButtonVariant, ButtonSize }
 export type TextAlignment = 'left' | 'center' | 'right'
 
 export interface ButtonConfig {
