@@ -21,7 +21,7 @@ export const REALTIME_CONFIG = {
     SIDEBAR_DASHBOARD: true, // ✅ FUNCIONANDO
 
     // Área pública - Cotizaciones para clientes
-    CLIENTE_COTIZACIONES: true, // ✅ FUNCIONANDO
+    CLIENTE_COTIZACIONES: false, // ✅ FUNCIONANDO
 
     // Logs de debug
     ENABLE_REALTIME_LOGS: true
