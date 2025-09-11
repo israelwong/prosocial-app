@@ -4,7 +4,7 @@ import { supabase } from '../_lib/supabase'
 import { crearNotificacion } from '../_lib/actions/notificacion/notificacion.actions'
 
 // 🚨 DEBUG: HOOK DESACTIVADO TEMPORALMENTE PARA DEBUG
-const HOOK_REALTIME_ENABLED = true  // ✅ ACTIVADO PARA PRUEBA 1
+const HOOK_REALTIME_ENABLED = true  // ✅ REACTIVADO - FUNCIONANDO
 
 interface UseNotificacionesRealtimeReturn {
     notificaciones: any[]

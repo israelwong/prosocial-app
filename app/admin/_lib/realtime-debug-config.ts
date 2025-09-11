@@ -6,22 +6,22 @@
 
 export const REALTIME_DEBUG_CONFIG = {
     // Navbar - Suscripción principal de notificaciones
-    NAVBAR_NOTIFICACIONES: false,  // DESACTIVAR TODO
+    NAVBAR_NOTIFICACIONES: true,  // ✅ FUNCIONANDO
 
     // Dropdown - Suscripción secundaria de notificaciones (solo INSERT)
-    DROPDOWN_NOTIFICACIONES: false,  // DESACTIVAR TODO
+    DROPDOWN_NOTIFICACIONES: true,  // ✅ FUNCIONANDO
 
     // Bitácora - Suscripción a EventoBitacora
-    EVENTO_BITACORA: false,  // DESACTIVAR TODO
+    EVENTO_BITACORA: false,  // ❌ PERMANENTEMENTE DESACTIVADO - CAUSA SCHEMA MISMATCH
 
     // Cotizaciones - Suscripción a CotizacionVisita (ya eliminada)
     COTIZACIONES_VISITA: false, // Ya no se usa
 
     // Dashboard - Conteos y estadísticas múltiples tablas
-    SIDEBAR_DASHBOARD: false, // DESACTIVAR TODO
+    SIDEBAR_DASHBOARD: true, // ✅ FUNCIONANDO
 
     // Área pública - Cotizaciones para clientes
-    CLIENTE_COTIZACIONES: false, // DESACTIVAR TODO
+    CLIENTE_COTIZACIONES: true, // ✅ FUNCIONANDO
 
     // Logs de debug
     ENABLE_REALTIME_LOGS: true

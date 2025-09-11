@@ -7,7 +7,7 @@ import NotificacionRealtime from '../ui/NotificacionRealtime'
 import AyudaEleccionCotizaciones from '../ui/AyudaEleccionCotizaciones'
 
 // 🚨 DEBUG: REALTIME DESACTIVADO EN ÁREA PÚBLICA
-const PUBLIC_REALTIME_ENABLED = false
+const PUBLIC_REALTIME_ENABLED = true  // ✅ REACTIVADO - FUNCIONANDO
 
 interface Cotizacion {
     id: string
