@@ -97,32 +97,11 @@ export default function FichaCotizacionesUnificada({ eventoCompleto, eventoAsign
         }
     })
 
-    // Suscripción en tiempo real
+    // Suscripción en tiempo real DESHABILITADA - CotizacionVisita ya no se usa
     const suscripcionSupabase = useCallback(() => {
-        const subscription = supabase
-            .channel('realtime:CotizacionVisita')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'CotizacionVisita' },
-                async (payload) => {
-                    console.log('Cambio detectado en CotizacionVisita:', payload);
-                    if (eventoId) {
-                        const cotizacionesUpdate = await obtenerCotizacionesPorEvento(eventoId)
-                        setCotizaciones(cotizacionesUpdate)
-                    }
-                }
-            ).subscribe((status, err) => {
-                if (err) {
-                    console.error('Error en la suscripción CotizacionVisita:', err);
-                } else {
-                    console.log('Estado de la suscripción en CotizacionVisita:', status);
-                }
-            });
-
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, [eventoId]);
+        console.log('ℹ️ Suscripción a CotizacionVisita deshabilitada - funcionalidad deprecada')
+        return () => { } // Retornar función vacía de cleanup
+    }, [])
 
     useEffect(() => {
         const unsubscribe = suscripcionSupabase();

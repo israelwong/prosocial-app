@@ -3,6 +3,9 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../_lib/supabase'
 import { crearNotificacion } from '../_lib/actions/notificacion/notificacion.actions'
 
+// 🚨 DEBUG: HOOK DESACTIVADO TEMPORALMENTE PARA DEBUG
+const HOOK_REALTIME_ENABLED = true  // ✅ ACTIVADO PARA PRUEBA 1
+
 interface UseNotificacionesRealtimeReturn {
     notificaciones: any[]
     nuevasNotificaciones: number
@@ -68,6 +71,14 @@ export function useNotificacionesRealtime(): UseNotificacionesRealtimeReturn {
 
     // Configurar suscripción realtime con reconexión automática
     const configurarSuscripcion = useCallback(() => {
+        // 🚨 DEBUG: REALTIME DESACTIVADO
+        if (!HOOK_REALTIME_ENABLED) {
+            console.log('🚨 Hook realtime desactivado para debug')
+            setConexionRealtime('disconnected')
+            recargarNotificaciones() // Solo cargar datos iniciales
+            return
+        }
+
         console.log('🔔 Configurando suscripción realtime de notificaciones')
         setConexionRealtime('connecting')
 
