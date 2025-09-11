@@ -239,12 +239,7 @@ model CotizacionCosto {
   Cotizacion   Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
 }
 
-model CotizacionVisita {
-  id           String     @id @default(cuid())
-  cotizacionId String
-  createdAt    DateTime   @default(now())
-  Cotizacion   Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
-}
+
 
 model Servicio {
   id                  String               @id @default(cuid())
@@ -400,66 +395,6 @@ model CondicionesComercialesMetodoPago {
   Cotizacion               Cotizacion[]           @relation("CondicionesComercialesMetodoPagoToCotizacion")
 }
 
-model Campania {
-  id        String    @id @default(cuid())
-  nombre    String
-  status    String    @default("active")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  Anuncio   Anuncio[]
-}
-
-model AnuncioPlataforma {
-  id        String    @id @default(cuid())
-  nombre    String
-  status    String    @default("active")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  Anuncio   Anuncio[]
-}
-
-model AnuncioTipo {
-  id        String    @id @default(cuid())
-  nombre    String
-  status    String    @default("active")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  anuncio   Anuncio[]
-}
-
-model AnuncioCategoria {
-  id        String    @id @default(cuid())
-  nombre    String
-  status    String    @default("active")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  anuncio   Anuncio[]
-}
-
-model Anuncio {
-  id                  String            @id @default(cuid())
-  campaniaId          String
-  nombre              String
-  anuncioTipoId       String
-  anuncioCategoriaId  String
-  anuncioPlataformaId String
-  imagen_url          String
-  status              String            @default("active")
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  AnuncioCategoria    AnuncioCategoria  @relation(fields: [anuncioCategoriaId], references: [id])
-  AnuncioPlataforma   AnuncioPlataforma @relation(fields: [anuncioPlataformaId], references: [id])
-  AnuncioTipo         AnuncioTipo       @relation(fields: [anuncioTipoId], references: [id])
-  Campania            Campania          @relation(fields: [campaniaId], references: [id])
-}
-
-model AnuncioVisita {
-  id        String   @id @default(cuid())
-  anuncioId String
-  fecha     DateTime
-  createdAt DateTime @default(now())
-}
-
 model Agenda {
   id            String    @id @default(cuid())
   userId        String?
@@ -546,19 +481,7 @@ model NominaServicio {
   @@unique([nominaId, cotizacionServicioId])
 }
 
-model Suscripcion {
-  id               String    @id @default(cuid())
-  clienteId        String    @unique
-  tipo             String    @default("evento")
-  status           String    @default("activa")
-  fechaInicio      DateTime  @default(now())
-  fechaVencimiento DateTime?
-  precio           Float?
-  descripcion      String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  cliente          Cliente   @relation(fields: [clienteId], references: [id])
-}
+
 
 model Gasto {
   id             String    @id @default(cuid())
@@ -753,4 +676,86 @@ model NegocioBanco {
 
   @@index([negocioId])
   @@index([status])
+}
+
+// TODO: Revisar y depurar modelos que no estén en uso actualmente
+model CotizacionVisita {
+  id           String     @id @default(cuid())
+  cotizacionId String
+  createdAt    DateTime   @default(now())
+  Cotizacion   Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
+}
+
+model Suscripcion {
+  id               String    @id @default(cuid())
+  clienteId        String    @unique
+  tipo             String    @default("evento")
+  status           String    @default("activa")
+  fechaInicio      DateTime  @default(now())
+  fechaVencimiento DateTime?
+  precio           Float?
+  descripcion      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  cliente          Cliente   @relation(fields: [clienteId], references: [id])
+}
+
+model Campania {
+  id        String    @id @default(cuid())
+  nombre    String
+  status    String    @default("active")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Anuncio   Anuncio[]
+}
+
+model AnuncioPlataforma {
+  id        String    @id @default(cuid())
+  nombre    String
+  status    String    @default("active")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Anuncio   Anuncio[]
+}
+
+model AnuncioTipo {
+  id        String    @id @default(cuid())
+  nombre    String
+  status    String    @default("active")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  anuncio   Anuncio[]
+}
+
+model AnuncioCategoria {
+  id        String    @id @default(cuid())
+  nombre    String
+  status    String    @default("active")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  anuncio   Anuncio[]
+}
+
+model Anuncio {
+  id                  String            @id @default(cuid())
+  campaniaId          String
+  nombre              String
+  anuncioTipoId       String
+  anuncioCategoriaId  String
+  anuncioPlataformaId String
+  imagen_url          String
+  status              String            @default("active")
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  AnuncioCategoria    AnuncioCategoria  @relation(fields: [anuncioCategoriaId], references: [id])
+  AnuncioPlataforma   AnuncioPlataforma @relation(fields: [anuncioPlataformaId], references: [id])
+  AnuncioTipo         AnuncioTipo       @relation(fields: [anuncioTipoId], references: [id])
+  Campania            Campania          @relation(fields: [campaniaId], references: [id])
+}
+
+model AnuncioVisita {
+  id        String   @id @default(cuid())
+  anuncioId String
+  fecha     DateTime
+  createdAt DateTime @default(now())
 }
