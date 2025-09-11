@@ -9,7 +9,7 @@ import { verifyToken, cerrarSesion } from '@/app/lib/auth';
 import { Bell, Menu, X, LogOut, ChevronDown, User as UserIcon, Settings, LayoutDashboard } from 'lucide-react'
 import { supabase } from '../_lib/supabase';
 import NotificacionesDropdown from './NotificacionesDropdown';
-import { REALTIME_DEBUG_CONFIG, logRealtime } from '../_lib/realtime-debug-config';
+import { REALTIME_CONFIG, logRealtime } from '../_lib/realtime-control';
 
 function Navbar() {
     const [user, setUser] = useState<User | null>(null);
@@ -23,7 +23,7 @@ function Navbar() {
     //! NOTIFICACIONES
     const suscripcionNotificaciones = useCallback(async () => {
         // Control centralizado de debug
-        if (!REALTIME_DEBUG_CONFIG.NAVBAR_NOTIFICACIONES) {
+        if (!REALTIME_CONFIG.NAVBAR_NOTIFICACIONES) {
             logRealtime('NAVBAR', 'Realtime DESHABILITADO para debug sistemático')
             return () => { } // Retornar función vacía de cleanup
         }

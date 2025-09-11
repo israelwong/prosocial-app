@@ -9,7 +9,7 @@ import { fichaBitacoraUnificadaEliminarBitacora, obtenerEventoBitacora } from '@
 import { supabase } from '@/app/admin/_lib/supabase'
 import ModalBitacoraNuevo from './ModalBitacoraNuevo'
 import ModalBitacoraEditar from './ModalBitacoraEditar'
-import { REALTIME_DEBUG_CONFIG, logRealtime } from '@/app/admin/_lib/realtime-debug-config'
+import { REALTIME_CONFIG, logRealtime } from '@/app/admin/_lib/realtime-control'
 
 interface Props {
     eventoCompleto: EventoCompleto
@@ -38,7 +38,7 @@ export default function FichaBitacoraUnificada({ eventoCompleto }: Props) {
     // Suscripción realtime para EventoBitacora con manejo de errores mejorado
     useEffect(() => {
         // Control centralizado de debug
-        if (!REALTIME_DEBUG_CONFIG.EVENTO_BITACORA) {
+        if (!REALTIME_CONFIG.EVENTO_BITACORA) {
             logRealtime('BITACORA', 'Realtime DESHABILITADO para debug sistemático')
             const pollingInterval = setInterval(() => {
                 logRealtime('BITACORA', 'Polling: Verificando cambios en bitácora...')

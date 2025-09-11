@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Bell, X, Eye, ExternalLink, Clock, CheckCircle, AlertCircle, MessageCircle } from 'lucide-react'
 import { marcarComoLeida, ocultarNotificacion, obtenerNotificaciones } from '../_lib/actions/notificacion/notificacion.actions'
 import { supabase } from '../_lib/supabase'
-import { REALTIME_DEBUG_CONFIG, logRealtime } from '../_lib/realtime-debug-config';
+import { REALTIME_CONFIG, logRealtime } from '../_lib/realtime-control';
 
 interface Notificacion {
     id: string
@@ -61,7 +61,7 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
     // Suscripción en tiempo real SOLO para nuevas notificaciones
     useEffect(() => {
         // Control centralizado de debug
-        if (!REALTIME_DEBUG_CONFIG.DROPDOWN_NOTIFICACIONES) {
+        if (!REALTIME_CONFIG.DROPDOWN_NOTIFICACIONES) {
             logRealtime('DROPDOWN', 'Realtime DESHABILITADO para debug sistemático')
             return
         }

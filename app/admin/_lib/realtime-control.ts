@@ -1,10 +1,10 @@
 // =====================================================
-// CENTRO DE CONTROL REALTIME - DEBUG SISTEMÁTICO
+// CENTRO DE CONTROL REALTIME - CONFIGURACIÓN GLOBAL
 // =====================================================
-// Usar este archivo para controlar todos los sistemas Realtime
-// y activarlos uno por uno para identificar problemas
+// Control centralizado para activar/desactivar sistemas Realtime
+// Útil para debugging, mantenimiento y control granular
 
-export const REALTIME_DEBUG_CONFIG = {
+export const REALTIME_CONFIG = {
     // Navbar - Suscripción principal de notificaciones
     NAVBAR_NOTIFICACIONES: true,  // ✅ FUNCIONANDO
 
@@ -12,7 +12,7 @@ export const REALTIME_DEBUG_CONFIG = {
     DROPDOWN_NOTIFICACIONES: true,  // ✅ FUNCIONANDO
 
     // Bitácora - Suscripción a EventoBitacora
-    EVENTO_BITACORA: false,  // ❌ PERMANENTEMENTE DESACTIVADO - CAUSA SCHEMA MISMATCH
+    EVENTO_BITACORA: false,  // ❌ DESACTIVADO - Usa polling por incompatibilidad
 
     // Cotizaciones - Suscripción a CotizacionVisita (ya eliminada)
     COTIZACIONES_VISITA: false, // Ya no se usa
@@ -29,7 +29,7 @@ export const REALTIME_DEBUG_CONFIG = {
 
 // Función helper para logs centralizados
 export function logRealtime(component: string, message: string, data?: any) {
-    if (REALTIME_DEBUG_CONFIG.ENABLE_REALTIME_LOGS) {
+    if (REALTIME_CONFIG.ENABLE_REALTIME_LOGS) {
         console.log(`🔄 [${component}] ${message}`, data || '');
     }
 }
