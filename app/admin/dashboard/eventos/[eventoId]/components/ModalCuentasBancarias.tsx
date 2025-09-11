@@ -56,7 +56,7 @@ export default function ModalCuentasBancarias({ isOpen, onClose }: Props) {
     if (!isOpen) return null
 
     return (
-        <div 
+        <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 overflow-y-auto"
             onClick={handleOverlayClick}
         >
@@ -99,8 +99,8 @@ export default function ModalCuentasBancarias({ isOpen, onClose }: Props) {
                                 <div
                                     key={cuenta.id}
                                     className={`p-5 rounded-lg border transition-colors ${cuenta.principal
-                                            ? 'bg-blue-500/10 border-blue-500/30'
-                                            : 'bg-zinc-800/50 border-zinc-700'
+                                        ? 'bg-blue-500/10 border-blue-500/30'
+                                        : 'bg-zinc-800/50 border-zinc-700'
                                         }`}
                                 >
                                     {/* Header de la cuenta */}
@@ -116,8 +116,8 @@ export default function ModalCuentasBancarias({ isOpen, onClose }: Props) {
                                             )}
                                         </div>
                                         <span className={`px-2 py-1 text-xs rounded-full ${cuenta.status === 'activo'
-                                                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                                : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                            : 'bg-red-500/20 text-red-400 border border-red-500/30'
                                             }`}>
                                             {cuenta.status === 'activo' ? 'Activa' : 'Inactiva'}
                                         </span>
