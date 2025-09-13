@@ -32,7 +32,8 @@ import {
     GASTO_STATUS,
     GASTO_CATEGORIAS
 } from '@/app/admin/_lib/actions/finanzas/finanzas.schemas';
-import { formatearMoneda, formatearFecha } from '@/app/admin/_lib/utils';
+import { formatearFecha } from '@/app/admin/_lib/utils/fechas';
+import { formatearMoneda } from '@/app/admin/_lib/utils/moneda';
 
 // =====================================
 // INTERFACES

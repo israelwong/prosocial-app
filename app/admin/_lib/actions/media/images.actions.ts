@@ -1,7 +1,8 @@
-// Ruta: app/admin/_lib/actions/imageHandler.actions.ts
+// Ruta: app/admin/_lib/actions/media/images.actions.ts
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import type { ImageUploadResult, ImageDeleteResult, MediaCategory } from './types';
 
 // Configuración de Supabase para ProSocial
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -18,18 +19,6 @@ const supabaseAdmin = supabaseUrl && supabaseServiceKey
     : null;
 
 const BUCKET_NAME = 'ProSocial'; // Bucket específico para ProSocial
-
-// Tipos para las respuestas
-export interface ImageUploadResult {
-    success: boolean;
-    publicUrl?: string;
-    error?: string;
-}
-
-export interface ImageDeleteResult {
-    success: boolean;
-    error?: string;
-}
 
 // --- Helper para extraer el path ---
 function getPathFromUrl(url: string): string | null {
@@ -50,14 +39,14 @@ function getPathFromUrl(url: string): string | null {
 
 // --- Helper para generar paths organizados ---
 export async function generateImagePath(
-    category: 'negocio' | 'eventos' | 'servicios' | 'clientes' | 'perfil',
+    category: MediaCategory,
     subcategory?: string,
     filename?: string
 ): Promise<string> {
     const timestamp = Date.now();
     const randomId = Math.random().toString(36).substring(2, 8);
 
-    let path = `${category}`;
+    let path = `images/${category}`;
 
     if (subcategory) {
         path += `/${subcategory}`;
@@ -87,7 +76,7 @@ export async function generateImagePath(
  */
 export async function subirImagenStorage(
     file: File,
-    category: 'negocio' | 'eventos' | 'servicios' | 'clientes' | 'perfil',
+    category: MediaCategory,
     subcategory?: string,
     customPath?: string
 ): Promise<ImageUploadResult> {
@@ -212,7 +201,7 @@ export async function eliminarImagenStorage(
 export async function actualizarImagenStorage(
     file: File,
     oldImageUrl: string | null | undefined,
-    category: 'negocio' | 'eventos' | 'servicios' | 'clientes' | 'perfil',
+    category: MediaCategory,
     subcategory?: string
 ): Promise<ImageUploadResult> {
 
@@ -256,5 +245,56 @@ export async function esUrlProSocial(url: string): Promise<boolean> {
         return urlObject.hostname.includes('supabase') && urlObject.pathname.startsWith(basePath);
     } catch {
         return false;
+    }
+}
+
+/**
+ * Obtiene información de una imagen desde su URL
+ */
+export async function obtenerInfoImagen(publicUrl: string): Promise<{
+    exists: boolean;
+    size?: number;
+    lastModified?: Date;
+    contentType?: string;
+    error?: string;
+}> {
+    if (!supabaseAdmin) {
+        return { exists: false, error: "Cliente Supabase no inicializado." };
+    }
+
+    const filePath = getPathFromUrl(publicUrl);
+    if (!filePath) {
+        return { exists: false, error: "No se pudo determinar la ruta del archivo." };
+    }
+
+    try {
+        const { data, error } = await supabaseAdmin.storage
+            .from(BUCKET_NAME)
+            .list(filePath.split('/').slice(0, -1).join('/'), {
+                search: filePath.split('/').pop()
+            });
+
+        if (error) {
+            return { exists: false, error: error.message };
+        }
+
+        const fileInfo = data?.find(file => file.name === filePath.split('/').pop());
+
+        if (!fileInfo) {
+            return { exists: false };
+        }
+
+        return {
+            exists: true,
+            size: fileInfo.metadata?.size,
+            lastModified: fileInfo.updated_at ? new Date(fileInfo.updated_at) : undefined,
+            contentType: fileInfo.metadata?.mimetype
+        };
+
+    } catch (error) {
+        return {
+            exists: false,
+            error: `Error al obtener información: ${error instanceof Error ? error.message : 'Error desconocido'}`
+        };
     }
 }

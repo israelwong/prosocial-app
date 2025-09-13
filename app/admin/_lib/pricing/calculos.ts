@@ -188,6 +188,8 @@ export function aplicarCondicionComercial(precioLista: number, condicion?: Condi
     return { precioConDescuento: precioLista - descuentoMonto, descuentoMonto, descuentoFraccion: fraccion };
 }
 
+import { formatearMoneda as formatearMonedaUtil } from '../utils/moneda';
+
 export function formatearMoneda(valor: number, currency: string = 'MXN') {
-    return valor.toLocaleString('es-MX', { style: 'currency', currency });
+    return formatearMonedaUtil(valor, currency);
 }

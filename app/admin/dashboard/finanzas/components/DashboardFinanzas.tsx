@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
+import { formatearMoneda } from '@/app/admin/_lib/utils/moneda';
 import {
     DollarSign,
     TrendingUp,
@@ -170,13 +171,6 @@ export default function DashboardFinanzas() {
 
         cargarDatos();
     }, []);
-
-    const formatearMoneda = (amount: number) => {
-        return new Intl.NumberFormat('es-MX', {
-            style: 'currency',
-            currency: 'MXN'
-        }).format(amount);
-    };
 
     const obtenerBadgeStatus = (status: string) => {
         switch (status) {

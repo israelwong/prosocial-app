@@ -2,11 +2,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { subirImagenStorage, eliminarImagenStorage, actualizarImagenStorage } from '../actions/imageHandler.actions';
-import type { ImageUploadResult, ImageDeleteResult } from '../actions/imageHandler.actions';
+import { subirImagenStorage, eliminarImagenStorage, actualizarImagenStorage } from '../actions/media/images.actions';
+import type { ImageUploadResult, ImageDeleteResult, MediaCategory } from '../actions/media/types';
 
 interface UseImageUploadOptions {
-    category: 'negocio' | 'eventos' | 'servicios' | 'clientes' | 'perfil';
+    category: MediaCategory;
     subcategory?: string;
     maxSize?: number; // en MB
     onSuccess?: (url: string) => void;

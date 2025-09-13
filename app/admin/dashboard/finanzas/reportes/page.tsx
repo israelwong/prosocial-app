@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
+import { formatearMoneda } from '@/app/admin/_lib/utils/moneda';
 import {
     Calendar,
     TrendingUp,
@@ -88,13 +89,6 @@ export default function ReportesPage() {
 
         cargarBalance();
     }, [fechaInicio, fechaFin]);
-
-    const formatearMoneda = (amount: number) => {
-        return new Intl.NumberFormat('es-MX', {
-            style: 'currency',
-            currency: 'MXN'
-        }).format(amount);
-    };
 
     const formatearPorcentaje = (valor: number) => {
         const signo = valor >= 0 ? '+' : '';

@@ -46,7 +46,7 @@ export default function AvisoPrivacidad() {
             <div className="px-6 pb-16">
                 <div className="max-w-4xl mx-auto">
                     {/* Introducción */}
-                    <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-8 mb-8">
+                    <div className="bg-zinc-900/50 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-8 mb-8 mt-8">
                         <div className="flex items-start gap-4">
                             <div className="flex-shrink-0 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                                 <FileText className="w-6 h-6 text-blue-400" />
