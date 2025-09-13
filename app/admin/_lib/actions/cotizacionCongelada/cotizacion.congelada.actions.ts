@@ -3,7 +3,7 @@
 import prisma from '../../prismaClient';
 import { calcularPaquete, type ServicioCantidad } from '../pricing/calculos';
 import { obtenerConfiguracionActiva } from '../configuracion/configuracion.actions';
-import { obtenerServicio } from '../servicio/servicio.actions';
+import { obtenerServicio } from '../servicios/servicios.actions';
 import { COTIZACION_STATUS } from '../../constants/status';
 
 // Tipos para la nueva funcionalidad (sin cambiar schema)

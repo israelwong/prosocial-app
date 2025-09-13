@@ -390,3 +390,21 @@ export async function actualizarOrdenPaquetes(paquetes: { id: string, posicion: 
         return { success: false, message: "No se pudo guardar el nuevo orden." };
     }
 }
+
+// =============================================================================
+// FUNCIONES MIGRADAS DESDE ARCHIVOS LEGACY
+// =============================================================================
+
+/**
+ * Obtener paquetes por tipo de evento - MIGRADA desde /paquete/paquete.actions.ts
+ * Función para obtener paquetes ordenados por posición
+ * Utilizada por: FichaCotizacionesUnificada
+ */
+export async function obtenerPaquetesPorTipoEventoLegacy(eventoTipoId: string) {
+    return await prisma.paquete.findMany({
+        where: { eventoTipoId },
+        orderBy: {
+            posicion: 'asc'
+        }
+    });
+}

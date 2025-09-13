@@ -7,7 +7,7 @@ import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.sche
 import { eliminarCotizacion } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
 
 import { obtenerCotizacionesPorEventoLegacy as obtenerCotizacionesPorEvento } from '@/app/admin/_lib/actions/cotizacion/cotizacion.actions'
-import { obtenerPaquetesPorTipoEventoLegacy as obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/actions/paquete/paquete.actions'
+import { obtenerPaquetesPorTipoEventoLegacy as obtenerPaquetesPorTipoEvento } from '@/app/admin/_lib/actions/paquetes/paquetes.actions'
 
 import FichaCotizacionDetalle from '../cotizacion/components/FichaCotizacionDetalle'
 
