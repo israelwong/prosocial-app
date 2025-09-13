@@ -188,7 +188,7 @@ export function aplicarCondicionComercial(precioLista: number, condicion?: Condi
     return { precioConDescuento: precioLista - descuentoMonto, descuentoMonto, descuentoFraccion: fraccion };
 }
 
-import { formatearMoneda as formatearMonedaUtil } from '../utils/moneda';
+import { formatearMoneda as formatearMonedaUtil } from '../../utils/moneda';
 
 export function formatearMoneda(valor: number, currency: string = 'MXN') {
     return formatearMonedaUtil(valor, currency);

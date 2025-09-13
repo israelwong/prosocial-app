@@ -3,8 +3,16 @@
 // =====================================================
 // Alternativa a Realtime que funciona de manera más confiable
 
-import { useRef, useEffect } from 'react'
-import { obtenerEventoBitacora } from '@/app/admin/_lib/actions/evento/bitacora.actions'
+import { useRef, useCallback, useEffect } from 'react'
+import { toast } from 'sonner'
+
+// Types
+import type { EventoBitacora } from '@/app/admin/_lib/types'
+
+// Actions
+import { obtenerEventoBitacora } from '@/app/admin/_lib/actions/bitacora/bitacora.actions'
+
+type UpdateCallback = (bitacora: EventoBitacora[]) => void
 
 interface PollingConfig {
     eventoId: string

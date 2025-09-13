@@ -1,5 +1,5 @@
 'use server'
-import prisma from '../../prismaClient';
+import prisma from '../../../prismaClient';
 import { EventoDetalleSchema, EventoDetalle } from './eventoDetalle.schemas';
 
 export async function getEventoDetalle(eventoId: string): Promise<EventoDetalle | null> {

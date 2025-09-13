@@ -19,7 +19,7 @@ import {
     actualizarFechaEvento
 } from '@/app/admin/_lib/actions/agenda/agenda.actions'
 import { AGENDA_STATUS } from '@/app/admin/_lib/constants/status'
-import { obtenerTiposEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions'
+import { obtenerTiposEvento } from '@/app/admin/_lib/actions/evento/tipo/eventoTipo.actions'
 import { useEventoSync } from '@/app/admin/hooks/useEventoSync'
 import {
     eliminarEvento,

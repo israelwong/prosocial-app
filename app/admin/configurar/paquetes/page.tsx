@@ -2,7 +2,7 @@
 
 import { Metadata } from 'next';
 import { obtenerPaquetesAgrupados } from '@/app/admin/_lib/actions/paquetes/paquetes.actions';
-import { obtenerTiposEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
+import { obtenerTiposEvento } from '@/app/admin/_lib/actions/evento/tipo/eventoTipo.actions';
 import PaquetesDashboard from './components/PaquetesDashboard';
 import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
 

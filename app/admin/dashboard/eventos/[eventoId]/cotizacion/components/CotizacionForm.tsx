@@ -7,7 +7,7 @@ import { manejarSubmitCotizacion } from '@/app/admin/_lib/actions/cotizacion/cot
 import { useRouter } from 'next/navigation';
 import { Loader2, MinusCircle, Plus, Minus, Calendar, CheckCircle } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
-import { calcularPaquete, calcularServicioDesdeBase, type ServicioCantidad } from '@/app/admin/_lib/pricing/calculos';
+import { calcularPaquete, calcularServicioDesdeBase, type ServicioCantidad } from '@/app/admin/_lib/actions/pricing/calculos';
 import toast from 'react-hot-toast';
 import BotonAutorizarCotizacion from './BotonAutorizarCotizacion';
 import { COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';

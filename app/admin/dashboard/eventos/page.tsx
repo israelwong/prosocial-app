@@ -1,7 +1,7 @@
 import React from 'react'
 import { Metadata } from 'next';
 import ListaEventosSimple from './components/ListaEventosSimple';
-import { getEventosPorEtapaConCotizaciones } from '@/app/admin/_lib/actions/eventos/eventos.actions';
+import { getEventosPorEtapaConCotizaciones } from '@/app/admin/_lib/actions/evento/consultas.actions';
 import { obtenerEtapasPorPosicion } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.actions';
 
 export const metadata: Metadata = {

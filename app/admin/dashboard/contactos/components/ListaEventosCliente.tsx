@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { obtenerEventosPorCliente } from '@/app/admin/_lib/actions/evento/evento.actions'
 import { Evento } from '@/app/admin/_lib/types'
-import { obtenerTipoEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions'
+import { obtenerTipoEvento } from '@/app/admin/_lib/actions/evento/tipo/eventoTipo.actions'
 import { useRouter } from 'next/navigation'
 import { Calendar, Edit } from 'lucide-react'
 

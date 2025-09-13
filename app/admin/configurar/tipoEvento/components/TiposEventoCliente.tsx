@@ -5,8 +5,8 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { EventoTipoCreateSchema, type EventoTipoForm } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.schemas';
-import { crearTipoEvento, actualizarTipoEvento, eliminarTipoEvento, actualizarPosicionTipoEvento, verificarSiPuedeEliminarTipoEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
+import { EventoTipoCreateSchema, type EventoTipoForm } from '@/app/admin/_lib/actions/evento/tipo/eventoTipo.schemas';
+import { crearTipoEvento, actualizarTipoEvento, eliminarTipoEvento, actualizarPosicionTipoEvento, verificarSiPuedeEliminarTipoEvento } from '@/app/admin/_lib/actions/evento/tipo/eventoTipo.actions';
 import { type EventoTipo } from '@prisma/client';
 import toast from 'react-hot-toast';
 import { GripVertical, Trash2, Loader2 } from 'lucide-react';
@@ -71,8 +71,8 @@ function SortableItem({ item, onUpdate, onDelete }: { item: EventoTipo, onUpdate
                 disabled={!canDelete}
                 title={!canDelete ? deleteReason || 'No se puede eliminar' : 'Eliminar tipo de evento'}
                 className={`p-2 rounded-md transition-colors ${canDelete
-                        ? 'text-red-500 hover:bg-red-500/10'
-                        : 'text-zinc-500 cursor-not-allowed opacity-50'
+                    ? 'text-red-500 hover:bg-red-500/10'
+                    : 'text-zinc-500 cursor-not-allowed opacity-50'
                     }`}
             >
                 <Trash2 size={16} />

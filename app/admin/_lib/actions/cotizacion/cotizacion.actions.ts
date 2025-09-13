@@ -3,7 +3,7 @@
 import prisma from '@/app/admin/_lib/prismaClient';
 import { retryDatabaseOperation } from '@/app/admin/_lib/utils/database-retry';
 import { obtenerEventoCompleto } from '@/app/admin/_lib/actions/evento/evento.actions';
-import { obtenerTiposEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
+import { obtenerTiposEvento } from '@/app/admin/_lib/actions/evento/tipo/eventoTipo.actions';
 import { obtenerCatalogoCompleto } from '@/app/admin/_lib/actions/catalogo/catalogo.actions';
 import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
 import { obtenerMetodosPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions';

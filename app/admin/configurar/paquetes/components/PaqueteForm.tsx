@@ -11,7 +11,11 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Trash2, Loader2, PlusCircle, MinusCircle } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
-import { calcularPaquete, calcularServicioDesdeBase, type ServicioCantidad } from '@/app/admin/_lib/pricing/calculos';
+import { obtenerCondicionesComerciales } from '@/app/admin/_lib/actions/condicionesComerciales/condicionesComerciales.actions';
+import { obtenerMetodosPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions';
+import { obtenerConfiguracionActiva } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
+import { calcularPaquete, calcularServicioDesdeBase, type ServicioCantidad } from '@/app/admin/_lib/actions/pricing/calculos';
+import { formatearMoneda } from '@/app/admin/_lib/utils/moneda';
 
 // Estructuras de datos existentes
 type CategoriaConServicios = ServicioCategoria & { Servicio: Servicio[] };

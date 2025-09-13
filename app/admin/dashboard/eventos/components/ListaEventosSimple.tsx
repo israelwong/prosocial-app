@@ -7,7 +7,7 @@ import { EventoPorEtapa } from '@/app/admin/_lib/actions/evento/evento.schemas'
 import { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.schemas'
 import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import { AGENDA_STATUS, EVENTO_STATUS } from '@/app/admin/_lib/constants/status'
-import { getEventosPendientesPorEtapa } from '@/app/admin/_lib/actions/eventos/eventos.actions'
+import { getEventosPendientesPorEtapa } from '@/app/admin/_lib/actions/evento/consultas.actions'
 import { toast } from 'sonner'
 
 // Drag and Drop imports
