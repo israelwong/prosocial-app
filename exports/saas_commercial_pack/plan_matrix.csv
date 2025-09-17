@@ -1,0 +1,20 @@
+area,feature,basic,pro,premium
+Usuarios,Usuarios incluidos,2,5,15
+Proyectos,Proyectos activos por mes,5,20,60
+Leads,Landing y captura,Plantilla,Templates por vertical,Plantillas avanzadas
+Mensajeria,WhatsApp/ManyChat,No,Disponibilidad API,Disponibilidad + creación proyecto
+Cotizaciones,Cotizaciones,Sí,Sí + secciones,c/versionado y expiración avanzada
+Comparador,Comparador de paquetes,Sí,Personalización,Upsells/cross-sell
+Pagos,Stripe pagos,Sí,Sí + MSI,Sí + reglas/recordatorios
+Comercial,Condiciones de pago,Básico,Avanzado,Avanzado por tipo de proyecto
+Agenda,Agenda/Citas,Sí,Sí + recordatorios,Sí + workflows
+Notificaciones,Notificaciones,Email básico,Email + in-app,In-app + WhatsApp
+Costos,Costos por servicio,No,Sí (simple),Sí + reportes
+Nómina,Nómina/Comisiones,No,Sí (individual),Sí (agrupada/comisión)
+Portal,Portal Cliente,Sí,Sí + comparador,Sí + marca cliente
+Branding,Branding,Logo,Marca + horarios,Marca + subdominio
+Dominios,Dominios personalizados,No,No,1 incluido
+Integraciones,API/Webhooks,No,Webhooks,API + Webhooks
+Storage,Almacenamiento (GB),5,25,100
+Soporte,Soporte,Email 48-72h,Email+chat 24-48h,Prioritario 4-8h
+SLA,SLA,No,No,99.9%
