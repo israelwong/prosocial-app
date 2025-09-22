@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, ChevronDown, Calendar, Cog, Building2, Layers, Users, Mail } from 'lucide-react';
+import { Menu, X, ChevronDown, Calendar, Mail } from 'lucide-react';
 import { usePathname } from 'next/navigation'
 import Image from 'next/image';
 
@@ -66,49 +66,28 @@ export default function NavbarV2() {
         setOpenDropdown(openDropdown === menuName ? null : menuName);
     };
 
-    // Estructura del menú con submenu
+    // Estructura del menú simplificada
     const menu: MenuItem[] = [
         {
-            name: 'Home',
+            name: 'Principal',
             link: "/",
             icon: null,
             status: 'active'
         },
         {
-            name: 'Events',
-            link: null,
+            name: 'Fifteens',
+            link: "/fifteens",
             icon: <Calendar className="w-4 h-4" />,
-            status: 'active',
-            submenu: [
-                { name: 'Fifteens', link: "/fifteens", description: "Quinceañeras únicas", status: 'active' },
-                { name: 'Weddings', link: "/weddings", description: "Bodas de ensueño", status: 'active' },
-                { name: 'Cliente Portal', link: "/cliente", description: "Acceso clientes ProSocial Events", status: 'active' }
-            ]
+            status: 'active'
         },
         {
-            name: 'Studio',
-            link: "/studio",
-            icon: <Building2 className="w-4 h-4" />,
-            status: 'coming-soon'
+            name: 'Weddings',
+            link: "/weddings",
+            icon: <Calendar className="w-4 h-4" />,
+            status: 'active'
         },
         {
-            name: 'Services',
-            link: null,
-            icon: <Cog className="w-4 h-4" />,
-            status: 'coming-soon',
-            submenu: [
-                { name: 'Digital Invitations', link: "#", description: "Invitaciones interactivas", status: 'coming-soon' },
-                { name: 'Media Storage', link: "#", description: "Archivo multimedia personal", status: 'coming-soon' }
-            ]
-        },
-        {
-            name: 'Platform',
-            link: "/platform",
-            icon: <Layers className="w-4 h-4" />,
-            status: 'coming-soon'
-        },
-        {
-            name: 'Contact',
+            name: 'Contacto',
             link: "/contacto",
             icon: <Mail className="w-4 h-4" />,
             status: 'active'
@@ -386,10 +365,10 @@ export default function NavbarV2() {
                                 {/* Mobile Footer */}
                                 <div className="p-6 border-t border-zinc-800 bg-zinc-950 flex-shrink-0">
                                     <p className="text-center text-base text-zinc-500 font-roboto">
-                                        Plataforma integral para eventos
+                                        Eventos únicos e inolvidables
                                     </p>
                                     <p className="text-center text-sm text-zinc-600 mt-2">
-                                        Tecnología • Creatividad • Escalabilidad
+                                        Quinceañeras • Bodas • Celebraciones
                                     </p>
                                 </div>
                             </div>

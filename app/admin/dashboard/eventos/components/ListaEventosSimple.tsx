@@ -3,11 +3,11 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Plus, User, Calendar, MapPin, Clock, FileText, Phone, Archive, ArchiveX, ArrowUpDown, ArrowUp, ArrowDown, CircleDollarSign, CircleUserRound } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
-import { EventoPorEtapa } from '@/app/admin/_lib/schemas/evento.schemas'
+import { EventoPorEtapa } from '@/app/admin/_lib/actions/evento/evento.schemas'
 import { EventoEtapa } from '@/app/admin/_lib/actions/evento/eventoManejo/eventoManejo.schemas'
 import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import { AGENDA_STATUS, EVENTO_STATUS } from '@/app/admin/_lib/constants/status'
-import { getEventosPendientesPorEtapa } from '@/app/admin/_lib/actions/eventos/eventos.actions'
+import { getEventosPendientesPorEtapa } from '@/app/admin/_lib/actions/evento/consultas.actions'
 import { toast } from 'sonner'
 
 // Drag and Drop imports

@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation'
 import { Trash } from 'lucide-react'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
 import type { EventoBitacora } from '@/app/admin/_lib/types'
-import { fichaBitacoraUnificadaEliminarBitacora, obtenerEventoBitacora } from '@/app/admin/_lib/actions/evento/bitacora.actions'
+import { fichaBitacoraUnificadaEliminarBitacora, obtenerEventoBitacora } from '@/app/admin/_lib/actions/bitacora/bitacora.actions'
 import { supabase } from '@/app/admin/_lib/supabase'
 import ModalBitacoraNuevo from './ModalBitacoraNuevo'
 import ModalBitacoraEditar from './ModalBitacoraEditar'
+import { REALTIME_CONFIG, logRealtime } from '@/app/admin/_lib/realtime-control'
 
 interface Props {
     eventoCompleto: EventoCompleto
@@ -34,39 +35,92 @@ export default function FichaBitacoraUnificada({ eventoCompleto }: Props) {
         }
     }, [eventoCompleto.id])
 
-    // Suscripción realtime para EventoBitacora (patrón probado)
+    // Suscripción realtime para EventoBitacora con manejo de errores mejorado
     useEffect(() => {
+        // Control centralizado de debug
+        if (!REALTIME_CONFIG.EVENTO_BITACORA) {
+            logRealtime('BITACORA', 'Realtime DESHABILITADO para debug sistemático')
+            const pollingInterval = setInterval(() => {
+                logRealtime('BITACORA', 'Polling: Verificando cambios en bitácora...')
+                recargarBitacora()
+            }, 30000)
+
+            return () => {
+                clearInterval(pollingInterval)
+            }
+        }
+
         console.log('🔔 Configurando suscripción realtime para EventoBitacora')
 
-        const subscription = supabase
-            .channel('realtime:EventoBitacora')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'EventoBitacora' },
-                async (payload) => {
-                    console.log('🔔 Cambio detectado en EventoBitacora:', payload)
-                    // Verificar si el cambio es del evento actual
-                    const newRecord = payload.new as any
-                    const oldRecord = payload.old as any
-                    if (newRecord?.eventoId === eventoCompleto.id || oldRecord?.eventoId === eventoCompleto.id) {
-                        console.log('✅ Cambio relevante para evento actual, recargando bitácora...')
-                        await recargarBitacora()
-                    } else {
-                        console.log('ℹ️ Cambio en bitácora de otro evento, ignorando')
-                    }
-                }
-            ).subscribe((status, err) => {
-                if (err) {
-                    console.error('❌ Error en la suscripción EventoBitacora:', err)
-                } else {
-                    console.log('✅ Estado de la suscripción EventoBitacora:', status)
-                }
-            })
+        let subscription: any = null
+        let reconnectTimeout: NodeJS.Timeout | null = null
+
+        const setupSubscription = () => {
+            try {
+                subscription = supabase
+                    .channel(`bitacora-evento-${eventoCompleto.id}`, {
+                        config: {
+                            broadcast: { self: false },
+                            presence: { key: 'user' }
+                        }
+                    })
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: '*',
+                            schema: 'public',
+                            table: 'EventoBitacora',
+                            filter: `eventoId=eq.${eventoCompleto.id}` // Filtrar directamente en la suscripción
+                        },
+                        async (payload) => {
+                            try {
+                                console.log('🔔 Cambio detectado en EventoBitacora:', payload)
+                                console.log('✅ Cambio relevante para evento actual, recargando bitácora...')
+                                await recargarBitacora()
+                            } catch (error) {
+                                console.error('❌ Error procesando cambio en bitácora:', error)
+                            }
+                        }
+                    )
+                    .subscribe((status, err) => {
+                        if (err) {
+                            console.error('❌ Error en la suscripción EventoBitacora:', err)
+                            // Si hay error de schema mismatch, intentar reconectar después de un tiempo
+                            if (err.message?.includes('mismatch between server and client bindings')) {
+                                console.log('🔄 Desajuste de schema detectado, reintentando en 5 segundos...')
+                                reconnectTimeout = setTimeout(() => {
+                                    if (subscription) {
+                                        subscription.unsubscribe()
+                                    }
+                                    setupSubscription()
+                                }, 5000)
+                            }
+                        } else {
+                            console.log('✅ Estado de la suscripción EventoBitacora:', status)
+                        }
+                    })
+            } catch (error) {
+                console.error('❌ Error configurando suscripción realtime:', error)
+                // Fallback: usar polling en caso de error de realtime
+                console.log('🔄 Fallback: usando polling cada 30 segundos')
+                reconnectTimeout = setTimeout(() => {
+                    recargarBitacora()
+                }, 30000)
+            }
+        }
+
+        // Configurar suscripción inicial
+        setupSubscription()
 
         // Cleanup al desmontar
         return () => {
             console.log('🧹 Limpiando suscripción EventoBitacora')
-            subscription.unsubscribe()
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout)
+            }
+            if (subscription) {
+                subscription.unsubscribe()
+            }
         }
     }, [eventoCompleto.id, recargarBitacora])
 

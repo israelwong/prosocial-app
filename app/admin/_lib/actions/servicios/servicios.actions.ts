@@ -206,3 +206,104 @@ export async function actualizarVisibilidadCliente(id: string, visible: boolean)
         return { success: false, message: "No se pudo cambiar la visibilidad." };
     }
 }
+
+// =============================================================================
+// FUNCIONES MIGRADAS DESDE /servicio/servicio.actions.ts
+// =============================================================================
+
+export async function obtenerServicos() {
+    return prisma.servicio.findMany({
+        orderBy: {
+            posicion: 'asc'
+        }
+    });
+}
+
+export async function obtenerServiciosActivos() {
+    return prisma.servicio.findMany({
+        where: {
+            status: 'active'
+        },
+        orderBy: {
+            posicion: 'asc'
+        }
+    });
+}
+
+export async function obtenerServicioPorCategoria(id: string) {
+    const tareas = await prisma.servicio.findMany({
+        where: {
+            servicioCategoriaId: id
+        },
+        orderBy: {
+            posicion: 'asc'
+        }
+    });
+    return tareas.length > 0 ? tareas : null;
+}
+
+export async function cambiarCategoriaTarea(id: string, categoriaId: string) {
+    const updatedTarea = await prisma.servicio.update({
+        where: { id: id },
+        data: { servicioCategoriaId: categoriaId }
+    });
+    return updatedTarea;
+}
+
+export async function actualizarCategoriaTarea(id: string, categoriaId: string) {
+    const updatedTarea = await prisma.servicio.update({
+        where: { id: id },
+        data: { servicioCategoriaId: categoriaId }
+    });
+    return updatedTarea;
+}
+
+export async function obtenerServiciosAdyacentes(servicioId: string): Promise<{ servicioAnterior: any | null, servicioSiguiente: any | null }> {
+    const servicioActual = await prisma.servicio.findUnique({
+        where: { id: servicioId },
+        select: { posicion: true, servicioCategoriaId: true }
+    });
+
+    if (!servicioActual) {
+        return { servicioAnterior: null, servicioSiguiente: null };
+    }
+
+    const servicioAnterior = await prisma.servicio.findFirst({
+        where: {
+            servicioCategoriaId: servicioActual.servicioCategoriaId,
+            posicion: { lt: servicioActual.posicion }
+        },
+        orderBy: { posicion: 'desc' }
+    });
+
+    const servicioSiguiente = await prisma.servicio.findFirst({
+        where: {
+            servicioCategoriaId: servicioActual.servicioCategoriaId,
+            posicion: { gt: servicioActual.posicion }
+        },
+        orderBy: { posicion: 'asc' }
+    });
+
+    return { servicioAnterior, servicioSiguiente };
+}
+
+export async function obtenerServiciosConRelaciones() {
+    return await prisma.servicio.findMany({
+        include: {
+            ServicioCategoria: {
+                include: {
+                    seccionCategoria: {
+                        include: {
+                            Seccion: true
+                        }
+                    }
+                }
+            }
+        },
+        orderBy: [
+            { ServicioCategoria: { seccionCategoria: { Seccion: { posicion: 'asc' } } } },
+            { ServicioCategoria: { posicion: 'asc' } },
+            { posicion: 'asc' }
+        ]
+    });
+}

@@ -202,10 +202,13 @@ export async function obtenerEventosSeguimientoPorEtapaListaAprobados(
                 eventoEtapaId: {
                     in: etapaIds
                 },
-                // Solo eventos que tengan al menos una cotización aprobada
+                // Solo eventos que tengan al menos una cotización aprobada o autorizada
                 Cotizacion: {
                     some: {
-                        status: COTIZACION_STATUS.APROBADA
+                        OR: [
+                            { status: COTIZACION_STATUS.APROBADA },
+                            { status: COTIZACION_STATUS.AUTORIZADO }
+                        ]
                     }
                 }
             },
@@ -215,7 +218,10 @@ export async function obtenerEventosSeguimientoPorEtapaListaAprobados(
                 EventoEtapa: true,
                 Cotizacion: {
                     where: {
-                        status: COTIZACION_STATUS.APROBADA // Solo cotizaciones aprobadas
+                        OR: [
+                            { status: COTIZACION_STATUS.APROBADA },
+                            { status: COTIZACION_STATUS.AUTORIZADO }
+                        ]
                     },
                     include: {
                         Pago: true

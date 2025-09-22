@@ -6,6 +6,9 @@ import CotizacionCard from '../cards/CotizacionCard'
 import NotificacionRealtime from '../ui/NotificacionRealtime'
 import AyudaEleccionCotizaciones from '../ui/AyudaEleccionCotizaciones'
 
+// 🚨 DEBUG: REALTIME DESACTIVADO EN ÁREA PÚBLICA
+const PUBLIC_REALTIME_ENABLED = true  // ✅ REACTIVADO - FUNCIONANDO
+
 interface Cotizacion {
     id: string
     nombre: string
@@ -87,7 +90,11 @@ export default function CotizacionesSection({
 
     // Suscripción optimizada en tiempo real (solo si está habilitada)
     useEffect(() => {
-        if (!enableRealtime) return // Salir si el realtime está deshabilitado
+        // 🚨 DEBUG: Verificar si realtime público está habilitado
+        if (!enableRealtime || !PUBLIC_REALTIME_ENABLED) {
+            console.log('🚨 Realtime público desactivado para debug')
+            return // Salir si el realtime está deshabilitado
+        }
 
         let subscription: any = null
 

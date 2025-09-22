@@ -1,7 +1,7 @@
 // Ruta: app/admin/configurar/tipoEvento/page.tsx
 
 import { Metadata } from 'next';
-import { obtenerTiposEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
+import { obtenerTiposEvento } from '@/app/admin/_lib/actions/evento/tipo/eventoTipo.actions';
 import TiposEventoCliente from './components/TiposEventoCliente';
 
 export const metadata: Metadata = {

@@ -11,7 +11,7 @@ import { actualizarEventoStatus } from '@/app/admin/_lib/actions/evento/evento.a
 import { obtenerEventoBasicoPorId } from '@/app/admin/_lib/actions/evento/evento.actions';
 import { obtenerCliente } from '@/app/admin/_lib/actions/cliente/cliente.actions';
 import { obtenerMetodoPago } from '@/app/admin/_lib/actions/metodoPago/metodoPago.actions';
-import { obtenerServicio } from '@/app/admin/_lib/actions/servicio/servicio.actions'
+import { obtenerServicio } from '@/app/admin/_lib/actions/servicios/servicios.actions'
 import { crearPago } from '@/app/admin/_lib/actions/pagos';
 import { obtenerConteoCotizacionVisitas } from '@/app/admin/_lib/actions/cotizacionVisita/cotizacionVisita.actions'
 

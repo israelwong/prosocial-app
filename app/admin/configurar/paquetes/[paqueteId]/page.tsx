@@ -2,7 +2,7 @@
 
 import PaqueteForm from '../components/PaqueteForm';
 import { obtenerPaquete } from '@/app/admin/_lib/actions/paquetes/paquetes.actions';
-import { obtenerTiposEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions';
+import { obtenerTiposEvento } from '@/app/admin/_lib/actions/evento/tipo/eventoTipo.actions';
 import { obtenerServiciosPorCategoria } from '@/app/admin/_lib/actions/servicios/servicios.actions'; // fallback
 import { obtenerCatalogoCompleto } from '@/app/admin/_lib/actions/catalogo/catalogo.actions';
 import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';

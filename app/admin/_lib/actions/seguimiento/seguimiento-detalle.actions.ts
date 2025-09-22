@@ -26,7 +26,7 @@ import {
     AGENDA_STATUS_COLORS,
     SERVICIO_STATUS_COLORS
 } from './seguimiento-detalle.schemas';
-import { PAGO_STATUS } from '@/app/admin/_lib/constants/status';
+import { PAGO_STATUS, COTIZACION_STATUS } from '@/app/admin/_lib/constants/status';
 
 // ========================================
 // FUNCIÓN PRINCIPAL DE CONSULTA
@@ -119,10 +119,11 @@ export async function obtenerEventoDetalleCompleto(
                     },
                     where: cotizacionId
                         ? { id: cotizacionId } // Si se especifica cotizacionId, buscar esa específica
-                        : { // Si no, buscar cotizaciones aprobadas (para dashboard)
+                        : { // Si no, buscar cotizaciones aprobadas o autorizadas (para dashboard)
                             OR: [
                                 { status: 'aprobado' },
-                                { status: 'aprobada' }  // Ambos valores posibles
+                                { status: 'aprobada' },  // Ambos valores posibles
+                                { status: COTIZACION_STATUS.AUTORIZADO } // Incluir también autorizadas
                             ]
                         },
                     orderBy: { createdAt: 'desc' },

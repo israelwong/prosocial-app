@@ -5,8 +5,8 @@ import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { toast } from 'sonner'
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
-import type { ClienteCompleto } from '@/app/admin/_lib/actions/evento/cliente/cliente.schemas'
-import { actualizarCliente, obtenerCanales } from '@/app/admin/_lib/actions/evento/cliente/cliente.actions'
+import type { ClienteCompleto } from '@/app/admin/_lib/actions/cliente/cliente.schemas'
+import { actualizarClienteValidado, obtenerCanales } from '@/app/admin/_lib/actions/cliente/cliente.actions'
 import {
     User,
     Phone,
@@ -72,7 +72,7 @@ export function FichaClienteActions({ eventoCompleto }: { eventoCompleto: Evento
     const handleSave = async () => {
         setSaving(true)
         try {
-            await actualizarCliente({
+            await actualizarClienteValidado({
                 id: cliente.id || '',
                 ...formData
             })
@@ -176,7 +176,7 @@ export default function FichaClienteUnificada({ eventoCompleto, showActions = tr
     const handleSave = async () => {
         setSaving(true)
         try {
-            await actualizarCliente({
+            await actualizarClienteValidado({
                 id: cliente.id || '',
                 ...formData
             })

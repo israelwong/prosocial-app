@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Bell, X, Eye, ExternalLink, Clock, CheckCircle, AlertCircle, MessageCircle } from 'lucide-react'
 import { marcarComoLeida, ocultarNotificacion, obtenerNotificaciones } from '../_lib/actions/notificacion/notificacion.actions'
 import { supabase } from '../_lib/supabase'
+import { REALTIME_CONFIG, logRealtime } from '../_lib/realtime-control';
 
 interface Notificacion {
     id: string
@@ -59,7 +60,13 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
 
     // Suscripción en tiempo real SOLO para nuevas notificaciones
     useEffect(() => {
-        console.log('🔌 Conectando suscripción de notificaciones (solo INSERT)...')
+        // Control centralizado de debug
+        if (!REALTIME_CONFIG.DROPDOWN_NOTIFICACIONES) {
+            logRealtime('DROPDOWN', 'Realtime DESHABILITADO para debug sistemático')
+            return
+        }
+
+        logRealtime('DROPDOWN', 'Conectando suscripción de notificaciones (solo INSERT)...')
 
         const subscription = supabase
             .channel('realtime:Notificacion')
@@ -67,7 +74,7 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'Notificacion' },
                 async (payload) => {
-                    console.log('🔔 Nueva notificación detectada:', payload)
+                    logRealtime('DROPDOWN', 'Nueva notificación detectada:', payload)
                     // Solo recargar para nuevas notificaciones
                     await cargarNotificaciones()
                 }
@@ -75,8 +82,12 @@ export default function NotificacionesDropdown({ userId }: NotificacionesDropdow
             .subscribe((status, err) => {
                 if (err) {
                     console.error('❌ Error en la suscripción Notificacion:', err)
+                    // Si hay error de schema mismatch, logearlo específicamente
+                    if (err.message?.includes('mismatch between server and client bindings')) {
+                        console.error('🚨 Schema mismatch detectado en dropdown Notificacion')
+                    }
                 } else {
-                    console.log('✅ Estado de la suscripción en Notificacion:', status)
+                    logRealtime('DROPDOWN', `Estado de la suscripción: ${status}`)
                 }
             })
 

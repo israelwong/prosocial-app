@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { obtenerEventoBitacora, crearBitacoraEvento, eliminarBitacoraEvento, actualizarBitacoraEvento } from '@/app/admin/_lib/actions/evento/bitacora.actions'
+import { obtenerEventoBitacora, crearBitacoraEvento, eliminarBitacoraEvento, actualizarBitacoraEvento } from '@/app/admin/_lib/actions/bitacora/bitacora.actions'
 import { Clock, FileText, AlertCircle, Plus, MoreVertical, Edit, Trash, X, MessageCircle } from 'lucide-react'
 import type { EventoBitacora } from '@/app/admin/_lib/types'
 

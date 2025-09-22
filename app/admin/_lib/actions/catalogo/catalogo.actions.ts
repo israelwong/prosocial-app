@@ -6,7 +6,7 @@ import prisma from '@/app/admin/_lib/prismaClient';
 import { revalidatePath } from 'next/cache';
 import { UpdatePosicionSchema } from './catalogo.schemas';
 import { SeccionSchema, CategoriaSchema } from './catalogo.schemas';
-import { calcularServicioDesdeBase } from '@/app/admin/_lib/pricing/calculos';
+import { calcularServicioDesdeBase } from '@/app/admin/_lib/actions/pricing/calculos';
 import { getGlobalConfiguracion } from '@/app/admin/_lib/actions/configuracion/configuracion.actions';
 import z from 'zod';
 

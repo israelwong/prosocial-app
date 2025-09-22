@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { type Paquete, type EventoTipo, type Configuracion } from '@prisma/client';
 import { useRouter } from 'next/navigation';
 import { crearPaquete, clonarPaquete, actualizarOrdenPaquetes } from '@/app/admin/_lib/actions/paquetes/paquetes.actions';
-import { calcularPaquete, type ServicioCantidad } from '@/app/admin/_lib/pricing/calculos';
+import { calcularPaquete, type ServicioCantidad } from '@/app/admin/_lib/actions/pricing/calculos';
 import toast from 'react-hot-toast';
 import { Pencil, Copy, GripVertical, Loader2 } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';

@@ -11,6 +11,18 @@ const basePath = '/admin/configurar/condicionesComerciales';
 
 export async function obtenerCondicionesComerciales() {
     return await prisma.condicionesComerciales.findMany({
+        include: {
+            CondicionesComercialesMetodoPago: {
+                include: {
+                    MetodoPago: {
+                        select: {
+                            id: true,
+                            metodo_pago: true
+                        }
+                    }
+                }
+            }
+        },
         orderBy: { orden: 'asc' },
     });
 }
@@ -175,8 +187,38 @@ export async function obtenerCondicionesComercialesMetodosPago(condicionesComerc
         where: {
             condicionesComercialesId
         },
+        include: {
+            MetodoPago: true
+        },
         orderBy: {
             orden: 'asc'
         }
     });
+}
+
+/**
+ * Obtiene condiciones comerciales activas CON métodos de pago asociados
+ * Útil para validar que solo se muestren condiciones que realmente se pueden usar
+ */
+export async function obtenerCondicionesComercialesActivasConMetodos() {
+    const condiciones = await prisma.condicionesComerciales.findMany({
+        where: {
+            status: 'active'
+        },
+        include: {
+            CondicionesComercialesMetodoPago: {
+                include: {
+                    MetodoPago: true
+                }
+            }
+        },
+        orderBy: {
+            orden: 'asc'
+        }
+    });
+
+    // Filtrar solo las que tienen al menos un método de pago
+    return condiciones.filter(condicion =>
+        condicion.CondicionesComercialesMetodoPago.length > 0
+    );
 }

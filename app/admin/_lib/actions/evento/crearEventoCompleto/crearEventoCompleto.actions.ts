@@ -2,8 +2,13 @@
 
 import prisma from '../../../prismaClient'
 import { validarCondigoAutorizacion } from '../../configuracion/configuracion.actions'
-import { obtenerEtapa1 } from '../../../actions/EventoEtapa/EventoEtapa.actions'
+import { obtenerEtapa1 } from '../etapa/etapa.actions'
 import { EVENTO_STATUS, CLIENTE_STATUS, MANUAL_CREATION_FLOW } from '../../../constants/status'
+// import { obtenerServicio } from '../../servicios/servicios.actions'
+// import { obtenerConfiguracionActiva } from '../../configuracion/configuracion.actions'
+// import { COTIZACION_STATUS } from '../../../constants/status'
+// import { obtenerPipelineEtapas, obtenerPipelineEtapaPorPosicion } from '../../pipeline/pipeline.actions'
+// import { obtenerCanales } from '../../canal/canal.actions'
 import {
     BuscarClienteSchema,
     CrearClienteInlineSchema,

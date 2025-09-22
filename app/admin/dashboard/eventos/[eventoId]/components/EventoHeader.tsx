@@ -1,11 +1,13 @@
 'use client'
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/app/components/ui/button'
 import { formatearFecha } from '@/app/admin/_lib/utils/fechas'
 import { WhatsAppIcon } from '@/app/components/ui/WhatsAppIcon'
 import { validarDisponibilidadFecha } from '@/app/admin/_lib/actions/evento/crearEventoCompleto/crearEventoCompleto.actions'
 import type { DisponibilidadFecha } from '@/app/admin/_lib/actions/evento/crearEventoCompleto/crearEventoCompleto.schemas'
 import { EVENTO_STATUS } from '@/app/admin/_lib/constants/status'
+import ModalCuentasBancarias from './ModalCuentasBancarias'
 import {
     Calendar,
     User,
@@ -14,7 +16,8 @@ import {
     Clock,
     MapPin,
     CheckCircle,
-    AlertCircle
+    AlertCircle,
+    Building2
 } from 'lucide-react'
 
 interface EventoData {
@@ -46,6 +49,7 @@ export default function EventoHeader({
 
     const [disponibilidadFecha, setDisponibilidadFecha] = useState<DisponibilidadFecha | null>(null)
     const [cargandoDisponibilidad, setCargandoDisponibilidad] = useState(false)
+    const [modalCuentasOpen, setModalCuentasOpen] = useState(false)
 
     // Verificar disponibilidad de fecha cuando cambie fechaEvento
     useEffect(() => {
@@ -223,6 +227,16 @@ export default function EventoHeader({
                             </Button>
                         )}
 
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setModalCuentasOpen(true)}
+                            className="bg-purple-600 hover:bg-purple-700 text-white border-purple-600 h-8 px-3"
+                        >
+                            <Building2 className="h-4 w-4 mr-1" />
+                            CLABE
+                        </Button>
+
                         {puedeGestionarEvento && (
                             <Button
                                 variant="outline"
@@ -282,6 +296,16 @@ export default function EventoHeader({
                             </Button>
                         )}
 
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setModalCuentasOpen(true)}
+                            className="bg-purple-600 hover:bg-purple-700 text-white border-purple-600 h-8 px-3"
+                        >
+                            <Building2 className="h-4 w-4 mr-1" />
+                            Cuenta CLABE
+                        </Button>
+
                         {puedeGestionarEvento && (
                             <Button
                                 variant="outline"
@@ -306,6 +330,15 @@ export default function EventoHeader({
                     </div>
                 </div>
             </div>
+
+            {/* Modal de Cuentas Bancarias - Renderizado en portal para evitar problemas de posicionamiento */}
+            {typeof window !== 'undefined' && createPortal(
+                <ModalCuentasBancarias
+                    isOpen={modalCuentasOpen}
+                    onClose={() => setModalCuentasOpen(false)}
+                />,
+                document.body
+            )}
         </div>
     )
 }

@@ -9,6 +9,7 @@ import { verifyToken, cerrarSesion } from '@/app/lib/auth';
 import { Bell, Menu, X, LogOut, ChevronDown, User as UserIcon, Settings, LayoutDashboard } from 'lucide-react'
 import { supabase } from '../_lib/supabase';
 import NotificacionesDropdown from './NotificacionesDropdown';
+import { REALTIME_CONFIG, logRealtime } from '../_lib/realtime-control';
 
 function Navbar() {
     const [user, setUser] = useState<User | null>(null);
@@ -21,19 +22,30 @@ function Navbar() {
 
     //! NOTIFICACIONES
     const suscripcionNotificaciones = useCallback(async () => {
+        // Control centralizado de debug
+        if (!REALTIME_CONFIG.NAVBAR_NOTIFICACIONES) {
+            logRealtime('NAVBAR', 'Realtime DESHABILITADO para debug sistemático')
+            return () => { } // Retornar función vacía de cleanup
+        }
+
+        logRealtime('NAVBAR', 'Configurando suscripción realtime para Notificacion')
         const subscriptionNotificaciones = supabase
             .channel('realtime:notificaciones')
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'Notificacion' },
                 async (payload) => {
-                    console.log('Evento en notificaciones:', payload);
+                    logRealtime('NAVBAR', 'Evento en notificaciones:', payload);
                 }
             ).subscribe((status, err) => {
                 if (err) {
-                    console.error('Error en la suscripción:', err);
+                    console.error('Error en la suscripción de notificaciones:', err);
+                    // Si hay error de schema mismatch, logearlo específicamente
+                    if (err.message?.includes('mismatch between server and client bindings')) {
+                        console.error('🚨 Schema mismatch detectado en tabla Notificacion')
+                    }
                 } else {
-                    console.log('Estado de la suscripción en notificaciones:', status);
+                    logRealtime('NAVBAR', `Estado de la suscripción: ${status}`);
                 }
             });
         return () => {

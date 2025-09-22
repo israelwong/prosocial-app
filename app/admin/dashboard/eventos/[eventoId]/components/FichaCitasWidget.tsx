@@ -4,7 +4,7 @@ import { Calendar, Clock, Phone, Video, MapPin, Plus, MessageCircle, AlertCircle
 import type { EventoCompleto } from '@/app/admin/_lib/actions/evento/evento.schemas'
 import { CitaConDetalle, CitaFormData, CitaTipo, CitaModalidad, CitaStatus } from '@/types/citas'
 import { getCitasByEventoId, createCita, updateCitaStatus, deleteCita } from '@/app/admin/_lib/actions/citas/citas.actions'
-import { CitaFormSchema } from '@/app/admin/_lib/schemas/citas.schemas'
+import { CitaFormSchema } from '@/app/admin/_lib/actions/citas/citas.schemas'
 import { toast } from 'sonner'
 
 interface Props {

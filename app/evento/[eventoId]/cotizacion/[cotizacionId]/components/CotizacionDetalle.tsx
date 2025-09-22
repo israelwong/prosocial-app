@@ -176,6 +176,23 @@ export default function CotizacionDetalle({
         }
     }
 
+    // Función para determinar si un método de pago es interno
+    const esMetodoInterno = (nombreMetodo: string): boolean => {
+        const metodosInternosNombres = [
+            'efectivo',
+            'depósito bancario',
+            'deposito bancario',
+            'transferencia directa',
+            'transferencia bancaria'
+        ];
+
+        const nombreLower = nombreMetodo.toLowerCase().trim();
+        return metodosInternosNombres.some(nombre =>
+            nombreLower === nombre.toLowerCase() ||
+            nombreLower.includes(nombre.toLowerCase())
+        );
+    }
+
     const cargarCondicionesComerciales = async () => {
         try {
             const condicionesActivas = await obtenerCondicionesComerciales()
@@ -206,12 +223,17 @@ export default function CotizacionDetalle({
                             })
                         )
 
+                        // 🔥 FILTRAR: Solo métodos de pago EXTERNOS (no internos)
+                        const metodosExternos = metodos_pago_con_nombre.filter(metodo =>
+                            !esMetodoInterno(metodo.metodo_pago)
+                        )
+
                         // Ordenar métodos de pago por orden
-                        metodos_pago_con_nombre.sort((a, b) => Number(a.orden ?? 0) - Number(b.orden ?? 0))
+                        metodosExternos.sort((a, b) => Number(a.orden ?? 0) - Number(b.orden ?? 0))
 
                         return {
                             ...condicion,
-                            metodosPago: metodos_pago_con_nombre
+                            metodosPago: metodosExternos // 🔥 CLIENTE: Solo métodos externos (SPEI, tarjetas) - Los internos (efectivo, transferencia directa) son para autorización manual
                         }
                     } catch (error) {
                         console.error(`Error cargando métodos para condición ${condicion.id}:`, error)

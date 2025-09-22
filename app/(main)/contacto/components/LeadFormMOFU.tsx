@@ -3,7 +3,10 @@ import React, { useState, useEffect } from 'react'
 import DatePicker, { registerLocale } from 'react-datepicker'
 import { es } from 'date-fns/locale'
 import 'react-datepicker/dist/react-datepicker.css'
-import { obtenerTiposEvento } from '@/app/admin/_lib/actions/eventoTipo/eventoTipo.actions'
+import { useSearchParams, useRouter } from 'next/navigation';
+import { User, Users, Rss } from 'lucide-react';
+import { obtenerTiposEvento } from '@/app/admin/_lib/actions/evento/tipo/eventoTipo.actions'
+import toast from 'react-hot-toast';
 import { EventoTipo } from '@prisma/client'
 
 // Registrar localización en español

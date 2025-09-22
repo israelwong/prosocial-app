@@ -1,5 +1,7 @@
 import React from 'react'
-import { crearBitacora } from '@/app/admin/_lib/actions/evento/bitacora.actions'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card'
+import { crearBitacora } from '@/app/admin/_lib/actions/bitacora/bitacora.actions'
+import { Button } from '@/app/components/ui/button'
 
 interface Props {
     eventoId: string
