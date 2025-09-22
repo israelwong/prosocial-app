@@ -61,7 +61,7 @@ export default function Home() {
                                     XV Años
                                 </h3>
                                 <p className="text-zinc-400 group-hover:text-zinc-300 transition-colors duration-300">
-                                    Celebra tu transición a mujer con elegancia y estilo único
+                                    Tu celebración más especial merece ser perfecta. Un día mágico que recordarás para siempre
                                 </p>
                             </div>
                         </Link>
@@ -82,7 +82,7 @@ export default function Home() {
                                     Bodas
                                 </h3>
                                 <p className="text-zinc-400 group-hover:text-zinc-300 transition-colors duration-300">
-                                    Tu día perfecto merece ser recordado para siempre
+                                    El amor de su vida merece una celebración única. Momentos inolvidables para toda la vida
                                 </p>
                             </div>
                         </Link>
