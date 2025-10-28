@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Especificación Calculadora de Planes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;line-height:1.5;padding:24px;max-width:900px;margin:0 auto}
+    h1,h2{margin-top:24px}
+    code{background:#f4f4f5;padding:2px 4px;border-radius:4px}
+    table{border-collapse:collapse;width:100%}
+    th,td{border:1px solid #e4e4e7;padding:8px;text-align:left}
+  </style>
+</head>
+<body>
+  <h1>Especificación Calculadora de Planes</h1>
+  <p>Objetivo: permitir a prospectos estimar el plan ideal según <strong>usuarios</strong>, <strong>proyectos activos/mes</strong> y <strong>storage</strong>, con add-ons automáticos.</p>
+  <h2>Inputs</h2>
+  <ul>
+    <li>Usuarios internos (1–50)</li>
+    <li>Proyectos activos por mes (1–200)</li>
+    <li>Almacenamiento requerido (GB) (5–1000)</li>
+    <li>Dominios personalizados (0–5)</li>
+    <li>Periodo (mensual/anual)</li>
+  </ul>
+  <h2>Lógica</h2>
+  <ol>
+    <li>Seleccionar plan base por umbrales: Básico ≤2/≤5/≤5GB; Pro ≤5/≤20/≤25GB; Premium ≤15/≤60/≤100GB.</li>
+    <li>Excesos: usuarios extra = USD 5/u/mes; proyectos extra = USD 1–2 según plan; storage extra = escalones (+50GB=USD10, +200GB=USD30).</li>
+    <li>Dominios: Premium incluye 1; adicionales USD 5/mes.</li>
+    <li>Aplicar descuento anual 20%.</li>
+  </ol>
+  <h2>Outputs</h2>
+  <table>
+    <thead><tr><th>Concepto</th><th>Monto</th></tr></thead>
+    <tbody>
+      <tr><td>Plan base</td><td>USD X</td></tr>
+      <tr><td>Usuarios extra</td><td>USD X</td></tr>
+      <tr><td>Proyectos extra</td><td>USD X</td></tr>
+      <tr><td>Storage extra</td><td>USD X</td></tr>
+      <tr><td>Dominios extra</td><td>USD X</td></tr>
+      <tr><td><strong>Total</strong></td><td><strong>USD X</strong></td></tr>
+    </tbody>
+  </table>
+  <p>Mensajes: mostrar <em>plan recomendado</em> y motivadores (ej. “Ahorra 20% pagando anual”).</p>
+</body>
+</html>
